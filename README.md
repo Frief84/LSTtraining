@@ -1,67 +1,106 @@
-# LSTtraining – Leitstellen-Simulations-Plugin für WordPress
+# LSTtraining
 
-**LSTtraining** ist ein modulares Framework zur Simulation von Einsätzen im Rettungsdienst- und Feuerwehrbereich – aktuell in aktiver Entwicklung (Stand: April 2025).
+LSTtraining ist ein spezialisiertes WordPress-Plugin zur Simulation und Schulung von Dispositionsabläufen für Feuerwehr- und Rettungsdienste. Es richtet sich an Ausbilder:innen und Trainingsleiter:innen, die realistische, kartengestützte Einsatzszenarien abbilden möchten – mit Fokus auf Visualisierung, Taktik und Wegesimulation.
 
-> ⚠️ Hinweis: Das Plugin befindet sich derzeit im **Beta-Status**. Viele Funktionen sind bereits nutzbar, aber noch nicht final.
+## 🔍 Features
 
----
-
-## ✅ Bereits implementiert
-
-- Verwaltung von Leitstellen inkl. Positionsmarker & Einsatzgebiet
-- OpenLayers-Integration zur Kartendarstellung
-- Zeichnen und Bearbeiten von Einsatzgebieten (Polygon)
-- Drag&Drop-fähige Kartenmarker für Leitstellenpositionen
-- Live-Routing mit OpenRouteService (ORS)
-- Dynamisch animierte Fahrzeugbewegung anhand realer Wegdaten
-- Auswahl zwischen WordPress-Datenbank und externer MySQL
-- Admin-Bereich im WordPress-Menü mit Einstellungsmöglichkeiten
+- Echtzeit-Kartendarstellung mit **OpenLayers**
+- Dynamische Anzeige von **Feuerwachen / Rettungswachen**
+- Visualisierung von **Einsatzgebieten**
+- Live-Simulation von **Fahrzeugbewegungen auf Routen**
+- Integration mit **OpenRouteService** zur Wegberechnung
+- Admin-Interface zur Verwaltung von Wachen, Gebieten und Einsätzen (geplant)
 
 ---
 
-## ⚙️ Einrichtung
+## 🗺️ Kartenfunktionen
 
-1. Plugin hochladen nach `/wp-content/plugins/lsttraining-plugin`
-2. Aktivieren im WordPress-Backend
-3. Unter **LSTtraining > Einstellungen**:
-   - Zielseite für Kartendarstellung auswählen
-   - ORS API-Key eintragen
-   - Tabellen installieren (Button)
-   - Optional: Externe Datenbank angeben
-
-4. Wechsel zu **Leitstellen**, um Einträge zu erstellen/bearbeiten
+- **OpenStreetMap** als Grundkarte
+- Anzeige aller Wachen aus der Datenbank mit SVG-Icons
+- Animation eines Fahrzeugs zwischen zwei Koordinaten
+- Zeichnung von Einsatzgebieten (Polygon-Funktion in Arbeit)
 
 ---
 
-## 🔜 Geplante Funktionen
+## ⚙️ Installation
 
-- Benutzerrollen (Admin, Editor, Spieler)
-- Verwaltung & Verknüpfung von Wachen, Fahrzeugen & Einsätzen
-- Zufällige Einsatzgenerierung nach Kriterien (Uhrzeit, Wetter, POI)
-- Gruppenübungen & Mehrbenutzermodus
-- Statistiken & Trainingsauswertung
-- Eigenes Routing-Backend (lokal statt API)
+1. Klone das Repository in dein WordPress-Plugin-Verzeichnis:
+   ```bash
+   git clone https://github.com/Frief84/LSTtraining.git wp-content/plugins/lsttraining
+   ```
 
----
+2. Aktiviere das Plugin im WordPress-Adminbereich.
 
-## 🧱 Projektstruktur
-lsttraining-plugin/ ├── css/ # Admin-Styles (z. B. Flexbox-Layout) ├── js/ # Karten- & Adminlogik ├── includes/ # Backend-Funktionen ├── openlayers/ # Vollständige JS-Bibliothek lokal ├── get_wachen.php # REST: liefert Wachen (GeoJSON) ├── get_route.php # REST: Routing mit ORS ├── index.html # Legacy / statisch └── database/schema.sql # Tabellenstruktur
+3. Stelle sicher, dass OpenLayers im Plugin-Verzeichnis unter `/openlayers/` verfügbar ist (z. B. `ol.js`, `ol.css`).
 
----
-
-## 🔗 Demo
-
-🧪 [https://frief.de](https://frief.de) – Kartenansicht live
+4. Richte die Datenbanktabellen ein (siehe unten).
 
 ---
 
-## 📩 Feedback
+## 🧱 Datenbank
 
-Fehler gefunden? Featurewunsch?  
-> Starte ein Issue oder kontaktiere [Frief84](https://github.com/Frief84)
+Die Datei `database/schema.sql` enthält das notwendige Datenbankschema:
+
+- `wachen`: Speichert Informationen zu Wachen inkl. Name, Koordinaten und Typ
+- Weitere Tabellen für Einsatzgebiete und Einsätze sind geplant
+
+Beispiel zur Ausführung:
+```sql
+SOURCE /path/to/lsttraining/database/schema.sql;
+```
 
 ---
 
-© 2025 by Frief84 – Dieses Plugin ist ein nicht-kommerzielles Trainingswerkzeug für Ausbildungszwecke.
+## 📦 Verzeichnisstruktur
 
+```
+lsttraining/
+├── js/                    # JavaScript (OpenLayers Logik)
+│   └── app.js
+├── img/                   # Icons für Fahrzeuge und Wachen
+│   └── fahrzeug/
+│   └── wachen/
+├── openlayers/            # Eingebettete OpenLayers-Bibliothek
+├── get_route.php          # Backend-Endpunkt für Routenberechnung
+├── get_wachen.php         # Backend-Endpunkt für Wachendaten
+├── index.html             # Standalone HTML-Testumgebung
+├── lsttraining-plugin.php # Haupt-Plugin-Datei
+├── shortcode-map.php      # (Noch nicht aktiv genutzt)
+└── README.md
+```
 
+---
+
+## 🧪 Testen der Karte lokal
+
+Du kannst die Karte direkt per `index.html` im Browser öffnen, um die JavaScript- und Kartenfunktionen zu testen, unabhängig von WordPress. Voraussetzung: Ein lokaler Server, der PHP-Dateien ausführt (z. B. XAMPP oder MAMP).
+
+---
+
+## 🔐 Sicherheitshinweise
+
+- Validierung und Escaping fehlen aktuell teilweise – dies ist bei Benutzereingaben unbedingt nachzurüsten
+- CSRF- und Nonce-Prüfungen sollten für AJAX-Endpunkte ergänzt werden
+- Prepared Statements für alle Datenbankabfragen sind empfohlen
+
+---
+
+## 🚧 Roadmap (geplant)
+
+- [ ] Admin-Bereich zur Verwaltung von Wachen und Einsatzgebieten
+- [ ] Zeichnung und Speicherung benutzerdefinierter Einsatzgebiete
+- [ ] Zeitbasierte Einsatzabläufe / Trainingsszenarien
+- [ ] Logging & Replay-Funktion
+- [ ] Shortcode für Kartenanzeige in Beiträgen (`[lst_map]`)
+
+---
+
+## 📄 Lizenz
+
+MIT License. Siehe `LICENSE.md`.
+
+---
+
+## 🧑‍💻 Mitwirken
+
+Pull Requests sind willkommen! Bitte öffne ein Issue für größere Feature-Vorschläge.
