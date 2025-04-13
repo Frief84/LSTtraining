@@ -75,8 +75,7 @@ function lsttraining_settings_page() {
                     </td>
                 </tr>
             </table>
-			
-			
+
             <?php submit_button(); ?>
         </form>
 
@@ -105,6 +104,19 @@ function lsttraining_settings_page() {
 add_action('admin_init', 'lsttraining_register_settings');
 
 add_action('admin_menu', function () {
-    add_menu_page('LSTtraining', 'LSTtraining', 'manage_options', 'lsttraining', 'lsttraining_settings_page');
+    // Hauptmenüpunkt
+    add_menu_page(
+        'LSTtraining Einstellungen',
+        'LSTtraining',
+        'manage_options',
+        'lsttraining',
+        'lsttraining_settings_page',
+        'dashicons-shield-alt'
+    );
+
+    // Untermenüpunkte
+    add_submenu_page('lsttraining', 'Einstellungen', 'Einstellungen', 'manage_options', 'lsttraining', 'lsttraining_settings_page');
+    add_submenu_page('lsttraining', 'Leitstellen', 'Leitstellen', 'manage_options', 'lsttraining_leitstellen', 'lsttraining_render_leitstellen');
+    add_submenu_page('lsttraining', 'Wachen', 'Wachen', 'manage_options', 'lsttraining_wachen', '__return_null');
+    add_submenu_page('lsttraining', 'Fahrzeuge', 'Fahrzeuge', 'manage_options', 'lsttraining_fahrzeuge', '__return_null');
 });
-?>

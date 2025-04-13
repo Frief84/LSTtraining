@@ -11,3 +11,4 @@ defined('ABSPATH') or die('No script kiddies please!');
 require_once plugin_dir_path(__FILE__) . 'includes/settings.php';
 require_once plugin_dir_path(__FILE__) . 'includes/schema_import.php';
 require_once plugin_dir_path(__FILE__) . 'includes/map-override.php';
+require_once plugin_dir_path(__FILE__) . 'includes/admin-ui.php';
