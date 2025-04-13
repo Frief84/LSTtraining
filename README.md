@@ -1,6 +1,8 @@
 # LSTtraining
 
-LSTtraining ist ein spezialisiertes WordPress-Plugin zur Simulation und Schulung von Dispositionsabläufen für Feuerwehr- und Rettungsdienste. Es richtet sich an Ausbilder:innen und Trainingsleiter:innen, die realistische, kartengestützte Einsatzszenarien abbilden möchten – mit Fokus auf Visualisierung, Taktik und Wegesimulation.
+**LSTtraining** ist ein spezialisiertes WordPress-Plugin zur Simulation und Schulung von Dispositionsabläufen für Feuerwehr- und Rettungsdienste. Es richtet sich an Ausbilder:innen und Trainingsleiter:innen, die realistische, kartengestützte Einsatzszenarien abbilden möchten – mit Fokus auf Visualisierung, Taktik und Wegesimulation.
+
+Eine öffentliche **Demo** läuft aktuell unter: [https://frief.de/](https://frief.de/)
 
 ## 🔍 Features
 
@@ -13,27 +15,20 @@ LSTtraining ist ein spezialisiertes WordPress-Plugin zur Simulation und Schulung
 
 ---
 
-## 🗺️ Kartenfunktionen
-
-- **OpenStreetMap** als Grundkarte
-- Anzeige aller Wachen aus der Datenbank mit SVG-Icons
-- Animation eines Fahrzeugs zwischen zwei Koordinaten
-- Zeichnung von Einsatzgebieten (Polygon-Funktion in Arbeit)
-
----
-
 ## ⚙️ Installation
 
-1. Klone das Repository in dein WordPress-Plugin-Verzeichnis:
+1. Lade das Plugin manuell in dein WordPress-Plugin-Verzeichnis `wp-content/plugins/lsttraining-plugin/` – entweder durch Download des Repositories als ZIP oder per Git-Klon:
    ```bash
-   git clone https://github.com/Frief84/LSTtraining.git wp-content/plugins/lsttraining
+   git clone https://github.com/Frief84/LSTtraining.git wp-content/plugins/lsttraining-plugin
    ```
 
-2. Aktiviere das Plugin im WordPress-Adminbereich.
+2. Aktiviere das Plugin im WordPress-Adminbereich unter **Plugins**.
 
-3. Stelle sicher, dass OpenLayers im Plugin-Verzeichnis unter `/openlayers/` verfügbar ist (z. B. `ol.js`, `ol.css`).
+3. Stelle sicher, dass dein Server PHP-Dateien korrekt verarbeitet und die erforderlichen Schreibrechte besitzt (insbesondere für AJAX-Aufrufe wie `get_wachen.php` und `get_route.php`).
 
-4. Richte die Datenbanktabellen ein (siehe unten).
+4. Die Karten- und Skriptdateien (JavaScript, OpenLayers etc.) befinden sich bereits im Plugin und werden automatisch geladen – es ist **keine zusätzliche Einrichtung von OpenLayers erforderlich**, da die Bibliothek lokal eingebunden ist.
+
+5. Richte die Datenbanktabellen ein (siehe unten).
 
 ---
 
@@ -44,36 +39,15 @@ Die Datei `database/schema.sql` enthält das notwendige Datenbankschema:
 - `wachen`: Speichert Informationen zu Wachen inkl. Name, Koordinaten und Typ
 - Weitere Tabellen für Einsatzgebiete und Einsätze sind geplant
 
-Beispiel zur Ausführung:
-```sql
-SOURCE /path/to/lsttraining/database/schema.sql;
-```
+Zum Einrichten kannst du z. B. Adminer, phpMyAdmin oder das WordPress-Datenbanktool nutzen.
 
 ---
 
-## 📦 Verzeichnisstruktur
+## 📄 Hinweis zur Entwicklung / Testumgebung
 
-```
-lsttraining/
-├── js/                    # JavaScript (OpenLayers Logik)
-│   └── app.js
-├── img/                   # Icons für Fahrzeuge und Wachen
-│   └── fahrzeug/
-│   └── wachen/
-├── openlayers/            # Eingebettete OpenLayers-Bibliothek
-├── get_route.php          # Backend-Endpunkt für Routenberechnung
-├── get_wachen.php         # Backend-Endpunkt für Wachendaten
-├── index.html             # Standalone HTML-Testumgebung
-├── lsttraining-plugin.php # Haupt-Plugin-Datei
-├── shortcode-map.php      # (Noch nicht aktiv genutzt)
-└── README.md
-```
+Das Plugin ist **nicht als Standalone-Anwendung gedacht**, sondern läuft vollständig eingebettet in WordPress.
 
----
-
-## 🧪 Testen der Karte lokal
-
-Du kannst die Karte direkt per `index.html` im Browser öffnen, um die JavaScript- und Kartenfunktionen zu testen, unabhängig von WordPress. Voraussetzung: Ein lokaler Server, der PHP-Dateien ausführt (z. B. XAMPP oder MAMP).
+Die Datei `index.html` dient lediglich internen Tests und Entwicklungszwecken und sollte nur in einer lokal konfigurierten Serverumgebung genutzt werden (z. B. XAMPP mit aktivem Apache + PHP). Sie ist **kein Bestandteil der Plugin-Funktionalität im WordPress-Frontend**.
 
 ---
 
