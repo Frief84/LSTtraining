@@ -38,14 +38,38 @@ window.initMapWithMarker = function(mapId, latInput, lonInput, initialCoords, as
     window[assignInteraction] = drag;
 };
 
-window.toggleForm = function() {
-    document.getElementById('neue-leitstelle-formular').style.display = 'block';
+window.openCreateForm = function () {
+    const createForm = document.getElementById('neue-leitstelle-formular');
+    const editForm = document.getElementById('edit-leitstelle-formular');
+
+    editForm.style.display = 'none';
+    createForm.style.display = 'block';
+
+    // Reset fields
+    createForm.querySelector('input[name="lst_neu_name"]').value = '';
+    createForm.querySelector('input[name="lst_neu_ort"]').value = '';
+    createForm.querySelector('input[name="lst_neu_bl"]').value = '';
+    createForm.querySelector('input[name="lst_neu_land"]').value = '';
+    createForm.querySelector('input[name="lst_neu_lat"]').value = '';
+    createForm.querySelector('input[name="lst_neu_lon"]').value = '';
+    document.getElementById('geojson_neu').value = '';
+
     if (!window.mapNeu) {
-        setTimeout(() => window.initMapWithMarker('map_neu', 'lst_neu_lat', 'lst_neu_lon', [13.4, 52.5], 'mapNeu', 'dragInteractionNeu'), 100);
+        setTimeout(() => {
+            window.initMapWithMarker('map_neu', 'lst_neu_lat', 'lst_neu_lon', [13.4, 52.5], 'mapNeu', 'dragInteractionNeu');
+        }, 100);
     }
 };
 
-window.editLeitstelle = function(id, name, ort, bl, land, lat, lon) {
+window.editLeitstelle = function (id, name, ort, bl, land, lat, lon, geojson) {
+    console.log('editLeitstelle wurde aufgerufen', id);
+
+    const createForm = document.getElementById('neue-leitstelle-formular');
+    const editForm = document.getElementById('edit-leitstelle-formular');
+
+    createForm.style.display = 'none';
+    editForm.style.display = 'block';
+
     document.getElementById('lst_update_id').value = id;
     document.getElementById('lst_update_name').value = name;
     document.getElementById('lst_update_ort').value = ort;
@@ -53,8 +77,25 @@ window.editLeitstelle = function(id, name, ort, bl, land, lat, lon) {
     document.getElementById('lst_update_land').value = land;
     document.getElementById('lst_update_lat').value = lat;
     document.getElementById('lst_update_lon').value = lon;
-    document.getElementById('edit-leitstelle-formular').style.display = 'block';
+    document.getElementById('geojson_edit').value = geojson || '';
 
-    setTimeout(() => window.initMapWithMarker('map_edit', 'lst_update_lat', 'lst_update_lon', [parseFloat(lon), parseFloat(lat)], 'mapEdit', 'dragInteractionEdit'), 100);
-    window.scrollTo(0, document.getElementById('edit-leitstelle-formular').offsetTop);
+    document.getElementById('edit-leitstelle-formular').scrollIntoView({ behavior: 'smooth' });
+
+    setTimeout(() => {
+        if (window.mapEdit) {
+            window.mapEdit.setTarget(null);
+            window.mapEdit = null;
+        }
+
+        document.getElementById('map_edit').innerHTML = '';
+        window.initMapWithMarker('map_edit', 'lst_update_lat', 'lst_update_lon', [parseFloat(lon), parseFloat(lat)], 'mapEdit', 'dragInteractionEdit');
+    }, 100);
+
+    // Optional: polygon-editor öffnen
+    setTimeout(() => {
+        const btn = document.querySelector('#edit-leitstelle-formular button[onclick*="Einsatzgebiet bearbeiten"]');
+        if (btn && btn.offsetParent !== null) {
+            btn.click();
+        }
+    }, 300);
 };
