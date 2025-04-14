@@ -4,7 +4,7 @@
 <file name="schema_import.php" server="ssh.strato.de" local="133889660664218383" remote="133889660870000000" Dst="2" />
 <file name="db.php" server="ssh.strato.de" local="133889660663829417" remote="133889660860000000" Dst="2" />
 <file name="map-override.php" server="ssh.strato.de" local="133889660664028908" remote="133889660860000000" Dst="2" />
-<file name="admin-ui.php" server="ssh.strato.de" local="133890191459516671" remote="133890191510000000" Dst="2" />
+<file name="admin-ui.php" server="ssh.strato.de" local="133891183214199831" remote="133891183220000000" Dst="2" />
 <file name="einsatzgebiet-map.php" server="ssh.strato.de" local="133890152272084097" remote="133890152580000000" Dst="2" />
-<file name="einsatzgebiet-editor.php" server="ssh.strato.de" local="133890167607013160" remote="133890167610000000" Dst="2" />
+<file name="einsatzgebiet-editor.php" server="ssh.strato.de" local="133891286437383588" remote="133891286420000000" Dst="2" />
 </dwsync>

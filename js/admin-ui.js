@@ -5,7 +5,7 @@ window.mapEdit = null;
 window.dragInteractionNeu = null;
 window.dragInteractionEdit = null;
 
-window.initMapWithMarker = function(mapId, latInput, lonInput, initialCoords, assignMap, assignInteraction) {
+window.initMapWithMarker = function(mapId, latInput, lonInput, initialCoords, assignMap, assignInteraction, polygonGeoJson = null) {
     const coord = ol.proj.fromLonLat(initialCoords);
     const feature = new ol.Feature({ geometry: new ol.geom.Point(coord) });
     feature.setStyle(new ol.style.Style({
@@ -17,22 +17,53 @@ window.initMapWithMarker = function(mapId, latInput, lonInput, initialCoords, as
         })
     }));
 
-    const vectorSource = new ol.source.Vector({ features: [feature] });
-    const vectorLayer = new ol.layer.Vector({ source: vectorSource });
+    const markerSource = new ol.source.Vector({ features: [feature] });
+    const markerLayer = new ol.layer.Vector({ source: markerSource });
+
+    const baseLayer = new ol.layer.Tile({ source: new ol.source.OSM() });
 
     const map = new ol.Map({
         target: mapId,
-        layers: [new ol.layer.Tile({ source: new ol.source.OSM() }), vectorLayer],
+        layers: [baseLayer, markerLayer],
         view: new ol.View({ center: coord, zoom: 8 })
     });
 
-    const drag = new ol.interaction.Modify({ source: vectorSource });
+    const drag = new ol.interaction.Modify({ source: markerSource });
     drag.on('modifyend', function (e) {
         const lonLat = ol.proj.toLonLat(e.features.item(0).getGeometry().getCoordinates());
         document.getElementById(latInput).value = lonLat[1].toFixed(6);
         document.getElementById(lonInput).value = lonLat[0].toFixed(6);
     });
     map.addInteraction(drag);
+
+    // Optionales Polygon (nicht editierbar)
+    if (polygonGeoJson && polygonGeoJson.trim() !== '') {
+        try {
+            const format = new ol.format.GeoJSON();
+            const features = format.readFeatures(polygonGeoJson, {
+                featureProjection: map.getView().getProjection()
+            });
+
+            const polygonSource = new ol.source.Vector({ features });
+
+           const polygonLayer = new ol.layer.Vector({
+				source: polygonSource,
+				style: new ol.style.Style({
+					stroke: new ol.style.Stroke({ color: 'rgba(0, 128, 255, 0.8)', width: 2 }),
+					fill: new ol.style.Fill({ color: 'rgba(0, 128, 255, 0.2)' })
+				})
+			});
+			polygonLayer.set('isPolygonLayer', true);
+			map.addLayer(polygonLayer);
+
+            map.getView().fit(polygonSource.getExtent(), {
+                padding: [20, 20, 20, 20],
+                duration: 500
+            });
+        } catch (err) {
+            console.warn("Ungültiges GeoJSON", err);
+        }
+    }
 
     window[assignMap] = map;
     window[assignInteraction] = drag;
@@ -45,7 +76,6 @@ window.openCreateForm = function () {
     editForm.style.display = 'none';
     createForm.style.display = 'block';
 
-    // Reset fields
     createForm.querySelector('input[name="lst_neu_name"]').value = '';
     createForm.querySelector('input[name="lst_neu_ort"]').value = '';
     createForm.querySelector('input[name="lst_neu_bl"]').value = '';
@@ -61,14 +91,20 @@ window.openCreateForm = function () {
     }
 };
 
-window.editLeitstelle = function (id, name, ort, bl, land, lat, lon, geojson) {
+window.editLeitstelle = function (id, name, ort, bl, land, lat, lon) {
     console.log('editLeitstelle wurde aufgerufen', id);
 
     const createForm = document.getElementById('neue-leitstelle-formular');
-    const editForm = document.getElementById('edit-leitstelle-formular');
+const editForm = document.getElementById('edit-leitstelle-formular');
+	
+	// Wenn das Formular sichtbar ist, keine neue Bearbeitung starten
+    if (editForm.style.display === 'block') {
+        alert('Es wird bereits eine Leitstelle bearbeitet.');
+        return;
+    }
 
-    createForm.style.display = 'none';
-    editForm.style.display = 'block';
+if (createForm) createForm.style.display = 'none';
+if (editForm) editForm.style.display = 'block';
 
     document.getElementById('lst_update_id').value = id;
     document.getElementById('lst_update_name').value = name;
@@ -77,25 +113,60 @@ window.editLeitstelle = function (id, name, ort, bl, land, lat, lon, geojson) {
     document.getElementById('lst_update_land').value = land;
     document.getElementById('lst_update_lat').value = lat;
     document.getElementById('lst_update_lon').value = lon;
-    document.getElementById('geojson_edit').value = geojson || '';
+    document.getElementById('geojson_edit').value = '';
 
     document.getElementById('edit-leitstelle-formular').scrollIntoView({ behavior: 'smooth' });
 
-    setTimeout(() => {
-        if (window.mapEdit) {
-            window.mapEdit.setTarget(null);
-            window.mapEdit = null;
-        }
+    // Lade GeoJSON via AJAX
+   fetch(`${ajaxurl}?action=lsttraining_get_einsatzgebiet&leitstelle_id=${id}&t=${Date.now()}`)
+    .then(r => r.json())
+    .then(result => {
+        if (result.success && result.data) {
+            let geoJson = result.data;
 
-        document.getElementById('map_edit').innerHTML = '';
-        window.initMapWithMarker('map_edit', 'lst_update_lat', 'lst_update_lon', [parseFloat(lon), parseFloat(lat)], 'mapEdit', 'dragInteractionEdit');
-    }, 100);
+            console.log("GeoJSON aus DB:", geoJson);
 
-    // Optional: polygon-editor öffnen
-    setTimeout(() => {
-        const btn = document.querySelector('#edit-leitstelle-formular button[onclick*="Einsatzgebiet bearbeiten"]');
-        if (btn && btn.offsetParent !== null) {
-            btn.click();
+            try {
+                // Da der GeoJSON-String doppelt escaped ist, einmal manuell parsen
+                if (typeof geoJson === 'string') {
+                    geoJson = JSON.parse(geoJson);
+                }
+
+                // dann aber wieder in String zurück, damit OpenLayers klar kommt
+                const cleanString = JSON.stringify(geoJson);
+
+                window.initMapWithMarker(
+                    'map_edit',
+                    'lst_update_lat',
+                    'lst_update_lon',
+                    [parseFloat(lon), parseFloat(lat)],
+                    'mapEdit',
+                    'dragInteractionEdit',
+                    cleanString
+                );
+            } catch (e) {
+                console.warn("GeoJSON konnte nicht geparst werden:", e);
+                window.initMapWithMarker(
+                    'map_edit',
+                    'lst_update_lat',
+                    'lst_update_lon',
+                    [parseFloat(lon), parseFloat(lat)],
+                    'mapEdit',
+                    'dragInteractionEdit'
+                );
+            }
+        } else {
+            console.log("Kein Einsatzgebiet vorhanden, initialisiere Map ohne Polygon");
+            window.initMapWithMarker(
+                'map_edit',
+                'lst_update_lat',
+                'lst_update_lon',
+                [parseFloat(lon), parseFloat(lat)],
+                'mapEdit',
+                'dragInteractionEdit'
+            );
         }
-    }, 300);
+    });
+
+
 };

@@ -62,6 +62,7 @@ Die Datei `index.html` dient lediglich internen Tests und Entwicklungszwecken un
 ## 🚧 Roadmap (geplant)
 
 - [ ] Admin-Bereich zur Verwaltung von Leistellen
+- [X]Interaktiver Einsatzgebiet-Editor (Polygon zeichnen, ändern, löschen, importieren)
 - [ ] Admin-Bereich zur Verwaltung von Wachen
 - [ ] Admin-Bereich zur Verwaltung von Fahrzeugen
 - [ ] Zeichnung und Speicherung benutzerdefinierter Einsatzgebiete
