@@ -1,7 +1,7 @@
 import json
 import requests
 import time
-import urllib.parse
+import re
 
 # Konfiguration
 INPUT_JSON = "leitstellen_deutschland_geo_final.json"
@@ -34,10 +34,14 @@ def fetch_overpass_data(polygon_str):
         print(f"Overpass-Fehler: {response.status_code}")
         return None
 
+def clean_area_name(text):
+    return re.sub(r"\[.*?\]|<.*?>|\*+|\(.*?\)|\]\]", "", text).strip()
+
 def fetch_by_area(area_name):
+    area_name_clean = clean_area_name(area_name)
     query = f"""
     [out:json][timeout:60];
-    area[name="{area_name}"]->.searchArea;
+    area[name="{area_name_clean}"]->.searchArea;
     (
       node["amenity"="fire_station"](area.searchArea);
       node["emergency"="ambulance_station"](area.searchArea);
@@ -57,6 +61,7 @@ def fetch_by_area(area_name):
         return None
 
 def parse_results(elements):
+    seen_coords = set()
     wachen = []
     for el in elements:
         tags = el.get("tags", {})
@@ -65,6 +70,11 @@ def parse_results(elements):
         lon = el.get("lon") or el.get("center", {}).get("lon")
 
         if lat and lon:
+            coord_key = (round(lat, 6), round(lon, 6))
+            if coord_key in seen_coords:
+                continue
+            seen_coords.add(coord_key)
+
             typ = ""
             if tags.get("amenity") == "fire_station" or tags.get("emergency") == "fire_station":
                 typ = "FW"
@@ -95,13 +105,17 @@ resultate = []
 
 for eintrag in wachen_vorlage:
     leitstelle_id = eintrag["leitstelle_id"]
-    name = eintrag.get("_comment", f"Leitstelle {leitstelle_id}")
-    print(f"Verarbeite: {name}")
+    name_raw = eintrag.get("_comment", f"Leitstelle {leitstelle_id}")
+    name_clean = clean_area_name(name_raw)
+    print(f"Verarbeite: {name_clean}")
 
-    geojsons = geo_map.get(leitstelle_id, {}).get("zustandigkeit_geojson", [])
-    zustandigkeit_namen = geo_map.get(leitstelle_id, {}).get("zustandigkeit", [])
+    daten = geo_map.get(leitstelle_id, {})
+    geojsons = daten.get("zustandigkeit_geojson", [])
+    zustandigkeit_namen = [clean_area_name(z) for z in daten.get("zustandigkeit", [])]
     alle_wachen = []
+    seen_coords = set()
 
+    # 1. Versuche GeoJSON
     if geojsons:
         for gj in geojsons:
             try:
@@ -110,26 +124,52 @@ for eintrag in wachen_vorlage:
                 if data:
                     wachen = parse_results(data.get("elements", []))
                     print(f"  → {len(wachen)} Wachen via Polygon gefunden")
-                    alle_wachen.extend(wachen)
+                    for w in wachen:
+                        coord = (round(w['latitude'], 6), round(w['longitude'], 6))
+                        if coord not in seen_coords:
+                            alle_wachen.append(w)
+                            seen_coords.add(coord)
                 time.sleep(1.5)
             except Exception as e:
-                print(f"Polygon-Fehler bei {name}: {e}")
-    else:
+                print(f"Polygon-Fehler bei {name_clean}: {e}")
+
+    # 2. Falls leer: Versuche Zuständigkeit
+    if not alle_wachen and zustandigkeit_namen:
         for gebiet in zustandigkeit_namen:
             try:
                 data = fetch_by_area(gebiet)
                 if data:
                     wachen = parse_results(data.get("elements", []))
                     print(f"  → {len(wachen)} Wachen via Flächenname '{gebiet}' gefunden")
-                    alle_wachen.extend(wachen)
+                    for w in wachen:
+                        coord = (round(w['latitude'], 6), round(w['longitude'], 6))
+                        if coord not in seen_coords:
+                            alle_wachen.append(w)
+                            seen_coords.add(coord)
                 time.sleep(1.5)
             except Exception as e:
-                print(f"Flächen-Fehler bei {name}: {e}")
+                print(f"Flächen-Fehler bei {name_clean}: {e}")
 
-    print(f"= Gesamt für {name}: {len(alle_wachen)} Wachen\n")
+    # 3. Falls immer noch leer: Versuche Leitstellenname
+    if not alle_wachen:
+        try:
+            data = fetch_by_area(name_clean)
+            if data:
+                wachen = parse_results(data.get("elements", []))
+                print(f"  → {len(wachen)} Wachen via Name '{name_clean}' gefunden")
+                for w in wachen:
+                    coord = (round(w['latitude'], 6), round(w['longitude'], 6))
+                    if coord not in seen_coords:
+                        alle_wachen.append(w)
+                        seen_coords.add(coord)
+            time.sleep(1.5)
+        except Exception as e:
+            print(f"Namens-Fehler bei {name_clean}: {e}")
+
+    print(f"= Gesamt für {name_clean}: {len(alle_wachen)} Wachen\n")
 
     resultate.append({
-        "_comment": name,
+        "_comment": name_clean,
         "leitstelle_id": leitstelle_id,
         "wachen": alle_wachen
     })
