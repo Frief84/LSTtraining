@@ -1,0 +1,4124 @@
+== Leitstellen ==
+Diese Tabelle gibt Auskunft über die verschiedenen Leitstellen in den Bundesländern sowie deren Aufgaben und Zuständigkeitsbereiche.
+{| class="wikitable"
+|- class="hintergrundfarbe8"
+! Funkrufname
+! Aufgaben
+! Örtliche Zuständigkeit<div style="text-align:left">
+* Landkreise
+* Kreisfreie Städte</div>
+!style="text-align:left"|
+* Standort
+* Betreiber
+!style="text-align:left"|
+* Fläche
+* Einwohner
+! Anmerkungen
+|- style="background:#FFFFDD;"
+! colspan="6" |
+
+=== Baden-Württemberg ===
+|-
+|Leitstelle Biberach
+|
+* [[Feuerwehr]]
+* [[Rettungsdienst]]
+* [[Katastrophenschutz]]
+* [[Hausnotruf]]
+* [[Kassenärztlicher Notdienst]]
+|
+* [[Landkreis Biberach]]
+|
+* [[Biberach an der Riß]]
+* DRK/Landkreis Biberach
+|
+* 1.409,8&nbsp;km²
+* 189.265
+|Seit 1979 bereits eine integrierte Leitstelle
+|-
+|Leitstelle Bodensee-Oberschwaben
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Bodenseekreis]]
+* [[Landkreis Ravensburg]]
+* [[Landkreis Sigmaringen]]
+|
+* [[Friedrichshafen]]
+* [[Weingarten (Württemberg)]]
+* DRK
+|
+* 3.500,97&nbsp;km²
+* 613.939
+|
+|-
+|Leitstelle Böblingen
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+* Kassenärztlicher Notdienst
+|
+* [[Landkreis Böblingen]]
+|
+* [[Böblingen]]
+* Landkreis Böblingen / DRK Kreisverband / Feuerwehr Stadt Böblingen
+|
+* 617,8&nbsp;km²
+* 372.293
+|
+|-
+|Leitstelle Calw
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Calw]]
+|
+* [[Calw]]
+* DRK/Feuerwehr
+|
+* 797,5&nbsp;km²
+* 159.644
+|
+|-
+|Leitstelle Emmendingen
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+* Hausnotruf
+
+|
+* [[Landkreis Emmendingen]]
+|
+* [[Emmendingen]]
+* DRK/Feuerwehr
+|
+* 679,9&nbsp;km²
+* 166.850
+|
+|-
+|Leitstelle Esslingen
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Esslingen]]
+|
+* [[Esslingen am Neckar]]
+* Feuerwehr/DRK
+|
+* 641,5&nbsp;km²
+* 514.503
+|
+|-
+|Leitstelle Freiburg
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+* Kassenärztlicher Notdienst
+|
+* [[Freiburg im Breisgau]]
+* [[Landkreis Breisgau-Hochschwarzwald]]
+|
+* [[Freiburg im Breisgau]]
+* [[Feuerwehr Freiburg im Breisgau|Berufsfeuerwehr]]/DRK
+|
+* 1.531,39&nbsp;km²
+* 484.933
+|
+|-
+|Leitstelle Freudenstadt
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Freudenstadt]]
+|
+* [[Freudenstadt]]
+* DRK
+|
+* 870,7&nbsp;km²
+* 121.865
+|
+|-
+|Leitstelle Göppingen
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Göppingen]]
+|
+* [[Göppingen]]
+* Feuerwehr/DRK
+|
+* 642,4&nbsp;km²
+* 255.807
+|
+|-
+|Leitstelle Rhein-Neckar
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Heidelberg]]
+* [[Rhein-Neckar-Kreis]]
+|
+* [[Heidelberg]]/[[Ladenburg]]
+* gGmbH von Stadt Heidelberg, Rhein-Neckar-Kreis und DRK
+|
+* 1.170,37&nbsp;km²
+* 719.605
+|Seit Anfang Dezember 2024 sind beide Standorte im vollen Betrieb
+|-
+|Leitstelle Heilbronn
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Heilbronn]]
+* [[Landkreis Heilbronn]]
+|
+* [[Heilbronn]]
+* [[Feuerwehr Heilbronn|Berufsfeuerwehr]]/DRK
+|
+* 1.200&nbsp;km²
+* 451.929
+|Die integrierte Leitstelle bei der Hauptfeuerwache Heilbronn ist seit 6. Dezember 2011 in Betrieb.
+|-
+|Leitstelle Hohenlohe
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Hohenlohekreis]]
+|
+* [[Künzelsau|Künzelsau-Gaisbach]]
+* DRK
+|
+* 776,8&nbsp;km²
+* 109.900
+|
+|-
+|Leitstelle Karlsruhe
+|
+* Rettungsdienst
+* Feuerwehr
+* Katastrophenschutz
+|
+* [[Karlsruhe]]
+* [[Landkreis Karlsruhe]]
+|
+* [[Karlsruhe]]
+* DRK KV Karlsruhe/[[Feuerwehr Karlsruhe|Berufsfeuerwehr]]
+|
+* 1.258,4&nbsp;km²
+* 720.436
+|Die [[Feuerwehr Karlsruhe#Integrierte Leitstelle|ILS]] wurde am  21. März 2017 in Betrieb genommen und nimmt unter anderem die Nummern 112, 19222 und 116117 entgegen.
+|-
+|Leitstelle Konstanz
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Konstanz]]
+|
+* [[Radolfzell am Bodensee]]
+* DRK
+|
+* 818,0&nbsp;km²
+* 275.120
+|
+|-
+|Leitstelle Ludwigsburg
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Ludwigsburg]]
+|
+* [[Ludwigsburg]]
+* ILS Ludwigsburg gGmbH – Mitarbeiter der Fw und des RD sind dort abgeordnet bzw. ausgeliehen
+|
+* 686,8&nbsp;km²
+* 515.146
+|Inoffizielle Inbetriebnahme am 8. Juli 2014. DRK Leitstelle ist ab dem Nachmittag des 8. Juli 2014 außer Betrieb. Die ILS hat somit ihren Regelbetrieb aufgenommen.
+|-
+|Leitstelle Lörrach
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+* Hausnotruf
+|
+* [[Landkreis Lörrach]]
+|
+* [[Lörrach]]
+* DRK/Kreis
+|
+* 806,8&nbsp;km²
+* 222.528
+|
+|-
+|Leitstelle Main-Tauber
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Main-Tauber-Kreis]]
+|
+* [[Bad Mergentheim]]
+* DRK
+|
+* 1.304,42&nbsp;km²
+* 134.939
+|
+|-
+|Leitstelle Mannheim
+|
+* Feuerwehr
+* Rettungsdienst (nur Notfallrettung)
+* Katastrophenschutz
+|
+* [[Mannheim]]
+|
+* [[Mannheim]]
+* [[Feuerwehr Mannheim|Stadt Mannheim]] & DRK KV Mannheim<ref>{{Internetquelle |url=https://www.ils-mannheim.de/ueberuns |titel=ILS Mannheim / Über uns |sprache=de |abruf=2024-01-22}}</ref>
+|
+* 144,96&nbsp;km²
+* 309.370
+|Krankentransporte werden durch die ILS Rhein-Neckar disponiert. Somit ist die ILS Mannheim formal keine richtige ILS
+|-
+|Leitstelle Mittelbaden
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Rastatt]]
+* [[Baden-Baden]]
+|
+* [[Rastatt]]
+* DRK KV Bühl-Achern, [[Landkreis Rastatt]] und <br>[[Baden-Baden|Stadt Baden-Baden]]
+|
+* 1.019,25&nbsp;km²
+* 326.665
+| Seit April 2020 auch für die Feuerwehr im Stadtkreis Baden-Baden zuständig.<ref>{{Internetquelle |url= https://www.baden-baden.de/buergerservice/news/neue-integrierte-leitstelle-mittelbaden_9775/ |titel= Neue Integrierte Leitstelle Mittelbaden |zugriff= 2020-04-02 |offline= 1 }}</ref>
+|-
+|Leitstelle Neckar-Odenwald
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+* Hausnotruf
+|
+* [[Neckar-Odenwald-Kreis]]
+|
+* [[Mosbach]]
+* DRK/Kreis
+|
+* 1.126,3&nbsp;km²
+* 149.885
+|
+|-
+|Leitstelle Ortenau
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Ortenaukreis]]
+|
+* [[Offenburg]]
+* Kreis/DRK
+|
+* 1.850,74&nbsp;km²
+* 417.613
+|
+|-
+|Leitstelle Ostalb
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Ostalbkreis]]
+* [[Landkreis Heidenheim]]
+|
+* [[Aalen]]
+* DRK
+|
+* 2.138,7&nbsp;km²
+* 448.073
+|Regionalleitstelle Ostwürttemberg
+|-
+|Leitstelle Pforzheim
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Pforzheim]]
+* [[Enzkreis]]
+|
+* [[Pforzheim]]
+* Stadt ([[Feuerwehr Pforzheim|Berufsfeuerwehr]])/Kreis/DRK
+|
+* 671,7&nbsp;km²
+* 314.880
+|Die Integrierte Leitstelle ist seit 14. Oktober 2015 in Betrieb.
+
+|-
+|Leitstelle Rems-Murr
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Rems-Murr-Kreis]]
+|
+* [[Waiblingen]]
+* DRK
+|
+* 858&nbsp;km²
+* 426.158
+|
+|-
+|Leitstelle Reutlingen
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Reutlingen]]
+|
+* [[Reutlingen]]
+* [[Feuerwehr Reutlingen|Berufsfeuerwehr]]/DRK
+|
+* 1.094,0&nbsp;km²
+* 281.580
+|
+|-
+|Leitstelle Rottweil
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Rottweil]]
+|
+* [[Rottweil]]
+* DRK / Landkreis Rottweil
+|
+* 769,4&nbsp;km²
+* 141.551
+|
+|-
+|Leitstelle Schwäbisch Hall
+|
+* Rettungsdienst
+* Feuerwehr
+* Katastrophenschutz
+|
+* [[Landkreis Schwäbisch Hall]]
+|
+* [[Schwäbisch Hall]]
+* ILS Schwäbisch Hall gGmbHLandkreis Schwäbisch Hall
+|
+* 1.484,06&nbsp;km²
+* 189.842
+|Die Integrierte Leitstelle Schwäbisch Hall hat zum 01.07.2023 ihren Dienst als gGmbH aufgenommen. 
+|-
+|Leitstelle Stuttgart
+|
+* Feuerwehr
+* Rettungsdienst
+* Ärztlicher Bereitschaftsdienst
+* Katastrophenschutz
+|
+* [[Stuttgart]]
+|
+* [[Stuttgart]]
+* [[Feuerwehr Stuttgart|Berufsfeuerwehr]]/DRK
+|
+* 207,36&nbsp;km²
+* 597.158
+|Die Integrierte Leitstelle bei der Feuerwache 3 in Bad Cannstadt würde am 26. März 2006 inbetriebgenommen 
+|-
+|Leitstelle Tübingen
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Tübingen]]
+|
+* [[Tübingen]]
+* DRK/Feuerwehr
+|
+* 519,2&nbsp;km²
+* 217.482
+|
+|-
+|Leitstelle Tuttlingen
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Tuttlingen]]
+|
+* [[Tuttlingen]]
+* DRK
+|
+* 734,4&nbsp;km²
+* 135.306
+|
+|-
+|Leitstelle Ulm 
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Ulm]]
+* [[Alb-Donau-Kreis]]
+|
+* [[Ulm]]
+* Feuerwehr/DRK
+|
+* 1.476,0&nbsp;km²
+* 311.646
+|
+|-
+|Leitstelle Schwarzwald-Baar
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Schwarzwald-Baar-Kreis]]
+|
+* [[Villingen-Schwenningen]]
+* DRK
+|
+* 1.025,2&nbsp;km²
+* 209.709
+|
+|-
+|Leitstelle Waldshut
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Waldshut]]
+|
+* [[Waldshut-Tiengen]]
+* DRK
+|
+* 1.131,2&nbsp;km²
+* 167.200
+|
+|-
+|Leitstelle Zollernalb
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+* Krankentransport
+* Hausnotruf
+* Kassenärztlicher Bereitschaftsdienst / Kassenärztlicher Fahrservice
+* Überwachung und Koordination Tunnel B463 Albstadt-Laufen
+* seismografische Überwachung Kreisstraße K 7145 (Albstadt-Laufen – Meßstetten-Tieringen)
+* Albstadtwerke / Stadtwerke Balingen (Wasser, Gas- und Stromversorgung)<ref>{{Webarchiv|url=http://kv-zollernalb.drk.de/angebote/rettungsdienst/integrierte-leitstelle.html |wayback=20160915220533 |text=kv-zollernalb.drk.de: Integrierte Leitstelle Zollernalb}}</ref>
+|
+* [[Zollernalbkreis]]
+|
+* [[Balingen]]
+* DRK
+|
+* 917,7&nbsp;km²
+* 191.531
+|
+|- style="background:#FFFFDD;"
+! colspan="6" |
+
+=== Bayern ===
+|-
+|Leitstelle Allgäu
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Lindau (Bodensee)]] (LI)
+* [[Kempten (Allgäu)]] (KE)
+* [[Kaufbeuren]] (KF)
+* [[Landkreis Oberallgäu]] (OA)
+* [[Landkreis Ostallgäu]] (OAL)
+|
+* [[Kempten (Allgäu)]]
+* Stadt Kempten (Allgäu) (Feuerwehr)
+|
+* 3.349,8&nbsp;km²
+* 468.939
+|
+Inbetriebnahme 5. Januar 2010
+|-
+| Leitstelle Amberg
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Amberg-Sulzbach]] (AS)
+* [[Amberg]] (AM)
+* [[Landkreis Schwandorf]] (SAD)
+|
+* [[Amberg]]
+* [[Zweckverband für Rettungsdienst und Feuerwehralarmierung]]
+|
+* 2.777,9&nbsp;km²
+* 296.458
+|
+Inbetriebnahme 6. November 2013
+
+Die Leitstellen Amberg und Nordoberpfalz fusionieren 2023 zur ILS Oberpfalz-Nord.<ref name="OpfN">
+{{Internetquelle |url=https://ils-amberg.de/index.php/aktuelle-berichte/81-presseinformation-zur-verbandsversammlung-zweckverband-fuer-rettungsdienst-und-feuerwehralarmierung-am-07-12-2022 |titel=Presseinformation |titelerg= |werk= |hrsg=ILS Amberg |datum=2022-12-07 |abruf=2023-01-30 |kommentar= |zitat=4) Information Fusionierung ZRF Amberg und ZRF Nordoberpfalz }}</ref>
+|-
+
+| Leitstelle Ansbach
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Ansbach]] (AN)
+* [[Ansbach]] (AN)
+* [[Landkreis Neustadt an der Aisch-Bad Windsheim]] (NEA)
+|
+* [[Ansbach]]
+* Stadt Ansbach (Feuerwehr)
+|
+* 3.339,3&nbsp;km²
+* 322.600
+|
+Inbetriebnahme 23. November 2011
+|-
+| Leitstelle Augsburg
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Augsburg]] (A)
+* [[Augsburg]] (A)
+* [[Landkreis Aichach-Friedberg]] (AIC)
+* [[Landkreis Dillingen an der Donau]] (DLG)
+* [[Landkreis Donau-Ries]] (DON)
+|
+* [[Augsburg]]
+* Stadt Augsburg ([[Feuerwehr Augsburg|Berufsfeuerwehr]])
+|
+* 4.068,0&nbsp;km²
+* 943.447
+|
+Inbetriebnahme 1. Oktober 2008
+|-
+|Leitstelle Bamberg-Forchheim<ref name=":1">https://www.ils-bamberg.de/index.php/downloads/category/3-informationen?download=8:der-zweckverband</ref>
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Bamberg]] (BA)
+* [[Bamberg]] (BA)
+* [[Landkreis Forchheim]] (FO)
+|
+* [[Bamberg]]
+* [[Zweckverband für Rettungsdienst und Feuerwehralarmierung]]
+|
+* 1.865,0&nbsp;km²
+* 345.703
+|
+Inbetriebnahme ILS 16. März 2010
+|-
+|Leitstelle Bayreuth/Kulmbach
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Bayreuth]] (BT)
+* [[Bayreuth]] (BT)
+* [[Landkreis Kulmbach]] (KU)
+|
+* [[Bayreuth]]
+* BRK Kreisverband Bayreuth
+|
+* 1.996,4&nbsp;km²
+* 258.226
+|
+Inbetriebnahme 2. November 2011
+|-
+|Leitstelle Coburg
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Coburg]] (CO)
+* [[Coburg]] (CO)
+* [[Landkreis Kronach]] (KC)
+* [[Landkreis Lichtenfels]] (LIF)
+|
+* [[Ebersdorf bei Coburg]]
+* BRK
+|
+* 1.813,6&nbsp;km²
+* 274.489
+|
+Inbetriebnahme 22. Juni 2010
+|-
+|Leitstelle Donau-Iller
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Günzburg]] (GZ)
+* [[Memmingen]] (MM)
+* [[Landkreis Neu-Ulm]] (NU)
+* [[Landkreis Unterallgäu]] (MN)
+|
+* [[Krumbach (Schwaben)|Krumbach]]
+* BRK
+|
+* 2.578,2&nbsp;km²
+* 462.386
+|
+Inbetriebnahme 8. November 2011
+|-
+|Leitstelle Erding
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Erding]] (ED)
+* [[Landkreis Ebersberg]] (EBE)
+* [[Landkreis Freising]] (FS)
+|
+* [[Erding]]
+* Landkreis Erding
+|
+* 2.221,5&nbsp;km²
+* 414.345
+|
+Inbetriebnahme 31. März 2009
+
+Seit 26. Juni 2016 im Digitalfunk Realbetrieb
+|-
+|Leitstelle Fürstenfeldbruck
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Dachau]] (DAH)
+* [[Landkreis Starnberg]] (STA)
+* [[Landkreis Fürstenfeldbruck]] (FFB)
+* [[Landkreis Landsberg am Lech]] (LL)
+|
+* [[Fürstenfeldbruck]]
+* [[Zweckverband für Rettungsdienst und Feuerwehralarmierung]]
+|
+* 2.306,3&nbsp;km²
+* 644.123
+|
+Inbetriebnahme 2. Juni 2007
+ 
+|-
+|Leitstelle Hochfranken
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Hof]] (HO)
+* [[Hof (Saale)]] (HO)
+* [[Landkreis Wunsiedel im Fichtelgebirge]] (WUN)
+|
+* [[Hof (Saale)]]
+* BRK
+|
+* 1.557,0&nbsp;km²
+* 232.606
+|
+Inbetriebnahme 30. Oktober 2008
+|-
+|Leitstelle Ingolstadt
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Eichstätt]] (EI)
+* [[Ingolstadt]] (IN)
+* [[Landkreis Neuburg-Schrobenhausen]] (ND)
+* [[Landkreis Pfaffenhofen an der Ilm]] (PAF)
+|
+* [[Ingolstadt]]
+* [[Zweckverband für Rettungsdienst und Feuerwehralarmierung]]
+|
+* 2.848,0&nbsp;km²
+* 455.045
+|
+Inbetriebnahme 11. Februar 2008
+|-
+|Leitstelle Landshut
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Landshut]] (LA)
+* [[Landshut]] (LA)
+* [[Landkreis Dingolfing-Landau]] (DGF)
+* [[Landkreis Kelheim]] (KEH)
+|
+* [[Landshut]]
+* [[Zweckverband für Rettungsdienst und Feuerwehralarmierung]]
+|
+* 3.358,6&nbsp;km²
+* 415.193
+|
+Inbetriebnahme 28. November 2007
+|-
+|Leitstelle Mittelfranken-Süd
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* {{Anker|Südfranken}} [[Landkreis Roth]] (RH)
+* [[Schwabach]] (SC)
+* [[Landkreis Weißenburg-Gunzenhausen]] (WUG)
+|
+* [[Schwabach]]
+* BRK KV Südfranken
+|
+* 1.906,8&nbsp;km²
+* 258.534
+|
+Inbetriebnahme 3. Juli 2012
+|-
+|Leitstelle München
+|
+* Feuerwehr (nur im Stadtgebiet)
+* Rettungsdienst
+* Katastrophenschutz (nur im Stadtgebiet)
+|
+* [[Landkreis München]]
+* [[München]]
+|
+* [[München]]
+* Stadt München ([[Feuerwehr München|Berufsfeuerwehr]])
+|
+* 977,7&nbsp;km²
+* 1.868.858
+|
+Inbetriebnahme 1997 als erste ILS in Bayern
+|-
+|Florian München Land
+|
+* Feuerwehr
+* Katastrophenschutz
+|
+* [[Landkreis München]]
+|
+* [[München]]
+* [[Landratsamt München]]
+|
+* 667,3&nbsp;km²
+* 358.480
+|
+Inbetriebnahme 1972 als eine der ersten ständig besetzten Feuerwehreinsatzzentralen in Bayern. Die FEZ ist über den Notruf 112 nur indirekt mittels Weiterleitung über zwei Standleitungen aus der ILS München erreichbar. Anbindung ans VPN-Netz der Integrierten Leitstellen im zweiten Halbjahr 2015. Erste BOS-Leitstelle in Bayern mit Tetra-Digitalfunk Anbindung.
+|-
+|Leitstelle Nordoberpfalz
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Neustadt an der Waldnaab]] (NEW)
+* [[Weiden in der Oberpfalz]] (WEN)
+* [[Landkreis Tirschenreuth]] (TIR)
+|
+* [[Weiden in der Oberpfalz]]
+* [[Zweckverband für Rettungsdienst und Feuerwehralarmierung]]
+
+|
+* 2.585,5&nbsp;km²
+* 218.425
+|
+Inbetriebnahme 27. April 2012
+
+Inbetriebnahme Digitalfunk: 01.07.2016
+
+Die Leitstellen Nordoberpfalz und Amberg fusionieren 2023 zur ILS Oberpfalz-Nord.<ref name="OpfN" />
+|-
+|Leitstelle Nürnberg
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Nürnberger Land]] (LAU)
+* [[Nürnberg]] (N)
+* [[Fürth]] (FÜ)
+* [[Erlangen]] (ER)
+* [[Landkreis Fürth]] (FÜ)
+* [[Landkreis Erlangen-Höchstadt]] (ERH)
+|
+* [[Nürnberg]]
+* Stadt Nürnberg ([[Feuerwehr Nürnberg|Berufsfeuerwehr]])
+|
+* 1.999,0&nbsp;km²
+* 1.134.520
+|
+Inbetriebnahme 20. Oktober 2010
+|-
+|Leitstelle Oberland
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Weilheim-Schongau]] (WM)
+* [[Landkreis Bad Tölz-Wolfratshausen]] (TÖL)
+* [[Landkreis Garmisch-Partenkirchen]] (GAP)
+|
+* [[Weilheim in Oberbayern]]
+* BRK
+|
+* 3.089,4&nbsp;km²
+* 358.331
+|
+Inbetriebnahme 30. Juni 2010
+
+
+Voraussichtlich zum 31.12.2025 Fusion mit der ILS FFB am Standort in Maisach - Gernlinden
+|-
+<!--|Leitstelle Oberpfalz-Nord
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Amberg]] (AM)
+* [[Landkreis Amberg-Sulzbach]] (AS)
+* [[Landkreis Neustadt an der Waldnaab]] (NEW)
+* [[Landkreis Schwandorf]] (SAD)
+* [[Landkreis Tirschenreuth]] (TIR)
+* [[Weiden in der Oberpfalz]] (WEN)
+|
+* wird noch festgelegt
+* [[Zweckverband für Rettungsdienst und Feuerwehralarmierung]]
+
+|
+* 5.363,4 km²
+* 514.883
+|
+Fusion am 1. Januar 2023, zunächst in zwei Betriebsstätten Amberg und Weiden<ref name="OpfN" />
+* Inbetriebnahme Amberg war 6. November 2013
+* Inbetriebnahme Weiden war 27. April 2012
+|-
+-->
+|Leitstelle Passau
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Passau]] (PA)
+* [[Passau]] (PA)
+* [[Landkreis Freyung-Grafenau]] (FRG)
+* [[Landkreis Rottal-Inn]] (PAN)
+|
+* [[Passau]]
+* [[Zweckverband für Rettungsdienst und Feuerwehralarmierung]]
+|
+* 3.863,8&nbsp;km²
+* 438.430
+|
+Inbetriebnahme 1. Juni 2012
+|-
+|Leitstelle Regensburg
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Regensburg]] (R)
+* [[Regensburg]] (R)
+* [[Landkreis Cham]] (CHA)
+* [[Landkreis Neumarkt in der Oberpfalz]] (NM)
+|
+* [[Regensburg]]
+* Stadt Regensburg (Berufsfeuerwehr)
+|
+* 4.330,9&nbsp;km²
+* 573.232
+|
+Inbetriebnahme 14. März 2007
+|-
+|Leitstelle Rosenheim
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Rosenheim]] (RO)
+* [[Rosenheim]] (RO)
+* [[Landkreis Miesbach]] (MB)
+|
+* Feuerwehr Rosenheim
+* Stadt [[Rosenheim]] (Feuerwehr)
+|
+* 2.340,1&nbsp;km²
+* 402.547
+|
+Inbetriebnahme 30. März 2010
+|-
+|Leitstelle Schweinfurt
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Schweinfurt]] (SW)
+* [[Schweinfurt]] (SW)
+* [[Landkreis Haßberge]] (HAS)
+* [[Landkreis Rhön-Grabfeld]] (NES)
+* [[Landkreis Bad Kissingen]] (KG)
+|
+* [[Schweinfurt]]<ref>https://ils-schweinfurt.brk.de/</ref>
+* BRK
+|
+* 3.992,2&nbsp;km²
+* 449.521
+|
+Inbetriebnahme 24. Juli 2012
+|-
+|Leitstelle Straubing
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Straubing-Bogen]] (SR)
+* [[Straubing]] (SR)
+* [[Landkreis Deggendorf]] (DEG)
+* [[Landkreis Regen]] (REG)
+|
+* [[Straubing]]
+* BRK
+|
+* 3.106,0&nbsp;km²
+* 339.904
+|
+Inbetriebnahme 5. Oktober 2010
+|-
+|Leitstelle Traunstein
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Traunstein]] (TS)
+* [[Landkreis Altötting]] (AÖ)
+* [[Landkreis Berchtesgadener Land]] (BGL)
+* [[Landkreis Mühldorf am Inn]] (MÜ)
+|
+* [[Traunstein]]
+* [[Zweckverband für Rettungsdienst und Feuerwehralarmierung]]
+|
+* 3.750&nbsp;km²
+* 493.000
+|
+Inbetriebnahme 14. Januar 2010
+|-
+|Leitstelle Bayerischer Untermain
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Aschaffenburg]] (AB)
+* [[Aschaffenburg]] (AB)
+* [[Landkreis Miltenberg]] (MIL)
+|
+* [[Aschaffenburg]]
+* [[Zweckverband für Rettungsdienst und Feuerwehralarmierung]]
+|
+* 1.477,6&nbsp;km²
+* 374.212
+|
+Inbetriebnahme 3. Juli 2012
+|-
+|Leitstelle Würzburg
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Würzburg]] (WÜ)
+* [[Würzburg]] (WÜ)
+* [[Landkreis Kitzingen]] (KT)
+* [[Landkreis Main-Spessart]] (MSP)
+|
+* [[Würzburg]]
+* Stadt Würzburg (Berufsfeuerwehr)
+|
+* 3.060,8&nbsp;km²
+* 515.734
+|
+Inbetriebnahme 24. Februar 2010
+|-
+|- style="background:#FFFFDD;"
+! colspan="6" |
+
+=== Berlin ===
+|-
+|Florian Berlin
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Berlin]]
+|
+* [[Berlin]]
+* [[Feuerwehr Berlin|Berufsfeuerwehr]]
+|
+* 891,85&nbsp;km²
+* 3.426.354
+|
+|-
+|Berolina
+|
+* Polizei
+|
+* [[Berlin]]
+|
+* Berlin
+* Polizei
+|
+* 891,85&nbsp;km²
+* 3.426.354
+|
+|-
+|Pelikan Berlin („Leitstelle II“)
+* Leitstelle Ehrenamt
+|
+* Wasserrettungsdienst
+* Katastrophenschutz
+|
+* [[Berlin]]
+|
+* [[Berlin]]
+* DLRG Berlin
+|
+* 891,85&nbsp;km²
+* 3.426.354
+|Besetzt in der Wassersportsaison (Fr.&nbsp;19:00 – So.&nbsp;19:00)
+|-
+|Rotkreuz Berlin
+* Leitstelle Ehrenamt
+|
+* Katastrophenschutz
+* Großveranstaltungen
+|
+* [[Berlin]]
+|
+* [[Berlin]]
+* DRK Berlin
+|
+* 891,85&nbsp;km²
+* 3.426.354
+|Besetzt bei Großveranstaltungen und Großschadenslagen.
+|-
+|Rotkreuz Berlin Wasserwacht („Leitstelle III“)
+* Leitstelle Ehrenamt
+|
+* Wasserrettungsdienst
+|
+* [[Berlin]]
+|
+* [[Berlin]]
+* DRK Berlin
+|
+* 891,85&nbsp;km²
+* 3.426.354
+|Besetzt in der Wassersportsaison (Fr.&nbsp;19:00 – So.&nbsp;19:00)
+|-
+|Sama Berlin 30
+Arbeiter-Samariter-Bund
+(„Leitstelle I“)
+
+* Leitstelle Ehrenamt
+|
+* Wasserrettungsdienst
+|
+* [[Berlin]]
+|
+* [[Berlin]]
+* ASB Berlin (WRD)
+|
+* 891,85&nbsp;km²
+* 3.426.354
+|Besetzt in der Wassersportsaison 
+(Fr. 19:00 – So. 19:00)
+|-
+|Sama Berlin 40
+Arbeiter-Samariter-Bund
+(„Leitstelle IV“)
+
+* Leitstelle Ehrenamt
+|
+* Wasserrettungsdienst
+|
+* [[Berlin]]
+|
+* [[Berlin]]
+* ASB Berlin (WRD)
+|
+* 891,85&nbsp;km²
+* 3.426.354
+|Besetzt in der Wassersportsaison 
+(Fr. 19:00 – So. 19:00)
+|- style="background:#FFFFDD;"
+! colspan="6" |
+
+=== Brandenburg ===
+|-
+|Einstein
+|
+* Polizei
+|
+* [[Land Brandenburg]]
+|
+* [[Potsdam]]
+|
+* 29.654,16&nbsp;km²
+* 2.511.917
+|
+|-
+|Leitstelle Brandenburg
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+* Wasserrettung
+* THW
+|
+* [[Brandenburg an der Havel]] (BRB)
+* [[Landkreis Potsdam-Mittelmark]] (PM)
+* [[Landkreis Teltow-Fläming]] (TF)
+|
+* [[Brandenburg an der Havel]]
+* [[Feuerwehr Brandenburg an der Havel|Berufsfeuerwehr]]
+|
+* 4.895,9&nbsp;km²
+* 456.847
+|
+|-
+|Leitstelle Lausitz<ref>[http://www.leitstelle-lausitz.de/ leitstelle-lausitz.de]</ref>
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Cottbus]] (CB)
+* [[Landkreis Dahme-Spreewald]] (LDS)
+* [[Landkreis Oberspreewald-Lausitz]] (OSL)
+* [[Landkreis Spree-Neiße]] (SPN)
+* [[Landkreis Elbe-Elster]] (EE)
+|
+* [[Cottbus]]
+* Berufsfeuerwehr
+|
+* 7.179,28&nbsp;km²
+* 649.964
+|
+|-
+|Leitstelle Oderland
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Frankfurt (Oder)]] (FF)
+* [[Landkreis Märkisch-Oderland]] (MOL)
+* [[Landkreis Oder-Spree]] (LOS)
+|
+* [[Frankfurt (Oder)]]
+* Berufsfeuerwehr
+|
+* 4.518,31&nbsp;km²
+* 443.777
+|
+|-
+|Leitstelle NordOst
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Barnim]] (BAR)
+* [[Landkreis Oberhavel]] (OHV)
+* [[Landkreis Uckermark]] (UM)
+|
+* [[Eberswalde]]
+* Landkreis Barnim
+|
+* 6.326,3&nbsp;km²
+* 513.724
+|
+|-
+|Leitstelle Nordwest
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Potsdam]] (P)
+* [[Landkreis Havelland]] (HVL)
+* [[Landkreis Prignitz]] (PR)
+* [[Landkreis Ostprignitz-Ruppin]] (OPR)
+|
+* [[Potsdam]]
+* Berufsfeuerwehr
+|
+* 6.537,0&nbsp;km²
+* 497.709
+|
+|- style="background:#FFFFDD;"
+! colspan="6" |
+
+=== Bremen ===
+|-
+|Florian Bremen
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Bremen]]
+|
+* [[Bremen]]
+* [[Feuerwehr Bremen|Berufsfeuerwehr]]
+|
+* 325,4&nbsp;km²
+* 548.477
+|
+|-
+|Leitstelle Bremerhaven
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Bremerhaven]]
+* [[Landkreis Cuxhaven]] (ohne Stadt Cuxhaven)
+* [[Landkreis Osterholz]]
+|
+* [[Bremerhaven]]
+* [[Feuerwehr Bremerhaven|Berufsfeuerwehr]]
+|
+* ca. 2.800&nbsp;km²
+* ca. 400.000
+|länderübergreifende Integrierte Regionalleitstelle Unterweser-Elbe für Bremerhaven (HB), Lk Cuxhaven und Lk Osterholz (Niedersachsen)
+|- style="background:#FFFFDD;"
+! colspan="6" |
+
+=== Hamburg ===
+|-
+|Florian Hamburg
+|
+* [[Feuerwehr Hamburg|Feuerwehr]]
+* [[Rettungsdienst in Hamburg|Rettungsdienst]]
+* Katastrophenschutz
+|
+* [[Hamburg]]
+|
+* [[Hamburg]]
+* [[Feuerwehr Hamburg|Berufsfeuerwehr]]
+|
+* 755,22&nbsp;km²
+* 1.899.160
+|Rettungsleitstelle für Feuerwehr und Rettungsdienst in Hamburg (ausgenommen Insel Neuwerk)
+|-
+|Rotkreuz Hamburg
+* Leitstelle Ehrenamt (seit 2006)
+|
+* Sanitätsdienst
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Hamburg]]
+|
+* [[Hamburg]]
+* Rotes Kreuz Hamburg
+|
+* 755,22&nbsp;km²
+* 1.899.160
+|Landesweite Leitstelle für Großveranstaltungen (auch Organisationsübergreifend), Alarm-Einsätze und regionalen Katastrophenschutz (DRK)
+|-
+|Akkon Hamburg
+* ehrenamtliche Leitstelle
+|
+* Sanitätsdienst
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Hamburg]]
+|
+* [[Hamburg]]
+* Johanniter Hamburg
+|
+* 755,22&nbsp;km²
+* 1.899.160
+| Leitstelle für [[Sanitätswachdienst]] und [[Rettungsdienst]] bei Großveranstaltungen und Einsatzführungsdienst im [[Bevölkerungsschutz]]
+|-
+|Michel
+|
+* Polizei
+|
+* [[Hamburg]]
+|
+* [[Hamburg]]
+* [[Behörde für Inneres und Sport]] – Polizei
+|
+* 755,22&nbsp;km²
+* 1.899.160
+|Die Polizeieinsatzzentrale ist zuständig für die Annahme des 110-Notrufes und sonstiger Hilfeersuchen. Sie koordiniert Polizeikräfte in 5 sog. „Michel-Kreisen“ (Funkkreise der einzelnen Regionen).
+|- style="background:#FFFFDD;"
+! colspan="6" |
+
+=== Hessen ===
+|-
+|Leitfunkstelle Darmstadt
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Darmstadt]]
+** [[Landkreis Bergstraße]]
+** [[Landkreis Darmstadt-Dieburg]]
+** [[Kreis Groß-Gerau]]
+** [[Odenwaldkreis]]
+|
+* [[Darmstadt]]
+* [[Feuerwehr Darmstadt|Berufsfeuerwehr]]
+|
+* 1.953,34&nbsp;km²
+* 1.116.194
+|
+Gemeinsamer Rettungsdienstbereich für den Westteil des Kreises Darmstadt-Dieburg bis zum
+31. Dezember 2016. Danach eigenständiger Rettungsdienstbereich von Stadt und Landkreis.
+|-
+|Leitstelle Bergstraße<ref>[http://www.leitstelle-bergstrasse.de/ leitstelle-bergstrasse.de]</ref>
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Bergstraße]]
+|
+* [[Heppenheim (Bergstraße)]]
+* Kreis
+|
+* 719,54&nbsp;km²
+* 275.205
+|
+|-
+|Leitstelle Darmstadt-Dieburg
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Darmstadt-Dieburg]]
+|
+* [[Dieburg]]
+* Kreis
+|
+* 658,5&nbsp;km²
+* 300.658
+|
+|-
+|Leitstelle Gerau<ref>[http://www.leitstelle-grossgerau.de/ leitstelle-grossgerau.de]</ref>
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Groß-Gerau]]
+|
+* [[Groß-Gerau]]
+* Eigenbetrieb Kreis
+|
+* 453,1&nbsp;km²
+* 280.308
+|
+|-
+|Leitstelle Odenwald
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Odenwaldkreis]]
+|
+* [[Erbach (Odenwald)|Erbach]]
+* Kreis
+|
+* 624&nbsp;km²
+* 97.780
+|
+|-
+|Leitfunkstelle Frankfurt
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Frankfurt am Main]]
+** [[Hochtaunuskreis]]
+** [[Main-Taunus-Kreis]]
+** [[Wetteraukreis]]
+|
+* [[Frankfurt am Main]]
+* [[Feuerwehr Frankfurt am Main|Berufsfeuerwehr]]
+|
+* 2.678,41&nbsp;km²
+* 1.435.926
+|
+|-
+|Leitstelle Hochtaunus
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Hochtaunuskreis]]
+|
+* [[Bad Homburg vor der Höhe]]
+* Kreis
+|
+* 482&nbsp;km²
+* 236.564
+|
+|-
+|Leitstelle Main-Taunus
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Main-Taunus-Kreis]]
+|
+* [[Hofheim am Taunus]]
+* Kreis
+|
+* 224,4&nbsp;km²
+* 237.735
+|
+|-
+|Leitstelle Wetterau
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Wetteraukreis]]
+|
+* [[Friedberg (Hessen)|Friedberg]]
+* Kreis
+|
+* 1.101,7&nbsp;km²
+* 306.460
+|
+|-
+|Leitfunkstelle Fulda
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Fulda]]
+** [[Landkreis Hersfeld-Rotenburg]]
+** [[Vogelsbergkreis]]
+|
+* [[Fulda]]
+* Feuerwehr
+|
+* 3.936,6&nbsp;km²
+* 507.984
+|
+|-
+|Leitstelle Hersfeld-Rotenburg
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Hersfeld-Rotenburg]]
+|
+* [[Bad Hersfeld]]
+* Kreis
+|
+* 1.097,2&nbsp;km²
+* 120.829
+|
+|-
+|Leitstelle Vogelsberg
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Vogelsbergkreis]]
+|
+* [[Lauterbach (Hessen)|Lauterbach]]
+* Kreis
+|
+* 1.459&nbsp;km²
+* 105.878
+|
+|-
+|Leitfunkstelle Gießen
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Gießen]]
+** [[Lahn-Dill-Kreis]]
+** [[Landkreis Marburg-Biedenkopf]]
+|
+* [[Gießen]]
+* Kreis
+|
+* 3.183,8&nbsp;km²
+* 823.106
+|
+|-
+|Leitstelle Lahn-Dill
+|
+* Feuerwehr
+* Rettungsdienst
+* Arztnotruf für die Region, A.N.R.
+* Katastrophenschutz
+|
+* [[Lahn-Dill-Kreis]]
+|
+* [[Wetzlar]]
+* Kreis
+|
+* 1.066,50&nbsp;km²
+* 253.777
+|
+|-
+|Leitstelle Marburg-Biedenkopf
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Marburg-Biedenkopf]]
+|
+* [[Cappel (Marburg)|Marburg-Cappel]]
+* Kreis
+|
+* 1.262,6&nbsp;km²
+* 246.648
+|
+|-
+|Leitfunkstelle Kassel<ref>[https://www.kassel.de/einrichtungen/feuerwehr/rubrik1/inhalte-fw-ueber-uns/leitfunkstelle.php kassel.de]</ref>
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Kassel]]
+* [[Landkreis Kassel]]
+** [[Schwalm-Eder-Kreis]]
+** [[Landkreis Waldeck-Frankenberg]]
+** [[Werra-Meißner-Kreis]]
+|
+* [[Kassel]]
+* [[Feuerwehr Kassel|Berufsfeuerwehr]]
+|
+* 5.811,49&nbsp;km²
+* 865.565
+|
+|-
+|Leitstelle Schwalm-Eder
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Schwalm-Eder-Kreis]]
+|
+* [[Homberg (Efze)]]
+* Kreis
+|
+* 1.538,6&nbsp;km²
+* 180.222
+|
+|-
+|Leitstelle Waldeck-Frankenberg<ref>{{Webarchiv|url=http://lk-wf.active-city.net/city_info/display/bs/vorgang/details.cfm?region_id=81&design_id=1154&id=1498 |wayback=20090524222354 |text=Landkreis Waldeck-Frankenberg: Zentrale Leitstelle Waldeck-Frankenberg }}</ref>
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Waldeck-Frankenberg]]
+|
+* [[Korbach]]
+* Kreis
+|
+* 1.848,6&nbsp;km²
+* 157.293
+|
+|-
+|Leitstelle Werra-Meißner
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Werra-Meißner-Kreis]]
+|
+* [[Eschwege]]
+* Kreis
+|
+* 1.024,7&nbsp;km²
+* 156.953
+|
+|-
+|Leitfunkstelle Offenbach
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Offenbach am Main]]
+** [[Landkreis Offenbach]]
+** [[Main-Kinzig-Kreis]]
+|
+* [[Offenbach am Main]]
+* [[Feuerwehr Offenbach am Main|Berufsfeuerwehr]]
+|
+* 1.798,7&nbsp;km²
+* 856.344
+|
+|-
+|Leitstelle Dietzenbach
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Offenbach]]
+|
+* [[Dietzenbach]]
+* Eigenbetrieb Kreis
+|
+* 356,3&nbsp;km²
+* 354.092
+|
+Notrufe aus dem Stadtteil Zeppelinheim (zu Neu-Isenburg) gehen bei der Leitstelle Frankfurt ein und müssen von dort zur Leitstelle Dietzenbach weitergeleitet werden.
+|-
+|Leitstelle Main-Kinzig
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Main-Kinzig-Kreis]]
+|
+* [[Gelnhausen]]
+* Kreis
+|
+* 1.397,5&nbsp;km²
+* 418.950
+|
+|-
+|Leitfunkstelle Wiesbaden
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Wiesbaden]]
+** [[Landkreis Limburg-Weilburg]]
+** [[Rheingau-Taunus-Kreis]]
+|
+* [[Wiesbaden]]
+* [[Feuerwehr Wiesbaden|Berufsfeuerwehr]]
+|
+* 1.753.9&nbsp;km²
+* 623.451
+|
+|-
+|Leitstelle Limburg-Weilburg
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Limburg-Weilburg]]
+|
+* [[Limburg an der Lahn|Limburg]]
+* Kreis
+|
+* 738,5&nbsp;km²
+* 172.083
+|
+|-
+|Leitstelle Rheingau-Taunus
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Rheingau-Taunus-Kreis]]
+|
+* [[Bad Schwalbach]]
+* Kreis
+|
+* 811,5&nbsp;km²
+* 187.157
+|
+|- style="background:#FFFFDD;"
+! colspan="6" |
+
+=== Mecklenburg-Vorpommern ===
+|-
+|[[Feuerwehr Schwerin#Integrierte Leitstelle Westmecklenburg|Leitstelle Westmecklenburg (ILWM)]]
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+* Koordinierung aller Intensivtransporte des Landes Mecklenburg-Vorpommern
+|
+* [[Schwerin]] (SN)
+* [[Landkreis Nordwestmecklenburg]] (NWM+HWI)
+* [[Landkreis Ludwigslust-Parchim]] (LWL+PCH)
+|
+* [[Schwerin]]
+* [[Feuerwehr Schwerin|Berufsfeuerwehr]]
+|
+* 6.997,82&nbsp;km²
+* 485.602
+|
+[[Leitstelle|Integrierte Leitstelle]]
+|-
+|Leitstelle Mittleres Mecklenburg<ref>[http://www.ils-mitte.de/ ils-mitte.de]</ref>
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Rostock]] 
+
+|
+* [[Bad Doberan]]
+* Kreis
+|
+* 3.422&nbsp;km²
+* 221.431
+|
+[[Leitstelle|Integrierte Leitstelle]]
+|-
+
+|-
+|Leitstelle Rostock
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Rostock]] (HRO)
+|
+* [[Rostock]]
+* Berufsfeuerwehr
+|
+* 181,44&nbsp;km²
+* 201.096
+|
+[[Leitstelle|Integrierte Leitstelle]]
+|-
+|Leitstelle Mecklenburgische-Seenplatte
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Mecklenburgische Seenplatte]] (NB+MST+MÜR+DM)
+|
+* [[Neubrandenburg]]
+* [[Feuerwehr Neubrandenburg|Berufsfeuerwehr]]
+|
+* 5.809,65&nbsp;km²
+* 297.662
+|
+[[Leitstelle|Integrierte Regionalleitstelle]]
+|-
+|Leitstelle Vorpommern-Rügen
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Vorpommern-Rügen]]
+|
+* [[Stralsund]]
+* Landkreis Vorpommern-Rügen
+|
+* 3.188&nbsp;km²
+* 223.718
+|
+
+[[Leitstelle|Integrierte Leitstelle]]
+|-
+|Leitstelle Vorpommern-Greifswald
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Vorpommern-Greifswald]]
+|
+* [[Greifswald]]
+* Landkreis Vorpommern-Greifswald
+|
+* 3.584,5&nbsp;km²
+* 237.375
+|
+[[Leitstelle|Integrierte Leitstelle]]
+|- style="background:#FFFFDD;"
+! colspan="6" |
+
+=== Niedersachsen ===
+|-
+|Leitstelle Heidekreis
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Heidekreis]]
+|
+* [[Soltau]]
+* Kreis
+|
+* 1.873,5&nbsp;km²
+* 141.692
+|
+Die Leitstelle arbeitet in einem Leitstellenverbund mit Florian Harburg und Leitstelle Rotenburg.
+|-
+|Leitstelle Braunschweig
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Braunschweig]] (BS)
+* [[Landkreis Peine]] (PE)
+* [[Landkreis Wolfenbüttel]] (WF)
+|
+* [[Braunschweig]]
+* [[Feuerwehr Braunschweig|Berufsfeuerwehr]]
+|
+* 1.449,3&nbsp;km²
+* 504.022
+|
+|-
+|Leitstelle Celle
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Celle]]
+|
+* [[Celle]]
+* Kreis
+|
+* 1.545,0&nbsp;km²
+* 181.115
+|
+Geplanter virtueller Leitstellenverbund mit den Landkreisen Gifhorn, Uelzen und Lüchow-Dannenberg
+|-
+|Florian Cuxhaven
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Cuxhaven]]
+|
+* [[Cuxhaven]]
+* [[Feuerwehr Cuxhaven|Berufsfeuerwehr]]
+|
+* 161,9&nbsp;km²
+* 51.587
+|
+Für Landkreis siehe Florian Geeste
+|-
+|Leitstelle Diepholz
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Diepholz]]
+|
+* [[Diepholz]]
+* Kreis
+|
+* 1.987,6&nbsp;km²
+* 215.142
+|
+|-
+|Leitstelle Emden
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Emden]]
+|
+* [[Emden]]
+* Stadt
+|
+* 112,3&nbsp;km²
+* 51.714
+|
+|-
+|Leitstelle Ems-Vechte
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Emsland]]
+* [[Landkreis Grafschaft Bentheim]]
+|
+* [[Meppen]]
+* Kreis
+|
+* 2.881,4&nbsp;km²
+* 313.533
+|
+|-
+|Leitstelle Friesland-Wilhelmshaven
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Friesland]] (FRI)
+* [[Wilhelmshaven|Stadt Wilhelmshaven]] (WHV)
+|
+* [[Wilhelmshaven]]
+* Zweckverband
+|
+* 714,8&nbsp;km²
+* 192.971 Winter / 251.432 Sommer
+|
+|-
+|Florian Geeste
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Cuxhaven]] ohne Stadt Cuxhaven
+|
+* [[Cuxhaven]]
+* Kreis
+|
+* 1.910,7&nbsp;km²
+* 151.346
+|
+Der Landkreis Cuxhaven, der Landkreis Osterholz und die Stadt Bremerhaven haben ihre Leitstellen im April 2013 am Standort Bremerhaven zur „Integrierten Regionalleitstelle Unterweser-Elbe“ zusammengelegt. Die Berufsfeuerwehr Cuxhaven betreibt im Stadtgebiet eine eigene Feuer- und Rettungsleitstelle.
+|-
+|Leitstelle Gifhorn
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Gifhorn]]
+|
+* [[Gifhorn]]
+* Kreis
+|
+* 1.607,9&nbsp;km²
+* 174.401
+|
+Geplanter virtueller Leitstellenverbund mit den Landkreisen Celle, Uelzen und Lüchow-Dannenberg
+|-
+|Kommunale Regionalleitstelle Göttingen
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Göttingen|Stadt Göttingen]]
+
+* [[Landkreis Göttingen]]
+|
+* [[Göttingen]]
+* [[Feuerwehr Göttingen|Berufsfeuerwehr Göttingen]]
+|
+* 1.117,5&nbsp;km²
+* 450.000
+|Die KRL wurde im Dezember 2017 in Betrieb genommen<ref>{{Internetquelle |url=https://feuerwehr.goettingen.de/magazin/artikel.php?artikel=481&menuid=13&topmenu=5 |titel=Feuerwehr Göttingen – Regionalleitstelle nimmt ihren Betrieb auf |werk= |hrsg= |datum= |zugriff=2017-12-24 |sprache=de}}</ref>
+|-
+|Leitstelle Goslar
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Goslar]]
+|
+* [[Goslar]]
+* Kreis
+|
+* 965,1&nbsp;km²
+* 148.091
+|
+|-
+|Leitstelle Hameln
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+* Polizei
+|
+* [[Landkreis Hameln-Pyrmont]] (HM)
+* [[Landkreis Holzminden]] (HOL)
+|
+* [[Hameln]]
+* Kreis/Polizei
+|
+* 1.488,7&nbsp;km²
+* 233.970
+|
+Kooperative Regionalleitstelle Weserbergland. Der Zuständigkeitsbereich der Polizei umfasst zusätzlich die Landkreise Schaumburg und Nienburg sowie Stadt und Landkreis Hildesheim
+
+|-
+|Leitstelle Hannover
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Region Hannover]]
+|
+* [[Hannover]]
+* [[Feuerwehr Hannover|Berufsfeuerwehr]]
+|
+* 2.290,5&nbsp;km²
+* 1.129.201
+|
+Es ist ein Zusammenschluss der Feuer- und Rettungsleitstelle mit der Polizeileitstelle geplant.
+|-
+|Leitstelle Harburg
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Harburg]]
+|
+* [[Winsen (Luhe)]]
+* Kreis
+|
+* 1.244,6&nbsp;km²
+* 243.888
+|
+Die Leitstelle arbeitet in einem virtuellen Leitstellenverbund mit den Leitstellen Heidekreis und Rotenburg zusammen.
+|-
+|Leitstelle Helmstedt
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Helmstedt]]
+|
+* [[Helmstedt]]
+* Kreis
+|
+* 673,8&nbsp;km²
+* 95.871
+|
+Fusion mit der Leitstelle Stadt Wolfsburg ist 2012 durchgeführt worden<ref>{{Internetquelle|url=http://www.kreisfeuerwehrverband-helmstedt.de/einsatzleitstelle/|titel=Kreisfeuerwehrverband Helmstedt e.V. – Einsatzleitstelle|sprache=de|zugriff=2017-07-17}}</ref>. Standort Wolfsburg.
+|-
+|Florian Hildesheim
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Hildesheim]]
+* Stadt Hildesheim
+|
+* [[Hildesheim]]
+* Berufsfeuerwehr/Kreis
+|
+* 1.205,8&nbsp;km²
+* 288.623
+|
+Die Stadt Hildesheim ist rechtlich bzgl. Feuerwehr, Rettungsdienst und Katastrophenschutz selbstständig.
+|-
+|Florian Lüchow
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Lüchow-Dannenberg]]
+|
+* [[Lüchow (Wendland)]]
+* Kreis
+|
+* 1.220,5&nbsp;km²
+* 50.465
+|Geplanter virtueller Leitstellenverbund mit den Landkreisen Celle, Uelzen und Gifhorn, ab 2011 Umstellung auf digitale Alarmierung. Digitale Alarmierung aktiv, zurzeit noch Testphase (Stand:08/2011)
+|-
+|Leitstelle Lüneburg
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+* Polizei
+|
+* [[Landkreis Lüneburg]]
+|
+* [[Lüneburg]]
+* Kreis
+|
+* 1.323,4&nbsp;km²
+* 176.445
+|Seit August 2015 wurden die FEL (Feuerwehr Einsatz- und Rettungsleitstelle) sowie die Leitstelle der Polizei zur KLL (Kooperative Leitstelle Lüneburg) zusammengeführt. Hier laufen alle polizeilichen Notrufe der „110“ aus den Landkreisen Celle, Heidekreis, Rotenburg, Stade, Lüneburg, Lüchow-Dannenberg, Uelzen und Harburg auf.  Außerdem erreichen die Notrufe über 112 aus dem Landkreis Lüneburg hier ihr Ziel.
+|-
+|Leitstelle Northeim
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Northeim]]
+|
+* [[Northeim]]
+* Kreis
+|
+* 1.266,9&nbsp;km²
+* 144.044
+|
+|-
+|Leitstelle Oldenburg
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+* Polizei
+|
+* [[Oldenburg (Oldenburg)]]
+* [[Landkreis Oldenburg]]
+* [[Landkreis Cloppenburg]]
+* [[Landkreis Wesermarsch]]
+* [[Landkreis Ammerland]]
+* [[Delmenhorst]]
+|
+* [[Oldenburg (Oldenburg)|Oldenburg]]
+* AÖR Großleitstelle Oldenburger Land/Polizei
+|
+* 4.196,7&nbsp;km²
+* 730.232
+|
+Inbetriebnahme im Juli 2012 erfolgt / Es werden auch die Polizeieinsätze in den Kreisen Cuxhaven, Diepholz, Friesland, Osterholz, Vechta und Verden sowie in der Stadt Wilhelmshaven koordiniert.
+|-
+|Leitstelle Osnabrück
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+* Polizei
+|
+* [[Osnabrück]]
+* [[Landkreis Osnabrück]]
+|
+* [[Osnabrück]]
+* Regionalleitstelle Osnabrück kAÖR
+|
+* 2.241,4&nbsp;km²
+* 521.722
+|
+Im Zuge der Neugliederung der [[Liste der BOS-Leitstellen#Niedersachsen|Leitstellen im Land Niedersachsen]] wurde im Jahr 2012 eine neue kooperative Regionalleitstelle als [[Anstalt des öffentlichen Rechts (Deutschland)|kommunale Anstalt des öffentlichen Rechts]] (kAöR) eingeweiht. Sie befindet sich nun, gemeinsam mit der [[Polizeieinsatzzentrale|Leitstelle der Polizei]], im Kreishaus des [[Landkreis Osnabrück|Landkreises]] am Schölerberg und ist für Feuerwehr und Rettungsdienst in Stadt und Landkreis Osnabrück zuständig. Die Leitstelle in der Hauptfeuerwache wird seitdem nur noch als Reserve vorgehalten. {{Siehe auch|Feuerwehr Osnabrück#Leitstelle|titel1=„Leitstelle“ im Artikel Feuerwehr Osnabrück}}
+|-
+|Leitstelle Osterode
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* ehemaliger [[Landkreis Osterode am Harz]]
+|
+* [[Osterode am Harz]]
+* Kreis
+|
+* 636,0&nbsp;km²
+* 80.300
+|
+|-
+|Leitstelle Ostfriesland
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+* Polizei
+|
+* [[Landkreis Aurich]]
+* [[Landkreis Wittmund]]
+* [[Landkreis Leer]]
+* Stadt [[Emden]] (nur Polizei)
+|
+* [[Wittmund|Stadt Wittmund]]
+* Kooperative Regionalleitstelle Ostfriesland AöR
+|
+* 3.029.9&nbsp;km²
+* 413.123
+|Die „Kooperative Regionalleitstelle Ostfriesland AöR“ mit Sitz in Wittmund ist zuständig für die Landkreise Aurich, Leer und Wittmund. Zusätzlich betreut die polizeiliche Seite auch die Stadt Emden.
+Quelle: <ref>{{Internetquelle |url=https://www.krlo.de/ |titel=Kooperative Regionalleitstelle Ostfriesland – Leitstelle Polizei, Feuerwehr und Rettungsdienst |sprache=de-DE |abruf=2022-05-05}}</ref>
+|-
+|Leitstelle Rotenburg
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Rotenburg (Wümme)]]
+|
+* [[Zeven]]
+* Kreis
+|
+* 2.070,0&nbsp;km²
+* 165.074
+|
+Die Leitstelle arbeitet in einem virtuellen Leitstellenverbund mit Leitstelle Heidekreis und Florian Harburg.
+|-
+|Florian Salzgitter
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Salzgitter]]
+|
+* [[Lebenstedt|Salzgitter-Lebenstedt]]
+* Berufsfeuerwehr
+|
+* 224,0&nbsp;km²
+* 105.320
+|
+
+
+
+|-
+|Leitstelle Schaumburg
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Schaumburg]]
+* [[Landkreis Nienburg/Weser]]
+|
+* [[Stadthagen]]
+* Kreise
+|
+* 2.074,5&nbsp;km²
+* 289.067
+|
+|-
+|Florian Stade
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Stade]]
+|
+* [[Stade]]
+* Kreis
+|
+* 1.266,0&nbsp;km²
+* 197.091
+|
+|-
+|Leitstelle Uelzen
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Uelzen]]
+|
+* [[Uelzen]]
+* Kreis/DRK
+|
+* 1.453,9&nbsp;km²
+* 95.983
+|Leitstellenverbund mit den Landkreisen Celle, Gifhorn und Lüchow-Dannenberg
+|-
+|Florian Vechta
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Vechta]]
+|
+* [[Vechta]]
+* Kreis
+|
+* 812,5&nbsp;km²
+* 134.404
+|
+|-
+|Leitstelle Verden
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Verden]]
+|
+* [[Verden (Aller)]]
+* Kreis
+|
+* 787,7&nbsp;km²
+* 133.767
+|
+|-
+|Florian Wolfsburg
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Wolfsburg]]
+|
+* [[Wolfsburg]]
+* [[Feuerwehr Wolfsburg|Berufsfeuerwehr]]
+|
+* 204,0&nbsp;km²
+* 120.009
+|
+Fusion mit der Leitstelle LK Helmstedt ist beschlossen. Standort Wolfsburg.
+|- style="background:#FFFFDD;"
+! colspan="6" |
+
+=== Nordrhein-Westfalen ===
+|-
+|Leitstelle Aachen
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Städteregion Aachen]]
+|
+* [[Aachen]]
+* [[Feuerwehr Aachen|Berufsfeuerwehr]]
+|
+* 707,12&nbsp;km²
+* {{EWZ|DE-NW|05334}}
+|
+|-
+|Leitstelle Berga
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Rheinisch-Bergischer Kreis]]
+|
+* [[Bergisch Gladbach]]
+* Kreis
+|
+* 438&nbsp;km²
+* {{EWZ|DE-NW|05378}}
+|
+|-
+|Leitstelle Bielefeld
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Bielefeld]]
+|
+* [[Bielefeld]]
+* [[Feuerwehr Bielefeld|Berufsfeuerwehr]]
+|
+* 257,8&nbsp;km²
+* {{EWZ|DE-NW|05711000}}
+|
+|-
+|Florian Bochum
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Bochum]]
+|
+* [[Bochum]]
+* [[Feuerwehr Bochum|Berufsfeuerwehr]]
+|
+* 145,4&nbsp;km²
+* {{EWZ|DE-NW|05911000}}
+|
+|-
+|Leitstelle Bonn
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Bonn]]
+|
+* [[Bonn]]
+* [[Feuerwehr Bonn|Berufsfeuerwehr]]
+|
+* 141,2&nbsp;km²
+* {{EWZ|DE-NW|05314000}}
+|
+|-
+|Leitstelle Borken
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Kreis Borken]]
+|
+* [[Borken]]
+* Kreis
+|
+* 1.418,8&nbsp;km²
+* {{EWZ|DE-NW|05554}}
+|
+|-
+|Florian Bottrop
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Bottrop]]
+|
+* [[Bottrop]]
+* Berufsfeuerwehr
+|
+* 100,7&nbsp;km²
+* {{EWZ|DE-NW|05512000}}
+|
+|-
+|Florian Coesfeld
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Kreis Coesfeld]]
+|
+* [[Coesfeld]]
+* Kreis
+|
+* 1.110,1&nbsp;km²
+* {{EWZ|DE-NW|05558}}
+| Seit dem 1. Jan. 2014 Leitstelle Coesfeld!
+|-
+|Leitstelle Düsseldorf
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Düsseldorf]]
+|
+* [[Düsseldorf]]
+* [[Feuerwehr Düsseldorf|Berufsfeuerwehr]]
+|
+* 217,0&nbsp;km²
+* {{EWZ|DE-NW|05111000}}
+|
+|-
+|Florian Duisburg
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Duisburg]]
+|
+* [[Duisburg]]
+* [[Feuerwehr Duisburg|Berufsfeuerwehr]]
+|
+* 232,8&nbsp;km²
+* {{EWZ|DE-NW|05112000}}
+|
+|-
+|Leitstelle Dortmund
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Dortmund]]
+|
+* [[Dortmund]]
+* [[Feuerwehr Dortmund|Berufsfeuerwehr]]
+|
+* 280,3&nbsp;km²
+* {{EWZ|DE-NW|05913000}}
+|
+|-
+|Leitstelle Kreis Düren
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Kreis Düren]]
+|
+* [[Stockheim (Kreuzau)|Kreuzau-Stockheim]]
+* Kreis
+|
+* 940,6&nbsp;km²
+* {{EWZ|DE-NW|05358}}
+|Bei Einführung der OPTA-Funkrufnamen von Florian Düren in Leitstelle Kreis Düren geändert
+|-
+|Leitstelle Ennepe
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Ennepe-Ruhr-Kreis]]
+|
+* [[Schwelm]]
+* Kreis
+|
+* 408,3&nbsp;km²
+* {{EWZ|DE-NW|05954}}
+|
+|-
+|Leitstelle Rhein-Erft Kreis
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Rhein-Erft-Kreis]]
+|
+* [[Kerpen]]
+* Feuerwehr
+|
+* 704,7&nbsp;km²
+* {{EWZ|DE-NW|05362}}
+|
+|-
+|Leitstelle Essen
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Essen]]
+|
+* [[Essen]]
+* Berufsfeuerwehr
+|
+* 210,4&nbsp;km²
+* {{EWZ|DE-NW|05113000}}
+|
+Bei Einführung der OPTA-Funkrufnamen von Florian Essen in Leitstelle Essen geändert
+|-
+|Leitstelle Euskirchen
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Kreis Euskirchen]]
+|
+* [[Euskirchen]]
+* Kreis
+|
+* 1.249,0&nbsp;km²
+* {{EWZ|DE-NW|05366}}
+|
+|-
+|Florian Gelsenkirchen
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Gelsenkirchen]]
+|
+* [[Gelsenkirchen]]
+* [[Feuerwehr Gelsenkirchen|Berufsfeuerwehr]]
+|
+* 104,8&nbsp;km²
+* {{EWZ|DE-NW|05513000}}
+|
+|-
+|Leitstelle Gütersloh
+|
+* [[Feuerwehr Gütersloh|Feuerwehr]]
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Kreis Gütersloh]]<ref>[https://www.nw.de/lokal/kreis_guetersloh/guetersloh/22543690_Einsatzleitstelle-Kreis-setzt-kuenftig-auf-eigenes-Personal.html nw online] abgerufen am 21. Jan. 2020</ref>
+|
+* [[Gütersloh]]
+* Kreis
+|
+* 967,2&nbsp;km²
+* {{EWZ|DE-NW|05754}}
+|Bei Einführung der OPTA-Funkrufnamen von Florian Gütersloh in Leitstelle Gütersloh geändert. Das Personal wird vom Kreis Gütersloh gestellt.
+|-
+|Florian Hagen
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Hagen]]
+|
+* [[Hagen]]
+* [[Feuerwehr Hagen|Berufsfeuerwehr]]
+|
+* 160,4&nbsp;km²
+* {{EWZ|DE-NW|05914000}}
+|
+|-
+|Florian Hamm
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Hamm]]
+|
+* [[Hamm]]
+* [[Feuerwehr Hamm|Berufsfeuerwehr]]
+|
+* 226,3&nbsp;km²
+* {{EWZ|DE-NW|05915000}}
+|
+|-
+|Leitstelle Kreis Heinsberg
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Kreis Heinsberg]]
+|
+* [[Erkelenz]]
+* Kreis
+|
+* 628,0&nbsp;km²
+* {{EWZ|DE-NW|05370}}
+|
+* Bei Einführung der OPTA-Funkrufnamen von Florian Heinsberg in Leitstelle Kreis Heinsberg geändert
+|-
+|Leitstelle Herford
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Kreis Herford]]
+|
+* [[Eilshausen|Hiddenhausen-Eilshausen]]
+* Kreis
+|
+* 450,0&nbsp;km²
+* {{EWZ|DE-NW|05758}}
+|
+|-
+|Florian Herne
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Herne]]
+|
+* [[Herne]]
+* [[Feuerwehr Herne|Berufsfeuerwehr]]
+|
+* 51,4&nbsp;km²
+* {{EWZ|DE-NW|05916000}}
+|
+|-
+|Leitstelle Kreis Höxter
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Kreis Höxter]]
+|
+* [[Brakel]]
+* Kreis
+|
+* 1.200,0&nbsp;km²
+* {{EWZ|DE-NW|05762}}
+|
+Geänderter Leitstellenname (Florian Höxter -> Leitstelle Kreis Höxter) und geänderte Funkrufnamen ab dem 1. Oktober 2012 zur Vorbereitung auf die Einführung des Digitalfunks 2013.
+|-
+|Leitstelle Kleve
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Kreis Kleve]]
+|
+* [[Kleve]]
+* Kreis
+|
+* 1.232,1&nbsp;km²
+* {{EWZ|DE-NW|05154}}
+|
+|-
+|Florian Köln
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Köln]]
+|
+* [[Köln]]
+* [[Feuerwehr Köln|Berufsfeuerwehr]]
+|
+* 405,2&nbsp;km²
+* {{EWZ|DE-NW|05315000}}
+|
+|-
+|Florian Krefeld
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Krefeld]]
+|
+* [[Krefeld]]
+* Berufsfeuerwehr
+|
+* 137,9&nbsp;km²
+* {{EWZ|DE-NW|05114000}}
+|
+|-
+|Florian Leverkusen
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Leverkusen]]
+|
+* [[Leverkusen]]
+* Berufsfeuerwehr
+|
+* 78,9&nbsp;km²
+* {{EWZ|DE-NW|05316000}}
+|
+|-
+|Leitstelle Lippe
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+* Ärztlicher Bereitschaftsdienst
+|
+* [[Kreis Lippe]]
+|
+* [[Lemgo]]
+* Kreis Lippe
+|
+* 1.246,4&nbsp;km²
+* {{EWZ|DE-NW|05766}}
+|
+|-
+|Leitstelle Mark
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Märkischer Kreis]]
+|
+* [[Altena]]
+* Kreis
+|
+* 1.059,0&nbsp;km²
+* {{EWZ|DE-NW|05962}}
+|
+Der Notruf 112 läuft aus dem gesamten Kreisgebiet in der Leitstelle Mark auf. Lediglich Notrufe aus dem Festnetz im Bereich der BF Iserlohn werden in Iserlohn angenommen und bearbeitet. Nach Umstellung auf die neuen Funkrufnamen jetzt „Leitstelle Mark“
+|-
+|Leitstelle Kreis Mettmann
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+* Polizei
+|
+* [[Kreis Mettmann]]
+|
+* [[Mettmann]]
+* Kreis
+|
+* 408,0&nbsp;km²
+* {{EWZ|DE-NW|05158}}
+|
+Aus Alt-Erkrath und Unterfeldhaus laufen Notrufe oftmals in Düsseldorf auf. Daher gilt dort zusätzlich die Notrufnummer (0211)203030. Der Notruf der Städte Langenfeld und Monheim wird in der Stadt Langenfeld aufgrund gleicher Vorwahl abgefragt und disponiert.
+|-
+|Leitstelle Minden
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Kreis Minden-Lübbecke]]
+|
+* [[Hille]]
+* Kreis
+|
+* 1.152&nbsp;km²
+* {{EWZ|DE-NW|05770}}
+|Seit 2022 Neubau der Leitstelle in Hille im FTZ des Kreises Minden-Lübbecke
+|-
+|Florian Mönchengladbach
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Mönchengladbach]]
+|
+* [[Mönchengladbach]]
+* [[Feuerwehr Mönchengladbach|Berufsfeuerwehr]]
+|
+* 170,5&nbsp;km²
+* {{EWZ|DE-NW|05116000}}
+|
+|-
+|Florian Mülheim
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Mülheim an der Ruhr]]
+|
+* [[Mülheim an der Ruhr]]
+* [[Feuerwehr Mülheim|Berufsfeuerwehr]]
+|
+* 91,3&nbsp;km²
+* {{EWZ|DE-NW|05117000}}
+|
+Aufgrund der identischen Vorwahl mit Oberhausen (0208) gilt für Krankentransporte die 19212 statt der 19222
+|-
+|Leitstelle Münster
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Münster]]
+|
+* [[Münster]]
+* [[Feuerwehr Münster|Berufsfeuerwehr]]
+|
+* 302,9&nbsp;km²
+* {{EWZ|DE-NW|05515000}}
+|
+|-
+|Leitstelle Rhein-Kreis-Neuss
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Rhein-Kreis Neuss]]
+|
+* [[Neuss]]
+* Kreis
+|
+* 576&nbsp;km²
+* {{EWZ|DE-NW|05162}}
+|
+|-
+|Leitstelle Oberberg
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Oberbergischer Kreis]]
+|
+* [[Kotthausen (Marienheide)|Marienheide-Kotthausen]]
+* Kreis
+|
+* 918,2&nbsp;km²
+* {{EWZ|DE-NW|05374}}
+|
+|-
+|Florian Oberhausen
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Oberhausen]]
+|
+* [[Oberhausen]]
+* Berufsfeuerwehr
+|
+* 77,0&nbsp;km²
+* {{EWZ|DE-NW|05119000}}
+|
+|-
+|Leitstelle Olpe
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Kreis Olpe]]
+|
+* [[Olpe]]
+* Kreis
+|
+* 710,0&nbsp;km²
+* {{EWZ|DE-NW|05966}}
+|
+|-
+|Leitstelle Paderborn
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Kreis Paderborn]]
+|
+* [[Ahden|Büren-Ahden]]
+* Kreis
+|
+* 1.245,3&nbsp;km²
+* {{EWZ|DE-NW|05774}}
+|
+|-
+|Florian Recklinghausen
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Kreis Recklinghausen]]
+|
+* [[Recklinghausen]]
+* Kreis
+|
+* 760,4&nbsp;km²
+* {{EWZ|DE-NW|05562}}
+|
+|-
+|Leitstelle Remscheid
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Remscheid]]
+|
+* [[Remscheid]]
+* [[Feuerwehr Remscheid|Berufsfeuerwehr]]
+|
+* 74,6&nbsp;km²
+* {{EWZ|DE-NW|05120000}}
+|
+Florian Remscheid wurde zu Leitstelle Remscheid
+|-
+|Leitstelle Rhein-Sieg
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Rhein-Sieg-Kreis]]
+|
+* [[Siegburg]]
+* Kreis
+|
+* 1.153,0&nbsp;km²
+* {{EWZ|DE-NW|05382}}
+|
+|-
+|Leitstelle Sauerland
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Hochsauerlandkreis]]
+|
+* [[Meschede]]
+* Kreis
+|
+* 1.958,8&nbsp;km²
+* {{EWZ|DE-NW|05958}}
+|
+|-
+|Leitstelle SiWi<ref>[http://feuerwehr-siegen.eu/index.php?option=com_content&view=article&id=1&Itemid=51 feuerwehr-siegen.eu]</ref>
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Kreis Siegen-Wittgenstein]]
+|
+* [[Siegen-Weidenau]]
+* Kreis
+|
+* 1.131,6&nbsp;km²
+* {{EWZ|DE-NW|05970}}
+|
+Die Leitstelle heißt jetzt Leitstelle Siegen-Wittgenstein (LS Si-Wi). Es werden neue Funkrufnamen in Vorbereitung auf den Digitalfunk genutzt.
+|-
+|Leitstelle Kreis Soest
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Kreis Soest]]
+|
+* [[Soest]]
+* Kreis
+|
+* 1.327,0&nbsp;km²
+* {{EWZ|DE-NW|05974}}
+|
+|-
+|Leitstelle Kreis Steinfurt
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Kreis Steinfurt]]
+|
+* [[Steinfurt]]
+* Kreis
+|
+* 1.791,3&nbsp;km²
+* {{EWZ|DE-NW|05566}}
+|
+Florian Steinfurt heißt seit dem 1. Oktober 2012 Leitstelle Kreis Steinfurt.
+|-
+|Leitstelle Unna
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Kreis Unna]]
+|
+* [[Unna]]
+* Kreis
+|
+* 542,6&nbsp;km²
+* {{EWZ|DE-NW|05978}}
+|
+Die Berufsfeuerwehr Lünen koordiniert ihre FW-Einsätze selbstständig
+|-
+|Florian Viersen
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Kreis Viersen]]
+|
+* [[Viersen]]
+* Feuerwehr
+|
+* 563.3&nbsp;km²
+* {{EWZ|DE-NW|05166}}
+|
+|-
+|Leitstelle Kreis Warendorf
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Kreis Warendorf]]
+|
+* [[Warendorf]]
+* Kreis
+|
+* 1.316,8&nbsp;km²
+* {{EWZ|DE-NW|05570}}
+|
+* Die Feuerwehr der Stadt [[Ahlen]] fragt den Notruf im Telefonfestnetz von Ahlen selber ab (FRN: Flo Ahlen). Der Mobilfunk läuft komplett in Warendorf auf.
+* Neuer Leitstellenname nach der Umstellung auf OPTA
+|-
+|Leitstelle Wesel
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Kreis Wesel]]
+|
+* [[Wesel]]
+* Kreis
+|
+* 1.042,4&nbsp;km²
+* {{EWZ|DE-NW|05170}}
+|
+|-
+|Leitstelle Wupper
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Solingen]] (SG)
+* [[Wuppertal]] (W)
+|
+* [[Wuppertal]]
+* Berufsfeuerwehr
+|
+* 257,9&nbsp;km²
+* {{EWZ|DE-NW|05124000}}
+|
+Die Leitstelle entstand im März 2007 aus den beiden selbstständigen Leitstellen Solingen und Wuppertal.
+|- style="background:#FFFFDD;"
+! colspan="6" |
+
+=== Rheinland-Pfalz ===
+|-
+|Leitstelle Kaiserslautern
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Kaiserslautern]]
+* [[Kaiserslautern]]
+* [[Landkreis Kusel]]
+* [[Donnersbergkreis]]
+|
+* [[Kaiserslautern]]
+* [[Feuerwehr Kaiserslautern|Berufsfeuerwehr]]
+|
+* 1.998,46&nbsp;km²
+* 361.796
+| Funkrufnamen: Leitstelle Kaiser
+|-
+|Leitstelle Koblenz
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Mayen-Koblenz]]
+* [[Koblenz]]
+* [[Landkreis Ahrweiler]]
+* [[Landkreis Cochem-Zell]]
+* [[Rhein-Hunsrück-Kreis]]
+|
+* [[Koblenz]]
+* [[Feuerwehr Koblenz|Berufsfeuerwehr]]
+|
+* 3.393,51&nbsp;km²
+* 631.936
+|
+|-
+|Leitstelle Ludwigshafen
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Ludwigshafen am Rhein]]
+* [[Rhein-Pfalz-Kreis]]
+* [[Frankenthal (Pfalz)|Frankenthal]]
+* [[Speyer]]
+* [[Neustadt an der Weinstraße]]
+* [[Landkreis Bad Dürkheim]]
+|
+* [[Ludwigshafen am Rhein]]
+* [[Feuerwehr Ludwigshafen|Berufsfeuerwehr]]
+|
+* 1.180,84&nbsp;km²
+* 598.948
+|
+Inbetriebnahme ILS am 18. Mai 2018 in Kooperation mit dem DRK<ref>[https://www.rheinpfalz.de/lokal/ludwigshafen_artikel,-ludwigshafen-integrierte-leitstelle-eingeweiht-_arid,1306196.html www.rheinpfalz.de] abgerufen am 13. Juni 2022</ref>
+|-
+|Leitstelle Mainz
+|rowspan="3"|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|rowspan="3"|
+* [[Landkreis Mainz-Bingen]]
+* [[Mainz]]
+* [[Worms]]
+* [[Landkreis Alzey-Worms]]
+* [[Landkreis Bad Kreuznach]]
+|
+* [[Mainz-Gonsenheim]]
+* DRK
+|rowspan="3"|
+* 2.263,80&nbsp;km²
+* 819.066
+|rowspan="3"|Ab Frühjahr 2025 werden die derzeitigen drei Standorte technisch zusammengeschaltet. Die Notrufabfrage erfolgt ab dann als integrierte Leitstelle über die Notrufnummer 112 gleichberechtigt von allen Standorten. Bis zum Jahr 2030 soll der Betrieb dann an nur noch einem Standort zentralisiert werden.
+|-
+|Florian Mainz (Leitstelle)
+|
+* [[Mainz-Bretzenheim]]
+* [[Feuerwehr Mainz|Berufsfeuerwehr]]
+|-
+|Florian Worms
+|
+* [[Worms]]
+* Feuerwehr
+|-
+|Leitstelle Montabaur
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Altenkirchen]]
+* [[Westerwaldkreis]]
+* [[Rhein-Lahn-Kreis]]
+* [[Landkreis Neuwied]]
+|
+* [[Montabaur]]
+* DRK
+|
+* 3.039,94&nbsp;km²
+* 651.370
+|
+|-
+|Leitstelle Landau
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Südliche Weinstraße]]
+* [[Landau in der Pfalz]]
+* [[Landkreis Germersheim]]
+* [[Landkreis Südwestpfalz]]
+* [[Pirmasens]]
+* [[Zweibrücken]]
+|
+* [[Landau in der Pfalz]]
+* DRK
+|
+* 2.271,78&nbsp;km²
+* 459.512
+|
+|-
+|Leitstelle Trier
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Trier-Saarburg]]
+* [[Trier]]
+* [[Landkreis Bernkastel-Wittlich]]
+* [[Eifelkreis Bitburg-Prüm]]
+* [[Landkreis Vulkaneifel]]
+* [[Landkreis Birkenfeld]]
+|
+* [[Trier]]
+* [[Feuerwehr Trier|Berufsfeuerwehr]]
+|
+* 5.702,58&nbsp;km²
+* 629.899
+|
+Der Landkreis Birkenfeld wird seit dem 20. Dezember 2024 von der Leitstelle Trier disponiert<ref>[https://trier-saarburg.de/2024/12/20/landkreis-birkenfeld-wird-teil-des-leitstellenbereichs-trier/] abgerufen am 20. Dezember 2024</ref>
+
+|- style="background:#FFFFDD;"
+! colspan="6" |
+
+=== Saarland ===
+|-
+|Saarfürst (FLZ)
+|
+* Polizei
+|
+* [[Regionalverband Saarbrücken]]
+* [[Landkreis Merzig-Wadern]]
+* [[Landkreis Neunkirchen]]
+* [[Landkreis Saarlouis]]
+* [[Saarpfalz-Kreis]]
+* [[Landkreis St. Wendel]]
+|
+* Saarbrücken
+* Innenministerium
+|
+* 2.571,52&nbsp;km²
+* 992.098
+|
+Seit 2010 zentrale Annahmestelle des Polizeinotrufes 110
+|-
+|Leitstelle Saar
+|
+* Rettungsdienst
+* Feuerwehr
+* Katastrophenschutz
+|
+* [[Regionalverband Saarbrücken]]
+* [[Landkreis Merzig-Wadern]]
+* [[Landkreis Neunkirchen]]
+* [[Landkreis Saarlouis]]
+* [[Saarpfalz-Kreis]]
+* [[Landkreis St. Wendel]]
+|
+* [[Saarbrücken]]
+* Zweckverband für Rettungsdienst und Feuerwehralarmierung<ref>{{Webarchiv|url=http://www.rzv-saar.de/rzv/ueberuns.php |wayback=20101005001756 |text=Aufgaben des RZV }}</ref>
+|
+* 2.571,52&nbsp;km²
+* 992.098
+| rowspan="2" |
+Leitstelle Saar seit 2016 zentrale Annahmestelle des Notrufes 112. 
+
+Landesweite [[Hausnotruf]]zentrale für DRK, MHD und ASB.
+
+
+Alarmierungen von Feuerwehr und Katastrophenschutz im Regionalverband Saarbrücken eigenständig durch Leitstelle der Berufsfeuerwehr.
+
+|-
+|Florian Saarbrücken
+|
+* Feuerwehr
+* Katastrophenschutz
+|
+* [[Regionalverband Saarbrücken]]
+|
+* [[Saarbrücken]]
+* [[Feuerwehr Saarbrücken|Berufsfeuerwehr]]
+|
+* 410,61&nbsp;km²
+* 325.978
+|- style="background:#FFFFDD;"
+! colspan="6" |
+
+=== Sachsen ===
+|-
+|Leitstelle Leipzig
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Leipzig]] (L)
+* [[Landkreis Leipzig]] (L)
+* [[Landkreis Nordsachsen]] (TDO)
+|
+* [[Leipzig]]
+* [[Feuerwehr Leipzig|Berufsfeuerwehr]]
+|
+* 3.964,2&nbsp;km²
+* 996.960
+|
+Inbetriebnahme 2016
+|-
+|Leitstelle Chemnitz
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Chemnitz]] (C)
+* [[Landkreis Mittelsachsen]] (FG)
+* [[Erzgebirgskreis]] (ERZ)
+|
+* [[Chemnitz]]
+* Berufsfeuerwehr
+|
+<br />
+
+* 4.161,6&nbsp;km²
+* 956.085
+|
+Inbetriebnahme 2017<ref>{{Webarchiv|url=http://www.chemnitz.de/chemnitz/de/aktuelles/presse/pressemitteilungen/2017/163.html |wayback=20170420045914 |text=chemnitz.de }} abgerufen am 19. April 2017.</ref>
+|-
+|Leitstelle Zwickau
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Zwickau]] (Z)
+* [[Vogtlandkreis]] (V)
+|
+* [[Zwickau]]
+* Berufsfeuerwehr
+|
+* 2.259,2&nbsp;km²
+* 600.229
+|
+Inbetriebnahme 2014
+|-
+|Leitstelle Dresden
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Dresden]] (DD)
+* [[Landkreis Meißen]] (MEI)
+* [[Landkreis Sächsische Schweiz-Osterzgebirge]] (PIR)
+|
+* [[Dresden]]
+* [[Feuerwehr Dresden|Berufsfeuerwehr]]
+|
+* 3.434,3&nbsp;km²
+* 1.020.491
+|
+Inbetriebnahme 2013
+|-
+|Leitstelle Ostsachsen
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+* Ärztlicher Bereitschaftsdienst
+|
+* [[Landkreis Bautzen]] (BZ)
+* [[Landkreis Görlitz]] (GR)
+|
+* [[Hoyerswerda]]
+* [[Feuerwehr Bautzen|Berufsfeuerwehr]]
+|
+* 4.496,7&nbsp;km²
+* 613.948
+|
+Inbetriebnahme 2013
+|-
+|- style="background:#FFFFDD;"
+! colspan="6" |
+
+=== Sachsen-Anhalt ===
+|-
+|Leitstelle Altmark
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Altmarkkreis Salzwedel]]
+* [[Landkreis Stendal]]
+|
+* [[Stendal]]
+* Kreis
+|
+* 4.715,5&nbsp;km²
+* 220.787
+|
+|-
+|Leitstelle Anhalt-Bitterfeld
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Anhalt-Bitterfeld]]
+|
+* [[Bitterfeld-Wolfen]]
+* Kreis
+|
+* 1.452,7&nbsp;km²
+* 184.877
+|
+|-
+|Leitstelle Börde
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+* THW
+|
+* [[Landkreis Börde]]
+|
+* [[Haldensleben]]
+* Kreis
+|
+* 2.366,2&nbsp;km²
+* 185.457
+|
+|-
+|Leitstelle Burgenlandkreis
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Burgenlandkreis]]
+|
+* [[Naumburg (Saale)]]
+* Kreis
+|
+* 1.413,4&nbsp;km²
+* 201.932
+|
+|-
+|Leitstelle Dessau
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Dessau-Roßlau]]
+|
+* [[Dessau-Roßlau]]
+* [[Feuerwehr Dessau-Roßlau|Berufsfeuerwehr]]
+|
+* 244,6&nbsp;km²
+* 89.934
+|
+|-
+|Leitstelle Halle
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Halle (Saale)]]
+* nördlicher [[Saalekreis]]
+|
+* [[Halle (Saale)]]
+* [[Feuerwehr Halle (Saale)|Berufsfeuerwehr]]
+|
+* 135,0&nbsp;km²
+* 233.705
+|
+Die Leitstelle ist auch für den nördlichen Saalekreis zuständig.
+|-
+|Leitstelle Harz
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Harz]]
+|
+* [[Halberstadt]]
+* Eigenbetrieb Kreis
+|
+* 2.104,0&nbsp;km²
+* 241.017
+|
+|-
+|Leitstelle Jerichower Land
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Jerichower Land]]
+|
+* [[Burg (bei Magdeburg)]]
+* Kreis
+|
+* 1.576,7&nbsp;km²
+* 99.693
+|Inbetriebnahme Neubau März 2015
+|-
+|Leitstelle Magdeburg
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+* THW
+|
+* [[Magdeburg]]
+|
+* [[Magdeburg]]
+* [[Feuerwehr Magdeburg|Berufsfeuerwehr]]
+|
+* 201,0&nbsp;km²
+* 232.364
+|
+|-
+|Leitstelle Mansfeld-Südharz
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Mansfeld-Südharz]]
+|
+* [[Sangerhausen]]
+* Kreis
+|
+* 1.448,7&nbsp;km²
+* 158.223
+|
+|-
+|Leitstelle Saalekreis
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* südlicher [[Saalekreis]]
+|
+* [[Merseburg]]
+* Kreis
+|
+* 1.433,3&nbsp;km²
+* 203.989
+|
+Die Leitstelle ist nur für den ehem. [[Landkreis Merseburg-Querfurt]] bzw. heutigen südlichen [[Saalekreis]] zuständig.
+|-
+|Leitstelle Salzlandkreis
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Salzlandkreis]]
+|
+* [[Staßfurt]]
+* Kreis
+|
+* 1.425,9&nbsp;km²
+* 219.222
+|
+|-
+|Leitstelle Wittenberg
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Wittenberg]]
+|
+* [[Lutherstadt Wittenberg]]
+* Kreis
+|
+* 1.929,9&nbsp;km²
+* 142.906
+|
+|- style="background:#FFFFDD;"
+! colspan="6" |
+
+=== Schleswig-Holstein ===
+|-
+|Leitstelle Nord
+Polizei: Nordwind
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+* Polizei
+|
+* [[Kreis Nordfriesland]] (NF)
+* [[Kreis Schleswig-Flensburg]] (SL)
+* [[Flensburg]] (FL)
+|
+* [[Harrislee]]
+* Zweckverband/Polizei
+|
+* 4.176,6&nbsp;km²
+* 453.620
+|
+Inbetriebnahme 3. September 2009
+|-
+|Leitstelle West
+Polizei: Westwind
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+* Polizei
+|
+* [[Kreis Pinneberg]] (PI)
+* [[Kreis Steinburg]] (IZ)
+* [[Kreis Dithmarschen]] (HEI)
+* [[Kreis Segeberg]] (SE)
+|
+* [[Elmshorn]]
+* Kreis Pinneberg/Polizei
+|
+* 4.492,6 km²
+* 863.538
+|
+Inbetriebnahme: Dezember 2001 (Fw/RD); April 2010 (Polizei). Kreis SE vorher bei Leitstelle Holstein (bis März 2021)
+|-
+|Leitstelle Süd
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Kreis Stormarn]] (OD)
+* [[Kreis Herzogtum Lauenburg]] (RZ)
+* [[Kreis Ostholstein]] (OH)
+|
+* [[Bad Oldesloe]]
+* Kreis
+|
+* 3421,3&nbsp;km²
+* 617,835
+|
+Integrierte Regionalleitstelle / Inbetriebnahme März 2006
+Kreis OH seit 2013
+|-
+|Leitstelle Mitte
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Kiel]] (KI)
+* [[Kreis Plön]] (PLÖ)
+* [[Kreis Rendsburg-Eckernförde]] (RD)
+|
+* [[Kiel]]
+* [[Feuerwehr Kiel|Berufsfeuerwehr]]
+|
+* 3.387,2&nbsp;km²
+* 643.430
+|
+Inbetriebnahme Dezember 2007
+|-
+|Leitstelle Neumünster
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Neumünster]] (NMS)
+|
+* [[Neumünster]]
+* Berufsfeuerwehr
+|
+* 71,63&nbsp;km²
+* 76.830
+|
+[[Gefahrenabwehrzentrum Neumünster]], Inbetriebnahme 1. Juli 2012
+|-
+
+|Leitstelle Lübeck
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Lübeck]]
+|
+* [[Lübeck]]
+* [[Feuerwehr Lübeck|Berufsfeuerwehr]]
+|
+* 214,1&nbsp;km²
+* 211.541
+|
+|- style="background:#FFFFDD;"
+! colspan="6" |
+
+=== Thüringen ===
+|-
+|Landeseinsatzzentrale Erfurt
+|
+* Polizei
+|
+*  [[Thüringen|Freistaat Thüringen]] (TH)
+|
+* [[Erfurt]]
+* [[Thüringer Polizei]]
+|
+* 16.202,35&nbsp;km²
+* 2.133.378
+|
+|-
+|Leitstelle Eichsfeld<ref>{{Internetquelle |autor=Landkreis Eichsfeld |url=http://www.leitstelle-eic.de/index.html |titel=Zentrale Leitstelle Eichsfeld |werk= |hrsg= |datum= |abruf=2020-03-27 |sprache=de}}</ref>
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Eichsfeld]] (EIC)
+|
+* [[Heilbad Heiligenstadt|Heiligenstadt]]
+* Kreis
+|
+* 943,07&nbsp;km²
+* 100.380
+|
+|-
+|Leitstelle Erfurt
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Erfurt]] (EF)
+* [[Landkreis Sömmerda]] (SÖM)
+* [[Weimar]] (WE) – nur Rettungsdienst
+|
+* [[Erfurt-Marbach]]
+* [[Feuerwehr Erfurt|Berufsfeuerwehr]]
+|
+* 1.161,27&nbsp;km²
+* 347.082
+|Seit 01.03.2023 koordiniert die Leitstelle Erfurt alle Einsätze aus Weimar.<ref>{{Internetquelle |url=https://www.erfurt.de/ef/de/service/aktuelles/am/2023/143901.html |titel=Leitstelle Erfurt koordiniert nun auch Einsätze in der Stadt Weimar |datum=2023-03-01 |sprache=de |abruf=2023-03-26}}</ref>
+|-
+|Leitstelle Gera
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Gera]] (G)
+
+* [[Altenburger Land]] (ABG)
+* [[Landkreis Greiz]] (GRZ)
+* [[Saale-Orla-Kreis]] (SOK)
+|
+* [[Gera]]
+* [[Feuerwehr Gera|Berufsfeuerwehr]]
+|
+* 2.718,86&nbsp;km²
+* 362.741
+|
+Inbetriebnahme der ZLS im April 1992;
+Umbau im Jahr 2008;
+Einweihung 26. Februar 2009;
+|-
+|Leitstelle Gotha
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Gotha]] (GTH)
+|
+* [[Gotha]]
+* Kreis
+|
+* 936,08&nbsp;km²
+* 135.452
+|Planen gemeinsame Leitstelle mit Ilm-Kreis und Wartburgkreis in Schwabhausen bei Gotha<ref name=":0">{{Internetquelle |url=https://www.mdr.de/nachrichten/thueringen/rettungsleitstelle-schwabhausen-gotha-ilmkreis-wartburgkreis-100.html |titel=Westthüringer Rettungsleitstelle in Schwabhausen geplant |werk=MDR.de |hrsg=MITTELDEUTSCHER RUNDFUNK |datum=2022-04-07 |sprache=de |abruf=2022-04-07|offline=1|archiv-url=https://web.archive.org/web/20220407090219/https://www.mdr.de/nachrichten/thueringen/rettungsleitstelle-schwabhausen-gotha-ilmkreis-wartburgkreis-100.html}}</ref>
+|-
+|Leitstelle Ilm-Kreis
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Ilm-Kreis]] (IK)
+|
+* [[Arnstadt]]
+* Kreis
+|
+* 805,11&nbsp;km²
+* 106.622
+|Planen gemeinsame Leitstelle mit Kreis Gotha und Wartburgkreis in Schwabhausen bei Gotha<ref name=":0" />
+|-
+|Leitstelle Jena
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Jena]] (J)
+* [[Saale-Holzland-Kreis]] (SHK)
+* [[Landkreis Saalfeld-Rudolstadt]] (SLF)
+|
+* [[Jena]]
+* [[Jena#Medizinische Versorgung und Feuerwehr|Berufsfeuerwehr]]
+|
+* 1.938,80&nbsp;km²
+* 293.984
+|
+KITH-Thüringen (luftgebundene Sekundärtransporte)
+|-
+|Leitstelle Nordhausen
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Nordhausen]] (NDH)
+* [[Kyffhäuserkreis]] (KYF)
+|
+* [[Nordhausen]]
+* Kreise
+|
+* 1.751,81&nbsp;km²
+* 158.831
+|
+|-
+|Florian Nordhausen
+|
+* Feuerwehr (Stadt Nordhausen)
+|
+* [[Nordhausen|Stadt Nordhausen]] (NDH)
+|
+* [[Nordhausen]]
+* Berufsfeuerwehr
+|
+* 108,25&nbsp;km²
+* 40.563
+|Leitstand bei der BF Nordhausen. Einsätze des Notrufs 112 werden von der Leitstelle Nordhausen an die BF weitergegeben.
+|-
+|Leitstelle Schmalkalden-Meiningen
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Schmalkalden-Meiningen]] (SM)
+|
+* [[Meiningen]]
+* Kreis
+|
+* 1.251,2&nbsp;km²
+* 125.646
+|Planung und schrittweise Umsetzung der Integration in die Leitstelle Suhl zur Regionalleitstelle Südthüringen bis 2027/2028.<ref>{{Internetquelle |autor=HCS-Content GmbH Germany |url=https://www.insuedthueringen.de/inhalt.plaene-auf-weg-gebracht-nur-noch-eine-leitstelle-fuer-suedthueringen.01fddd4d-868a-4d8d-8c2c-f1ed11712581.html |titel=Pläne auf Weg gebracht: Nur noch eine Leitstelle für Südthüringen - inSüdthüringen |sprache=de |abruf=2023-03-26}}</ref>
+|-
+|Leitstelle Suhl
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Suhl]] (SHL)
+* [[Landkreis Sonneberg]] (SON)
+* [[Landkreis Hildburghausen]] (HBN)
+|
+* [[Zella-Mehlis]]
+* Rettungsdienstzweckverband
+|
+* 1.513,65&nbsp;km²
+* 158.918
+|Planung und schrittweise Umsetzung der Integration des Landkreises Schmalkalden-Meiningen zur Regionalleitstelle Südthüringen bis 2027/2028.<ref>{{Internetquelle |autor=HCS-Content GmbH Germany |url=https://www.insuedthueringen.de/inhalt.rettungsleitstelle-handyortung-und-notruf-app.744fa9ef-1304-434b-ad98-ad00d6d72188.html |titel=Rettungsleitstelle: Handyortung und Notruf-App - inSüdthüringen |sprache=de |abruf=2023-03-26}}</ref>
+|-
+|Leitstelle Unstrut-Hainich<ref>[http://www.landkreis-unstrut-hainich.de/fachbereiche/fd_brandschutz/leitstelle/leitstelle.htm landkreis-unstrut-hainich.de]</ref>
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Unstrut-Hainich-Kreis]] (UH)
+|
+* [[Mühlhausen/Thüringen|Mühlhausen]]
+* Kreis
+|
+* 979,69&nbsp;km²
+* 102.912
+|
+|-
+|Leitstelle Wartburgkreis
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Wartburgkreis]] (WAK)
+|
+* [[Eisenach]]
+* Kreis
+|
+* 1.371,73&nbsp;km²
+* 162.096
+|Planen gemeinsame Leitstelle mit Kreis Gotha und Ilm-Kreis in Schwabhausen bei Gotha<ref name=":0" />
+|-
+|Florian Weimar
+|
+* Feuerwehr
+|
+* [[Weimar]] (WE)
+|
+* [[Weimar]]
+* Berufsfeuerwehr
+|
+* 84,48 km²
+* 65.090
+|Leitstand der Berufsfeuerwehr Weimar. Einsätze des Notrufs 112 werden von der Leitstelle Erfurt an die BF weitergegeben.
+|-
+|Leitstelle Weimarer Land
+|
+* Feuerwehr
+* Rettungsdienst
+* Katastrophenschutz
+|
+* [[Landkreis Weimarer Land]] (AP)
+|
+* [[Apolda]]
+* Kreis/DRK
+|
+* 804,48&nbsp;km²
+* 81.947
+|
+|}

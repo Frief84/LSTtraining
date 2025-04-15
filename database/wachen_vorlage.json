@@ -1,0 +1,1325 @@
+[
+  {
+    "leitstelle_id": 1,
+    "name": "Leitstelle Biberach",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 2,
+    "name": "Leitstelle Bodensee-Oberschwaben",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 3,
+    "name": "Leitstelle Böblingen",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 4,
+    "name": "Leitstelle Calw",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 5,
+    "name": "Leitstelle Emmendingen",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 6,
+    "name": "Leitstelle Esslingen",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 7,
+    "name": "Leitstelle Freiburg",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 8,
+    "name": "Leitstelle Freudenstadt",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 9,
+    "name": "Leitstelle Göppingen",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 10,
+    "name": "Leitstelle Rhein-Neckar",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 11,
+    "name": "Leitstelle Heilbronn",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 12,
+    "name": "Leitstelle Hohenlohe",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 13,
+    "name": "Leitstelle Karlsruhe",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 14,
+    "name": "Leitstelle Konstanz",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 15,
+    "name": "Leitstelle Ludwigsburg",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 16,
+    "name": "Leitstelle Lörrach",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 17,
+    "name": "Leitstelle Main-Tauber",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 18,
+    "name": "Leitstelle Mannheim",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 19,
+    "name": "Leitstelle Mittelbaden",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 20,
+    "name": "Leitstelle Neckar-Odenwald",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 21,
+    "name": "Leitstelle Ortenau",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 22,
+    "name": "Leitstelle Ostalb",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 23,
+    "name": "Leitstelle Pforzheim",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 24,
+    "name": "Leitstelle Rems-Murr",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 25,
+    "name": "Leitstelle Reutlingen",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 26,
+    "name": "Leitstelle Rottweil",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 27,
+    "name": "Leitstelle Schwäbisch Hall",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 28,
+    "name": "Leitstelle Stuttgart",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 29,
+    "name": "Leitstelle Tübingen",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 30,
+    "name": "Leitstelle Tuttlingen",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 31,
+    "name": "Leitstelle Ulm",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 32,
+    "name": "Leitstelle Schwarzwald-Baar",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 33,
+    "name": "Leitstelle Waldshut",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 34,
+    "name": "Leitstelle Zollernalb",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 35,
+    "name": "Leitstelle Allgäu",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 36,
+    "name": "Leitstelle Bamberg-Forchheim<ref name=\":1\">https://www.ils-bamberg.de/index.php/downloads/category/3-informationen?download=8:der-zweckverband</ref>",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 37,
+    "name": "Leitstelle Bayreuth/Kulmbach",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 38,
+    "name": "Leitstelle Coburg",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 39,
+    "name": "Leitstelle Donau-Iller",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 40,
+    "name": "Leitstelle Erding",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 41,
+    "name": "Leitstelle Fürstenfeldbruck",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 42,
+    "name": "Leitstelle Hochfranken",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 43,
+    "name": "Leitstelle Ingolstadt",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 44,
+    "name": "Leitstelle Landshut",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 45,
+    "name": "Leitstelle Mittelfranken-Süd",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 46,
+    "name": "Leitstelle München",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 47,
+    "name": "Leitstelle Nordoberpfalz",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 48,
+    "name": "Leitstelle Nürnberg",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 49,
+    "name": "Leitstelle Oberland",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 50,
+    "name": "Leitstelle Oberpfalz-Nord",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 51,
+    "name": "Leitstelle Passau",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 52,
+    "name": "Leitstelle Regensburg",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 53,
+    "name": "Leitstelle Rosenheim",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 54,
+    "name": "Leitstelle Schweinfurt",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 55,
+    "name": "Leitstelle Straubing",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 56,
+    "name": "Leitstelle Traunstein",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 57,
+    "name": "Leitstelle Bayerischer Untermain",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 58,
+    "name": "Leitstelle Würzburg",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 59,
+    "name": "Leitstelle Brandenburg",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 60,
+    "name": "Leitstelle Lausitz<ref>[http://www.leitstelle-lausitz.de/ leitstelle-lausitz.de]</ref>",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 61,
+    "name": "Leitstelle Oderland",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 62,
+    "name": "Leitstelle NordOst",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 63,
+    "name": "Leitstelle Nordwest",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 64,
+    "name": "Leitstelle Bremerhaven",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 65,
+    "name": "Leitstelle Bergstraße<ref>[http://www.leitstelle-bergstrasse.de/ leitstelle-bergstrasse.de]</ref>",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 66,
+    "name": "Leitstelle Darmstadt-Dieburg",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 67,
+    "name": "Leitstelle Gerau<ref>[http://www.leitstelle-grossgerau.de/ leitstelle-grossgerau.de]</ref>",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 68,
+    "name": "Leitstelle Odenwald",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 69,
+    "name": "Leitstelle Hochtaunus",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 70,
+    "name": "Leitstelle Main-Taunus",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 71,
+    "name": "Leitstelle Wetterau",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 72,
+    "name": "Leitstelle Hersfeld-Rotenburg",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 73,
+    "name": "Leitstelle Vogelsberg",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 74,
+    "name": "Leitstelle Lahn-Dill",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 75,
+    "name": "Leitstelle Marburg-Biedenkopf",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 76,
+    "name": "Leitstelle Schwalm-Eder",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 77,
+    "name": "Leitstelle Waldeck-Frankenberg<ref>{{Webarchiv|url=http://lk-wf.active-city.net/city_info/display/bs/vorgang/details.cfm?region_id=81&design_id=1154&id=1498 |wayback=20090524222354 |text=Landkreis Waldeck-Frankenberg: Zentrale Leitstelle Waldeck-Frankenberg }}</ref>",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 78,
+    "name": "Leitstelle Werra-Meißner",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 79,
+    "name": "Leitstelle Dietzenbach",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 80,
+    "name": "Leitstelle Main-Kinzig",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 81,
+    "name": "Leitstelle Limburg-Weilburg",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 82,
+    "name": "Leitstelle Rheingau-Taunus",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 83,
+    "name": "Leitstelle Westmecklenburg (ILWM)]]",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 84,
+    "name": "Leitstelle Mittleres Mecklenburg<ref>[http://www.ils-mitte.de/ ils-mitte.de]</ref>",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 85,
+    "name": "Leitstelle Rostock",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 86,
+    "name": "Leitstelle Mecklenburgische-Seenplatte",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 87,
+    "name": "Leitstelle Vorpommern-Rügen",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 88,
+    "name": "Leitstelle Vorpommern-Greifswald",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 89,
+    "name": "Leitstelle Heidekreis",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 90,
+    "name": "Leitstelle Braunschweig",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 91,
+    "name": "Leitstelle Celle",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 92,
+    "name": "Leitstelle Diepholz",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 93,
+    "name": "Leitstelle Emden",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 94,
+    "name": "Leitstelle Ems-Vechte",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 95,
+    "name": "Leitstelle Friesland-Wilhelmshaven",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 96,
+    "name": "Leitstelle Gifhorn",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 97,
+    "name": "Leitstelle Goslar",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 98,
+    "name": "Leitstelle Hameln",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 99,
+    "name": "Leitstelle Hannover",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 100,
+    "name": "Leitstelle Harburg",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 101,
+    "name": "Leitstelle Helmstedt",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 102,
+    "name": "Leitstelle Lüneburg",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 103,
+    "name": "Leitstelle Northeim",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 104,
+    "name": "Leitstelle Oldenburg",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 105,
+    "name": "Leitstelle Osnabrück",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 106,
+    "name": "Leitstelle Osterode",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 107,
+    "name": "Leitstelle Ostfriesland",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 108,
+    "name": "Leitstelle Rotenburg",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 109,
+    "name": "Leitstelle Schaumburg",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 110,
+    "name": "Leitstelle Uelzen",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 111,
+    "name": "Leitstelle Verden",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 112,
+    "name": "Leitstelle Aachen",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 113,
+    "name": "Leitstelle Berga",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 114,
+    "name": "Leitstelle Bielefeld",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 115,
+    "name": "Leitstelle Bonn",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 116,
+    "name": "Leitstelle Borken",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 117,
+    "name": "Leitstelle Düsseldorf",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 118,
+    "name": "Leitstelle Dortmund",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 119,
+    "name": "Leitstelle Kreis Düren",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 120,
+    "name": "Leitstelle Ennepe",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 121,
+    "name": "Leitstelle Rhein-Erft Kreis",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 122,
+    "name": "Leitstelle Essen",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 123,
+    "name": "Leitstelle Euskirchen",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 124,
+    "name": "Leitstelle Gütersloh",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 125,
+    "name": "Leitstelle Kreis Heinsberg",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 126,
+    "name": "Leitstelle Herford",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 127,
+    "name": "Leitstelle Kreis Höxter",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 128,
+    "name": "Leitstelle Kleve",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 129,
+    "name": "Leitstelle Lippe",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 130,
+    "name": "Leitstelle Mark",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 131,
+    "name": "Leitstelle Kreis Mettmann",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 132,
+    "name": "Leitstelle Minden",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 133,
+    "name": "Leitstelle Münster",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 134,
+    "name": "Leitstelle Rhein-Kreis-Neuss",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 135,
+    "name": "Leitstelle Oberberg",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 136,
+    "name": "Leitstelle Olpe",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 137,
+    "name": "Leitstelle Paderborn",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 138,
+    "name": "Leitstelle Remscheid",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 139,
+    "name": "Leitstelle Rhein-Sieg",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 140,
+    "name": "Leitstelle Sauerland",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 141,
+    "name": "Leitstelle SiWi<ref>[http://feuerwehr-siegen.eu/index.php?option=com_content&view=article&id=1&Itemid=51 feuerwehr-siegen.eu]</ref>",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 142,
+    "name": "Leitstelle Kreis Soest",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 143,
+    "name": "Leitstelle Kreis Steinfurt",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 144,
+    "name": "Leitstelle Unna",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 145,
+    "name": "Leitstelle Kreis Warendorf",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 146,
+    "name": "Leitstelle Wesel",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 147,
+    "name": "Leitstelle Wupper",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 148,
+    "name": "Leitstelle Kaiserslautern",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 149,
+    "name": "Leitstelle Koblenz",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 150,
+    "name": "Leitstelle Ludwigshafen",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 151,
+    "name": "Leitstelle Mainz",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 152,
+    "name": "Leitstelle Montabaur",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 153,
+    "name": "Leitstelle Landau",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 154,
+    "name": "Leitstelle Trier",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 155,
+    "name": "Leitstelle Saar",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 156,
+    "name": "Leitstelle Leipzig",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 157,
+    "name": "Leitstelle Chemnitz",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 158,
+    "name": "Leitstelle Zwickau",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 159,
+    "name": "Leitstelle Dresden",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 160,
+    "name": "Leitstelle Ostsachsen",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 161,
+    "name": "Leitstelle Altmark",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 162,
+    "name": "Leitstelle Anhalt-Bitterfeld",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 163,
+    "name": "Leitstelle Börde",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 164,
+    "name": "Leitstelle Burgenlandkreis",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 165,
+    "name": "Leitstelle Dessau",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 166,
+    "name": "Leitstelle Halle",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 167,
+    "name": "Leitstelle Harz",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 168,
+    "name": "Leitstelle Jerichower Land",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 169,
+    "name": "Leitstelle Magdeburg",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 170,
+    "name": "Leitstelle Mansfeld-Südharz",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 171,
+    "name": "Leitstelle Saalekreis",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 172,
+    "name": "Leitstelle Salzlandkreis",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 173,
+    "name": "Leitstelle Wittenberg",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 174,
+    "name": "Leitstelle Süd",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 175,
+    "name": "Leitstelle Mitte",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 176,
+    "name": "Leitstelle Neumünster",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 177,
+    "name": "Leitstelle Lübeck",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 178,
+    "name": "Leitstelle Eichsfeld<ref>{{Internetquelle |autor=Landkreis Eichsfeld |url=http://www.leitstelle-eic.de/index.html |titel=Zentrale Leitstelle Eichsfeld |werk= |hrsg= |datum= |abruf=2020-03-27 |sprache=de}}</ref>",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 179,
+    "name": "Leitstelle Erfurt",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 180,
+    "name": "Leitstelle Gera",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 181,
+    "name": "Leitstelle Gotha",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 182,
+    "name": "Leitstelle Ilm-Kreis",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 183,
+    "name": "Leitstelle Jena",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 184,
+    "name": "Leitstelle Nordhausen",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 185,
+    "name": "Leitstelle Schmalkalden-Meiningen",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 186,
+    "name": "Leitstelle Suhl",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 187,
+    "name": "Leitstelle Unstrut-Hainich<ref>[http://www.landkreis-unstrut-hainich.de/fachbereiche/fd_brandschutz/leitstelle/leitstelle.htm landkreis-unstrut-hainich.de]</ref>",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 188,
+    "name": "Leitstelle Wartburgkreis",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  },
+  {
+    "leitstelle_id": 189,
+    "name": "Leitstelle Weimarer Land",
+    "typ": "",
+    "latitude": null,
+    "longitude": null
+  }
+]

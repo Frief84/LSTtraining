@@ -1,7 +1,3 @@
--- Datenbank auswählen oder erstellen
--- CREATE DATABASE lsttraining CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
--- USE lsttraining;
-
 -- 1. Leitstellen
 CREATE TABLE leitstellen (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -87,4 +83,18 @@ CREATE TABLE einsaetze (
 
     erstellt_am TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (leitstelle_id) REFERENCES leitstellen(id) ON DELETE CASCADE
+);
+
+-- 6. Nebenleistellen
+CREATE TABLE nebenleistellen (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    aufgaben TEXT,
+    zustandigkeit TEXT,
+    standorte TEXT,
+    einwohner INT,
+    flaeche_km2 FLOAT,
+    gps VARCHAR(255),
+    nachbarleitstelle BOOLEAN,
+    geojson JSON
 );

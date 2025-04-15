@@ -1,0 +1,15 @@
+[out:json][timeout:25];
+{{geocodeArea:Potsdam}}->.searchArea;
+
+// Suche nach Feuerwehr- und Rettungswachen, aber nur direkt getaggte Objekte
+(
+  node["amenity"="fire_station"](area.searchArea);
+  node["emergency"="ambulance_station"](area.searchArea);
+  node["emergency"="fire_station"](area.searchArea);
+
+  way["amenity"="fire_station"](area.searchArea);
+  way["emergency"="ambulance_station"](area.searchArea);
+  way["emergency"="fire_station"](area.searchArea);
+);
+
+out center tags;

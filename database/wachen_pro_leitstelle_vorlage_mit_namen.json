@@ -1,0 +1,947 @@
+[
+  {
+    "_comment": "Leitstelle Biberach",
+    "leitstelle_id": 1,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Bodensee-Oberschwaben",
+    "leitstelle_id": 2,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Böblingen",
+    "leitstelle_id": 3,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Calw",
+    "leitstelle_id": 4,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Emmendingen",
+    "leitstelle_id": 5,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Esslingen",
+    "leitstelle_id": 6,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Freiburg",
+    "leitstelle_id": 7,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Freudenstadt",
+    "leitstelle_id": 8,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Göppingen",
+    "leitstelle_id": 9,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Rhein-Neckar",
+    "leitstelle_id": 10,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Heilbronn",
+    "leitstelle_id": 11,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Hohenlohe",
+    "leitstelle_id": 12,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Karlsruhe",
+    "leitstelle_id": 13,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Konstanz",
+    "leitstelle_id": 14,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Ludwigsburg",
+    "leitstelle_id": 15,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Lörrach",
+    "leitstelle_id": 16,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Main-Tauber",
+    "leitstelle_id": 17,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Mannheim",
+    "leitstelle_id": 18,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Mittelbaden",
+    "leitstelle_id": 19,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Neckar-Odenwald",
+    "leitstelle_id": 20,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Ortenau",
+    "leitstelle_id": 21,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Ostalb",
+    "leitstelle_id": 22,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Pforzheim",
+    "leitstelle_id": 23,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Rems-Murr",
+    "leitstelle_id": 24,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Reutlingen",
+    "leitstelle_id": 25,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Rottweil",
+    "leitstelle_id": 26,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Schwäbisch Hall",
+    "leitstelle_id": 27,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Stuttgart",
+    "leitstelle_id": 28,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Tübingen",
+    "leitstelle_id": 29,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Tuttlingen",
+    "leitstelle_id": 30,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Ulm",
+    "leitstelle_id": 31,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Schwarzwald-Baar",
+    "leitstelle_id": 32,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Waldshut",
+    "leitstelle_id": 33,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Zollernalb",
+    "leitstelle_id": 34,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Allgäu",
+    "leitstelle_id": 35,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Bamberg-Forchheim<ref name=\":1\">https://www.ils-bamberg.de/index.php/downloads/category/3-informationen?download=8:der-zweckverband</ref>",
+    "leitstelle_id": 36,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Bayreuth/Kulmbach",
+    "leitstelle_id": 37,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Coburg",
+    "leitstelle_id": 38,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Donau-Iller",
+    "leitstelle_id": 39,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Erding",
+    "leitstelle_id": 40,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Fürstenfeldbruck",
+    "leitstelle_id": 41,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Hochfranken",
+    "leitstelle_id": 42,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Ingolstadt",
+    "leitstelle_id": 43,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Landshut",
+    "leitstelle_id": 44,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Mittelfranken-Süd",
+    "leitstelle_id": 45,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle München",
+    "leitstelle_id": 46,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Nordoberpfalz",
+    "leitstelle_id": 47,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Nürnberg",
+    "leitstelle_id": 48,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Oberland",
+    "leitstelle_id": 49,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Oberpfalz-Nord",
+    "leitstelle_id": 50,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Passau",
+    "leitstelle_id": 51,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Regensburg",
+    "leitstelle_id": 52,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Rosenheim",
+    "leitstelle_id": 53,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Schweinfurt",
+    "leitstelle_id": 54,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Straubing",
+    "leitstelle_id": 55,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Traunstein",
+    "leitstelle_id": 56,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Bayerischer Untermain",
+    "leitstelle_id": 57,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Würzburg",
+    "leitstelle_id": 58,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Brandenburg",
+    "leitstelle_id": 59,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Lausitz<ref>[http://www.leitstelle-lausitz.de/ leitstelle-lausitz.de]</ref>",
+    "leitstelle_id": 60,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Oderland",
+    "leitstelle_id": 61,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle NordOst",
+    "leitstelle_id": 62,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Nordwest",
+    "leitstelle_id": 63,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Bremerhaven",
+    "leitstelle_id": 64,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Bergstraße<ref>[http://www.leitstelle-bergstrasse.de/ leitstelle-bergstrasse.de]</ref>",
+    "leitstelle_id": 65,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Darmstadt-Dieburg",
+    "leitstelle_id": 66,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Gerau<ref>[http://www.leitstelle-grossgerau.de/ leitstelle-grossgerau.de]</ref>",
+    "leitstelle_id": 67,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Odenwald",
+    "leitstelle_id": 68,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Hochtaunus",
+    "leitstelle_id": 69,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Main-Taunus",
+    "leitstelle_id": 70,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Wetterau",
+    "leitstelle_id": 71,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Hersfeld-Rotenburg",
+    "leitstelle_id": 72,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Vogelsberg",
+    "leitstelle_id": 73,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Lahn-Dill",
+    "leitstelle_id": 74,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Marburg-Biedenkopf",
+    "leitstelle_id": 75,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Schwalm-Eder",
+    "leitstelle_id": 76,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Waldeck-Frankenberg<ref>{{Webarchiv|url=http://lk-wf.active-city.net/city_info/display/bs/vorgang/details.cfm?region_id=81&design_id=1154&id=1498 |wayback=20090524222354 |text=Landkreis Waldeck-Frankenberg: Zentrale Leitstelle Waldeck-Frankenberg }}</ref>",
+    "leitstelle_id": 77,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Werra-Meißner",
+    "leitstelle_id": 78,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Dietzenbach",
+    "leitstelle_id": 79,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Main-Kinzig",
+    "leitstelle_id": 80,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Limburg-Weilburg",
+    "leitstelle_id": 81,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Rheingau-Taunus",
+    "leitstelle_id": 82,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Westmecklenburg (ILWM)]]",
+    "leitstelle_id": 83,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Mittleres Mecklenburg<ref>[http://www.ils-mitte.de/ ils-mitte.de]</ref>",
+    "leitstelle_id": 84,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Rostock",
+    "leitstelle_id": 85,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Mecklenburgische-Seenplatte",
+    "leitstelle_id": 86,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Vorpommern-Rügen",
+    "leitstelle_id": 87,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Vorpommern-Greifswald",
+    "leitstelle_id": 88,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Heidekreis",
+    "leitstelle_id": 89,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Braunschweig",
+    "leitstelle_id": 90,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Celle",
+    "leitstelle_id": 91,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Diepholz",
+    "leitstelle_id": 92,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Emden",
+    "leitstelle_id": 93,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Ems-Vechte",
+    "leitstelle_id": 94,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Friesland-Wilhelmshaven",
+    "leitstelle_id": 95,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Gifhorn",
+    "leitstelle_id": 96,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Goslar",
+    "leitstelle_id": 97,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Hameln",
+    "leitstelle_id": 98,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Hannover",
+    "leitstelle_id": 99,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Harburg",
+    "leitstelle_id": 100,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Helmstedt",
+    "leitstelle_id": 101,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Lüneburg",
+    "leitstelle_id": 102,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Northeim",
+    "leitstelle_id": 103,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Oldenburg",
+    "leitstelle_id": 104,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Osnabrück",
+    "leitstelle_id": 105,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Osterode",
+    "leitstelle_id": 106,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Ostfriesland",
+    "leitstelle_id": 107,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Rotenburg",
+    "leitstelle_id": 108,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Schaumburg",
+    "leitstelle_id": 109,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Uelzen",
+    "leitstelle_id": 110,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Verden",
+    "leitstelle_id": 111,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Aachen",
+    "leitstelle_id": 112,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Berga",
+    "leitstelle_id": 113,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Bielefeld",
+    "leitstelle_id": 114,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Bonn",
+    "leitstelle_id": 115,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Borken",
+    "leitstelle_id": 116,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Düsseldorf",
+    "leitstelle_id": 117,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Dortmund",
+    "leitstelle_id": 118,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Kreis Düren",
+    "leitstelle_id": 119,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Ennepe",
+    "leitstelle_id": 120,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Rhein-Erft Kreis",
+    "leitstelle_id": 121,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Essen",
+    "leitstelle_id": 122,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Euskirchen",
+    "leitstelle_id": 123,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Gütersloh",
+    "leitstelle_id": 124,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Kreis Heinsberg",
+    "leitstelle_id": 125,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Herford",
+    "leitstelle_id": 126,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Kreis Höxter",
+    "leitstelle_id": 127,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Kleve",
+    "leitstelle_id": 128,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Lippe",
+    "leitstelle_id": 129,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Mark",
+    "leitstelle_id": 130,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Kreis Mettmann",
+    "leitstelle_id": 131,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Minden",
+    "leitstelle_id": 132,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Münster",
+    "leitstelle_id": 133,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Rhein-Kreis-Neuss",
+    "leitstelle_id": 134,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Oberberg",
+    "leitstelle_id": 135,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Olpe",
+    "leitstelle_id": 136,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Paderborn",
+    "leitstelle_id": 137,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Remscheid",
+    "leitstelle_id": 138,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Rhein-Sieg",
+    "leitstelle_id": 139,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Sauerland",
+    "leitstelle_id": 140,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle SiWi<ref>[http://feuerwehr-siegen.eu/index.php?option=com_content&view=article&id=1&Itemid=51 feuerwehr-siegen.eu]</ref>",
+    "leitstelle_id": 141,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Kreis Soest",
+    "leitstelle_id": 142,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Kreis Steinfurt",
+    "leitstelle_id": 143,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Unna",
+    "leitstelle_id": 144,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Kreis Warendorf",
+    "leitstelle_id": 145,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Wesel",
+    "leitstelle_id": 146,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Wupper",
+    "leitstelle_id": 147,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Kaiserslautern",
+    "leitstelle_id": 148,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Koblenz",
+    "leitstelle_id": 149,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Ludwigshafen",
+    "leitstelle_id": 150,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Mainz",
+    "leitstelle_id": 151,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Montabaur",
+    "leitstelle_id": 152,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Landau",
+    "leitstelle_id": 153,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Trier",
+    "leitstelle_id": 154,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Saar",
+    "leitstelle_id": 155,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Leipzig",
+    "leitstelle_id": 156,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Chemnitz",
+    "leitstelle_id": 157,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Zwickau",
+    "leitstelle_id": 158,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Dresden",
+    "leitstelle_id": 159,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Ostsachsen",
+    "leitstelle_id": 160,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Altmark",
+    "leitstelle_id": 161,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Anhalt-Bitterfeld",
+    "leitstelle_id": 162,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Börde",
+    "leitstelle_id": 163,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Burgenlandkreis",
+    "leitstelle_id": 164,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Dessau",
+    "leitstelle_id": 165,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Halle",
+    "leitstelle_id": 166,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Harz",
+    "leitstelle_id": 167,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Jerichower Land",
+    "leitstelle_id": 168,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Magdeburg",
+    "leitstelle_id": 169,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Mansfeld-Südharz",
+    "leitstelle_id": 170,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Saalekreis",
+    "leitstelle_id": 171,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Salzlandkreis",
+    "leitstelle_id": 172,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Wittenberg",
+    "leitstelle_id": 173,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Süd",
+    "leitstelle_id": 174,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Mitte",
+    "leitstelle_id": 175,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Neumünster",
+    "leitstelle_id": 176,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Lübeck",
+    "leitstelle_id": 177,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Eichsfeld<ref>{{Internetquelle |autor=Landkreis Eichsfeld |url=http://www.leitstelle-eic.de/index.html |titel=Zentrale Leitstelle Eichsfeld |werk= |hrsg= |datum= |abruf=2020-03-27 |sprache=de}}</ref>",
+    "leitstelle_id": 178,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Erfurt",
+    "leitstelle_id": 179,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Gera",
+    "leitstelle_id": 180,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Gotha",
+    "leitstelle_id": 181,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Ilm-Kreis",
+    "leitstelle_id": 182,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Jena",
+    "leitstelle_id": 183,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Nordhausen",
+    "leitstelle_id": 184,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Schmalkalden-Meiningen",
+    "leitstelle_id": 185,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Suhl",
+    "leitstelle_id": 186,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Unstrut-Hainich<ref>[http://www.landkreis-unstrut-hainich.de/fachbereiche/fd_brandschutz/leitstelle/leitstelle.htm landkreis-unstrut-hainich.de]</ref>",
+    "leitstelle_id": 187,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Wartburgkreis",
+    "leitstelle_id": 188,
+    "wachen": []
+  },
+  {
+    "_comment": "Leitstelle Weimarer Land",
+    "leitstelle_id": 189,
+    "wachen": []
+  }
+]
