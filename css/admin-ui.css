@@ -63,6 +63,18 @@ hr {
   min-height: 300px;
 }
 
+.btn-einsatzgebiet-delete {
+  background-color: #dc3545;       /* Bootstrap-Rot */
+  color: white;
+  float: right;
+  margin-left: auto;
+}
+
+.btn-einsatzgebiet-delete:hover {
+  background-color: #c82333;
+}
+
+
 @media (max-width: 768px) {
   .form-container {
     flex-direction: column;

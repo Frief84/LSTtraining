@@ -46,15 +46,15 @@ window.initMapWithMarker = function(mapId, latInput, lonInput, initialCoords, as
 
             const polygonSource = new ol.source.Vector({ features });
 
-           const polygonLayer = new ol.layer.Vector({
-				source: polygonSource,
-				style: new ol.style.Style({
-					stroke: new ol.style.Stroke({ color: 'rgba(0, 128, 255, 0.8)', width: 2 }),
-					fill: new ol.style.Fill({ color: 'rgba(0, 128, 255, 0.2)' })
-				})
-			});
-			polygonLayer.set('isPolygonLayer', true);
-			map.addLayer(polygonLayer);
+            const polygonLayer = new ol.layer.Vector({
+                source: polygonSource,
+                style: new ol.style.Style({
+                    stroke: new ol.style.Stroke({ color: 'rgba(0, 128, 255, 0.8)', width: 2 }),
+                    fill: new ol.style.Fill({ color: 'rgba(0, 128, 255, 0.2)' })
+                })
+            });
+            polygonLayer.set('isPolygonLayer', true);
+            map.addLayer(polygonLayer);
 
             map.getView().fit(polygonSource.getExtent(), {
                 padding: [20, 20, 20, 20],
@@ -95,16 +95,15 @@ window.editLeitstelle = function (id, name, ort, bl, land, lat, lon) {
     console.log('editLeitstelle wurde aufgerufen', id);
 
     const createForm = document.getElementById('neue-leitstelle-formular');
-const editForm = document.getElementById('edit-leitstelle-formular');
-	
-	// Wenn das Formular sichtbar ist, keine neue Bearbeitung starten
+    const editForm = document.getElementById('edit-leitstelle-formular');
+
     if (editForm.style.display === 'block') {
         alert('Es wird bereits eine Leitstelle bearbeitet.');
         return;
     }
 
-if (createForm) createForm.style.display = 'none';
-if (editForm) editForm.style.display = 'block';
+    if (createForm) createForm.style.display = 'none';
+    if (editForm) editForm.style.display = 'block';
 
     document.getElementById('lst_update_id').value = id;
     document.getElementById('lst_update_name').value = name;
@@ -117,56 +116,53 @@ if (editForm) editForm.style.display = 'block';
 
     document.getElementById('edit-leitstelle-formular').scrollIntoView({ behavior: 'smooth' });
 
-    // Lade GeoJSON via AJAX
-   fetch(`${ajaxurl}?action=lsttraining_get_einsatzgebiet&leitstelle_id=${id}&t=${Date.now()}`)
-    .then(r => r.json())
-    .then(result => {
-        if (result.success && result.data) {
-            let geoJson = result.data;
+    fetch(`${ajaxurl}?action=lsttraining_get_einsatzgebiet&leitstelle_id=${id}&t=${Date.now()}`)
+        .then(r => r.json())
+        .then(result => {
+            let polygon = null;
 
-            console.log("GeoJSON aus DB:", geoJson);
-
-            try {
-                // Da der GeoJSON-String doppelt escaped ist, einmal manuell parsen
-                if (typeof geoJson === 'string') {
-                    geoJson = JSON.parse(geoJson);
+            if (result.success && result.data) {
+                try {
+                    polygon = typeof result.data === 'string' ? JSON.parse(result.data) : result.data;
+                    const geojsonString = JSON.stringify(polygon);
+                    document.getElementById('geojson_edit').value = geojsonString;
+                    console.log('GeoJSON geladen:', polygon);
+                } catch (e) {
+                    console.warn('GeoJSON konnte nicht geparst werden', e);
                 }
-
-                // dann aber wieder in String zurück, damit OpenLayers klar kommt
-                const cleanString = JSON.stringify(geoJson);
-
-                window.initMapWithMarker(
-                    'map_edit',
-                    'lst_update_lat',
-                    'lst_update_lon',
-                    [parseFloat(lon), parseFloat(lat)],
-                    'mapEdit',
-                    'dragInteractionEdit',
-                    cleanString
-                );
-            } catch (e) {
-                console.warn("GeoJSON konnte nicht geparst werden:", e);
-                window.initMapWithMarker(
-                    'map_edit',
-                    'lst_update_lat',
-                    'lst_update_lon',
-                    [parseFloat(lon), parseFloat(lat)],
-                    'mapEdit',
-                    'dragInteractionEdit'
-                );
             }
-        } else {
-            console.log("Kein Einsatzgebiet vorhanden, initialisiere Map ohne Polygon");
+
             window.initMapWithMarker(
                 'map_edit',
                 'lst_update_lat',
                 'lst_update_lon',
                 [parseFloat(lon), parseFloat(lat)],
                 'mapEdit',
-                'dragInteractionEdit'
+                'dragInteractionEdit',
+                polygon ? JSON.stringify(polygon) : null
             );
-        }
-    });
 
-
+            // Einsatzgebiet-Editor initialisieren (falls vorhanden)
+            const popup = document.querySelector('.einsatzgebiet-popup');
+            if (popup && typeof window.initEinsatzgebietEditor === 'function') {
+                window.initEinsatzgebietEditor(popup);
+            }
+        });
 };
+
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('.edit-leitstelle').forEach(btn => {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      window.editLeitstelle(
+        this.dataset.id,
+        this.dataset.name,
+        this.dataset.ort,
+        this.dataset.bl,
+        this.dataset.land,
+        this.dataset.lat,
+        this.dataset.lon
+      );
+    });
+  });
+});

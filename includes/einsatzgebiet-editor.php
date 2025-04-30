@@ -9,7 +9,7 @@ function lsttraining_einsatzgebiet_editor($mapId = 'polygon_map', $inputId = 'ei
         position: fixed;
         top: 50%;
         left: 50%;
-        transform: translate(-50%, -50%);
+        transform: translate(-50%, -40%);
         z-index: 9999;
         background: #fff;
         border: 1px solid #ccc;
