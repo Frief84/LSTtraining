@@ -55,7 +55,6 @@ CREATE TABLE einsatzgebiete (
 CREATE TABLE einsaetze (
     id INT AUTO_INCREMENT PRIMARY KEY,
     leitstelle_id INT NOT NULL,
-
     einsatzart ENUM('RD', 'FW') NOT NULL,
     einsatztyp ENUM(
         'Notfalleinsatz',
@@ -65,22 +64,18 @@ CREATE TABLE einsaetze (
         'THL mit Person',
         'THL ohne Person'
     ) NOT NULL,
-
     uhrzeit_fenster VARCHAR(20),
-    wetter ENUM('klar', 'heiß', 'windig', 'regnerisch', 'schneefall', 'glatt', 'gewitter', 'beliebig') DEFAULT 'beliebig',
-
+    wetter ENUM('klar', 'heiß', 'windig', 'regnerisch', 'starkregen', 'schneefall', 'glatt', 'gewitter', 'beliebig') DEFAULT 'beliebig',
     anrufertext TEXT NOT NULL,
     lagemeldung TEXT NOT NULL,
     patientenzahl INT DEFAULT 0,
     patient_anforderung VARCHAR(255),
     notarzt_benoetigt BOOLEAN DEFAULT FALSE,
     feuerwehr_benoetigt BOOLEAN DEFAULT FALSE,
-
     poi_tag VARCHAR(50),
     folgeanrufe VARCHAR(255),
     latitude DOUBLE,
     longitude DOUBLE,
-
     erstellt_am TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (leitstelle_id) REFERENCES leitstellen(id) ON DELETE CASCADE
 );
@@ -97,4 +92,55 @@ CREATE TABLE nebenleistellen (
     gps VARCHAR(255),
     nachbarleitstelle BOOLEAN,
     geojson JSON
+);
+
+-- 7. Spielinstanzen
+CREATE TABLE spielinstanzen (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    leitstelle_id INT,
+    name VARCHAR(255),
+    erstellt_am TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ist_aktiv BOOLEAN DEFAULT TRUE,
+    FOREIGN KEY (leitstelle_id) REFERENCES leitstellen(id) ON DELETE CASCADE
+);
+
+-- 8. Spieler-Zuweisung zu Spielinstanzen
+CREATE TABLE instanz_user (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    instanz_id INT,
+    user_id INT,
+    rolle ENUM('leiter', 'mitspieler') DEFAULT 'mitspieler',
+    connected BOOLEAN DEFAULT TRUE,
+    FOREIGN KEY (instanz_id) REFERENCES spielinstanzen(id)
+);
+
+-- 9. Wachenstatus je Spielinstanz
+CREATE TABLE instanz_wachen (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    instanz_id INT,
+    wache_id INT,
+    ist_aktiv BOOLEAN DEFAULT TRUE,
+    bemerkung TEXT,
+    FOREIGN KEY (instanz_id) REFERENCES spielinstanzen(id),
+    FOREIGN KEY (wache_id) REFERENCES wachen(id)
+);
+
+-- 10. Fahrzeugstatus je Spielinstanz
+CREATE TABLE fahrzeug_status (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    instanz_id INT,
+    fahrzeug_id INT,
+    wache_id INT NULL,
+    latitude DOUBLE,
+    longitude DOUBLE,
+    ziel_latitude DOUBLE NULL,
+    ziel_longitude DOUBLE NULL,
+    status ENUM('frei', 'besetzt', 'einsatzbereit', 'nicht einsatzbereit') DEFAULT 'frei',
+    fms_status ENUM('1','2','3','4','5','6') DEFAULT '2',
+    sondersignal BOOLEAN DEFAULT FALSE,
+    bemerkung TEXT,
+    letzte_aktualisierung TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (instanz_id) REFERENCES spielinstanzen(id),
+    FOREIGN KEY (fahrzeug_id) REFERENCES fahrzeuge(id),
+    FOREIGN KEY (wache_id) REFERENCES wachen(id)
 );

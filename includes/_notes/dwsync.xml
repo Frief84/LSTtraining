@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <dwsync>
-<file name="settings.php" server="ssh.strato.de" local="133890095622191953" remote="133890095790000000" Dst="2" />
-<file name="schema_import.php" server="ssh.strato.de" local="133889660664218383" remote="133889660870000000" Dst="2" />
-<file name="db.php" server="ssh.strato.de" local="133889660663829417" remote="133889660860000000" Dst="2" />
-<file name="map-override.php" server="ssh.strato.de" local="133889660664028908" remote="133889660860000000" Dst="2" />
-<file name="admin-ui.php" server="ssh.strato.de" local="133891183214199831" remote="133891183220000000" Dst="2" />
-<file name="einsatzgebiet-map.php" server="ssh.strato.de" local="133890152272084097" remote="133890152580000000" Dst="2" />
-<file name="einsatzgebiet-editor.php" server="ssh.strato.de" local="133891286437383588" remote="133891286420000000" Dst="2" />
+<file name="settings.php" server="ssh.strato.de" local="133900775620360669" remote="133900806220000000" Dst="2" />
+<file name="schema_import.php" server="ssh.strato.de" local="133889660664218383" remote="133900806220000000" Dst="2" />
+<file name="db.php" server="ssh.strato.de" local="133889660663829417" remote="133900806210000000" Dst="2" />
+<file name="map-override.php" server="ssh.strato.de" local="133889660664028908" remote="133900806220000000" Dst="2" />
+<file name="admin-ui.php" server="ssh.strato.de" local="133904733547976588" remote="133904733560000000" Dst="2" />
+<file name="einsatzgebiet-map.php" server="ssh.strato.de" local="133890152272084097" remote="133900806210000000" Dst="2" />
+<file name="einsatzgebiet-editor.php" server="ssh.strato.de" local="133891286437383588" remote="133900806210000000" Dst="2" />
+<file name="admin-menu.php" server="ssh.strato.de" local="133904725489972672" remote="133904725510000000" Dst="2" />
+<file name="nebenstellen_editor.php" server="ssh.strato.de" local="133904772150733653" remote="133904772170000000" Dst="2" />
+<file name="leitstellen_editor.php" server="ssh.strato.de" local="133904731763319596" remote="133904731760000000" Dst="2" />
 </dwsync>
