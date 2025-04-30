@@ -1,4 +1,12 @@
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.einsatzgebiet-popup').forEach(container => {
+        window.initEinsatzgebietEditor(container);
+    });
+});
+
 window.initEinsatzgebietEditor = function(container) {
+
     const mapId = container.dataset.mapId;
     const geojsonId = container.dataset.geojsonId;
     const leitstelleId = container.dataset.leitstelleId;
@@ -100,72 +108,77 @@ window.initEinsatzgebietEditor = function(container) {
 
     // Speichern
     container.querySelector('.btn-einsatzgebiet-save')?.addEventListener('click', () => {
-        updateGeoJSON();
-        let rawGeoJson = geojsonTextarea.value;
-        try {
-            const parsed = JSON.parse(rawGeoJson);
-            rawGeoJson = JSON.stringify(parsed);
-        } catch (err) {
-            alert('GeoJSON ist ungültig und konnte nicht gespeichert werden.');
-            console.error(err);
-            return;
-        }
+    updateGeoJSON();
+    let rawGeoJson = geojsonTextarea.value;
 
-        fetch(ajaxurl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({
-                action: 'lsttraining_save_einsatzgebiet',
-                leitstelle_id: leitstelleId,
-                geojson: rawGeoJson
-            })
+    try {
+        const parsed = JSON.parse(rawGeoJson);
+        rawGeoJson = JSON.stringify(parsed);
+    } catch (err) {
+        alert('GeoJSON ist ungültig und konnte nicht gespeichert werden.');
+        console.error(err);
+        return;
+    }
+
+    const context = container.dataset.context || 'leitstelle';
+    const action = (context === 'neben') ? 'lsttraining_save_neben_einsatzgebiet' : 'lsttraining_save_einsatzgebiet';
+
+    fetch(ajaxurl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+            action: action,
+            leitstelle_id: leitstelleId,
+            geojson: rawGeoJson
         })
-        .then(r => r.json())
-        .then(result => {
-            if (result.success) {
-                alert('Einsatzgebiet gespeichert');
-                container.style.display = 'none';
+    })
+    .then(r => r.json())
+    .then(result => {
+        if (result.success) {
+            alert('Einsatzgebiet gespeichert');
+            container.style.display = 'none';
 
-                if (window.mapEdit) {
-                    const editFeatures = format.readFeatures(rawGeoJson, {
-                        featureProjection: window.mapEdit.getView().getProjection()
+            // Optional: Layer in mapEdit aktualisieren (nur bei Leitstellen sinnvoll)
+            if (context === 'leitstelle' && window.mapEdit) {
+                const format = new ol.format.GeoJSON();
+                const editFeatures = format.readFeatures(rawGeoJson, {
+                    featureProjection: window.mapEdit.getView().getProjection()
+                });
+
+                const editLayers = window.mapEdit.getLayers().getArray();
+                const polygonLayer = editLayers.find(layer => layer.get('isPolygonLayer'));
+
+                if (polygonLayer) {
+                    polygonLayer.getSource().clear();
+                    polygonLayer.getSource().addFeatures(editFeatures);
+                } else {
+                    const newPolygonLayer = new ol.layer.Vector({
+                        source: new ol.source.Vector({ features: editFeatures }),
+                        style: new ol.style.Style({
+                            stroke: new ol.style.Stroke({ color: 'rgba(0, 128, 255, 0.8)', width: 2 }),
+                            fill: new ol.style.Fill({ color: 'rgba(0, 128, 255, 0.2)' })
+                        })
                     });
-
-                    const editLayers = window.mapEdit.getLayers().getArray();
-                    const polygonLayer = editLayers.find(layer => layer.get('isPolygonLayer'));
-
-                    if (polygonLayer) {
-                        polygonLayer.getSource().clear();
-                        polygonLayer.getSource().addFeatures(editFeatures);
-                    } else {
-                        const newPolygonLayer = new ol.layer.Vector({
-                            source: new ol.source.Vector({ features: editFeatures }),
-                            style: new ol.style.Style({
-                                stroke: new ol.style.Stroke({ color: 'rgba(0, 128, 255, 0.8)', width: 2 }),
-                                fill: new ol.style.Fill({ color: 'rgba(0, 128, 255, 0.2)' })
-                            })
-                        });
-                        newPolygonLayer.set('isPolygonLayer', true);
-                        window.mapEdit.addLayer(newPolygonLayer);
-                    }
-
-                    const newExtent = ol.extent.createEmpty();
-                    editFeatures.forEach(f => ol.extent.extend(newExtent, f.getGeometry().getExtent()));
-
-                    if (!ol.extent.isEmpty(newExtent)) {
-                        window.mapEdit.getView().fit(newExtent, {
-                            padding: [50, 50, 50, 50],
-                            duration: 300,
-                            maxZoom: 8
-                        });
-                    }
+                    newPolygonLayer.set('isPolygonLayer', true);
+                    window.mapEdit.addLayer(newPolygonLayer);
                 }
-            } else {
-                alert('Fehler: ' + result.data);
-            }
-        });
-    });
 
+                const newExtent = ol.extent.createEmpty();
+                editFeatures.forEach(f => ol.extent.extend(newExtent, f.getGeometry().getExtent()));
+
+                if (!ol.extent.isEmpty(newExtent)) {
+                    window.mapEdit.getView().fit(newExtent, {
+                        padding: [50, 50, 50, 50],
+                        duration: 300,
+                        maxZoom: 8
+                    });
+                }
+            }
+        } else {
+            alert('Fehler: ' + result.data);
+        }
+    });
+});
     // GeoJSON manuell importieren
     importButton?.addEventListener('click', () => {
         const input = manualTextarea?.value.trim();

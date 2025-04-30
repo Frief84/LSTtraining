@@ -7,8 +7,8 @@
 <file name="einsatzgebiet-map.php" server="ssh.strato.de" local="133890152272084097" remote="133900806210000000" Dst="2" />
 <file name="einsatzgebiet-editor.php" server="ssh.strato.de" local="133904977506570222" remote="133904977530000000" Dst="2" />
 <file name="admin-menu.php" server="ssh.strato.de" local="133904725489972672" remote="133904725510000000" Dst="2" />
-<file name="nebenstellen_editor.php" server="ssh.strato.de" local="133904782354126264" remote="133904782360000000" Dst="2" />
+<file name="nebenstellen_editor.php" server="ssh.strato.de" local="133905164988326568" remote="133905165030000000" Dst="2" />
 <file name="leitstellen_editor.php" server="ssh.strato.de" local="133904951951604687" remote="133904951950000000" Dst="2" />
-<file name="admin-ui.php" server="ssh.strato.de" local="133904976041838604" remote="133904976150000000" Dst="2" />
-<file name="ajax-handlers.php" server="ssh.strato.de" local="133904973361618560" remote="133904976770000000" Dst="2" />
+<file name="admin-ui.php" server="ssh.strato.de" local="133905090479274032" remote="133905090520000000" Dst="2" />
+<file name="ajax-handlers.php" server="ssh.strato.de" local="133905172233663744" remote="133905173100000000" Dst="2" />
 </dwsync>

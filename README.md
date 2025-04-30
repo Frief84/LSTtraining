@@ -79,3 +79,14 @@ MIT License. Siehe `LICENSE.md`.
 ## 🧑‍💻 Mitwirken
 
 Pull Requests sind willkommen! Bitte öffne ein Issue für größere Feature-Vorschläge.
+
+
+## ✅ Umgesetzte Funktionen (seit April 2025)
+
+- [X] Zentrale Auslagerung aller AJAX-Handler in `ajax-handlers.php`
+- [X] Dynamisches Nachladen und Anzeigen von Einsatzgebieten beim Bearbeiten von Leitstellen
+- [X] Integration eines eigenständigen Editors für Einsatzgebiete mit OpenLayers
+- [X] Fehlerbehandlung bei ungültigem oder leerem GeoJSON (kein JS-Fehler mehr)
+- [X] Automatische Markerpositionierung inkl. Verschiebung und Rückschreiben der Koordinaten
+- [X] Überarbeitung von `admin-ui.js` zur flexiblen Initialisierung
+- [X] Button "Einsatzgebiet löschen" optisch angepasst (rechtsbündig, rot)

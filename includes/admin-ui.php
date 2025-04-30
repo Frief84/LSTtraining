@@ -12,6 +12,7 @@ add_action('admin_enqueue_scripts', function ($hook) {
         wp_enqueue_style('lsttraining-admin-style', $base . '/css/admin-ui.css', [], '1.0');
         wp_enqueue_script('lsttraining-admin-ui', $base . '/js/admin-ui.js', ['jquery'], '1.0', true);
         wp_enqueue_script('lsttraining-einsatzgebiet-editor', $base . '/js/einsatzgebiet-editor.js', ['jquery'], '1.0', true);
+        wp_enqueue_script('lsttraining-nebenstellen-editor', $base . '/js/nebenstellen_editor.js', ['openlayers'], '1.0', true);
     }
 });
 

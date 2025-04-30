@@ -6,6 +6,14 @@ window.dragInteractionNeu = null;
 window.dragInteractionEdit = null;
 
 window.initMapWithMarker = function(mapId, latInput, lonInput, initialCoords, assignMap, assignInteraction, polygonGeoJson = null) {
+	
+			if (window[assignMap]) {
+			window[assignMap].setTarget(null); // trennt alte Karte vom DOM
+			window[assignMap] = null;
+		}
+		const container = document.getElementById(mapId);
+		if (container) container.innerHTML = ''; // räumt das Map-Container-DIV auf
+	
     const coord = ol.proj.fromLonLat(initialCoords);
     const feature = new ol.Feature({ geometry: new ol.geom.Point(coord) });
     feature.setStyle(new ol.style.Style({

@@ -59,3 +59,27 @@ add_action('wp_ajax_lsttraining_save_einsatzgebiet', function () {
 
     wp_send_json_success();
 });
+
+add_action('wp_ajax_lsttraining_save_neben_einsatzgebiet', function () {
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error('Keine Berechtigung');
+    }
+
+    $id = intval($_POST['neben_id'] ?? 0);
+    $geojson = stripslashes($_POST['geojson'] ?? '');
+
+    if (!$id || $geojson === '') {
+        wp_send_json_error('Ungültige Daten');
+    }
+
+    global $wpdb;
+    $table = $wpdb->prefix . 'nebenleistellen';
+
+    $updated = $wpdb->update($table, ['geojson' => $geojson], ['id' => $id]);
+
+    if ($updated !== false) {
+        wp_send_json_success();
+    } else {
+        wp_send_json_error('Update fehlgeschlagen');
+    }
+});

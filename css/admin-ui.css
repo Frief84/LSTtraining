@@ -74,6 +74,19 @@ hr {
   background-color: #c82333;
 }
 
+tr.missing-both {
+    background-color: #ffcccc; /* rot */
+}
+tr.missing-geojson {
+    background-color: #fff3cd; /* gelb */
+}
+tr.missing-gps {
+    background-color: #f0f0f0; /* hellgrau */
+}
+
+tr {
+    border-bottom: 1px solid #ccc;
+}
 
 @media (max-width: 768px) {
   .form-container {
