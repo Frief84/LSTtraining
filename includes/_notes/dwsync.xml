@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <dwsync>
-<file name="settings.php" server="ssh.strato.de" local="133900775620360669" remote="133900806220000000" Dst="2" />
-<file name="schema_import.php" server="ssh.strato.de" local="133889660664218383" remote="133900806220000000" Dst="2" />
-<file name="db.php" server="ssh.strato.de" local="133889660663829417" remote="133900806210000000" Dst="2" />
-<file name="map-override.php" server="ssh.strato.de" local="133889660664028908" remote="133900806220000000" Dst="2" />
-<file name="einsatzgebiet-map.php" server="ssh.strato.de" local="133890152272084097" remote="133900806210000000" Dst="2" />
-<file name="einsatzgebiet-editor.php" server="ssh.strato.de" local="133904977506570222" remote="133904977530000000" Dst="2" />
-<file name="admin-menu.php" server="ssh.strato.de" local="133904725489972672" remote="133904725510000000" Dst="2" />
-<file name="nebenstellen_editor.php" server="ssh.strato.de" local="133905164988326568" remote="133905165030000000" Dst="2" />
-<file name="leitstellen_editor.php" server="ssh.strato.de" local="133904951951604687" remote="133904951950000000" Dst="2" />
+<file name="settings.php" server="ssh.strato.de" local="133904798355772382" remote="133905859360000000" Dst="2" />
+<file name="schema_import.php" server="ssh.strato.de" local="133889660664218383" remote="133905859360000000" Dst="2" />
+<file name="db.php" server="ssh.strato.de" local="133889660663829417" remote="133905859340000000" Dst="2" />
+<file name="map-override.php" server="ssh.strato.de" local="133889660664028908" remote="133905859340000000" Dst="2" />
+<file name="einsatzgebiet-map.php" server="ssh.strato.de" local="133890152272084097" remote="133905859340000000" Dst="2" />
+<file name="einsatzgebiet-editor.php" server="ssh.strato.de" local="133905957094300013" remote="133905957120000000" Dst="2" />
+<file name="admin-menu.php" server="ssh.strato.de" local="133904798355742367" remote="133905957550000000" Dst="2" />
+<file name="nebenstellen_editor.php" server="ssh.strato.de" local="133905976929617407" remote="133905976980000000" Dst="2" />
+<file name="leitstellen_editor.php" server="ssh.strato.de" local="133906022510464504" remote="133906022640000000" Dst="2" />
 <file name="admin-ui.php" server="ssh.strato.de" local="133905090479274032" remote="133905090520000000" Dst="2" />
-<file name="ajax-handlers.php" server="ssh.strato.de" local="133905172233663744" remote="133905173100000000" Dst="2" />
+<file name="ajax-handlers.php" server="ssh.strato.de" local="133906003725908275" remote="133906003790000000" Dst="2" />
 </dwsync>

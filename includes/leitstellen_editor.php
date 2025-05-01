@@ -12,7 +12,8 @@ require_once plugin_dir_path(__FILE__) . '/einsatzgebiet-editor.php';
 
 $pdo = lsttraining_get_connection();
 $leitstellen = [];
-$suchbegriff = $_GET['suchbegriff'] ?? '';
+
+$suchbegriff = isset($_GET['suchbegriff']) ? $_GET['suchbegriff'] : '';
 
 // Löschen
 if (isset($_GET['delete_id']) && $pdo) {
@@ -34,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['lst_update_id']) && $
     ]);
 
     // GeoJSON speichern
-    $geojson = stripslashes($_POST['geojson_edit'] ?? '');
+    $geojson = isset($_POST['geojson_edit']) ? stripslashes($_POST['geojson_edit']) : '';
     $leitstelle_id = intval($_POST['lst_update_id']);
     $check = $pdo->prepare("SELECT id FROM einsatzgebiete WHERE leitstelle_id = ?");
     $check->execute([$leitstelle_id]);
@@ -70,7 +71,7 @@ if ($pdo) {
     <table class="widefat">
         <thead><tr><th>ID</th><th>Name</th><th>Ort</th><th>Bundesland</th><th>Land</th><th>Koordinaten</th><th>Aktionen</th></tr></thead>
         <tbody>
-        <?php foreach ($leitstellen as $l): ?>
+        <?php foreach ($leitstellen as $l) : ?>
             <tr>
                 <td><?php echo esc_html($l->id); ?></td>
                 <td><?php echo esc_html($l->name); ?></td>
@@ -117,14 +118,28 @@ if ($pdo) {
           </td>
         </tr>
       </table>
-      <input type="hidden" name="geojson_edit" id="geojson_edit" value="[]">
     </div>
     <div class="map-wrapper" style="flex: 1 1 48%;">
       <div id="map_edit" style="height: 300px;"></div>
     </div>
     <div style="width: 100%;">
-      <?php <input type="hidden" name="geojson_edit" id="geojson_edit" value='{"type":"FeatureCollection","features":[]}'>
- ?>
+<?php
+$leitstelle_id = isset($leitstelle->id) ? $leitstelle->id : 0;
+$geojson = isset($leitstelle->geojson) ? $leitstelle->geojson : '';
+$center = isset($leitstelle->latitude, $leitstelle->longitude) ? $leitstelle->latitude . ',' . $leitstelle->longitude : '';
+?>
+
+<button 
+    type="button" 
+    class="button open-einsatzgebiet-editor"
+    data-map-id="einsatzgebiet_<?= $leitstelle_id ?>"
+    data-geojson=''
+    data-leitstelle-id="<?= $leitstelle_id ?>"
+    data-center="<?= esc_attr($center) ?>"
+    data-context="leitstelle"
+>
+    Einsatzgebiet bearbeiten
+</button>
       <p><button class="button button-primary">Speichern</button>
          <button type="button" class="button" onclick="document.getElementById('popup-overlay').style.display='none'; document.getElementById('edit-leitstelle-formular').style.display='none';">Abbrechen</button></p>
     </div>

@@ -37,8 +37,8 @@ add_action('wp_ajax_lsttraining_save_einsatzgebiet', function () {
     }
 
     $leitstelle_id = intval($_POST['leitstelle_id'] ?? 0);
-    $geojson = stripslashes($_POST['geojson'] ?? '');
-
+    $geojson = $_POST['geojson'] ?? '';
+	error_log("GeoJSON-Empfang: ID={$leitstelle_id}, Länge=" . strlen($geojson));
     if ($leitstelle_id <= 0 || empty($geojson)) {
         wp_send_json_error('Ungültige Daten', 400);
     }
@@ -65,21 +65,26 @@ add_action('wp_ajax_lsttraining_save_neben_einsatzgebiet', function () {
         wp_send_json_error('Keine Berechtigung');
     }
 
-    $id = intval($_POST['neben_id'] ?? 0);
+    $neben_id = intval($_POST['neben_id'] ?? 0);
     $geojson = stripslashes($_POST['geojson'] ?? '');
 
-    if (!$id || $geojson === '') {
-        wp_send_json_error('Ungültige Daten');
+    if ($neben_id <= 0 || empty($geojson)) {
+        wp_send_json_error('Ungültige Daten', 400);
     }
 
-    global $wpdb;
-    $table = $wpdb->prefix . 'nebenleistellen';
+    require_once plugin_dir_path(__FILE__) . '/db.php';
+    $pdo = lsttraining_get_connection();
 
-    $updated = $wpdb->update($table, ['geojson' => $geojson], ['id' => $id]);
+    $stmt = $pdo->prepare("SELECT id FROM nebenleitstellen WHERE id = ?");
+    $stmt->execute([$neben_id]);
 
-    if ($updated !== false) {
-        wp_send_json_success();
+    if ($stmt->fetchColumn()) {
+        $stmt = $pdo->prepare("UPDATE nebenleitstellen SET geojson = ? WHERE id = ?");
+        $stmt->execute([$geojson, $neben_id]);
     } else {
-        wp_send_json_error('Update fehlgeschlagen');
+        wp_send_json_error('Nebenleitstelle nicht gefunden');
     }
+
+    wp_send_json_success();
 });
+

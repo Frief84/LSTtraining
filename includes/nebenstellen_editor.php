@@ -24,13 +24,13 @@ $suchbegriff = $_GET['suchbegriff'] ?? '';
 
 // Nebenleitstelle löschen
 if (isset($_GET['delete_id']) && $pdo) {
-    $stmt = $pdo->prepare("DELETE FROM nebenleistellen WHERE id = ?");
+    $stmt = $pdo->prepare("DELETE FROM nebenleitstellen WHERE id = ?");
     $stmt->execute([intval($_GET['delete_id'])]);
 }
 
 // Nebenleitstelle bearbeiten
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['neben_update_id']) && $pdo) {
-    $stmt = $pdo->prepare("UPDATE nebenleistellen SET name = ?, zustandigkeit = ?, einwohner = ?, flaeche_km2 = ?, gps = ?, nachbarleitstelle = ?, geojson = ? WHERE id = ?");
+    $stmt = $pdo->prepare("UPDATE nebenleitstellen SET name = ?, zustandigkeit = ?, einwohner = ?, flaeche_km2 = ?, gps = ?, nachbarleitstelle = ?, geojson = ? WHERE id = ?");
     $stmt->execute([
         sanitize_text_field($_POST['neben_update_name']),
         sanitize_text_field($_POST['neben_update_zustandigkeit']),
@@ -46,10 +46,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['neben_update_id']) &&
 // Liste laden
 if ($pdo) {
     if ($suchbegriff !== '') {
-        $stmt = $pdo->prepare("SELECT * FROM nebenleistellen WHERE name LIKE ? OR id = ? ORDER BY name ASC");
+        $stmt = $pdo->prepare("SELECT * FROM nebenleitstellen WHERE name LIKE ? OR id = ? ORDER BY name ASC");
         $stmt->execute(['%' . $suchbegriff . '%', $suchbegriff]);
     } else {
-        $stmt = $pdo->query("SELECT * FROM nebenleistellen ORDER BY name ASC");
+        $stmt = $pdo->query("SELECT * FROM nebenleitstellen ORDER BY name ASC");
     }
     $nebenstellen = $stmt->fetchAll(PDO::FETCH_OBJ);
 }
@@ -156,9 +156,28 @@ if ($pdo) {
 
         <input type="hidden" name="geojson_edit" id="geojson_edit" value="[]">
 
-        <div class="form-map" id="einsatzgebiet_container">
-            <?php lsttraining_einsatzgebiet_editor('einsatzgebiet_edit', 'geojson_edit', $geojson, $n->id); ?>
-        </div>
+<div class="form-map" id="einsatzgebiet_container">
+<?php
+$neben_id = $n->id ?? 0;
+$geojson = $n->geojson ?? '';
+$center = '';
+if (!empty($n->gps) && strtolower($n->gps) !== 'none') {
+    $center = $n->gps;
+}
+?>
+
+<button 
+    type="button" 
+    class="button open-einsatzgebiet-editor"
+    data-map-id="einsatzgebiet_<?= $neben_id ?>"
+    data-geojson='<?= esc_attr($geojson) ?>'
+    data-leitstelle-id="<?= $neben_id ?>"
+    data-center="<?= esc_attr($center) ?>"
+    data-context="neben"
+>
+    Einsatzgebiet bearbeiten
+</button>
+</div>
 
         <p style="margin-top:1rem;">
             <button class="button button-primary">Speichern</button>
