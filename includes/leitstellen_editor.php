@@ -125,15 +125,20 @@ if ($pdo) {
     <div style="width: 100%;">
 <?php
 $leitstelle_id = isset($leitstelle->id) ? $leitstelle->id : 0;
+$mapId = 'einsatzgebiet_' . $leitstelle_id;
+$inputId = 'geojson_edit_' . $leitstelle_id;
 $geojson = isset($leitstelle->geojson) ? $leitstelle->geojson : '';
 $center = isset($leitstelle->latitude, $leitstelle->longitude) ? $leitstelle->latitude . ',' . $leitstelle->longitude : '';
+
+// Editor erzeugen (vorher, aber unsichtbar!)
+lsttraining_einsatzgebiet_editor($mapId, $inputId, $geojson, $leitstelle_id, 'leitstelle', $center);
 ?>
 
 <button 
     type="button" 
     class="button open-einsatzgebiet-editor"
-    data-map-id="einsatzgebiet_<?= $leitstelle_id ?>"
-    data-geojson=''
+    data-map-id="einsatzgebiet_edit"
+    data-geojson='<?= esc_attr($geojson) ?>'
     data-leitstelle-id="<?= $leitstelle_id ?>"
     data-center="<?= esc_attr($center) ?>"
     data-context="leitstelle"

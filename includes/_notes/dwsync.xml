@@ -5,10 +5,10 @@
 <file name="db.php" server="ssh.strato.de" local="133889660663829417" remote="133905859340000000" Dst="2" />
 <file name="map-override.php" server="ssh.strato.de" local="133889660664028908" remote="133905859340000000" Dst="2" />
 <file name="einsatzgebiet-map.php" server="ssh.strato.de" local="133890152272084097" remote="133905859340000000" Dst="2" />
-<file name="einsatzgebiet-editor.php" server="ssh.strato.de" local="133905957094300013" remote="133905957120000000" Dst="2" />
+<file name="einsatzgebiet-editor.php" server="ssh.strato.de" local="133907485725550104" remote="133907485750000000" Dst="2" />
 <file name="admin-menu.php" server="ssh.strato.de" local="133904798355742367" remote="133905957550000000" Dst="2" />
-<file name="nebenstellen_editor.php" server="ssh.strato.de" local="133905976929617407" remote="133905976980000000" Dst="2" />
-<file name="leitstellen_editor.php" server="ssh.strato.de" local="133906022510464504" remote="133906022640000000" Dst="2" />
+<file name="nebenstellen_editor.php" server="ssh.strato.de" local="133907558410000000" remote="133907558410000000" Dst="2" />
+<file name="leitstellen_editor.php" server="ssh.strato.de" local="133907463368030248" remote="133907463390000000" Dst="2" />
 <file name="admin-ui.php" server="ssh.strato.de" local="133905090479274032" remote="133905090520000000" Dst="2" />
-<file name="ajax-handlers.php" server="ssh.strato.de" local="133906003725908275" remote="133906003790000000" Dst="2" />
+<file name="ajax-handlers.php" server="ssh.strato.de" local="133907551762210382" remote="133907551760000000" Dst="2" />
 </dwsync>

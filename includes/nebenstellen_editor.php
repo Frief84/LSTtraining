@@ -6,7 +6,7 @@
 if (!current_user_can('manage_options')) {
     wp_die('Keine Berechtigung.');
 }
-
+$base = plugin_dir_url(__FILE__) . '..';
 require_once plugin_dir_path(__FILE__) . '/db.php';
 require_once plugin_dir_path(__FILE__) . '/einsatzgebiet-editor.php';
 
@@ -166,11 +166,10 @@ if (!empty($n->gps) && strtolower($n->gps) !== 'none') {
 }
 ?>
 
-<button 
-    type="button" 
+<button
+    type="button"
     class="button open-einsatzgebiet-editor"
     data-map-id="einsatzgebiet_<?= $neben_id ?>"
-    data-geojson='<?= esc_attr($geojson) ?>'
     data-leitstelle-id="<?= $neben_id ?>"
     data-center="<?= esc_attr($center) ?>"
     data-context="neben"

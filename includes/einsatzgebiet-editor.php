@@ -1,9 +1,10 @@
 <?php
-function lsttraining_einsatzgebiet_editor($mapId = 'polygon_map', $inputId = 'einsatzgebiet_geojson', $geojson = '', $leitstelle_id = 0, $context = 'leitstelle', $center = '') {
-    $uid = uniqid();
-    $dataContext = $context === 'neben' ? 'neben' : 'leitstelle';
+// einsatzgebiet-editor.php
 
-    echo '<div id="popup_' . $uid . '" class="einsatzgebiet-popup" style="
+function lsttraining_einsatzgebiet_editor($mapId = 'polygon_map', $inputId = 'einsatzgebiet_geojson', $geojson = '', $leitstelle_id = 0, $context = 'leitstelle', $center = '') {
+    $dataContext = ($context === 'neben') ? 'neben' : 'leitstelle';
+
+    echo '<div id="popup_' . esc_attr($mapId) . '" class="einsatzgebiet-popup" style="
         display: none;
         position: fixed;
         top: 50%;
@@ -23,21 +24,26 @@ function lsttraining_einsatzgebiet_editor($mapId = 'polygon_map', $inputId = 'ei
     data-geojson-id="' . esc_attr($inputId) . '"
     data-leitstelle-id="' . intval($leitstelle_id) . '"
     data-context="' . esc_attr($dataContext) . '"
-    data-center="' . esc_attr($center) . '">';
+    data-center="' . esc_attr($center) . '"
+    data-geojson="' . esc_attr($geojson) . '"
+    >';
 
     echo '<h3>Einsatzgebiet bearbeiten</h3>';
-    echo '<div style="background:#eef3f9; border:1px solid #cce; padding:10px; margin-bottom:15px;">';
-    echo '<strong>Hinweise zur Bearbeitung:</strong>';
-    echo '<ul style="margin-top:5px;">
+
+    echo '<div style="background:#eef3f9; border:1px solid #cce; padding:10px; margin-bottom:15px;">
+        <strong>Hinweise zur Bearbeitung:</strong>
+        <ul style="margin-top:5px;">
             <li><strong>Linksklick</strong> in der Karte fügt einen Punkt zum Polygon hinzu.</li>
             <li><strong>Rechtsklick</strong> entfernt den letzten Punkt oder löscht das Polygon.</li>
             <li>Ein bestehendes GeoJSON kann unten eingefügt und übernommen werden.</li>
-            <li>Für externe Bearbeitung kannst du das Tool <a href="https://opendatalab.de/projects/geojson-utilities/" target="_blank">GeoJSON Utilities</a> nutzen.</li>
-          </ul>';
-    echo '</div>';
+            <li>Für externe Bearbeitung kannst du das Tool 
+                <a href="https://opendatalab.de/projects/geojson-utilities/" target="_blank">GeoJSON Utilities</a> nutzen.
+            </li>
+        </ul>
+    </div>';
 
     echo '<div id="' . esc_attr($mapId) . '" style="height: 300px; border: 1px solid #ccc; margin-bottom: 10px;"></div>';
-    echo '<textarea name="' . esc_attr($inputId) . '" id="' . esc_attr($inputId) . '" style="display:none">' . esc_textarea($geojson) . '</textarea>';
+    echo '<textarea id="' . esc_attr($inputId) . '" style="display:none">' . esc_textarea($geojson) . '</textarea>';
 
     echo '<p>
         <button type="button" class="button button-primary btn-einsatzgebiet-save">Speichern</button>
@@ -46,21 +52,10 @@ function lsttraining_einsatzgebiet_editor($mapId = 'polygon_map', $inputId = 'ei
     </p>';
 
     echo '<div style="margin-top: 15px;">
-        <label for="manual_geojson"><strong>GeoJSON manuell einfügen:</strong></label><br>
+        <label><strong>GeoJSON manuell einfügen:</strong></label><br>
         <textarea id="manual_geojson" style="width: 100%; height: 100px;"></textarea><br>
         <button type="button" class="button" id="btn-geojson-import">GeoJSON übernehmen</button>
     </div>';
 
-    echo '</div>'; // popup schließen
-
-    // Der Button initialisiert die Karte nur bei Bedarf
-    echo '<button type="button" class="button" onclick="
-        const popup = document.getElementById(\'popup_' . $uid . '\');
-        if (!popup.dataset.initialized) {
-            window.initEinsatzgebietEditor(popup);
-        } else {
-            popup.style.display = \'block\';
-        }
-    ">Einsatzgebiet bearbeiten</button>';
+    echo '</div>';
 }
-?>

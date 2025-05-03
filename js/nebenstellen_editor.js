@@ -1,13 +1,13 @@
-window.initNebenstelleMap = function(gps, geojson = null, hauptLat = null, hauptLon = null) {
 
-    let lat = 51.0, lon = 10.0; // Deutschland-Mitte
-	if (gps && gps.includes(',')) {
-		const coords = gps.split(',').map(parseFloat);
-		if (!isNaN(coords[0]) && !isNaN(coords[1])) {
-			lat = coords[0];
-			lon = coords[1];
-		}
-	}
+window.initNebenstelleMap = function(gps, geojson = null, hauptLat = null, hauptLon = null) {
+    let lat = 51.0, lon = 10.0;
+    if (gps && gps.includes(',')) {
+        const coords = gps.split(',').map(parseFloat);
+        if (!isNaN(coords[0]) && !isNaN(coords[1])) {
+            lat = coords[0];
+            lon = coords[1];
+        }
+    }
     const view = new ol.View({ center: ol.proj.fromLonLat([lon, lat]), zoom: 11 });
 
     const nebenMarker = new ol.Feature({
@@ -21,7 +21,7 @@ window.initNebenstelleMap = function(gps, geojson = null, hauptLat = null, haupt
             stroke: new ol.style.Stroke({ color: '#fff', width: 2 })
         })
     }));
-	window.nebenMarkerFeature = nebenMarker;
+    window.nebenMarkerFeature = nebenMarker;
     const vectorSource = new ol.source.Vector({ features: [nebenMarker] });
     const markerLayer = new ol.layer.Vector({ source: vectorSource });
 
@@ -39,58 +39,52 @@ window.initNebenstelleMap = function(gps, geojson = null, hauptLat = null, haupt
         nebenMarker.setGeometry(new ol.geom.Point(e.coordinate));
         document.getElementById('neben_update_gps').value = latNew.toFixed(6) + ',' + lonNew.toFixed(6);
     });
-	
-	// Drag & Drop für Nebenstellen-Marker
-const drag = new ol.interaction.Modify({ source: vectorSource });
-drag.on('modifyend', function (e) {
-    const coord = e.features.item(0).getGeometry().getCoordinates();
-    const [lon, lat] = ol.proj.toLonLat(coord);
-    document.getElementById('neben_update_gps').value = lat.toFixed(6) + ',' + lon.toFixed(6);
-});
-map.addInteraction(drag);
 
-    // GeoJSON Gebiet laden
-		if (geojson && geojson.trim() !== '') {
-		try {
-			let parsed = JSON.parse(geojson);
-			if (Array.isArray(parsed)) {
-				parsed = {
-					type: 'FeatureCollection',
-					features: parsed
-				};
-			}
+    const drag = new ol.interaction.Modify({ source: vectorSource });
+    drag.on('modifyend', function (e) {
+        const coord = e.features.item(0).getGeometry().getCoordinates();
+        const [lon, lat] = ol.proj.toLonLat(coord);
+        document.getElementById('neben_update_gps').value = lat.toFixed(6) + ',' + lon.toFixed(6);
+    });
+    map.addInteraction(drag);
 
-			const format = new ol.format.GeoJSON();
-			const features = format.readFeatures(parsed, {
-				featureProjection: map.getView().getProjection()
-			});
-			const polygonSource = new ol.source.Vector({ features });
+    if (geojson && geojson.trim() !== '') {
+        try {
+            let parsed = JSON.parse(geojson);
+            if (Array.isArray(parsed)) {
+                parsed = {
+                    type: 'FeatureCollection',
+                    features: parsed
+                };
+            }
+            const format = new ol.format.GeoJSON();
+            const features = format.readFeatures(parsed, {
+                featureProjection: map.getView().getProjection()
+            });
+            const polygonSource = new ol.source.Vector({ features });
+            const polygonLayer = new ol.layer.Vector({
+                source: polygonSource,
+                style: new ol.style.Style({
+                    stroke: new ol.style.Stroke({ color: 'rgba(0, 128, 255, 0.8)', width: 2 }),
+                    fill: new ol.style.Fill({ color: 'rgba(0, 128, 255, 0.2)' })
+                })
+            });
+            map.addLayer(polygonLayer);
+            const extent = polygonSource.getExtent();
+            if (!ol.extent.isEmpty(extent)) {
+                map.getView().fit(extent, {
+                    padding: [20, 20, 20, 20],
+                    duration: 500
+                });
+            } else {
+                console.warn("Kein darstellbares Polygon vorhanden – extent ist leer");
+                map.getView().setZoom(6);
+            }
+        } catch (e) {
+            console.warn("Ungültiges GeoJSON für Nebenstelle", e);
+        }
+    }
 
-			const polygonLayer = new ol.layer.Vector({
-				source: polygonSource,
-				style: new ol.style.Style({
-					stroke: new ol.style.Stroke({ color: 'rgba(0, 128, 255, 0.8)', width: 2 }),
-					fill: new ol.style.Fill({ color: 'rgba(0, 128, 255, 0.2)' })
-				})
-			});
-			map.addLayer(polygonLayer);
-
-			const extent = polygonSource.getExtent();
-			if (!ol.extent.isEmpty(extent)) {
-				map.getView().fit(extent, {
-					padding: [20, 20, 20, 20],
-					duration: 500
-				});
-			} else {
-				console.warn("Kein darstellbares Polygon vorhanden – extent ist leer");
-				map.getView().setZoom(6);
-			}
-		} catch (e) {
-			console.warn("Ungültiges GeoJSON für Nebenstelle", e);
-		}
-	}
-
-    // Hauptleitstelle anzeigen (optional)
     if (hauptLat && hauptLon) {
         const leitFeature = new ol.Feature({
             geometry: new ol.geom.Point(ol.proj.fromLonLat([parseFloat(hauptLon), parseFloat(hauptLat)]))
@@ -114,10 +108,8 @@ map.addInteraction(drag);
 document.getElementById('neben_update_gps')?.addEventListener('blur', function () {
     const val = this.value.trim();
     if (!val.includes(',')) return;
-
     const [lat, lon] = val.split(',').map(x => parseFloat(x));
     if (isNaN(lat) || isNaN(lon)) return;
-
     const coord = ol.proj.fromLonLat([lon, lat]);
     if (window.nebenstelleMap && window.nebenMarkerFeature) {
         window.nebenMarkerFeature.setGeometry(new ol.geom.Point(coord));
@@ -138,7 +130,6 @@ window.editNebenstelle = function(id, name, zust, einwohner, flaeche, gps, nachb
     document.getElementById('popup-overlay').style.display = 'block';
     document.getElementById('edit-nebenstelle-formular').style.display = 'block';
 
-    // ggf. alte Karte entfernen
     if (window.nebenstelleMap) {
         window.nebenstelleMap.setTarget(null);
         window.nebenstelleMap = null;
@@ -147,18 +138,19 @@ window.editNebenstelle = function(id, name, zust, einwohner, flaeche, gps, nachb
 
     setTimeout(() => {
         window.initNebenstelleMap(gps, geojson);
+        const einsatzEditorContainer = document.querySelector('.einsatzgebiet-popup');
+        if (einsatzEditorContainer && typeof window.initEinsatzgebietEditor === 'function') {
+            window.initEinsatzgebietEditor(einsatzEditorContainer);
+        }
     }, 200);
 };
 
-window.closeNebenstellePopup = function () {
+window.closeNebenstellePvopup = function () {
     document.getElementById('popup-overlay')?.style.setProperty('display', 'none');
     document.getElementById('edit-nebenstelle-formular')?.style.setProperty('display', 'none');
 };
-	
-	var feld = document.getElementById('neben_update_nachbar');
+
+var feld = document.getElementById('neben_update_nachbar');
 if (feld && feld.closest) {
     feld.closest('tr').style.display = 'none';
 }
-
-
-	

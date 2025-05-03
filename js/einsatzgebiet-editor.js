@@ -300,3 +300,25 @@ const features = format.readFeatures(parsed, {
 
     container.style.display = "block";
 };
+	
+	window.openEinsatzgebietPopup = function () {
+    const container = document.querySelector('.einsatzgebiet-popup');
+    if (!container) {
+        alert("Einsatzgebiet-Editor nicht gefunden.");
+        return;
+    }
+
+    if (typeof window.initEinsatzgebietEditor === 'function') {
+        window.initEinsatzgebietEditor(container);
+    }
+
+    container.style.display = 'block';
+
+    // Wenn Karte existiert, Größe aktualisieren
+    const mapId = container.dataset.mapId;
+    const map = window._openlayersMaps?.[mapId];
+    if (map) {
+        requestAnimationFrame(() => map.updateSize());
+    }
+};
+
