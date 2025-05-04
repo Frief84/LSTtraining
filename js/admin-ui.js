@@ -172,9 +172,13 @@ window.editLeitstelle = function (id, name, ort, bl, land, lat, lon) {
   fetch(`${ajaxurl}?action=lsttraining_get_einsatzgebiet&leitstelle_id=${id}&t=${Date.now()}`)
     .then((r) => r.json())
     .then((res) => {
-      const poly = res.success && res.data
-        ? res.data
-        : { type: 'FeatureCollection', features: [] };
+      let poly = res.success && res.data
+	  ? res.data
+	  : { type: 'FeatureCollection', features: [] };
+
+	if (Array.isArray(poly)) {
+	  poly = { type: 'FeatureCollection', features: poly };
+	}
 
       document.getElementById('geojson_edit').value = JSON.stringify(poly);
 
@@ -257,7 +261,8 @@ document.addEventListener('click', (ev) => {
           document.body.appendChild(popup);
 
           /* inject GeoJSON */
-          document.getElementById(geojsonId).value = JSON.stringify(poly);
+          const geoEl = popup.querySelector('#' + geojsonId);
+		  if (geoEl) geoEl.value = JSON.stringify(poly);
 
           popup.style.display = 'block';
 

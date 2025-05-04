@@ -117,33 +117,71 @@ document.getElementById('neben_update_gps')?.addEventListener('blur', function (
     }
 });
 
-window.editNebenstelle = function(id, name, zust, einwohner, flaeche, gps, nachbar, geojson) {
-    document.getElementById('neben_update_id').value = id;
-    document.getElementById('neben_update_name').value = name;
-    document.getElementById('neben_update_zustandigkeit').value = zust;
-    document.getElementById('neben_update_einwohner').value = einwohner;
-    document.getElementById('neben_update_flaeche').value = flaeche;
-    document.getElementById('neben_update_gps').value = gps;
-    document.getElementById('neben_update_nachbar').value = nachbar;
-    document.getElementById('geojson_edit').value = geojson;
+window.editNebenstelle = function (
+  id, name, zust, einwohner, flaeche, gps, nachbar, geojsonStub
+) {
+  /* ---- cache popup elements --------------------------------------- */
+  var overlay = document.getElementById('popup-overlay');
+  var formBox = document.getElementById('edit-nebenstelle-formular');
 
-    document.getElementById('popup-overlay').style.display = 'block';
-    document.getElementById('edit-nebenstelle-formular').style.display = 'block';
+  /* ---- fill inputs ------------------------------------------------- */
+  document.getElementById('neben_update_id').value            = id;
+  document.getElementById('neben_update_name').value          = name;
+  document.getElementById('neben_update_zustandigkeit').value = zust;
+  document.getElementById('neben_update_einwohner').value     = einwohner;
+  document.getElementById('neben_update_flaeche').value       = flaeche;
+  document.getElementById('neben_update_gps').value           = gps;
+  document.getElementById('neben_update_nachbar').value       = nachbar;
+  document.getElementById('geojson_edit').value               = '[]';
 
-    if (window.nebenstelleMap) {
-        window.nebenstelleMap.setTarget(null);
-        window.nebenstelleMap = null;
-    }
-    document.getElementById('nebenstelle_map').innerHTML = '';
+  /* ---- show popup -------------------------------------------------- */
+  overlay.style.display = 'block';
+  formBox.style.display = 'block';
 
-    setTimeout(() => {
-        window.initNebenstelleMap(gps, geojson);
-        const einsatzEditorContainer = document.querySelector('.einsatzgebiet-popup');
-        if (einsatzEditorContainer && typeof window.initEinsatzgebietEditor === 'function') {
-            window.initEinsatzgebietEditor(einsatzEditorContainer);
-        }
-    }, 200);
+  /* ---- reset map container ---------------------------------------- */
+  if (window.nebenstelleMap) {
+    window.nebenstelleMap.setTarget(null);
+    window.nebenstelleMap = null;
+  }
+  document.getElementById('nebenstelle_map').innerHTML = '';
+
+  /* ---- button INSIDE current popup -------------------------------- */
+  var egBtn = formBox.querySelector('.open-einsatzgebiet-editor');
+  if (egBtn) {
+    egBtn.dataset.mapId        = 'einsatzgebiet_' + id;
+    egBtn.dataset.leitstelleId = String(id);
+    egBtn.dataset.center       = gps || '';
+    egBtn.dataset.context      = 'neben';
+  }
+
+  /* ---- load polygon, then init map -------------------------------- */
+  fetch(
+    ajaxurl +
+      '?action=lsttraining_get_neben_einsatzgebiet&neben_id=' + id
+  )
+    .then(function (r) { return r.json(); })
+    .then(function (res) {
+      var geoStr =
+        res.success && res.data
+          ? (typeof res.data === 'string' ? res.data : JSON.stringify(res.data))
+          : '[]';
+
+      /* write to hidden field */
+      document.getElementById('geojson_edit').value = geoStr;
+
+      /* map with polygon */
+      window.initNebenstelleMap(gps, geoStr);
+
+      /* re-init polygon editor if already injected */
+      var polyPopup = formBox.querySelector('.einsatzgebiet-popup');
+      if (polyPopup && typeof window.initEinsatzgebietEditor === 'function') {
+        window.initEinsatzgebietEditor(polyPopup);
+      }
+    });
 };
+
+
+
 
 window.closeNebenstellePvopup = function () {
     document.getElementById('popup-overlay')?.style.setProperty('display', 'none');

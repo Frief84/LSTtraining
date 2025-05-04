@@ -84,6 +84,7 @@ window.initEinsatzgebietEditor = function (container) {
             featureProjection: map.getView().getProjection()
         });
         geojsonTextarea.value = geojson;
+		if (manualTextarea) manualTextarea.value = JSON.stringify(JSON.parse(geojson), null, 2);
     }
 
     draw.on('drawend', function (evt) {
@@ -99,43 +100,52 @@ window.initEinsatzgebietEditor = function (container) {
     modify.on('modifyend', updateGeoJSON);
 
     const existing = geojsonTextarea.value;
+
 try {
-    const parsed = JSON.parse(existing);
+    let parsed = existing ? JSON.parse(existing) : null;
 
-    if (parsed && parsed.type === "FeatureCollection") {
-        if (parsed.crs) {
-    delete parsed.crs;
-}
+    /* akzeptiere auch Array- oder Einzel-Feature  → FeatureCollection */
+    if (Array.isArray(parsed)) {
+        parsed = { type: 'FeatureCollection', features: parsed };
+    } else if (parsed && parsed.type === 'Feature') {
+        parsed = { type: 'FeatureCollection', features: [parsed] };
+    }
 
-const features = format.readFeatures(parsed, {
-    featureProjection: map.getView().getProjection()
-});
+    if (parsed && parsed.type === 'FeatureCollection') {
+        if (parsed.crs) delete parsed.crs;          // altes CRS-Feld entfernen
+
+        const features = format.readFeatures(parsed, {
+            featureProjection: map.getView().getProjection()
+        });
 
         if (features.length > 0) {
             vectorSource.clear();
             vectorSource.addFeatures(features);
-
-            if (deleteButton) {
-                deleteButton.style.display = 'inline-block';
-            }
+			
+			if (manualTextarea) {
+			manualTextarea.value = JSON.stringify(parsed, null, 2);   // hübsch eingerückt
+		}
+			
+            if (deleteButton) deleteButton.style.display = 'inline-block';
 
             requestAnimationFrame(() => {
                 const extent = vectorSource.getExtent();
                 if (!ol.extent.isEmpty(extent)) {
                     map.getView().fit(extent, {
-                        padding: [50, 50, 50, 50],
+                        padding : [50, 50, 50, 50],
                         duration: 200,
-                        maxZoom: 8
+                        maxZoom : 8
                     });
                 }
             });
         }
-    } else {
-        console.warn("GeoJSON ist vorhanden, aber kein FeatureCollection", parsed);
+    } else if (existing) {
+        console.warn('GeoJSON ist vorhanden, aber kein FeatureCollection', parsed);
     }
+
 } catch (e) {
     if (existing) {
-        console.warn("GeoJSON konnte nicht geparst werden:", e);
+        console.warn('GeoJSON konnte nicht geparst werden:', e);
     }
 }
 
