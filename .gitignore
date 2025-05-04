@@ -3,4 +3,7 @@ node_modules/
 .env
 dwsync.xml
 **/_notes/
-**/_notes/*
+**/_notes/**_notes/dwsync.xml
+*.zip
+*.zip
+*_notes/dwsync.xml
