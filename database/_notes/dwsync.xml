@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <dwsync>
-<file name="schema.sql" server="ssh.strato.de" local="133904798355702476" remote="133905957430000000" Dst="2" />
+<file name="schema.sql" server="ssh.strato.de" local="133908229433627593" remote="133908229460000000" Dst="2" />
 <file name="4_kreise.geojson" server="ssh.strato.de" local="133891807403071064" remote="133905957390000000" Dst="2" />
 <file name="import_neue_nebenleistellen.sql" server="ssh.strato.de" local="133904798355519612" remote="133905957390000000" Dst="2" />
 <file name="insert_nebenleistellen_mysql_ready.sql" server="ssh.strato.de" local="133891838948892107" remote="133905957400000000" Dst="2" />

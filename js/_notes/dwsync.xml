@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <dwsync>
 <file name="app.js" server="ssh.strato.de" local="133889676859065110" remote="133889676860000000" Dst="2" />
-<file name="admin-ui.js" server="ssh.strato.de" local="133907559371273171" remote="133907559380000000" Dst="2" />
-<file name="nebenstellen_editor.js" server="ssh.strato.de" local="133907442180066726" remote="133907442190000000" Dst="2" />
-<file name="einsatzgebiet-editor.js" server="ssh.strato.de" local="133907396479657063" remote="133907406400000000" Dst="2" />
+<file name="admin-ui.js" server="ssh.strato.de" local="133909108124262881" remote="133909108780000000" Dst="2" />
+<file name="nebenstellen_editor.js" server="ssh.strato.de" local="133908362283472655" remote="133908362300000000" Dst="2" />
+<file name="einsatzgebiet-editor.js" server="ssh.strato.de" local="133908394257720716" remote="133908394290000000" Dst="2" />
+<file name="leitstellen_editor.js" server="ssh.strato.de" local="133909089633145213" remote="133909089680000000" Dst="2" />
+<file name="wachen.js" server="ssh.strato.de" local="133909400633411825" remote="133909400660000000" Dst="2" />
 </dwsync>

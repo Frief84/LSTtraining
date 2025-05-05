@@ -48,7 +48,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['lst_update_id'] ) &
         sanitize_text_field( $_POST['lst_update_land'] ),
         floatval( $_POST['lst_update_lat'] ),
         floatval( $_POST['lst_update_lon'] ),
-        intval ( $_POST['lst_update_id'] )
+        intval( $_POST['lst_update_id'] )
     ] );
 
     /* GeoJSON (accept both field names) */
@@ -122,8 +122,7 @@ if ( $pdo ) {
                 <td><?php echo esc_html( $l->land ); ?></td>
                 <td><?php echo esc_html( $l->latitude ); ?>,&nbsp;<?php echo esc_html( $l->longitude ); ?></td>
                 <td>
-                    <a href="#"
-                       class="button edit-leitstelle"
+                    <a href="#" class="button edit-leitstelle"
                        data-id="<?php echo esc_attr( $l->id ); ?>"
                        data-name="<?php echo esc_attr( $l->name ); ?>"
                        data-ort="<?php echo esc_attr( $l->ort ); ?>"
@@ -145,14 +144,12 @@ if ( $pdo ) {
 </div>
 
 <!-- Popup overlay -->
-<div id="popup-overlay"
-     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:9998;"></div>
+<div id="popup-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:9998;"></div>
 
 <!-- Edit popup -->
-<div id="edit-leitstelle-formular"
-     style="display:none; position:fixed; top:5%; left:50%; transform:translateX(-50%);
-            background:#fff; padding:20px; max-width:800px; width:90%;
-            border:1px solid #ccc; z-index:9999; box-shadow:0 0 15px rgba(0,0,0,.3);">
+<div id="edit-leitstelle-formular" style="display:none; position:fixed; top:5%; left:50%; transform:translateX(-50%);
+        background:#fff; padding:20px; max-width:800px; width:90%;
+        border:1px solid #ccc; z-index:9999; box-shadow:0 0 15px rgba(0,0,0,.3);">
 
     <h2>Leitstelle bearbeiten</h2>
 
@@ -192,15 +189,19 @@ lsttraining_einsatzgebiet_editor(
         data-context="leitstelle">
     Einsatzgebiet bearbeiten
 </button>
+<button type="button" class="button open-wachen-editor" style="margin-left:10px;"
+        onclick="window.location.href='<?php echo admin_url('admin.php?page=lsttraining_leitstellen_wachen'); ?>&leitstelle_id='+document.getElementById('lst_update_id').value;">
+    Wachen bearbeiten
+</button>
 
-            <p>
-                <button class="button button-primary">Speichern</button>
-                <button type="button" class="button"
-                        onclick="document.getElementById('popup-overlay').style.display='none';
-                                 document.getElementById('edit-leitstelle-formular').style.display='none';">
-                    Abbrechen
-                </button>
-            </p>
+        <p>
+            <button class="button button-primary">Speichern</button>
+            <button type="button" class="button"
+                    onclick="document.getElementById('popup-overlay').style.display='none';
+                             document.getElementById('edit-leitstelle-formular').style.display='none';">
+                Abbrechen
+            </button>
+        </p>
         </div>
     </form>
 </div>

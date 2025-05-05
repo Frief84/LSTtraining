@@ -20,7 +20,14 @@ add_action('admin_menu', function () {
     // Unterpunkte für LSTtraining
     add_submenu_page('lsttraining', 'Einstellungen', 'Einstellungen', 'manage_options', 'lsttraining', 'lsttraining_settings_page');
     add_submenu_page('lsttraining', 'Leitstellen', 'Leitstellen', 'manage_options', 'lsttraining_leitstellen', 'lsttraining_render_leitstellen');
-    add_submenu_page('lsttraining', 'Wachen', 'Wachen', 'manage_options', 'lsttraining_leitstellen_wachen', 'lsttraining_render_leitstellen_wachen');
+    add_submenu_page(
+    'lsttraining',
+    'Wachen',
+    'Wachen',
+    'manage_options',
+    'lsttraining_leitstellen_wachen',
+    'lsttraining_render_leitstellen_wachen'
+	);
     add_submenu_page('lsttraining', 'Fahrzeuge', 'Fahrzeuge', 'manage_options', 'lsttraining_leitstellen_fahrzeuge', 'lsttraining_render_leitstellen_fahrzeuge');
 
     // Nebenstruktur als Hauptpunkt mit Dummy-Seite (zeigt ersten Unterpunkt)

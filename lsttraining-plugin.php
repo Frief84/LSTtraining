@@ -14,3 +14,4 @@ require_once plugin_dir_path(__FILE__) . 'includes/admin-menu.php';     // Menü
 require_once plugin_dir_path(__FILE__) . 'includes/admin-ui.php';       // Rendering-Logik
 require_once plugin_dir_path(__FILE__) . 'includes/schema_import.php';  // SQL/Tabellen
 require_once plugin_dir_path(__FILE__) . 'includes/map-override.php';   // Map-Hooks
+

@@ -15,15 +15,27 @@ CREATE TABLE leitstellen (
 /* ------------------------------------------------------------------ */
 /* 2. Wachen                                                           */
 /* ------------------------------------------------------------------ */
+--
+-- Tabelle `wachen`
+-- Eine Wache kann *entweder* einer Leitstelle (leitstelle_id) *oder*
+-- einer Nebenleitstelle (nebenleitstelle_id) zugeordnet sein – nie beides.
+-- Der CHECK-Constraint chk_eine_eltern sorgt dafür, dass genau eine der
+-- beiden Spalten befüllt ist.
+--
 CREATE TABLE wachen (
-    id           INT AUTO_INCREMENT PRIMARY KEY,
-    leitstelle_id INT  NOT NULL,
-    name         VARCHAR(255) NOT NULL,
-    typ          ENUM('RW','RD','FW','FFW','FW_RD') NOT NULL,
-    latitude     DOUBLE NOT NULL,
-    longitude    DOUBLE NOT NULL,
-    FOREIGN KEY (leitstelle_id) REFERENCES leitstellen(id) ON DELETE CASCADE
+  id                 INT            NOT NULL AUTO_INCREMENT,
+  leitstelle_id      INT            NULL,
+  nebenleitstelle_id INT            NULL,
+  name               VARCHAR(255)   NOT NULL,
+  …
+  PRIMARY KEY (id),
+  CONSTRAINT chk_eine_eltern CHECK (
+    (leitstelle_id      IS NOT NULL AND nebenleitstelle_id IS NULL)
+    OR
+    (leitstelle_id      IS NULL     AND nebenleitstelle_id IS NOT NULL)
+  )
 );
+
 
 /* ------------------------------------------------------------------ */
 /* 3. Fahrzeuge                                                        */
