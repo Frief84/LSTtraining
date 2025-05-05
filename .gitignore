@@ -7,3 +7,10 @@ dwsync.xml
 *.zip
 *.zip
 *_notes/dwsync.xml
+"**/_notes/*.xml" 
+"_notes/" 
+"css/_notes/" 
+"database/_notes/" 
+"includes/_notes/" 
+"js/_notes/" 
+**/_notes/
