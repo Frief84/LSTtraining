@@ -160,60 +160,69 @@ Jedes Modul ist als eigenständige Datei umgesetzt, um die Verantwortlichkeiten 
 3. **Wachen verwalten**: Karte & Liste laden Daten über `lsttraining_get_wachen`  
 4. **Wache bearbeiten**: Pop-up-Formular per AJAX (`lsttraining_get_wache`/`lsttraining_save_wache`)
 
-## 🏥 Krankenhäuser
+# Krankenhäuser – Statische Tabelle
 
-Wir haben jetzt eine vollständige statische „Hospitalkatalog“-Tabelle für die Simulation definiert. Die SQL-Definition dient nur als Referenz – in der README beschreiben wir die Felder:
+Diese Datei dokumentiert die Felder und die Struktur der `krankenhaeuser`-Tabelle sowie das Format des `departments`-JSON-Feldes.
 
-| Feld             | Typ                         | Beschreibung                                                           |
-|------------------|-----------------------------|------------------------------------------------------------------------|
-| **id**           | INT, PK, AUTO_INCREMENT     | Interner Primärschlüssel                                                |
-| **poi_id**       | VARCHAR(50), UNIQUE         | Externe POI-ID (z.B. OSM-ID oder GeoJSON-ID)                            |
-| **name**         | VARCHAR(255)                | Name des Krankenhauses                                                  |
-| **latitude**     | DOUBLE                      | Breitengrad                                                             |
-| **longitude**    | DOUBLE                      | Längengrad                                                              |
-| **versorgungsstufe** | ENUM                    | Versorgungsstufe (  
-   - `Grundversorgung`  
-   - `Schwerpunktversorger`  
-   - `Maximalversorger`  
-)                                                                         |
-| **trauma_level** | TINYINT                     | Trauma-Level (0 = kein, 1–3)                                            |
-| **helipad**      | BOOLEAN                     | Hubschrauberlandeplatz vorhanden? (`true` / `false`)                    |
-| **departments**  | JSON                        | Liste der Fachabteilungen als JSON-Array (siehe unten)                  |
-| **last_update**  | TIMESTAMP                   | Zeitpunkt der letzten Änderung                                          |
+## Tabellenschema (ohne CREATE TABLE)
 
-### 📋 Fachabteilungen (`departments` JSON)
+- **id**: INT AUTO_INCREMENT, Primärschlüssel.  
+- **poi_id**: VARCHAR(50) NOT NULL, eindeutige externe POI-ID (z.B. OSM-ID oder GeoJSON-ID).  
+- **name**: VARCHAR(255) NOT NULL, Name des Krankenhauses.  
+- **latitude**: DOUBLE NOT NULL, Breitengrad.  
+- **longitude**: DOUBLE NOT NULL, Längengrad.  
+- **versorgungsstufe**: ENUM('Grundversorgung','Schwerpunktversorger','Maximalversorger') NOT NULL DEFAULT 'Grundversorgung', Kategorie der medizinischen Versorgung.  
+- **trauma_level**: TINYINT NOT NULL DEFAULT 0, Trauma-Level (0 = keine, 1–3).  
+- **helipad**: BOOLEAN NOT NULL DEFAULT FALSE, vorhanden: Landeplatz für Hubschrauber.  
+- **departments**: JSON NOT NULL, Liste der Fachabteilungen (siehe unten).  
+- **last_update**: TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, Zeitstempel der letzten Änderung.
 
-Das Feld `departments` ist ein JSON-Array mit Objekten für jede Abteilung. Um Konsistenz sicherzustellen, dürfen nur folgende **Codes** verwendet werden:
+## `departments` JSON-Feld
 
-| Code   | Name                                    |
-|--------|-----------------------------------------|
-| NOTF   | Innere Notaufnahme                      |
-| KINA   | Kinder-Notaufnahme                      |
-| CHIR   | Chirurgie                               |
-| ISTX   | Chirurgische Intensivstation            |
-| CT     | Computertomographie                     |
-| DERM   | Dermatologie                            |
-| DRAM   | Druckkammer                             |
-| VASG   | Gefäßchirurgie                          |
-| GYNO   | Gynäkologie                             |
-| HNOK   | HNO-Heilkunde                           |
-| INTX   | Innere Intensivstation                  |
-| CARD   | Kardiologie                             |
-| KESS   | Kreißsaal                               |
-| MRT    | Magnetresonanztomographie               |
-| MKGC   | MKG-Chirurgie                           |
-| NECH   | Neurochirurgie                          |
-| NEUR   | Neurologie                              |
-| NOTO   | Notoperation                            |
-| NUKL   | Nuklearmedizin                          |
-| ONKO   | Onkologie                               |
-| PSYC   | Psychiatrie                             |
-| PED    | Pädiatrie                               |
-| KKH    | Kinderkrankenhaus                       |
-| STRK   | Stroke Unit                             |
-| UROL   | Urologie                                |
-| BURN   | Brandverletzten-Station                 |
-| CAT    | Herzkatheteruntersuchung                |
+Das JSON-Feld `departments` enthält ein Array von Objekten. Jedes Objekt beschreibt eine Fachabteilung mit folgenden Feldern:
+
+- **code** (string): Kurzcode der Abteilung (z.B. "NEO" für Neonatologie).  
+- **name** (string): Vollständiger Name der Abteilung.  
+- **available** (boolean): Gibt an, ob die Abteilung im Spiel genutzt werden kann.  
+
+### Beispiel
+
+```json
+[
+  { "code": "NEF", "name": "Notfallchirurgie",              "available": true },
+  { "code": "INT", "name": "Innere Notaufnahme (allg.)",    "available": true },
+  { "code": "KIN", "name": "Kinderkrankenhaus",             "available": true },
+  { "code": "STK", "name": "Stroke Unit",                   "available": true },
+  { "code": "NEO", "name": "Neonatologie",                  "available": false },
+  { "code": "PSY", "name": "Psychiatrie",                   "available": false }
+]
+```
+
+## Vorgeschlagene Liste möglicher Fachdisziplinen
+
+| Code | Name                                            |
+|------|-------------------------------------------------|
+| NOT  | Allgemeine Notaufnahme                          |
+| INT  | Innere Notaufnahme (allg.)                      |
+| CHI  | Chirurgie                                       |
+| NEC  | Notfallchirurgie                                |
+| STK  | Stroke Unit                                     |
+| KIN  | Kinderkrankenhaus / Kinder-Notaufnahme         |
+| HER  | Herzkatheter-Untersuchung                       |
+| TRA  | Unfallchirurgie / Traumatologie                 |
+| ONK  | Onkologie                                       |
+| PÄD  | Pädiatrie                                       |
+| PSY  | Psychiatrie                                     |
+| NEF  | Neurochirurgie                                  |
+| RAY  | Radiologie / CT & MRT                           |
+| URO  | Urologie                                        |
+| DER  | Dermatologie                                    |
+| GY   | Gynäkologie                                     |
+| ORL  | HNO-Heilkunde                                   |
+| NUK  | Nuklearmedizin                                  |
+| ICU  | Intensivstation                                 |
+
+
 
 #### Aufbau eines Eintrags
 
@@ -226,7 +235,7 @@ Jedes Array-Element ist ein Objekt mit:
   "priority": 2,         // 1 = höchste Priorität, höhere Zahlen = weniger wichtig
   "capacity": 24         // optional: Betten- bzw. Behandlungsplätze
 }
-
+```
 ## 🧑‍💻 Mitwirken
 
 Pull Requests sind willkommen! Bitte öffne ein Issue für größere Vorschläge.
