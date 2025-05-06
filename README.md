@@ -160,9 +160,72 @@ Jedes Modul ist als eigenständige Datei umgesetzt, um die Verantwortlichkeiten 
 3. **Wachen verwalten**: Karte & Liste laden Daten über `lsttraining_get_wachen`  
 4. **Wache bearbeiten**: Pop-up-Formular per AJAX (`lsttraining_get_wache`/`lsttraining_save_wache`)
 
-## 📄 Lizenz
+## 🏥 Krankenhäuser
 
-MIT License. Siehe `LICENSE.md`.
+Wir haben jetzt eine vollständige statische „Hospitalkatalog“-Tabelle für die Simulation definiert. Die SQL-Definition dient nur als Referenz – in der README beschreiben wir die Felder:
+
+| Feld             | Typ                         | Beschreibung                                                           |
+|------------------|-----------------------------|------------------------------------------------------------------------|
+| **id**           | INT, PK, AUTO_INCREMENT     | Interner Primärschlüssel                                                |
+| **poi_id**       | VARCHAR(50), UNIQUE         | Externe POI-ID (z.B. OSM-ID oder GeoJSON-ID)                            |
+| **name**         | VARCHAR(255)                | Name des Krankenhauses                                                  |
+| **latitude**     | DOUBLE                      | Breitengrad                                                             |
+| **longitude**    | DOUBLE                      | Längengrad                                                              |
+| **versorgungsstufe** | ENUM                    | Versorgungsstufe (  
+   - `Grundversorgung`  
+   - `Schwerpunktversorger`  
+   - `Maximalversorger`  
+)                                                                         |
+| **trauma_level** | TINYINT                     | Trauma-Level (0 = kein, 1–3)                                            |
+| **helipad**      | BOOLEAN                     | Hubschrauberlandeplatz vorhanden? (`true` / `false`)                    |
+| **departments**  | JSON                        | Liste der Fachabteilungen als JSON-Array (siehe unten)                  |
+| **last_update**  | TIMESTAMP                   | Zeitpunkt der letzten Änderung                                          |
+
+### 📋 Fachabteilungen (`departments` JSON)
+
+Das Feld `departments` ist ein JSON-Array mit Objekten für jede Abteilung. Um Konsistenz sicherzustellen, dürfen nur folgende **Codes** verwendet werden:
+
+| Code   | Name                                    |
+|--------|-----------------------------------------|
+| NOTF   | Innere Notaufnahme                      |
+| KINA   | Kinder-Notaufnahme                      |
+| CHIR   | Chirurgie                               |
+| ISTX   | Chirurgische Intensivstation            |
+| CT     | Computertomographie                     |
+| DERM   | Dermatologie                            |
+| DRAM   | Druckkammer                             |
+| VASG   | Gefäßchirurgie                          |
+| GYNO   | Gynäkologie                             |
+| HNOK   | HNO-Heilkunde                           |
+| INTX   | Innere Intensivstation                  |
+| CARD   | Kardiologie                             |
+| KESS   | Kreißsaal                               |
+| MRT    | Magnetresonanztomographie               |
+| MKGC   | MKG-Chirurgie                           |
+| NECH   | Neurochirurgie                          |
+| NEUR   | Neurologie                              |
+| NOTO   | Notoperation                            |
+| NUKL   | Nuklearmedizin                          |
+| ONKO   | Onkologie                               |
+| PSYC   | Psychiatrie                             |
+| PED    | Pädiatrie                               |
+| KKH    | Kinderkrankenhaus                       |
+| STRK   | Stroke Unit                             |
+| UROL   | Urologie                                |
+| BURN   | Brandverletzten-Station                 |
+| CAT    | Herzkatheteruntersuchung                |
+
+#### Aufbau eines Eintrags
+
+Jedes Array-Element ist ein Objekt mit:
+
+```json
+{
+  "code":     "CHIR",    // einer der obigen Codes
+  "name":     "Chirurgie",
+  "priority": 2,         // 1 = höchste Priorität, höhere Zahlen = weniger wichtig
+  "capacity": 24         // optional: Betten- bzw. Behandlungsplätze
+}
 
 ## 🧑‍💻 Mitwirken
 
