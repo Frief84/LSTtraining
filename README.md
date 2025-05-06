@@ -223,19 +223,6 @@ Das JSON-Feld `departments` enthält ein Array von Objekten. Jedes Objekt beschr
 | ICU  | Intensivstation                                 |
 
 
-
-#### Aufbau eines Eintrags
-
-Jedes Array-Element ist ein Objekt mit:
-
-```json
-{
-  "code":     "CHIR",    // einer der obigen Codes
-  "name":     "Chirurgie",
-  "priority": 2,         // 1 = höchste Priorität, höhere Zahlen = weniger wichtig
-  "capacity": 24         // optional: Betten- bzw. Behandlungsplätze
-}
-```
 ## 🧑‍💻 Mitwirken
 
 Pull Requests sind willkommen! Bitte öffne ein Issue für größere Vorschläge.
