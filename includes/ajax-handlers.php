@@ -149,25 +149,47 @@ add_action( 'wp_ajax_lsttraining_get_wache', function() {
 });
 
 /**
- * Änderungen an einer Wache speichern
+ * Speichert Änderungen an einer Wache
  * @action wp_ajax_lsttraining_save_wache
  */
-add_action( 'wp_ajax_lsttraining_save_wache', function() {
-    if ( ! current_user_can( 'manage_options' ) ) {
-        wp_send_json_error( 'Keine Berechtigung', 403 );
+add_action('wp_ajax_lsttraining_save_wache', function() {
+    if ( ! current_user_can('manage_options') ) {
+        wp_send_json_error('Keine Berechtigung', 403);
     }
-    $id        = intval( $_POST['id'] ?? 0 );
-    $name      = sanitize_text_field( $_POST['name'] ?? '' );
-    $typ       = sanitize_text_field( $_POST['typ']  ?? '' );
-    $latitude  = floatval( $_POST['latitude']  ?? 0 );
-    $longitude = floatval( $_POST['longitude'] ?? 0 );
-    if ( ! $id ) {
-        wp_send_json_error( 'Ungültige Wache-ID', 400 );
+
+    $id        = intval($_POST['id']       ?? 0);
+    $name      = sanitize_text_field($_POST['name'] ?? '');
+    $typ       = sanitize_text_field($_POST['typ']  ?? '');         // <- holen wir hier
+    $latitude  = floatval($_POST['latitude']  ?? 0);
+    $longitude = floatval($_POST['longitude'] ?? 0);
+
+    if ( $id <= 0 ) {
+        wp_send_json_error('Ungültige Wache-ID', 400);
     }
-    $pdo  = lsttraining_get_connection();
+
+    $pdo = lsttraining_get_connection();
     $stmt = $pdo->prepare(
-      'UPDATE wachen SET name = ?, typ = ?, latitude = ?, longitude = ? WHERE id = ?'
+        "UPDATE wachen
+           SET name      = ?,
+               typ       = ?,
+               latitude  = ?,
+               longitude = ?
+         WHERE id = ?"
     );
-    $ok = $stmt->execute( [ $name, $typ, $latitude, $longitude, $id ] );
-    $ok ? wp_send_json_success() : wp_send_json_error( 'Speichern fehlgeschlagen', 500 );
+
+    $ok = $stmt->execute([
+        $name,
+        $typ,            // <- typ hier
+        $latitude,
+        $longitude,
+        $id
+    ]);
+
+    if ( ! $ok ) {
+        wp_send_json_error('Speichern fehlgeschlagen', 500);
+    }
+
+    wp_send_json_success();
 });
+
+

@@ -6,7 +6,7 @@ add_action( 'admin_enqueue_scripts', function ( $hook ) {
     // Basis-Skripte/CSS für alle LSTtraining-Seiten
     if ( $hook === 'toplevel_page_lsttraining' || strpos( $hook, 'lsttraining_' ) !== false ) {
         $base = plugin_dir_url( __FILE__ ) . '..';
-
+		wp_enqueue_style( 'dashicons' );
         // OpenLayers
         wp_enqueue_style(  'openlayers-style',    $base . '/openlayers/ol.css' );
         wp_enqueue_script( 'openlayers',          $base . '/openlayers/ol.js', [], null, true );
