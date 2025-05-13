@@ -27,6 +27,40 @@ if ( isset( $_GET['delete_id'] ) && $pdo ) {
 }
 
 /* -------------------------------------------------------------------------
+ * CREATE
+ * ---------------------------------------------------------------------- */
+if ( $_SERVER['REQUEST_METHOD'] === 'POST'
+     && isset( $_POST['lst_form_mode'] )
+     && $_POST['lst_form_mode'] === 'create'
+     && $pdo ) {
+
+    // Neue Leitstelle schreiben
+    $stmt = $pdo->prepare(
+        'INSERT INTO leitstellen
+             (name, ort, bundesland, land, latitude, longitude, geojson)
+         VALUES (?,?,?,?,?,?,?)'
+    );
+
+    $stmt->execute( [
+        sanitize_text_field( $_POST['lst_update_name'] ),
+        sanitize_text_field( $_POST['lst_update_ort'] ),
+        sanitize_text_field( $_POST['lst_update_bl'] ),
+        sanitize_text_field( $_POST['lst_update_land'] ),
+        floatval( $_POST['lst_update_lat'] ),
+        floatval( $_POST['lst_update_lon'] ),
+        wp_unslash( $_POST['geojson_edit'] ?? '' ),
+    ] );
+
+    add_settings_error(
+        'lsttraining_msg',
+        'lst_ok',
+        'Leitstelle angelegt.',
+        'updated'
+    );
+}
+
+
+/* -------------------------------------------------------------------------
  * UPDATE
  * ---------------------------------------------------------------------- */
 if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['lst_update_id'] ) && $pdo ) {
@@ -104,6 +138,10 @@ if ( $pdo ) {
                value="<?php echo esc_attr( $suchbegriff ); ?>" style="width:300px;">
         <button class="button">Suchen</button>
     </form>
+	
+	<button id="btn-new-leitstelle" class="button button-primary">
+    + Neue Leitstelle
+</button>
 
     <table class="widefat">
         <thead>
@@ -189,8 +227,11 @@ lsttraining_einsatzgebiet_editor(
         data-context="leitstelle">
     Einsatzgebiet bearbeiten
 </button>
+			
 <button type="button" class="button open-wachen-editor" style="margin-left:10px;"
-        onclick="window.location.href='<?php echo admin_url('admin.php?page=lsttraining_leitstellen_wachen'); ?>&leitstelle_id='+document.getElementById('lst_update_id').value;">
+        onclick="window.location.href='<?php 
+          echo admin_url( 'admin.php?page=lsttraining_leitstellen_wachen' );
+        ?>&ls_id='+document.getElementById('lst_update_id').value;">
     Wachen bearbeiten
 </button>
 
@@ -205,3 +246,4 @@ lsttraining_einsatzgebiet_editor(
         </div>
     </form>
 </div>
+

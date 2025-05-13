@@ -272,3 +272,86 @@ document.addEventListener('click', (ev) => {
         });
     });
 });
+
+function resetValue(id) {
+  const el = document.getElementById(id);
+  if (el) el.value = '';            // nur wenn Element existiert
+}
+
+function ensureEditMap() {
+  // existiert schon? → nur Größe & Marker resetten
+  if (window.mapEdit) {
+    window.mapEdit.getView()
+                  .setCenter(ol.proj.fromLonLat([9.0, 51.0]))  // Mitte DE
+                  .setZoom(7);
+
+    // Marker / Feature-Layer leeren
+    const src = mapEdit.getLayers().item(1).getSource();
+    if (src) src.clear();
+
+  } else {
+    // noch keine Map vorhanden – komplett anlegen
+    window.initMapWithMarker(
+      'map_edit',          // DIV-ID
+      'lst_update_lat',    // hidden lat-Input
+      'lst_update_lon',    // hidden lon-Input
+      [9.0, 51.0],         // Start-Center
+      'mapEdit',           // globale Referenz
+      'dragInteractionEdit'
+    );
+  }
+
+  // Timing-Problem: Map war eben noch in display:none
+  // ⇒ Größe nachträglich aktualisieren
+  setTimeout(() => mapEdit.updateSize(), 0);
+}
+
+function openLeitstellePopupForCreate() {
+  // Überschrift
+  const heading = document.querySelector('#edit-leitstelle-formular h2');
+  if (heading) heading.textContent = 'Leitstelle erstellen';
+
+  // Felder leeren
+  [
+    'lst_update_id','lst_update_name','lst_update_ort',
+    'lst_update_bl','lst_update_land','lst_update_lat','lst_update_lon'
+  ].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+
+  // Formular-Modus
+  const mode = document.getElementById('lst_form_mode');
+  if (mode) mode.value = 'create';
+
+  // Karten zurücksetzen
+  if (typeof resetEditMaps === 'function') resetEditMaps();
+	
+ensureEditMap();	
+	
+  // Overlay & Pop-up anzeigen
+  const overlay = document.getElementById('popup-overlay');
+  if (overlay) overlay.style.display = 'block';
+
+  const popup = document.getElementById('edit-leitstelle-formular');
+  if (popup) popup.style.display = 'block';
+}
+
+// Klick-Handler für den neuen Button
+document.getElementById('btn-new-leitstelle')
+        .addEventListener('click', e => {
+  e.preventDefault();
+  openLeitstellePopupForCreate();
+});
+
+// Beispiel-Reset-Funktion (Marker in Mitte DE, Polygon löschen)
+function resetEditMaps() {
+  if (window.mapEdit) {
+    mapEdit.getView().setCenter(ol.proj.fromLonLat([9.0, 51.0]));
+    // ersten Feature-Layer leeren
+    mapEdit.getLayers().item(1).getSource().clear();
+  }
+  // Einsatzgebiet-Hidden-Field zurücksetzen
+  document.getElementById('geojson_edit').value = '';
+}
+

@@ -3,6 +3,8 @@ if ( ! current_user_can( 'manage_options' ) ) {
     wp_die( 'Keine Berechtigung.' );
 }
 
+
+
 require_once plugin_dir_path( __FILE__ ) . '/db.php';
 $pdo = lsttraining_get_connection();
 
@@ -18,50 +20,51 @@ $all_nls = $all_ls;
   <h1>Wachen verwalten</h1>
 
  <form method="get" style="display: flex; gap: 20px; margin-bottom: 20px;">
-    <input type="hidden" name="page" value="lsttraining_leitstellen_wachen">
+  <input type="hidden" name="page" value="lsttraining_leitstellen_wachen">
 
-    <!-- Leitstellen-Box -->
-    <div class="filter-box" style="flex:1; border:1px solid #ddd; padding:10px; border-radius:4px;">
-      <h2 style="margin-top:0;">Leitstelle</h2>
-      <p>
-        <label for="ls_search">Suche Leitstelle:</label><br>
-        <input type="text" id="ls_search" placeholder="Filter..." style="width:100%; box-sizing:border-box;">
-      </p>
-      <p>
-        <label for="ls_id">Leitstelle auswählen:</label><br>
-        <select id="ls_id" name="ls_id" style="width:100%; box-sizing:border-box;">
-          <option value="0">– keine –</option>
-          <?php foreach ( $all_ls as $ls ) : ?>
-            <option value="<?php echo esc_attr( $ls['id'] ) ?>"
-              <?php selected( $filter_leitstelle, $ls['id'] ) ?>>
-              <?php echo esc_html( $ls['name'] ) ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
-      </p>
-    </div>
+  <!-- Leitstellen-Box -->
+  <div class="filter-box" style="flex:1; border:1px solid #ddd; padding:10px; border-radius:4px;">
+    <h2 style="margin-top:0;">Leitstelle</h2>
+    <p>
+      <label for="ls_search">Suche Leitstelle:</label><br>
+      <input type="text" id="ls_search" placeholder="Filter..." style="width:100%; box-sizing:border-box;">
+    </p>
+    <p>
+      <label for="ls_id">Leitstelle auswählen:</label><br>
+      <select id="ls_id" name="ls_id" style="width:100%; box-sizing:border-box;">
+        <option value="0">– keine –</option>
+        <?php foreach ( $all_ls as $ls ) : ?>
+          <option value="<?php echo esc_attr( $ls['id'] ) ?>"
+            <?php selected( $filter_leitstelle, $ls['id'] ) ?>>
+            <?php echo esc_html( $ls['name'] ) ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
+    </p>
+  </div>
 
-    <!-- Nebenleitstellen-Box -->
-    <div class="filter-box" style="flex:1; border:1px solid #ddd; padding:10px; border-radius:4px;">
-      <h2 style="margin-top:0;">Nebenleitstelle</h2>
-      <p>
-        <label for="nls_search">Suche Nebenleitstelle:</label><br>
-        <input type="text" id="nls_search" placeholder="Filter..." style="width:100%; box-sizing:border-box;">
-      </p>
-      <p>
-        <label for="nls_id">Nebenleitstelle auswählen:</label><br>
-        <select id="nls_id" name="nls_id" style="width:100%; box-sizing:border-box;">
-          <option value="0">– keine –</option>
-          <?php foreach ( $all_nls as $nls ) : ?>
-            <option value="<?php echo esc_attr( $nls['id'] ) ?>"
-              <?php selected( $filter_nebenleitstelle, $nls['id'] ) ?>>
-              <?php echo esc_html( $nls['name'] ) ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
-      </p>
-    </div>
-  </form>
+  <!-- Nebenleitstellen-Box -->
+  <div class="filter-box" style="flex:1; border:1px solid #ddd; padding:10px; border-radius:4px;">
+    <h2 style="margin-top:0;">Nebenleitstelle</h2>
+    <p>
+      <label for="nls_search">Suche Nebenleitstelle:</label><br>
+      <input type="text" id="nls_search" placeholder="Filter..." style="width:100%; box-sizing:border-box;">
+    </p>
+    <p>
+      <label for="nls_id">Nebenleitstelle auswählen:</label><br>
+      <select id="nls_id" name="nls_id" style="width:100%; box-sizing:border-box;">
+        <option value="0">– keine –</option>
+        <?php foreach ( $all_nls as $nls ) : ?>
+          <option value="<?php echo esc_attr( $nls['id'] ) ?>"
+            <?php selected( $filter_nebenleitstelle, $nls['id'] ) ?>>
+            <?php echo esc_html( $nls['name'] ) ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
+    </p>
+  </div>
+</form>
+
   <!-- Karte -->
   <div id="wachen-map" style="height: 400px; margin-bottom: 20px;"></div>
 
@@ -157,7 +160,7 @@ $all_nls = $all_ls;
   <option value="">– wählen –</option>
   <option value="FW"   {{typ==="FW"  ?"selected":""}}>Feuerwache</option>
   <option value="FFW"  {{typ==="FFW" ?"selected":""}}>Freiwillige Feuerwehr</option>
-  <option value="FFRD" {{typ==="FFRD"?"selected":""}}>Freiwillige Feuerwehr + Rettungsdienst</option>
+  <option value="SEG"  {{typ==="SEG" ?"selected":""}}>Sondereinsatzgruppe</option>
   <option value="RD"   {{typ==="RD"  ?"selected":""}}>Rettungswache</option>
   <option value="FRRD" {{typ==="FRRD"?"selected":""}}>Rettungsdienst + Feuerwehr</option>  
 </select>
@@ -186,6 +189,7 @@ $all_nls = $all_ls;
     <p class="submit">
       <button type="submit" class="button button-primary">Speichern</button>
       <button type="button" id="wache-edit-cancel" class="button">Abbrechen</button>
+	  <button type="button" class="button-delete-wache" data-id="{{id}}">Wache löschen </button>
     </p>
   </form>
 </script>

@@ -192,4 +192,25 @@ add_action('wp_ajax_lsttraining_save_wache', function() {
     wp_send_json_success();
 });
 
+/**
+ * Löscht eine Wache
+ * @action wp_ajax_lsttraining_delete_wache
+ */
+add_action('wp_ajax_lsttraining_delete_wache', function() {
+    if ( ! current_user_can('manage_options') ) {
+        wp_send_json_error('Keine Berechtigung', 403);
+    }
+    $id = intval($_POST['wache_id'] ?? 0);
+    if (!$id) {
+        wp_send_json_error('Ungültige Wache-ID', 400);
+    }
+    $pdo = lsttraining_get_connection();
+    $stmt = $pdo->prepare("DELETE FROM wachen WHERE id = ?");
+    $ok = $stmt->execute([$id]);
+    if (!$ok) {
+        wp_send_json_error('Löschen fehlgeschlagen', 500);
+    }
+    wp_send_json_success();
+});
+
 

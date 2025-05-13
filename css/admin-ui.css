@@ -102,13 +102,14 @@ tr {
 
 .ol-tooltip {
   position: absolute;
-  background: rgba(255,255,255,0.9);
+  background: white;
   padding: 4px 8px;
   border-radius: 4px;
-  border: 1px solid #666;
-  white-space: nowrap;
-  font-size: 13px;
-  pointer-events: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  pointer-events: auto;  /* ganz wichtig */
+  z-index: 1000;          /* über dem Canvas */
+  width: max-content;
+
 }
 
 .ol-tooltip-hidden {
@@ -118,42 +119,89 @@ tr {
 /* -----------------------------------
    Modal-Grundgerüst
 -----------------------------------*/
-#wache-edit-modal {
+.wache-edit-modal.hidden {
+  display: none;
+}
+.wache-edit-modal {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 9999; /* ganz oben */
-  pointer-events: none;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 10000;
 }
-
-#wache-edit-modal .wache-edit-overlay {
+.wache-edit-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
   background: rgba(0,0,0,0.5);
-  pointer-events: all;
 }
-
-#wache-edit-modal .wache-edit-content {
+/* Container inkl. Scroll, falls Inhalt größer ist */
+.wache-edit-container {
   position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
   background: #fff;
   padding: 20px;
-  max-width: 500px;
-  width: 90%;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  border-radius: 6px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-  pointer-events: all;
+  max-width: 90vw;
+  max-height: 90vh;
   overflow: auto;
+  z-index: 10001;
 }
 
-/* .hidden blendet das gesamte Modal aus */
-.hidden {
-  display: none !important;
+/* -----------------------------------
+   Tooltip für Karte
+-----------------------------------*/
+.ol-tooltip {
+  position: absolute;
+  background: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  pointer-events: auto;  /* Klicks durchlassen */
+  z-index: 1000;         /* über dem Canvas */
+  white-space: nowrap;
+}
+.ol-tooltip-hidden {
+  display: none;
+}
+
+/* -----------------------------------
+   Roter Lösch-Button im Modal
+-----------------------------------*/
+.button-delete-wache {
+  position: absolute;
+  right: 20px;
+  bottom: 45px;
+  background: #dc3545;    /* Bootstrap-Rot */
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.button-delete-wache:hover {
+  background: #c82333;
+}
+
+/* -----------------------------------
+   Filter-Box Styling
+-----------------------------------*/
+.filter-box {
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 4px;
+  background: #fafafa;
+  margin-bottom: 20px;
+}
+.filter-box h2 {
+  margin: 0 0 10px;
+  font-size: 1.1em;
+}
+.filter-box input,
+.filter-box select {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 5px;
 }
 

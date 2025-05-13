@@ -154,3 +154,26 @@ CREATE TABLE fahrzeug_status (
     FOREIGN KEY (fahrzeug_id) REFERENCES fahrzeuge(id),
     FOREIGN KEY (wache_id)    REFERENCES wachen(id)
 );
+
+/* ------------------------------------------------------------------ */
+/* 7. Krankenhäuser                    */
+/* ------------------------------------------------------------------ */ 
+CREATE TABLE krankenhaeuser (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  poi_id VARCHAR(50) NOT NULL UNIQUE COMMENT 'Externe POI-ID (z.B. OSM-ID oder GeoJSON-ID)',
+  name VARCHAR(255) NOT NULL COMMENT 'Name des Krankenhauses',
+  latitude DOUBLE NOT NULL COMMENT 'Breitengrad',
+  longitude DOUBLE NOT NULL COMMENT 'Längengrad',
+  versorgungsstufe ENUM(
+    'Grundversorgung',
+    'Schwerpunktversorger',
+    'Maximalversorger'
+  ) NOT NULL DEFAULT 'Grundversorgung' COMMENT 'Versorgungsstufe',
+  trauma_level TINYINT NOT NULL DEFAULT 0 COMMENT 'Trauma-Level (0=kein, 1–3)',
+  helipad BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Landeplatz für Hubschrauber vorhanden?',
+  departments JSON NOT NULL COMMENT 'Liste der Fachabteilungen als JSON-Array',
+  last_update TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP COMMENT 'Zeitpunkt der letzten Änderung'
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COMMENT='Statische Hospitalkatalog-Tabelle für Simulation';
