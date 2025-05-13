@@ -307,11 +307,11 @@ function ensureEditMap() {
 }
 
 function openLeitstellePopupForCreate() {
-  // Überschrift
+  // heading
   const heading = document.querySelector('#edit-leitstelle-formular h2');
   if (heading) heading.textContent = 'Leitstelle erstellen';
 
-  // Felder leeren
+  // clear inputs
   [
     'lst_update_id','lst_update_name','lst_update_ort',
     'lst_update_bl','lst_update_land','lst_update_lat','lst_update_lon'
@@ -320,38 +320,44 @@ function openLeitstellePopupForCreate() {
     if (el) el.value = '';
   });
 
-  // Formular-Modus
+  // mode = create
   const mode = document.getElementById('lst_form_mode');
   if (mode) mode.value = 'create';
 
-  // Karten zurücksetzen
+  // map reset / init
   if (typeof resetEditMaps === 'function') resetEditMaps();
-	
-ensureEditMap();	
-	
-  // Overlay & Pop-up anzeigen
+  if (typeof ensureEditMap  === 'function') ensureEditMap();
+
+  // show overlay + popup
   const overlay = document.getElementById('popup-overlay');
   if (overlay) overlay.style.display = 'block';
 
   const popup = document.getElementById('edit-leitstelle-formular');
-  if (popup) popup.style.display = 'block';
+  if (popup)  popup.style.display = 'block';
 }
 
-// Klick-Handler für den neuen Button
-document.getElementById('btn-new-leitstelle')
-        .addEventListener('click', e => {
-  e.preventDefault();
-  openLeitstellePopupForCreate();
+/* register click handler after DOM is ready */
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('btn-new-leitstelle');
+  if (!btn) {
+    console.warn('[lsttraining] + Neue Leitstelle-Button not found.');
+    return;
+  }
+
+  btn.addEventListener('click', e => {
+    e.preventDefault();
+    openLeitstellePopupForCreate();
+  });
 });
 
-// Beispiel-Reset-Funktion (Marker in Mitte DE, Polygon löschen)
+/* helper: reset existing map (center Germany, clear polygon/marker) */
 function resetEditMaps() {
   if (window.mapEdit) {
     mapEdit.getView().setCenter(ol.proj.fromLonLat([9.0, 51.0]));
-    // ersten Feature-Layer leeren
     mapEdit.getLayers().item(1).getSource().clear();
   }
-  // Einsatzgebiet-Hidden-Field zurücksetzen
-  document.getElementById('geojson_edit').value = '';
+  const poly = document.getElementById('geojson_edit');
+  if (poly) poly.value = '';
 }
+
 

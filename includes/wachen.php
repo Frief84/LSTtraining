@@ -132,12 +132,12 @@ $all_nls = $all_ls;
   <div class="wache-edit-container">
     <h2>Wache bearbeiten</h2>
     <div class="wache-edit-content">
-      <!-- hier wird via JS das Formular reingeladen -->
+      <!-- form will be injected via JS -->
     </div>
   </div>
 </div>
 
-<!-- Template für das Formular -->
+<!-- Template for the form (loaded by JS via wp.template / _.template) -->
 <script type="text/html" id="tmpl-wache-edit-form">
   <form id="wache-edit-form">
     <input type="hidden" name="id" value="{{id}}">
@@ -147,37 +147,51 @@ $all_nls = $all_ls;
         <th>ID</th>
         <td><strong>{{id}}</strong></td>
       </tr>
+
       <tr>
         <th><label for="w-name">Name</label></th>
         <td>
           <input type="text" id="w-name" name="name" value="{{name}}" class="regular-text" required>
         </td>
       </tr>
+
       <tr>
         <th><label for="w-typ">Typ</label></th>
         <td>
           <select id="w-typ" name="typ">
-  <option value="">– wählen –</option>
-  <option value="FW"   {{typ==="FW"  ?"selected":""}}>Feuerwache</option>
-  <option value="FFW"  {{typ==="FFW" ?"selected":""}}>Freiwillige Feuerwehr</option>
-  <option value="SEG"  {{typ==="SEG" ?"selected":""}}>Sondereinsatzgruppe</option>
-  <option value="RD"   {{typ==="RD"  ?"selected":""}}>Rettungswache</option>
-  <option value="FRRD" {{typ==="FRRD"?"selected":""}}>Rettungsdienst + Feuerwehr</option>  
-</select>
+            <option value="">– wählen –</option>
+            <option value="FW"   {{typ==="FW"  ?"selected":""}}>Feuerwache</option>
+            <option value="FFW"  {{typ==="FFW" ?"selected":""}}>Freiwillige Feuerwehr</option>
+            <option value="SEG"  {{typ==="SEG" ?"selected":""}}>Sondereinsatzgruppe</option>
+            <option value="RD"   {{typ==="RD"  ?"selected":""}}>Rettungswache</option>
+            <option value="FRRD" {{typ==="FRRD"?"selected":""}}>Rettungsdienst + Feuerwehr</option>
+          </select>
         </td>
       </tr>
+
+      <!-- one combined position string + hidden lat/lon; JS keeps them in sync -->
       <tr>
-        <th><label for="w-lat">Latitude</label></th>
+        <th><label for="w-pos">Position&nbsp;(lat, lon)</label></th>
         <td>
-          <input type="number" step="0.000001" id="w-lat" name="latitude" value="{{latitude}}" required>
+          <input type="text" id="w-pos" name="position"
+                 value="{{latitude}}, {{longitude}}"
+                 class="regular-text"
+                 pattern="^\s*-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?\s*$"
+                 title="Format: Breitengrad, Längengrad">
+          <input type="hidden" id="w-lat" name="latitude"  value="{{latitude}}">
+          <input type="hidden" id="w-lon" name="longitude" value="{{longitude}}">
         </td>
       </tr>
+
+      <!-- interactive OpenLayers map -->
       <tr>
-        <th><label for="w-lon">Longitude</label></th>
+        <th>Koordinaten-Karte</th>
         <td>
-          <input type="number" step="0.000001" id="w-lon" name="longitude" value="{{longitude}}" required>
+          <div id="map_wache_edit" style="height:280px; border:1px solid #ccc;"></div>
+          <p class="description">Marker ziehen oder Position eingeben.</p>
         </td>
       </tr>
+
       <tr>
         <th><label for="w-bild">Bild (optional)</label></th>
         <td>
@@ -189,7 +203,8 @@ $all_nls = $all_ls;
     <p class="submit">
       <button type="submit" class="button button-primary">Speichern</button>
       <button type="button" id="wache-edit-cancel" class="button">Abbrechen</button>
-	  <button type="button" class="button-delete-wache" data-id="{{id}}">Wache löschen </button>
+      <button type="button" class="button-delete-wache" data-id="{{id}}">Wache löschen</button>
     </p>
   </form>
 </script>
+
