@@ -182,13 +182,30 @@ $all_nls = $all_ls;
           <input type="hidden" id="w-lon" name="longitude" value="{{longitude}}">
         </td>
       </tr>
+	  
+	  <tr>
+  <th><label for="w-arr">Anfahrts-Position</label></th>
+  <td><input type="text" id="w-arr" name="arrival_pos"
+             value="{{arrival_pos}}" placeholder="52.704615, 12.520004"></td>
+</tr>
+<tr>
+  <th><label for="w-dep">Abfahrts-Position</label></th>
+  <td><input type="text" id="w-dep"  name="departure_pos"
+             value="{{departure_pos}}" placeholder="52.704615, 12.520004"></td>
+</tr>
 
+	  
       <!-- interactive OpenLayers map -->
       <tr>
         <th>Koordinaten-Karte</th>
         <td>
           <div id="map_wache_edit" style="height:280px; border:1px solid #ccc;"></div>
           <p class="description">Marker ziehen oder Position eingeben.</p>
+		  <p class="description">
+      <strong>Arrival-Marker:</strong> Shift&nbsp;+&nbsp;Klick &nbsp;|&nbsp;
+      <strong>Departure-Marker:</strong> Strg&nbsp;+&nbsp;Klick &nbsp;|&nbsp;
+      <strong>Marker löschen:</strong> Feld leeren
+    </p>
         </td>
       </tr>
 

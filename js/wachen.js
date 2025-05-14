@@ -2,6 +2,28 @@
 
 (function($){
 
+	const styleMain = new ol.style.Style({
+  image: new ol.style.Circle({ radius: 6, fill: new ol.style.Fill({ color: '#e31b23' }) })
+});
+const styleArr  = new ol.style.Style({
+  image: new ol.style.Circle({ radius: 5, fill: new ol.style.Fill({ color: '#009b3a' }) })
+});
+const styleDep  = new ol.style.Style({
+  image: new ol.style.Circle({ radius: 5, fill: new ol.style.Fill({ color: '#1f51ff' }) })
+});
+
+/* Helper – lat/lon-String → [lon,lat] oder null */
+function strToLonLat(str) {
+  const p = str.split(',');
+  return p.length === 2 ? [parseFloat(p[1]), parseFloat(p[0])] : null;
+}
+
+/* Helper – Feature-Koordinate → Feld aktualisieren */
+function lonLatToField(selectorLatLon, lonLat) {
+  $(selectorLatLon).val(`${lonLat[1].toFixed(6)}, ${lonLat[0].toFixed(6)}`);
+}
+
+	
   // --------------------------------------------------------
   // 1) Hilfsfunktion: Template mit Daten füllen
   // --------------------------------------------------------
@@ -334,47 +356,118 @@ $('body').on('click', '.button-delete-wache', function(e){
   });
 });
 
-// ------------------- Edit-Karte --------------------
+/**
+ * (Re)builds the edit-map every time the modal opens.
+ * Creates three drag-enabled markers:
+ *   main  = station position   (red)
+ *   arr   = arrival position   (green)   – optional
+ *   dep   = departure position (blue)    – optional
+ *
+ * Shift + click  → add / move arrival marker
+ * Ctrl  + click  → add / move departure marker
+ *
+ * @param {number} lat  Station latitude
+ * @param {number} lon  Station longitude
+ */
 function ensureWacheEditMap(lat, lon) {
 
-  const center  = ol.proj.fromLonLat([lon, lat]);
-  const marker  = new ol.Feature({ geometry: new ol.geom.Point(center) });
-  const vSource = new ol.source.Vector({ features: [marker] });
+  /* -------------------------------------------------- */
+  /* 1) features & source                               */
+  /* -------------------------------------------------- */
+  const mainLL = [lon, lat];
+  const arrLL  = strToLonLat($('#w-arr').val());
+  const depLL  = strToLonLat($('#w-dep').val());
 
+  const mainFt = new ol.Feature({ geometry: new ol.geom.Point(ol.proj.fromLonLat(mainLL)) });
+  let arrFt  = arrLL ? new ol.Feature({           
+                geometry: new ol.geom.Point(ol.proj.fromLonLat(arrLL))
+              }) : null;
+let depFt  = depLL ? new ol.Feature({           
+                geometry: new ol.geom.Point(ol.proj.fromLonLat(depLL))
+              }) : null;
+
+  mainFt.setStyle(styleMain);
+  if (arrFt) arrFt.setStyle(styleArr);
+  if (depFt) depFt.setStyle(styleDep);
+
+  const vSrc = new ol.source.Vector({ features: [mainFt].concat(arrFt || [], depFt || []) });
+
+  /* -------------------------------------------------- */
+  /* 2) map                                             */
+  /* -------------------------------------------------- */
   window.mapWEdit = new ol.Map({
     target: 'map_wache_edit',
     layers: [
       new ol.layer.Tile({ source: new ol.source.OSM() }),
-      new ol.layer.Vector({ source: vSource })
+      new ol.layer.Vector({ source: vSrc })
     ],
-    view: new ol.View({ center, zoom: 14 })
+    view: new ol.View({ center: ol.proj.fromLonLat(mainLL), zoom: 14 })
   });
 
-  mapWEdit.addInteraction(new ol.interaction.Modify({ source: vSource }));
+  /* -------------------------------------------------- */
+  /* 3) drag-modify interaction                         */
+  /* -------------------------------------------------- */
+  mapWEdit.addInteraction(new ol.interaction.Modify({ source: vSrc }));
 
-  /* Hidden inputs synchronisieren */
-  const sync = () => {
-    const [x, y] = ol.proj.toLonLat(marker.getGeometry().getCoordinates());
-    $('#w-pos').val(`${y.toFixed(6)}, ${x.toFixed(6)}`);
-    $('#w-lat').val(y.toFixed(6));
-    $('#w-lon').val(x.toFixed(6));
-  };
-  sync();
-  marker.getGeometry().on('change', sync);
+  /* on drag → update corresponding field */
+  vSrc.getFeatures().forEach(ft => {
+    ft.getGeometry().on('change', () => {
+      const [x, y] = ol.proj.toLonLat(ft.getGeometry().getCoordinates());
+      if (ft === mainFt) {
+        $('#w-pos').val(`${y.toFixed(6)}, ${x.toFixed(6)}`);
+        $('#w-lat').val(y.toFixed(6));
+        $('#w-lon').val(x.toFixed(6));
+      } else if (ft === arrFt) {
+        lonLatToField('#w-arr', [x, y]);
+      } else if (ft === depFt) {
+        lonLatToField('#w-dep', [x, y]);
+      }
+    });
+  });
+
+  /* -------------------------------------------------- */
+  /* 4) hot-clicks: Shift / Ctrl                        */
+  /* -------------------------------------------------- */
+  mapWEdit.on('singleclick', evt => {
+    const lonLat = ol.proj.toLonLat(evt.coordinate);
+
+   if (evt.originalEvent.shiftKey) {          // Arrival
+  if (!arrFt) {
+    arrFt = new ol.Feature({ geometry: new ol.geom.Point(evt.coordinate) }); // ← arrFt ohne window.
+    arrFt.setStyle(styleArr);
+    vSrc.addFeature(arrFt);
+  } else {
+    arrFt.getGeometry().setCoordinates(evt.coordinate);
+  }
+  lonLatToField('#w-arr', lonLat);
 }
 
-	// ------------------- Edit-Karte --------------------
-
-	// Eingabefeld ändert Marker
-$(document).on('change', '#w-pos', function(){
-  const match = this.value.split(',');
-  if (match.length === 2) {
-    const lat = parseFloat(match[0]); const lon = parseFloat(match[1]);
-    if (!isNaN(lat) && !isNaN(lon)) {
-      $('#w-lat').val(lat); $('#w-lon').val(lon);
-      ensureWacheEditMap(lat, lon);    // Marker springt zur neuen Pos.
-    }
+if (evt.originalEvent.ctrlKey) {           // Departure
+  if (!depFt) {
+    depFt = new ol.Feature({ geometry: new ol.geom.Point(evt.coordinate) }); // ← depFt ohne window.
+    depFt.setStyle(styleDep);
+    vSrc.addFeature(depFt);
+  } else {
+    depFt.getGeometry().setCoordinates(evt.coordinate);
   }
-});
+  lonLatToField('#w-dep', lonLat);
+}
+  });
+
+  /* -------------------------------------------------- */
+  /* 5) empty input  → marker removal                   */
+  /* -------------------------------------------------- */
+  $('#w-arr').on('input', function () {
+    if (this.value.trim() === '' && arrFt) {
+      vSrc.removeFeature(arrFt);
+    }
+  });
+  $('#w-dep').on('input', function () {
+    if (this.value.trim() === '' && depFt) {
+      vSrc.removeFeature(depFt);
+    }
+  });
+}
+
 	
 })(jQuery);

@@ -102,115 +102,135 @@ add_action( 'wp_ajax_lsttraining_render_einsatzgebiet_editor', function () {
 });
 
 /* -------------------------------------------------------------------------
- * WACHEN (Liste, Einzeldaten, Speichern)
+ * WACHEN (Liste, Einzeldaten, Speichern, Löschen)
  * ---------------------------------------------------------------------- */
 
 /**
  * Liste der Wachen für Karte/Tabelle
  * @action wp_ajax_lsttraining_get_wachen
  */
-add_action( 'wp_ajax_lsttraining_get_wachen', function() {
+add_action( 'wp_ajax_lsttraining_get_wachen', function () {
     if ( ! current_user_can( 'manage_options' ) ) {
         wp_send_json_error( 'Keine Berechtigung.', 403 );
     }
+
     $ls  = intval( $_GET['ls_id']  ?? 0 );
     $nls = intval( $_GET['nls_id'] ?? 0 );
     if ( ! $ls && ! $nls ) {
         wp_send_json_error( 'Kein Filter angegeben.', 400 );
     }
+
     $pdo    = lsttraining_get_connection();
-    $sql    = 'SELECT id, name, typ, latitude, longitude FROM wachen WHERE 1=1';
+    $sql    = 'SELECT id, name, typ, latitude, longitude,
+                      arrival_pos, departure_pos
+                 FROM wachen WHERE 1 = 1';
     $params = [];
-    if ( $ls )  { $sql .= ' AND leitstelle_id = ?';      $params[] = $ls;  }
+    if ( $ls  ) { $sql .= ' AND leitstelle_id      = ?'; $params[] = $ls;  }
     if ( $nls ) { $sql .= ' AND nebenleitstelle_id = ?'; $params[] = $nls; }
+
     $stmt = $pdo->prepare( $sql );
     $stmt->execute( $params );
+
     wp_send_json_success( $stmt->fetchAll( PDO::FETCH_ASSOC ) );
-});
+} );
 
 /**
  * Daten einer einzelnen Wache laden
  * @action wp_ajax_lsttraining_get_wache
  */
-add_action( 'wp_ajax_lsttraining_get_wache', function() {
+add_action( 'wp_ajax_lsttraining_get_wache', function () {
     if ( ! current_user_can( 'manage_options' ) ) {
         wp_send_json_error( 'Keine Berechtigung', 403 );
     }
+
     $id = intval( $_GET['wache_id'] ?? 0 );
     if ( ! $id ) {
         wp_send_json_error( 'Wache-ID fehlt', 400 );
     }
+
     $pdo  = lsttraining_get_connection();
-    $stmt = $pdo->prepare( 'SELECT id, name, typ, latitude, longitude FROM wachen WHERE id = ?' );
+    $stmt = $pdo->prepare(
+        'SELECT id, name, typ, latitude, longitude,
+                arrival_pos, departure_pos
+           FROM wachen
+          WHERE id = ?'
+    );
     $stmt->execute( [ $id ] );
     $row = $stmt->fetch( PDO::FETCH_ASSOC );
+
     $row ? wp_send_json_success( $row )
-         : wp_send_json_error( 'Nicht gefunden', 404 );
-});
+         : wp_send_json_error   ( 'Nicht gefunden', 404 );
+} );
 
 /**
  * Speichert Änderungen an einer Wache
  * @action wp_ajax_lsttraining_save_wache
  */
-add_action('wp_ajax_lsttraining_save_wache', function() {
-    if ( ! current_user_can('manage_options') ) {
-        wp_send_json_error('Keine Berechtigung', 403);
+add_action( 'wp_ajax_lsttraining_save_wache', function () {
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( 'Keine Berechtigung', 403 );
     }
 
-    $id        = intval($_POST['id']       ?? 0);
-    $name      = sanitize_text_field($_POST['name'] ?? '');
-    $typ       = sanitize_text_field($_POST['typ']  ?? '');         // <- holen wir hier
-    $latitude  = floatval($_POST['latitude']  ?? 0);
-    $longitude = floatval($_POST['longitude'] ?? 0);
+    $id        = intval( $_POST['id']        ?? 0 );
+    $name      = sanitize_text_field( $_POST['name'] ?? '' );
+    $typ       = sanitize_text_field( $_POST['typ']  ?? '' );
+    $latitude  = floatval( $_POST['latitude']  ?? 0 );
+    $longitude = floatval( $_POST['longitude'] ?? 0 );
+
+    /* neue optionale Felder */
+    $arrival   = sanitize_text_field( $_POST['arrival_pos']   ?? '' );
+    $departure = sanitize_text_field( $_POST['departure_pos'] ?? '' );
 
     if ( $id <= 0 ) {
-        wp_send_json_error('Ungültige Wache-ID', 400);
+        wp_send_json_error( 'Ungültige Wache-ID', 400 );
     }
 
-    $pdo = lsttraining_get_connection();
+    $pdo  = lsttraining_get_connection();
     $stmt = $pdo->prepare(
-        "UPDATE wachen
-           SET name      = ?,
-               typ       = ?,
-               latitude  = ?,
-               longitude = ?
-         WHERE id = ?"
+        'UPDATE wachen
+            SET name          = ?,
+                typ           = ?,
+                latitude      = ?,
+                longitude     = ?,
+                arrival_pos   = ?,
+                departure_pos = ?
+          WHERE id = ?'
     );
 
-    $ok = $stmt->execute([
+    $ok = $stmt->execute( [
         $name,
-        $typ,            // <- typ hier
+        $typ,
         $latitude,
         $longitude,
+        $arrival,
+        $departure,
         $id
-    ]);
+    ] );
 
-    if ( ! $ok ) {
-        wp_send_json_error('Speichern fehlgeschlagen', 500);
-    }
-
-    wp_send_json_success();
-});
+    $ok ? wp_send_json_success()
+        : wp_send_json_error( 'Speichern fehlgeschlagen', 500 );
+} );
 
 /**
  * Löscht eine Wache
  * @action wp_ajax_lsttraining_delete_wache
  */
-add_action('wp_ajax_lsttraining_delete_wache', function() {
-    if ( ! current_user_can('manage_options') ) {
-        wp_send_json_error('Keine Berechtigung', 403);
+add_action( 'wp_ajax_lsttraining_delete_wache', function () {
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( 'Keine Berechtigung', 403 );
     }
-    $id = intval($_POST['wache_id'] ?? 0);
-    if (!$id) {
-        wp_send_json_error('Ungültige Wache-ID', 400);
+
+    $id = intval( $_POST['wache_id'] ?? 0 );
+    if ( ! $id ) {
+        wp_send_json_error( 'Ungültige Wache-ID', 400 );
     }
-    $pdo = lsttraining_get_connection();
-    $stmt = $pdo->prepare("DELETE FROM wachen WHERE id = ?");
-    $ok = $stmt->execute([$id]);
-    if (!$ok) {
-        wp_send_json_error('Löschen fehlgeschlagen', 500);
-    }
-    wp_send_json_success();
-});
+
+    $pdo  = lsttraining_get_connection();
+    $stmt = $pdo->prepare( 'DELETE FROM wachen WHERE id = ?' );
+    $ok   = $stmt->execute( [ $id ] );
+
+    $ok ? wp_send_json_success()
+        : wp_send_json_error( 'Löschen fehlgeschlagen', 500 );
+} );
 
 
