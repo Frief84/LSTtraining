@@ -64,7 +64,10 @@ $all_nls = $all_ls;
     </p>
   </div>
 </form>
-
+	
+<button id="btn-new-wache" class="button button-primary" style="margin-left:10px;">
+  + Neue Wache
+</button>
   <!-- Karte -->
   <div id="wachen-map" style="height: 400px; margin-bottom: 20px;"></div>
 

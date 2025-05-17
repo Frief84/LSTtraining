@@ -1,3 +1,11 @@
+/* ------------------------------------------------------------------
+ * LST Training – Gesamt‑Schema mit created_at
+ * Stand: 2025‑05‑14
+ * ------------------------------------------------------------------ */
+
+SET NAMES utf8mb4;
+SET foreign_key_checks = 0;
+
 /* ------------------------------------------------------------------ */
 /* 1. Leitstellen                                                     */
 /* ------------------------------------------------------------------ */
@@ -9,33 +17,37 @@ CREATE TABLE leitstellen (
     land       VARCHAR(100),
     latitude   DOUBLE,
     longitude  DOUBLE,
-    geojson    LONGTEXT              -- neues Feld: Polygon-GeoJSON
+    geojson    LONGTEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 /* ------------------------------------------------------------------ */
 /* 2. Wachen                                                           */
 /* ------------------------------------------------------------------ */
---
--- Tabelle `wachen`
--- Eine Wache kann *entweder* einer Leitstelle (leitstelle_id) *oder*
--- einer Nebenleitstelle (nebenleitstelle_id) zugeordnet sein – nie beides.
--- Der CHECK-Constraint chk_eine_eltern sorgt dafür, dass genau eine der
--- beiden Spalten befüllt ist.
---
 CREATE TABLE wachen (
-  id                 INT            NOT NULL AUTO_INCREMENT,
-  leitstelle_id      INT            NULL,
-  nebenleitstelle_id INT            NULL,
-  name               VARCHAR(255)   NOT NULL,
-  …
+  id                   INT UNSIGNED AUTO_INCREMENT,
+  leitstelle_id        INT UNSIGNED NULL,
+  nebenleitstelle_id   INT UNSIGNED NULL,
+
+  name                 VARCHAR(100) NOT NULL,
+  typ                  VARCHAR(10)  NOT NULL,
+
+  latitude             DECIMAL(10,6) NOT NULL,
+  longitude            DECIMAL(10,6) NOT NULL,
+
+  arrival_pos          VARCHAR(50) NULL,
+  departure_pos        VARCHAR(50) NULL,
+
+  bild                 VARCHAR(255) NULL,
+  created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
   PRIMARY KEY (id),
   CONSTRAINT chk_eine_eltern CHECK (
-    (leitstelle_id      IS NOT NULL AND nebenleitstelle_id IS NULL)
+    (leitstelle_id IS NOT NULL AND nebenleitstelle_id IS NULL)
     OR
-    (leitstelle_id      IS NULL     AND nebenleitstelle_id IS NOT NULL)
+    (leitstelle_id IS NULL     AND nebenleitstelle_id IS NOT NULL)
   )
-);
-
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 /* ------------------------------------------------------------------ */
 /* 3. Fahrzeuge                                                        */
@@ -58,11 +70,12 @@ CREATE TABLE fahrzeuge (
     latitude    DOUBLE,
     longitude   DOUBLE,
     bild_datei  VARCHAR(255),
+    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (wache_id) REFERENCES wachen(id) ON DELETE CASCADE
 );
 
 /* ------------------------------------------------------------------ */
-/* 4. Einsatzvorlagen (unverändert)                                   */
+/* 4. Einsatzvorlagen                                                  */
 /* ------------------------------------------------------------------ */
 CREATE TABLE einsaetze (
     id            INT AUTO_INCREMENT PRIMARY KEY,
@@ -86,11 +99,12 @@ CREATE TABLE einsaetze (
     latitude      DOUBLE,
     longitude     DOUBLE,
     erstellt_am   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (leitstelle_id) REFERENCES leitstellen(id) ON DELETE CASCADE
 );
 
 /* ------------------------------------------------------------------ */
-/* 5. Nebenleitstellen (unverändert)                                  */
+/* 5. Nebenleitstellen                                                 */
 /* ------------------------------------------------------------------ */
 CREATE TABLE nebenleitstellen (
     id                INT AUTO_INCREMENT PRIMARY KEY,
@@ -102,17 +116,19 @@ CREATE TABLE nebenleitstellen (
     flaeche_km2       FLOAT,
     gps               VARCHAR(255),
     nachbarleitstelle BOOLEAN,
-    geojson           JSON
+    geojson           JSON,
+    created_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 /* ------------------------------------------------------------------ */
-/* 6. Spielinstanzen & Zuordnungen (unverändert)                       */
+/* 6. Spielinstanzen & Zuordnungen                                     */
 /* ------------------------------------------------------------------ */
 CREATE TABLE spielinstanzen (
     id           INT AUTO_INCREMENT PRIMARY KEY,
     leitstelle_id INT,
     name         VARCHAR(255),
     erstellt_am  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     ist_aktiv    BOOLEAN DEFAULT TRUE,
     FOREIGN KEY (leitstelle_id) REFERENCES leitstellen(id) ON DELETE CASCADE
 );
@@ -123,6 +139,7 @@ CREATE TABLE instanz_user (
     user_id   INT,
     rolle     ENUM('leiter','mitspieler') DEFAULT 'mitspieler',
     connected BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (instanz_id) REFERENCES spielinstanzen(id)
 );
 
@@ -132,6 +149,7 @@ CREATE TABLE instanz_wachen (
     wache_id  INT,
     ist_aktiv BOOLEAN DEFAULT TRUE,
     bemerkung TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (instanz_id) REFERENCES spielinstanzen(id),
     FOREIGN KEY (wache_id)   REFERENCES wachen(id)
 );
@@ -150,30 +168,30 @@ CREATE TABLE fahrzeug_status (
     sondersignal       BOOLEAN DEFAULT FALSE,
     bemerkung          TEXT,
     letzte_aktualisierung TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (instanz_id)  REFERENCES spielinstanzen(id),
     FOREIGN KEY (fahrzeug_id) REFERENCES fahrzeuge(id),
     FOREIGN KEY (wache_id)    REFERENCES wachen(id)
 );
 
 /* ------------------------------------------------------------------ */
-/* 7. Krankenhäuser                    */
-/* ------------------------------------------------------------------ */ 
+/* 7. Krankenhäuser                                                    */
+/* ------------------------------------------------------------------ */
 CREATE TABLE krankenhaeuser (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  poi_id VARCHAR(50) NOT NULL UNIQUE COMMENT 'Externe POI-ID (z.B. OSM-ID oder GeoJSON-ID)',
+  poi_id VARCHAR(50) NOT NULL UNIQUE COMMENT 'Externe POI-ID',
   name VARCHAR(255) NOT NULL COMMENT 'Name des Krankenhauses',
-  latitude DOUBLE NOT NULL COMMENT 'Breitengrad',
-  longitude DOUBLE NOT NULL COMMENT 'Längengrad',
+  latitude DOUBLE NOT NULL,
+  longitude DOUBLE NOT NULL,
   versorgungsstufe ENUM(
-    'Grundversorgung',
-    'Schwerpunktversorger',
-    'Maximalversorger'
-  ) NOT NULL DEFAULT 'Grundversorgung' COMMENT 'Versorgungsstufe',
-  trauma_level TINYINT NOT NULL DEFAULT 0 COMMENT 'Trauma-Level (0=kein, 1–3)',
-  helipad BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Landeplatz für Hubschrauber vorhanden?',
-  departments JSON NOT NULL COMMENT 'Liste der Fachabteilungen als JSON-Array',
+    'Grundversorgung','Schwerpunktversorger','Maximalversorger'
+  ) NOT NULL DEFAULT 'Grundversorgung',
+  trauma_level TINYINT NOT NULL DEFAULT 0,
+  helipad BOOLEAN NOT NULL DEFAULT FALSE,
+  departments JSON NOT NULL,
   last_update TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-    ON UPDATE CURRENT_TIMESTAMP COMMENT 'Zeitpunkt der letzten Änderung'
-) ENGINE=InnoDB
-  DEFAULT CHARSET=utf8mb4
-  COMMENT='Statische Hospitalkatalog-Tabelle für Simulation';
+    ON UPDATE CURRENT_TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+/* ------------------------------------------------------------------ */
+SET foreign_key_checks = 1;

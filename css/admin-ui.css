@@ -205,3 +205,7 @@ tr {
   margin-top: 5px;
 }
 
+.btn-new-leitstelle{
+	float: right;
+    margin-bottom: 20px;
+}

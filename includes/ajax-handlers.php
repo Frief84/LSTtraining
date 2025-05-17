@@ -233,4 +233,35 @@ add_action( 'wp_ajax_lsttraining_delete_wache', function () {
         : wp_send_json_error( 'Löschen fehlgeschlagen', 500 );
 } );
 
+/* --------- NEU: Wache anlegen ----------------------------------- */
+add_action( 'wp_ajax_lsttraining_create_wache', function () {
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( 'Keine Berechtigung', 403 );
+    }
+
+    $name       = sanitize_text_field( $_POST['name'] ?? '' );
+    $typ        = sanitize_text_field( $_POST['typ']  ?? '' );
+    $lat        = floatval( $_POST['latitude']  ?? 0 );
+    $lon        = floatval( $_POST['longitude'] ?? 0 );
+    $arrival    = sanitize_text_field( $_POST['arrival_pos']   ?? '' );
+    $departure  = sanitize_text_field( $_POST['departure_pos'] ?? '' );
+    $ls_id      = intval( $_POST['leitstelle_id'] ?? 0 );        // falls nötig
+
+    if ( $lat === 0 || $lon === 0 || $name === '' ) {
+        wp_send_json_error( 'Pflichtfelder fehlen', 400 );
+    }
+
+    $pdo = lsttraining_get_connection();
+    $stmt = $pdo->prepare(
+        'INSERT INTO wachen
+             (leitstelle_id, name, typ, latitude, longitude, arrival_pos, departure_pos)
+         VALUES (?,?,?,?,?,?,?)'
+    );
+    $ok = $stmt->execute([
+        $ls_id, $name, $typ, $lat, $lon, $arrival, $departure
+    ]);
+
+    $ok ? wp_send_json_success()
+        : wp_send_json_error( 'Anlegen fehlgeschlagen', 500 );
+});
 

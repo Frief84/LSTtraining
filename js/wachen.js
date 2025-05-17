@@ -1,6 +1,15 @@
 // js/wachen.js
 
 (function($){
+	
+	document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('btn-new-wache');
+  if (btn) btn.addEventListener('click', e => {
+    e.preventDefault();
+    openNewWacheModal();
+  });
+});
+
 
 	const styleMain = new ol.style.Style({
   image: new ol.style.Circle({ radius: 6, fill: new ol.style.Fill({ color: '#e31b23' }) })
@@ -150,11 +159,16 @@ function openWacheModal(data) {
   /* Modal zuerst sichtbar machen */
   $('#wache-edit-modal').removeClass('hidden');
 
-  /* im nächsten Frame: Karte + Dropdown setzen */
-  requestAnimationFrame(() => {
-    ensureWacheEditMap(+data.latitude, +data.longitude);
-    $('#w-typ').val(data.typ);
-  });
+ requestAnimationFrame(() => {
+   // vierte und fünfte Arg. sind optionale Strings
+   ensureWacheEditMap(
+     +data.latitude,
+     +data.longitude,
+     data.arrival_pos   || '',
+     data.departure_pos || ''
+   );
+   $('#w-typ').val(data.typ);
+ });
 }
 	
 // --------------------------------------------------------
@@ -255,9 +269,14 @@ $('body').on('submit', '#wache-edit-form', function (e) {
   }
 
   /* ---------- collect form data & send via AJAX ---------- */
-  const data = $(this).serializeArray()
-                      .reduce((o, kv) => { o[kv.name] = kv.value; return o; },
-                              { action: 'lsttraining_save_wache' });
+
+	 const mode = $('#w-form-mode').val();           // "create" oder "update"
+ const data = $(this).serializeArray()
+   .reduce((o, kv) => { o[kv.name] = kv.value; return o; },
+           { action: mode === 'create'
+                       ? 'lsttraining_create_wache'  // INSERT-Hook
+                       : 'lsttraining_save_wache'    // UPDATE-Hook
+           });
 
   $.post(lstWachenAjax.ajax_url, data).done(res => {
     if (res.success) {
@@ -466,6 +485,34 @@ if (evt.originalEvent.ctrlKey) {           // Departure
     if (this.value.trim() === '' && depFt) {
       vSrc.removeFeature(depFt);
     }
+  });
+}
+
+	/**
+ * Öffnet das Modal leer zum Anlegen einer neuen Wache.
+ */
+function openNewWacheModal() {
+
+  const tpl  = $('#tmpl-wache-edit-form').html();
+  const html = renderTemplate(tpl, {
+    id: '',
+    name: '',
+    typ: '',
+    latitude: 51.0,
+    longitude: 9.0,
+    arrival_pos: '',
+    departure_pos: ''
+  });
+
+  $('#wache-edit-modal .wache-edit-content').html(html);
+
+  /* Modus → create */
+  $('#w-form-mode').val('create');
+
+  /* Modal zuerst einblenden, dann Karte initialisieren */
+  $('#wache-edit-modal').removeClass('hidden');
+  requestAnimationFrame(() => {
+    ensureWacheEditMap(51.0, 9.0);          // Mitte DE
   });
 }
 
