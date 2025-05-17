@@ -47,23 +47,36 @@ function lsttraining_render_leitstellen_wachen() {
     include plugin_dir_path( __FILE__ ) . '/wachen.php';
 }
 
-// die anderen Callbacks unverändert…
+// ─────────────────────────────────────────────
+// Page-Render-Callbacks (nur jeweils EINE Definition!)
+// ─────────────────────────────────────────────
+
+/**
+ * Render the Leitstellen page.
+ */
 function lsttraining_render_leitstellen() {
-    require_once plugin_dir_path( __FILE__ ) . '/leitstellen_editor.php';
+    require_once plugin_dir_path( __FILE__ ) . 'leitstellen_editor.php';
 }
 
-function lsttraining_render_leitstellen_fahrzeuge() {
-    echo '<div class="wrap"><h1>Leitstellen – Fahrzeuge</h1><p>Hier könnten die Fahrzeuge der spielbaren Leitstellen verwaltet werden.</p></div>';
-}
-
+/**
+ * Render the Nebenleitstellen page.
+ */
 function lsttraining_render_nebenleitstellen() {
-    require_once plugin_dir_path( __FILE__ ) . '/nebenstellen_editor.php';
+    require_once plugin_dir_path( __FILE__ ) . 'nebenstellen_editor.php';
 }
 
-function lsttraining_render_neben_wachen() {
-    echo '<div class="wrap"><h1>Neben-Wachen</h1><p>Bearbeite realistische Wachen aus Nebenleitstellen.</p></div>';
+/**
+ * Render the Krankenhäuser page.
+ */
+function lsttraining_render_krankenhaeuser() {
+    echo '<div class="wrap"><h1>Krankenhäuser</h1></div>';
 }
 
-function lsttraining_render_neben_fahrzeuge() {
-    echo '<div class="wrap"><h1>Neben-Fahrzeuge</h1><p>Verwalte Fahrzeuge, die zu Neben-Wachen gehören.</p></div>';
+
+/**
+ * Render the Fahrzeuge page.
+ */
+function lsttraining_render_leitstellen_fahrzeuge() {
+    echo '<div class="wrap"><h1>Leitstellen – Fahrzeuge</h1></div>';
 }
+
