@@ -265,3 +265,14 @@ add_action( 'wp_ajax_lsttraining_create_wache', function () {
         : wp_send_json_error( 'Anlegen fehlgeschlagen', 500 );
 });
 
+add_action('wp_ajax_get_krankenhaeuser', 'lsttraining_ajax_get_krankenhaeuser');
+
+function lsttraining_ajax_get_krankenhaeuser() {
+    $pdo = lsttraining_get_connection();
+
+    $stmt = $pdo->prepare("SELECT id, name, versorgungsstufe, trauma_level, latitude, longitude FROM krankenhaeuser ORDER BY name");
+    $stmt->execute();
+
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    wp_send_json($results);
+}

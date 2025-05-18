@@ -47,6 +47,33 @@ function lsttraining_render_leitstellen_wachen() {
     include plugin_dir_path( __FILE__ ) . '/wachen.php';
 }
 
+
+function lsttraining_render_hospitals() {
+    $base = plugin_dir_url(__FILE__) . '..';
+
+    // JS registrieren und einbinden
+    wp_enqueue_script(
+        'lsttraining-hospitals',
+        $base . '/js/hospitals.js',
+        ['jquery', 'openlayers'],
+        '1.0',
+        true
+    );
+
+    // Optional: Lokale AJAX-URL oder Admin-Link
+    wp_localize_script(
+        'lsttraining-hospitals',
+        'lstHospitalsAjax',
+        [
+            'ajax_url'  => admin_url('admin-ajax.php'),
+            'admin_url' => admin_url('admin.php'),
+        ]
+    );
+
+    // Template laden
+    include plugin_dir_path(__FILE__) . '/hospitals.php';
+}
+
 // ─────────────────────────────────────────────
 // Page-Render-Callbacks (nur jeweils EINE Definition!)
 // ─────────────────────────────────────────────
@@ -65,12 +92,6 @@ function lsttraining_render_nebenleitstellen() {
     require_once plugin_dir_path( __FILE__ ) . 'nebenstellen_editor.php';
 }
 
-/**
- * Render the Krankenhäuser page.
- */
-function lsttraining_render_krankenhaeuser() {
-    echo '<div class="wrap"><h1>Krankenhäuser</h1></div>';
-}
 
 
 /**

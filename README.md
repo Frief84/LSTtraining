@@ -45,6 +45,80 @@ Das Schema in `database/schema.sql` definiert acht Tabellen:
 5. **spielinstanzen**, **instanz_wachen**, **instanz_user**: Multi-User-Instanzen für Trainingsszenarien  
 6. **einsatzvorlagen**: Vorlagen für wiederkehrende Übungen  
 
+## 🏥 Krankenhäuser
+
+Wir haben jetzt eine vollständige statische „Hospitalkatalog“-Tabelle für die Simulation definiert. Die SQL-Definition dient nur als Referenz – in der README beschreiben wir die Felder:
+
+| Feld               | Typ                                    | Beschreibung                                                          |
+|--------------------|----------------------------------------|-----------------------------------------------------------------------|
+| **id**             | INT, PK, AUTO_INCREMENT                | Interner Primärschlüssel                                              |
+| **poi_id**         | VARCHAR(50), UNIQUE                    | Externe POI-ID (z.B. OSM-ID oder GeoJSON-ID)                          |
+| **name**           | VARCHAR(255)                           | Name des Krankenhauses                                                |
+| **latitude**       | DOUBLE                                 | Breitengrad                                                           |
+| **longitude**      | DOUBLE                                 | Längengrad                                                            |
+| **versorgungsstufe** | ENUM                                 | Versorgungsstufe:  
+  - `Grundversorgung`  
+  - `Schwerpunktversorger`  
+  - `Maximalversorger`  
+| **trauma_level**   | TINYINT                                | Trauma-Level (0 = keiner, 1–3)                                        |
+| **helipad**        | BOOLEAN                                | Hubschrauberlandeplatz vorhanden? (`true` / `false`)                  |
+| **departments**    | JSON                                   | Liste der Fachabteilungen als JSON-Array (siehe unten)                |
+| **last_update**    | TIMESTAMP                              | Zeitpunkt der letzten Änderung (automatisch aktualisiert)            |
+| **created_at**     | TIMESTAMP                              | Erstellungszeitpunkt (automatisch gesetzt)                           |
+
+### 📋 Fachabteilungen (`departments` JSON)
+
+Das Feld `departments` ist ein JSON-Array mit Objekten für jede Abteilung. Um Konsistenz sicherzustellen, dürfen nur folgende **Codes** verwendet werden:
+
+| Code | Name                                 |
+|------|--------------------------------------|
+| NOTF | Innere Notaufnahme                   |
+| KINA | Kinder-Notaufnahme                   |
+| CHIR | Chirurgie                            |
+| ISTX | Chirurgische Intensivstation         |
+| CT   | Computertomographie                  |
+| DERM | Dermatologie                         |
+| DRAM | Druckkammer                          |
+| VASG | Gefäßchirurgie                       |
+| GYNO | Gynäkologie                          |
+| HNOK | HNO-Heilkunde                        |
+| INTX | Innere Intensivstation               |
+| CARD | Kardiologie                          |
+| KESS | Kreißsaal                            |
+| MRT  | Magnetresonanztomographie            |
+| MKGC | MKG-Chirurgie                        |
+| NECH | Neurochirurgie                       |
+| NEUR | Neurologie                           |
+| NOTO | Notoperation                         |
+| NUKL | Nuklearmedizin                       |
+| ONKO | Onkologie                            |
+| PSYC | Psychiatrie                          |
+| PED  | Pädiatrie                            |
+| KKH  | Kinderkrankenhaus                    |
+| STRK | Stroke Unit                          |
+| UROL | Urologie                             |
+| BURN | Brandverletzten-Station              |
+| CAT  | Herzkatheteruntersuchung             |
+
+#### Aufbau eines `departments`-Eintrags
+
+Jedes Array-Element ist ein Objekt mit folgenden Feldern:
+
+```json
+{
+  "code":     "CHIR",     // einer der obigen Codes
+  "name":     "Chirurgie",
+  "priority": 2,          // 1 = höchste Priorität, höhere Zahlen = weniger wichtig
+  "capacity": 24          // optional: Betten- bzw. Behandlungsplätze
+}
+
+> Hinweis:
+> Die Felder versorgungsstufe, trauma_level und helipad
+> beeinflussen das Routing/Handling in der Simulation.
+> last_update wird automatisch auf den aktuellen Zeitstempel gesetzt,
+> wenn sich Daten ändern.
+> Nur Codes aus der obigen Liste sind gültig — Erweiterungen müssen hier dokumentiert werden.
+
 ## 🏗️ Architektur und Aufbau
 
 ### 1. Haupt-Bootstrap (`lsttraining-plugin.php`)

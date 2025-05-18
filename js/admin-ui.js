@@ -338,9 +338,17 @@ function openLeitstellePopupForCreate() {
 
 /* register click handler after DOM is ready */
 document.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const page = params.get('page');
+
+  if (page !== 'lsttraining_leitstellen') {
+    // Nicht die richtige Seite – kein Button vorhanden
+    return;
+  }
+
   const btn = document.getElementById('btn-new-leitstelle');
   if (!btn) {
-    console.warn('[lsttraining] + Neue Leitstelle-Button not found.');
+    console.warn('[lsttraining] Button #btn-new-leitstelle nicht gefunden.');
     return;
   }
 

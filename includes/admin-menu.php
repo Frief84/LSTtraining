@@ -44,7 +44,7 @@ add_action( 'admin_menu', function() {
         'Krankenhäuser',
         'manage_options',
         'lsttraining_krankenhaeuser',
-        'lsttraining_render_krankenhaeuser'
+        'lsttraining_render_hospitals'
     );
 
     // ────────────────────────────────
