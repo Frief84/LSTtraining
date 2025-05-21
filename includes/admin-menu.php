@@ -96,5 +96,8 @@ add_action( 'admin_menu', function() {
         'lsttraining_render_leitstellen',
         0
     );
+	
 });
+
+
 

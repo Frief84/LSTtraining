@@ -209,3 +209,121 @@ tr {
 	float: right;
     margin-bottom: 20px;
 }
+
+/* Basis: versteckt */
+.hidden {
+  display: none !important;
+}
+
+/* Wenn sichtbar, soll es als Vollbild-Overlay kommen */
+.hospital-edit-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5); /* halbtransparentes Grau */
+  display: flex;               /* zentriert den Container */
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;               /* über allem anzeigen */
+}
+
+/* Das innere Panel */
+.hospital-edit-container {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 600px;
+  width: 90%;
+  position: relative;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+/* Overlay hinter dem Container (falls Du es nutzt) */
+.hospital-edit-overlay {
+  position: absolute;
+  top:0; left:0;
+  width:100%; height:100%;
+  /* kannst hier noch ein zusätzliches Layer machen */
+}
+
+.hospital-delete-button {
+  float: right;
+  margin-left: 8px;
+}
+
+ /* Stelle auf Auto-Layout um, damit Spaltenbreiten dem Inhalt folgen */
+  table.widefat.fixed {
+    table-layout: auto !important;
+    width: 100% /* oder weglassen, wenn Du nur die Inhalte willst */;
+  }
+  /* Entferne feste Width-Attribute von den Th-Zellen */
+  table.widefat.fixed th[width] {
+    width: auto !important;
+  }
+  /* Erlaube normalen Zeilenumbruch in allen Zellen außer Aktionenzelle */
+  table.widefat.fixed td {
+    white-space: normal;
+  }
+  /* Die Aktions-Spalte soll weiterhin nicht umbrechen */
+  table.widefat.fixed td[style*="nowrap"] {
+    white-space: nowrap;
+  }
+
+.hospital-tooltip {
+  position: absolute;
+  background: white;
+  border: 1px solid #666;
+  padding: 6px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  font-size: 13px;
+}
+.hospital-tooltip.hidden {
+  display: none;
+}
+.hospital-tooltip-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.hospital-tooltip-edit {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+#departments-edit-modal {
+  position: fixed;
+  top: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 800px;
+  background: #fff;
+  border: 1px solid #ccc;
+  z-index: 10000;
+  padding: 1em;
+  box-shadow: 0 0 20px rgba(0,0,0,0.2);
+  overflow-y: auto;
+  max-height: 90%;
+}
+
+#departments-edit-modal.hidden {
+  display: none;
+}
+
+#departments-edit-modal .modal-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+#departments-selector{
+	
+	    padding-top: 5px;
+
+	margin-left: 5px;
+}
