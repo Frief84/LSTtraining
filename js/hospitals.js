@@ -481,35 +481,42 @@ function openEditForm(id) {
 
             // 5) Speichern
             document.getElementById('hospital-edit-form').addEventListener('submit', e => {
-                e.preventDefault();
-                const form = e.target;
+  e.preventDefault();
+  const form = e.target;
+  const fd = new FormData(form);
 
-                // 1) Koords parsen und versteckte Felder füllen
-                const coordsStr = document.getElementById('h-coords').value.trim();
-                const [latStr, lonStr] = coordsStr.split(/\s*,\s*/);
-                document.getElementById('h-lat').value = latStr;
-                document.getElementById('h-lon').value = lonStr;
+  // Optional: alle dept-* Felder einsammeln und in JSON wandeln
+  const departments = {};
 
-                // 2) Jetzt alle FormData-Einträge loggen zum Debug
-                const fd = new FormData(form);
+  form.querySelectorAll('input[name^="departments["]').forEach(input => {
+    const match = input.name.match(/^departments\[(.+?)\]\[(.+?)\]$/);
+    if (match) {
+      const code = match[1];
+      const key = match[2];
+      departments[code] = departments[code] || {};
+      departments[code][key] = input.type === 'checkbox' ? input.checked : input.value;
+    }
+  });
 
-                // 3) Abschicken
-                fetch(`${lstHospitalsAjax.ajax_url}?action=save_krankenhaus`, {
-                        method: 'POST',
-                        credentials: 'same-origin',
-                        body: fd
-                    })
-                    .then(r => r.json())
-                    .then(json => {
-                        if (!json.success) throw new Error(json.data || 'Speichern fehlgeschlagen');
-                        document.getElementById('hospital-edit-modal').classList.add('hidden');
-                        fetchHospitals();
-                    })
-                    .catch(err => {
-                        console.error('Speichern-Fehler:', err);
-                        alert('Speichern fehlgeschlagen: ' + err.message);
-                    });
-            });
+  fd.set('departments', JSON.stringify(departments));
+
+  fetch(`${lstHospitalsAjax.ajax_url}?action=save_krankenhaus`, {
+    method: 'POST',
+    credentials: 'same-origin',
+    body: fd
+  })
+    .then(r => r.json())
+    .then(json => {
+      if (!json.success) throw new Error(json.data || 'Speichern fehlgeschlagen');
+      document.getElementById('hospital-edit-modal').classList.add('hidden');
+      fetchHospitals();
+    })
+    .catch(err => {
+      console.error('Speichern-Fehler:', err);
+      alert('Speichern fehlgeschlagen: ' + err.message);
+    });
+});
+
 
             // 6) Löschen
             const deleteBtn = document.getElementById('hospital-delete-button');
