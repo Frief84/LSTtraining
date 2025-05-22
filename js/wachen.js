@@ -73,9 +73,11 @@ function lonLatToField(selectorLatLon, lonLat) {
   // 3) AJAX: Wachen laden und als Marker rendern
   // --------------------------------------------------------
   function loadWachen(lsId, nlsId) {
-    const params = new URLSearchParams();
-    if (lsId)  params.set('ls_id', lsId);
-    if (nlsId) params.set('nls_id', nlsId);
+    if (!lsId && !nlsId) return;
+
+  const params = new URLSearchParams();
+  if (lsId)  params.set('ls_id',  lsId);
+  if (nlsId) params.set('nls_id', nlsId);
 
     fetch(lstWachenAjax.ajax_url + '?action=lsttraining_get_wachen&' + params.toString())
       .then(res => {
@@ -305,50 +307,49 @@ $('body').on('submit', '#wache-edit-form', function (e) {
 // --------------------------------------------------------
 // 7) Initial, Live-Filter und gegenseitiges Zurücksetzen (+ optionales Submit)
 // --------------------------------------------------------
-$(function(){
-  const lsSelect  = $('#ls_id');
-  const nlsSelect = $('#nls_id');
+$(function () {
+  const lsSelect  = $('#ls_id');     // main control centre
+  const nlsSelect = $('#nls_id');    // sub control centre
   const lsSearch  = $('#ls_search');
   const nlsSearch = $('#nls_search');
   const $form     = lsSelect.closest('form');
 
-  // 7.1) Erst laden
-  loadWachen(lsSelect.val(), nlsSelect.val());
+  /* --- 7.1  First load ------------------------------------------- */
+  const initLs  = parseInt(lsSelect.val(),  10) || 0;
+  const initNls = parseInt(nlsSelect.val(), 10) || 0;
+  if (initLs || initNls) {           // only call when at least one filter exists
+    loadWachen(initLs, initNls);
+  }
 
-  // 7.2) Live-Filter
-  lsSearch.on('keyup', function(){
+  /* --- 7.2  Live search ------------------------------------------ */
+  lsSearch.on('keyup', function () {
     const term = this.value.toLowerCase();
-    lsSelect.find('option').each(function(){
-      $(this).toggle( $(this).text().toLowerCase().includes(term) );
+    lsSelect.find('option').each(function () {
+      $(this).toggle($(this).text().toLowerCase().includes(term));
     });
   });
-  nlsSearch.on('keyup', function(){
+  nlsSearch.on('keyup', function () {
     const term = this.value.toLowerCase();
-    nlsSelect.find('option').each(function(){
-      $(this).toggle( $(this).text().toLowerCase().includes(term) );
+    nlsSelect.find('option').each(function () {
+      $(this).toggle($(this).text().toLowerCase().includes(term));
     });
   });
 
-  // 7.3) Wenn Leitstelle gewechselt …
-  lsSelect.on('change', function(){
-    // Nebenleitstelle zurücksetzen
-    nlsSelect.val('0');
-    // Karte neu laden
-    loadWachen(lsSelect.val(), 0);
-    // Tabelle neu laden (Seiten-Reload)
-    $form.submit();
+  /* --- 7.3  Leitstelle changed ----------------------------------- */
+  lsSelect.on('change', function () {
+    nlsSelect.val('0');                   // reset sub-station
+    loadWachen(lsSelect.val(), 0);        // reload map
+    $form.submit();                       // reload table via page refresh
   });
 
-  // 7.4) Wenn Nebenleitstelle gewechselt …
-  nlsSelect.on('change', function(){
-    // Leitstelle zurücksetzen
-    lsSelect.val('0');
-    // Karte neu laden
-    loadWachen(0, nlsSelect.val());
-    // Tabelle neu laden (Seiten-Reload)
-    $form.submit();
+  /* --- 7.4  Nebenleitstelle changed ------------------------------ */
+  nlsSelect.on('change', function () {
+    lsSelect.val('0');                    // reset main station
+    loadWachen(0, nlsSelect.val());       // reload map
+    $form.submit();                       // reload table via page refresh
   });
 });
+
 	
 	// --------------------------------------------------------
 // 8) Delete im Modal

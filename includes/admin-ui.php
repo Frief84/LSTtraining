@@ -13,41 +13,76 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Admin UI Dispatcher für LSTtraining Plugin
  */
+/**
+ * Enqueue admin assets for each LST-Training sub-page separately.
+ */
 add_action( 'admin_enqueue_scripts', function ( $hook ) {
-    // Wir wollen alle Hooks, die unser Plugin betreffen
-    if ( strpos( $hook, 'lsttraining' ) !== false ) {
 
-        $base = plugin_dir_url( __FILE__ ) . '..';
+    // --- 1) Common values --------------------------------------------------
+    $root_url = plugin_dir_url( dirname( __FILE__ ) ); // …/lsttraining-plugin/
 
-        // Dashicons + OpenLayers
-        wp_enqueue_style( 'dashicons' );
-        wp_enqueue_style( 'openlayers-style', $base . '/openlayers/ol.css' );
-        wp_enqueue_script( 'openlayers', $base . '/openlayers/ol.js', [], null, true );
+    /* Shared libraries (loaded on every LST-Training page) */
+    wp_enqueue_style(  'dashicons' );
+    wp_enqueue_style(  'lst-openlayers-css', $root_url . 'openlayers/ol.css' );
+    wp_enqueue_script( 'lst-openlayers',     $root_url . 'openlayers/ol.js',
+                       [], null, true );
 
-        // allgemeine Admin-UI
-        wp_enqueue_style( 'lsttraining-admin-style', $base . '/css/admin-ui.css', [], '1.0' );
-        wp_enqueue_script( 'lsttraining-admin-ui', $base . '/js/admin-ui.js', ['jquery'], '1.0.2', true );
-        wp_enqueue_script( 'lsttraining-einsatzgebiet-editor', $base . '/js/einsatzgebiet-editor.js', ['jquery'], '1.0', true );
-        wp_enqueue_script( 'lsttraining-nebenstellen-editor', $base . '/js/nebenstellen_editor.js', ['openlayers'], '1.0', true );
+    wp_enqueue_style(  'lst-admin-css',      $root_url . 'css/admin-ui.css',
+                       [], '1.0.0' );
+    wp_enqueue_script( 'lst-admin-ui',       $root_url . 'js/admin-ui.js',
+                       [ 'jquery' ], '1.0.2', true );
+
+    // --- 2) Assets only for ► Leitstellen ▸ Krankenhäuser ------------------
+    if ( strpos( $hook, '_page_lsttraining_krankenhaeuser' ) !== false ) {
+
+    wp_enqueue_script(
+        'lst-departments',
+        $root_url . 'js/departments.js',
+        [ 'jquery', 'underscore', 'wp-util' ],
+        '1.0.0', true
+    );
+
+    wp_enqueue_script(
+        'lst-hospitals',
+        $root_url . 'js/hospitals.js',
+        [ 'jquery', 'lst-openlayers', 'lst-departments' ],
+        '1.0.0', true
+    );
+
+    wp_localize_script(
+        'lst-hospitals',
+        'lstHospitalsAjax',
+        [
+            'ajax_url' => admin_url( 'admin-ajax.php' ),
+            'nonce'    => wp_create_nonce( 'lsttraining_hospitals' ),
+        ]
+    );
+}
+    // --- 3) Assets only for ► Leitstellen ▸ Wachen -------------------------
+    if ( $hook === 'lsttraining_leitstellen_page_lsttraining_leitstellen_wachen' ) {
 
         wp_enqueue_script(
-			'lsttraining-departments',
-			plugin_dir_url( dirname( __FILE__ ) ) . 'js/departments.js',
-			['jquery', 'underscore', 'wp-util'],
-			'1.0',
-			true
-		);
+            'lst-wachen',
+            $root_url . 'js/wachen.js',       // ← correct path, no “includes/”
+            [ 'jquery', 'lst-openlayers' ],
+            '1.0.0', true
+        );
 
-		wp_enqueue_script(
-			'lsttraining-hospitals',
-			plugin_dir_url( dirname( __FILE__ ) ) . 'js/hospitals.js',
-			[ 'jquery', 'lsttraining-departments' ], // ← richtig!
-			'1.0',
-			true
-		);
-
+        wp_localize_script(
+            'lst-wachen',
+            'lstWachenAjax',
+            [
+                'ajax_url'  => admin_url( 'admin-ajax.php' ),
+                'admin_url' => admin_url( 'admin.php' ),
+            ]
+        );
     }
-} );
+
+    // --- 4) Optional: further pages - add more branches here ---------------
+});
+
+
+
 
 
 // ─────────────────────────────────────────────
@@ -82,46 +117,38 @@ if ( ! function_exists( 'lsttraining_render_leitstellen_fahrzeuge' ) ) {
 }
 
 /**
- * Render the Leitstellen & Wachen page.
+ * Render the Hospitals page.
+ */
+if ( ! function_exists( 'lsttraining_render_krankenhaeuser' ) ) {
+    function lsttraining_render_krankenhaeuser() {
+        require_once plugin_dir_path( __FILE__ ) . 'hospitals.php';
+    }
+}
+
+
+/**
+ * Render the “Leitstellen & Wachen” admin page.
  */
 if ( ! function_exists( 'lsttraining_render_leitstellen_wachen' ) ) {
     function lsttraining_render_leitstellen_wachen() {
-        $base_url = plugin_dir_url( __FILE__ );
 
-        // OpenLayers einbinden
-        wp_enqueue_script(
-            'openlayers',
-            'https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js',
-            [],
-            null,
-            true
-        );
+        /* 1 | Assets enqueuen (OpenLayers, wachen.js, Ajax-Variablen)  */
+        $plugin_url = plugin_dir_url( dirname( __FILE__ ) );
 
-        // Eigenes JS einbinden
-        wp_enqueue_script(
-            'lsttraining-wachen',
-            $base_url . 'js/wachen.js',
-            [ 'jquery', 'openlayers' ],
-            '1.0',
-            true
-        );
+        wp_enqueue_script( 'lst-openlayers',
+            $plugin_url . 'openlayers/ol.js', [], null, true );
 
-        // AJAX-URLs für das JS bereitstellen
-        wp_localize_script(
-            'lsttraining-wachen',
-            'lstWachenAjax',
-            [
-                'ajax_url'  => admin_url( 'admin-ajax.php' ),
-                'admin_url' => admin_url( 'admin.php' ),
-            ]
-        );
+        wp_enqueue_script( 'lst-wachen',
+            $plugin_url . 'js/wachen.js',
+            [ 'jquery', 'lst-openlayers' ], '1.0.0', true );
 
-        // HTML-Ausgabe der Admin-Seite
-        ?>
-        <div class="wrap">
-            <h1><?php esc_html_e( 'Leitstellen & Wachen', 'lsttraining' ); ?></h1>
-            <div id="lsttraining-wachen-container" style="width:100%; height:600px;"></div>
-        </div>
-        <?php
+        wp_localize_script( 'lst-wachen', 'lstWachenAjax', [
+            'ajax_url' => admin_url( 'admin-ajax.php' ),
+        ] );
+
+        /* 2 | Seite rendern – ENTWEDER wachen.php einbinden … */
+        require_once plugin_dir_path( __FILE__ ) . 'wachen.php';
+
     }
 }
+

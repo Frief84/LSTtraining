@@ -388,9 +388,10 @@ function setupEditButtons() {
 
 
 // 5. Neuer Eintrag
-document.getElementById('btn-new-krankenhaus')
-    .addEventListener('click', () => openEditForm(null));
-
+jQuery( function ( $ ) {                     // runs when DOM is ready
+    $('#btn-new-krankenhaus')               // safe even if the element
+        .on('click', () => openEditForm(null)); // isn’t present yet
+});
 // 6. Modal öffnen und befüllen
 function openEditForm(id) {
     const modal = document.getElementById('hospital-edit-modal');

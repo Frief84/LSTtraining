@@ -38,14 +38,14 @@ add_action( 'admin_menu', function() {
     // ────────────────────────────────
     //  2a) Krankenhäuser
     // ────────────────────────────────
-    add_submenu_page(
-        'lsttraining_leitstellen',
-        'Krankenhäuser',
-        'Krankenhäuser',
-        'manage_options',
-        'lsttraining_krankenhaeuser',
-        'lsttraining_render_hospitals'
-    );
+		add_submenu_page(
+		'lsttraining_leitstellen',       // Parent-Slug deines LST-Training-Menus
+		'Krankenhäuser',                 // Page-Titel (oben im Browser-Tab)
+		'Krankenhäuser',                 // Label im Menü
+		'manage_options',                // Capability
+		'lsttraining_krankenhaeuser',    // Menu-Slug
+		'lsttraining_render_krankenhaeuser' // Callback-Funktion
+	);
 
     // ────────────────────────────────
     //  3) Wachen
