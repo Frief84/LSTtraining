@@ -1,4 +1,6 @@
 (function () {
+	
+	window.activeDeptCode = null; 
   // Erlaubte Fachbereiche (statisch vorgegeben)
   const allowed = {
     NOTF: 'Innere Notaufnahme',
@@ -8,12 +10,12 @@
     CT: 'Computertomographie',
     DERM: 'Dermatologie',
     DRAM: 'Druckkammer',
-    VASG: 'GefÃ¤ÃŸchirurgie',
-    GYNO: 'GynÃ¤kologie',
+    VASG: 'Gefäßchirurgie',
+    GYNO: 'Gynäkologie',
     HNOK: 'HNO-Heilkunde',
     INTX: 'Innere Intensivstation',
     CARD: 'Kardiologie',
-    KESS: 'KreiÃŸsaal',
+    KESS: 'Kreißsaal',
     MRT: 'Magnetresonanztomographie',
     MKGC: 'MKG-Chirurgie',
     NECH: 'Neurochirurgie',
@@ -22,7 +24,7 @@
     NUKL: 'Nuklearmedizin',
     ONKO: 'Onkologie',
     PSYC: 'Psychiatrie',
-    PED: 'PÃ¤diatrie',
+    PED: 'Pädiatrie',
     KKH: 'Kinderkrankenhaus',
     STRK: 'Stroke Unit',
     UROL: 'Urologie',
@@ -40,7 +42,7 @@
   const detailsTable = container.querySelector('#departments-details-table tbody');
 
   if (!modal || !form || !selector || !detailsTable) {
-    console.warn('Ein benÃ¶tigtes Element fehlt.');
+    console.warn('Ein benötigtes Element fehlt.');
     return;
   }
 
@@ -70,7 +72,7 @@
       });
   });
 
-  // Checkbox-Ã„nderung
+  // Checkbox-Änderung
   selector.addEventListener('change', e => {
     if (!e.target.matches('.dept-toggle')) return;
     const code = e.target.value;
@@ -143,7 +145,7 @@ const tpl = wp.template('departments-editor');
   const hospital_lat = data.hospital_lat;
   const hospital_lon = data.hospital_lon;
 
-  // Checkbox-Ã„nderung â†’ Zeile einfÃ¼gen oder lÃ¶schen
+  // Checkbox-Änderung ? Zeile einfügen oder löschen
   $selector.on('change', '.dept-toggle', function () {
     const code = this.value;
     if (this.checked) {
@@ -165,16 +167,16 @@ existing.forEach(dep => {
   if (checkbox.length) {
     checkbox.prop('checked', true);
     
-    // Direkt Zeile hinzufÃ¼gen, ohne "change"-Event
+    // Direkt Zeile hinzufügen, ohne "change"-Event
     window.addDepartmentRow(code, dep, allowed, hospital_lat, hospital_lon);
   } else {
-    console.warn('Checkbox nicht gefunden fÃ¼r:', code);
+    console.warn('Checkbox nicht gefunden für:', code);
   }
 });
 }
 
 
-  // Listener fÃ¼r alle Fachbereichs-Buttons
+  // Listener für alle Fachbereichs-Buttons
   document.addEventListener('click', function (e) {
     const btn = e.target.closest('.edit-departments, #h-departments-button');
     if (!btn) return;
@@ -197,7 +199,7 @@ existing.forEach(dep => {
         const feat = window.deptSource.getFeatures().find(f => f.get('code') === code);
         if (feat) {
           feat.getGeometry().setCoordinates(ol.proj.fromLonLat([lon, lat]));
-          console.log(`ðŸ”„ Marker fÃ¼r ${code} aktualisiert`);
+          console.log(`?? Marker für ${code} aktualisiert`);
         }
       }
     };
@@ -206,103 +208,164 @@ existing.forEach(dep => {
     lonInput.addEventListener('change', onCoordChange);
   }
 	
+	// 7. Zusätzliche Marker für bestehende Departments
+      function getColor(code) {
+        const palette = {
+          NOTF: '#e41a1c', KINA: '#377eb8', CHIR: '#4daf4a', ISTX: '#984ea3', CT: '#ff7f00',
+          DERM: '#ffff33', DRAM: '#a65628', VASG: '#f781bf', GYNO: '#999999', HNOK: '#66c2a5',
+          INTX: '#a6cee3', CARD: '#1f78b4', KESS: '#b2df8a', MRT: '#33a02c', MKGC: '#fb9a99',
+          NECH: '#e31a1c', NEUR: '#fdbf6f', NOTO: '#ff7f00', NUKL: '#cab2d6', ONKO: '#6a3d9a',
+          PSYC: '#b15928', PED: '#8dd3c7', KKH: '#ffffb3', STRK: '#bebada', UROL: '#fb8072',
+          BURN: '#80b1d3', CAT: '#fdb462'
+        };
+        return palette[code] || '#000';
+      }
+	
 window.addDepartmentRow = function (code, dep, allowed, hospital_lat, hospital_lon) {
-  const $details = jQuery('#departments-details-table tbody');
-  if ($details.find(`tr[data-code="${code}"]`).length) return;
+    const $details = jQuery('#departments-details-table tbody');
+    if ($details.find(`tr[data-code="${code}"]`).length) return;
 
-  const label = allowed[code];
-  const priority = dep.priority || 1;
-  const lat = dep.latitude || hospital_lat;
-  const lon = dep.longitude || hospital_lon;
+    /* ------------------------------------------------------------------
+       1) Tabellenzeile anlegen
+    ------------------------------------------------------------------ */
+    const label    = allowed[code];
+    const priority = dep.priority || 1;
+    const lat      = dep.latitude  || hospital_lat;
+    const lon      = dep.longitude || hospital_lon;
 
-  const tr = document.createElement('tr');
-  tr.dataset.code = code;
-  tr.innerHTML = `
-    <td><input type="checkbox" name="departments[${code}][enabled]" checked></td>
-    <td>${label}</td>
-    <td>
-      <select name="departments[${code}][priority]" style="width: 60px;">
-        <option value="1" ${priority == 1 ? 'selected' : ''}>1</option>
-        <option value="2" ${priority == 2 ? 'selected' : ''}>2</option>
-        <option value="3" ${priority == 3 ? 'selected' : ''}>3</option>
-      </select>
-    </td>
-    <td>
-      <input name="departments[${code}][latitude]" value="${lat}" style="width:70px" class="lat-input">
-      ,
-      <input name="departments[${code}][longitude]" value="${lon}" style="width:70px" class="lon-input">
-    </td>
-  `;
-  $details.append(tr);
+    const tr = document.createElement('tr');
+    tr.dataset.code = code;
+    tr.innerHTML = `
+      <td><input type="checkbox" name="departments[${code}][enabled]" checked></td>
+      <td>${label}</td>
+      <td>
+        <select name="departments[${code}][priority]" style="width: 60px;">
+          <option value="1" ${priority == 1 ? 'selected' : ''}>1</option>
+          <option value="2" ${priority == 2 ? 'selected' : ''}>2</option>
+          <option value="3" ${priority == 3 ? 'selected' : ''}>3</option>
+        </select>
+      </td>
+      <td>
+        <input name="departments[${code}][latitude]"  value="${lat}" style="width:70px" class="lat-input"> ,
+        <input name="departments[${code}][longitude]" value="${lon}" style="width:70px" class="lon-input">
+      </td>`;
+    $details.append(tr);
 
-  // 1. Marker fÃ¼r Department
-  const feature = new ol.Feature({
-    geometry: new ol.geom.Point(ol.proj.fromLonLat([lon, lat])),
-    code: code,
-    type: 'department' // <<< wichtig
-  });
-
-  const color = getColor(code); // falls du die Palette global verfÃ¼gbar machst
-  feature.setStyle(new ol.style.Style({
-    image: new ol.style.Circle({
-      radius: 6,
-      fill: new ol.style.Fill({ color: color }),
-      stroke: new ol.style.Stroke({ color: '#fff', width: 2 })
-    })
-  }));
-
-  window.deptSource.addFeature(feature);
-
-  // 2. Inputs â†’ Marker verschieben
-  const latInput = tr.querySelector('.lat-input');
-  const lonInput = tr.querySelector('.lon-input');
-  const updateMarker = () => {
-    const newLat = parseFloat(latInput.value);
-    const newLon = parseFloat(lonInput.value);
-    if (!isNaN(newLat) && !isNaN(newLon)) {
-      feature.getGeometry().setCoordinates(ol.proj.fromLonLat([newLon, newLat]));
-    }
-  };
-  latInput.addEventListener('change', updateMarker);
-  lonInput.addEventListener('change', updateMarker);
-
-  // 3. Marker Drag â†’ Inputs aktualisieren (nur beim ersten Department einmal!)
-  if (!window.deptModifyInteraction) {
-    const modify = new ol.interaction.Modify({
-      source: window.deptSource,
-      filter: feature => feature.get('type') === 'department' // <<< nur die!
+    /* ------------------------------------------------------------------
+       2) OpenLayers-Feature ERST ANLEGEN …
+    ------------------------------------------------------------------ */
+    const feature = new ol.Feature({
+        geometry: new ol.geom.Point(ol.proj.fromLonLat([lon, lat])),
+        code: code,
+        type: 'department'
     });
 
-    modify.on('modifyend', e => {
-      e.features.forEach(f => {
-        const code = f.get('code');
-        const row = document.querySelector(`tr[data-code="${code}"]`);
-        if (row) {
-          const coords = ol.proj.toLonLat(f.getGeometry().getCoordinates());
-          row.querySelector('.lat-input').value = coords[1].toFixed(6);
-          row.querySelector('.lon-input').value = coords[0].toFixed(6);
+    /* ------------------------------------------------------------------
+       … dann Farbe bestimmen und Style setzen
+    ------------------------------------------------------------------ */
+    const color = (typeof getColor === 'function') ? getColor(code) : '#1976d2';
+
+    feature.setStyle(new ol.style.Style({
+        image: new ol.style.Circle({
+            radius: 6,
+            fill:   new ol.style.Fill({ color }),
+            stroke: new ol.style.Stroke({ color: '#fff', width: 2 })
+        }),
+        hitDetection: new ol.style.Circle({ radius: 14 })
+    }));
+
+    window.deptSource.addFeature(feature);
+
+    /* ------------------------------------------------------------------
+       3) Inputs ? Marker synchronisieren …
+    ------------------------------------------------------------------ */
+    const latInput = tr.querySelector('.lat-input');
+    const lonInput = tr.querySelector('.lon-input');
+
+    const updateMarker = () => {
+        const newLat = parseFloat(latInput.value);
+        const newLon = parseFloat(lonInput.value);
+        if (!isNaN(newLat) && !isNaN(newLon)) {
+            feature.getGeometry().setCoordinates(
+                ol.proj.fromLonLat([newLon, newLat])
+            );
         }
-      });
+    };
+    latInput.addEventListener('change', updateMarker);
+    lonInput.addEventListener('change', updateMarker);
+
+    /* ------------------------------------------------------------------
+       4) Zeilen-Checkbox wieder entfernt? ? Feature löschen / Drag sperren
+    ------------------------------------------------------------------ */
+    tr.querySelector('input[type="checkbox"]').addEventListener('change', function () {
+        if (!this.checked) {
+            tr.remove();
+            window.deptSource.removeFeature(feature);
+
+            if (window.activeDeptCode === code) {
+                window.activeDeptCode = null;
+                window.deptDragCollection.clear();
+            }
+
+            const selBox = document.querySelector(
+                `#departments-selector input[value="${code}"]`
+            );
+            if (selBox) selBox.checked = false;
+        }
     });
-
-    window.deptMap.addInteraction(modify);
-    window.deptModifyInteraction = modify; // speichern, nur einmalig hinzufÃ¼gen
-  }
-
-  // 4. Zeile entfernen
-  tr.querySelector('input[type="checkbox"]').addEventListener('change', function () {
-    if (!this.checked) {
-      tr.remove();
-      window.deptSource.removeFeature(feature);
-      const selBox = document.querySelector(`#departments-selector input[value="${code}"]`);
-      if (selBox) selBox.checked = false;
-    }
-  });
 };
 
 
-	
-	
+/* ------------------------------------------------------------------
+   Ein-Zeilen-Selektion in #departments-details-table  (jQuery, delegiert)
+------------------------------------------------------------------ */
+jQuery(function ($) {
+
+    $(document).on('click', '#departments-details-table tbody tr', function () {
+        const $row = $(this);
+        const code = $row.data('code');
+
+        // visuelle Auswahl
+        $row.closest('tbody').find('tr.selected').removeClass('selected');
+        $row.addClass('selected');
+
+        // nur das passende Feature in die Collection legen
+        const feat = window.deptSource.getFeatures()
+                       .find(f => f.get('code') === code);   // department-Marker
+
+        window.deptDragCollection.clear();
+        if (feat) window.deptDragCollection.push(feat);      // jetzt ziehbar
+    });
+});
+
+	function initDeptTranslateInteraction() {
+
+    // Collection, in die wir immer genau 1 Feature legen
+    const dragCollection = new ol.Collection();
+
+    window.deptTranslate = new ol.interaction.Translate({
+        features: dragCollection          // ? nur was hier drin liegt ist ziehbar
+    });
+
+    // Nach dem Verschieben Koordinaten zurück in die Inputs
+    window.deptTranslate.on('translateend', e => {
+        e.features.forEach(f => {
+            const code        = f.get('code');
+            const [lon, lat ] = ol.proj.toLonLat(f.getGeometry().getCoordinates());
+            const row         = document.querySelector(`tr[data-code="${code}"]`);
+            if (row) {
+                row.querySelector('.lat-input').value =  lat.toFixed(6);
+                row.querySelector('.lon-input').value =  lon.toFixed(6);
+            }
+        });
+    });
+
+    window.deptMap.addInteraction(window.deptTranslate);
+
+    // global, damit wir aus dem Row-Click darauf zugreifen können
+    window.deptDragCollection = dragCollection;
+}
+
 	
 window.bindDepartmentForm = bindDepartmentForm;
 })(); // <- Abschluss des IIFE

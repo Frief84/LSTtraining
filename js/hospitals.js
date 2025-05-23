@@ -1,5 +1,40 @@
 // hospitals.js
 
+
+
+/* -------------------------------------------------------------
+   1) Translate-Interaction EINMAL definieren
+------------------------------------------------------------- */
+function initDeptTranslateInteraction() {
+
+    // Collection mit genau einem ziehbaren Feature
+    const dragCollection = new ol.Collection();
+
+    window.deptTranslate = new ol.interaction.Translate({
+        features: dragCollection
+    });
+
+    window.deptTranslate.on('translateend', e => {
+        e.features.forEach(f => {
+            const code        = f.get('code');
+            const [lon, lat ] = ol.proj.toLonLat(f.getGeometry().getCoordinates());
+            const row         = document.querySelector(`tr[data-code="${code}"]`);
+            if (row) {
+                row.querySelector('.lat-input').value =  lat.toFixed(6);
+                row.querySelector('.lon-input').value =  lon.toFixed(6);
+            }
+        });
+    });
+
+    window.deptMap.addInteraction(window.deptTranslate);
+    window.deptDragCollection = dragCollection;  // global für Row-Click
+}
+
+/* 2) G L O B A L  exportieren ------------- */
+window.initDeptTranslateInteraction = initDeptTranslateInteraction;
+
+
+
 /**
  * Öffnet die Fachbereichs-Seite im Admin
  */
@@ -36,23 +71,31 @@ function openDepartmentEditor(hospitalId) {
         allowed
       });
 
-      // 2. Karte initialisieren VOR bindDepartmentForm!
-      const mapDiv = content.querySelector('#dept-map');
-      mapDiv.innerHTML = '';
+// 2. Karte initialisieren VOR bindDepartmentForm!
+const mapDiv = content.querySelector('#dept-map');
+mapDiv.innerHTML = '';
 
-      window.deptSource = new ol.source.Vector();
-      window.deptMap = new ol.Map({
-        target: mapDiv,
-        layers: [
-          new ol.layer.Tile({ source: new ol.source.OSM() }),
-          new ol.layer.Vector({ source: window.deptSource })
-        ],
-        view: new ol.View({
-          center: ol.proj.fromLonLat([hospital_lon, hospital_lat]),
-          zoom: 14
-        })
-      });
+// ► Source JETZT anlegen
+window.deptSource = new ol.source.Vector();
 
+window.deptMap = new ol.Map({
+  target: mapDiv,
+  layers: [
+    new ol.layer.Tile({ source: new ol.source.OSM() }),
+    new ol.layer.Vector({ source: window.deptSource })
+  ],
+  view: new ol.View({
+    center: ol.proj.fromLonLat([hospital_lon, hospital_lat]),
+    zoom: 14
+  })
+});
+	  
+if (!window.deptTranslate && typeof window.initDeptTranslateInteraction === 'function') {
+    window.initDeptTranslateInteraction();
+}
+
+
+	  
       // 3. Marker für das Krankenhaus
       const hospitalMarker = new ol.Feature({
         geometry: new ol.geom.Point(ol.proj.fromLonLat([hospital_lon, hospital_lat]))
@@ -566,15 +609,4 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEditButtons();
 });
 
-      // 7. Zusätzliche Marker für bestehende Departments
-      function getColor(code) {
-        const palette = {
-          NOTF: '#e41a1c', KINA: '#377eb8', CHIR: '#4daf4a', ISTX: '#984ea3', CT: '#ff7f00',
-          DERM: '#ffff33', DRAM: '#a65628', VASG: '#f781bf', GYNO: '#999999', HNOK: '#66c2a5',
-          INTX: '#a6cee3', CARD: '#1f78b4', KESS: '#b2df8a', MRT: '#33a02c', MKGC: '#fb9a99',
-          NECH: '#e31a1c', NEUR: '#fdbf6f', NOTO: '#ff7f00', NUKL: '#cab2d6', ONKO: '#6a3d9a',
-          PSYC: '#b15928', PED: '#8dd3c7', KKH: '#ffffb3', STRK: '#bebada', UROL: '#fb8072',
-          BURN: '#80b1d3', CAT: '#fdb462'
-        };
-        return palette[code] || '#000';
-      }
+      

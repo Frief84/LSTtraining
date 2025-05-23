@@ -38,7 +38,7 @@ add_action( 'admin_enqueue_scripts', function ( $hook ) {
     wp_enqueue_script(
         'lst-departments',
         $root_url . 'js/departments.js',
-        [ 'jquery', 'underscore', 'wp-util' ],
+        [ 'jquery', 'underscore', 'wp-util' , 'lst-openlayers'],
         '1.0.0', true
     );
 
@@ -55,6 +55,7 @@ add_action( 'admin_enqueue_scripts', function ( $hook ) {
         [
             'ajax_url' => admin_url( 'admin-ajax.php' ),
             'nonce'    => wp_create_nonce( 'lsttraining_hospitals' ),
+			'plugin_url' => plugin_dir_url( dirname( __FILE__ ) ), 
         ]
     );
 }

@@ -321,9 +321,15 @@ tr {
   display: flex;
   flex-direction: column;
 }
-#departments-selector{
-	
-	    padding-top: 5px;
+/* nur eine Zeile auswählen → hellgrau hervorheben */
+#departments-details-table tbody tr.selected {
+    background: #e3e1e1;      /* hellgrau */
+}
+#departments-details-table tbody tr {          /* optisch als Button erkennbar */
+    cursor: pointer;
+}
 
-	margin-left: 5px;
+#departments-edit-form .description{
+	    background-color: #ebebeb;
+    padding: 10px;
 }

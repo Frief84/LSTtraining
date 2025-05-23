@@ -27,7 +27,12 @@ $pdo = lsttraining_get_connection();
         </label>
       <# }); #>
     </div>
-
+	<hr>
+	<p class="description">
+      Wähle oben die zur verfügungstehenden Fachbereich aus – in der tablle kannst du Priorität
+      und (falls nötig) die Koordinaten anpassen.  
+      Durch Klick auf eine Tabellenzeile wird ihr Marker zum Verschieben in der Karte aktiviert.
+    </p>
     <!-- Hier hängen wir die Detail-Tabelle an -->
     <table class="form-table" id="departments-details-table" style="width:100%;">
       <thead>
@@ -55,7 +60,7 @@ $pdo = lsttraining_get_connection();
 
   </form>
 
-  <!-- Karte bleibt unverändert -->
+  	<hr>
   <div id="dept-map"
        style="height:300px; width:100%; margin-top:20px; border:1px solid #ccc;">
   </div>
@@ -248,5 +253,3 @@ $krankenhaeuser = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 	
 </div> <!-- Ende .wrap -->
-
-
