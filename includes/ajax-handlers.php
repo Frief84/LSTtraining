@@ -462,35 +462,15 @@ function lsttraining_get_departments() {
 
     // 6) Erlaubte Fachbereiche (Codes → Labels) definieren
     //    Passe dieses Array an deine tatsächliche Konfiguration an
-    $allowed = [
-    'NOTF' => 'Innere Notaufnahme',
-    'KINA' => 'Kinder- und Jugendmedizin',
-    'CHIR' => 'Chirurgie',
-    'ISTX' => 'Intensivstation',
-    'CT'   => 'Computertomographie',
-    'DERM' => 'Dermatologie',
-    'DRAM' => 'Radiologie',
-    'VASG' => 'Vaskuläre Chirurgie',
-    'GYNO' => 'Gynäkologie',
-    'HNOK' => 'Hals-Nasen-Ohren-Heilkunde',
-    'INTX' => 'Internistische Intensivmedizin',
-    'CARD' => 'Kardiologie',
-    'KESS' => 'Krebsstation',
-    'MRT'  => 'Magnetresonanztomographie',
-    'MKGC' => 'Magnetresonanz-Kernspin',
-    'NECH' => 'Neurochirurgie',
-    'NEUR' => 'Neurologie',
-    'NOTO' => 'Notfallzentrum',
-    'NUKL' => 'Nuklearmedizin',
-    'ONKO' => 'Onkologie',
-    'PSYC' => 'Psychiatrie',
-    'PED'  => 'Pädiatrie',
-    'KKH'  => 'Krankenhaus-Koordination',
-    'STRK' => 'Stroke-Einheit',
-    'UROL' => 'Urologie',
-    'BURN' => 'Brandverletztenstation',
-    'CAT'  => 'Katheterlabor',
-];
+//JSON einlesen
+$json_path    = plugin_dir_path( __FILE__ ) . 'departments.json';
+$departments  = json_decode( file_get_contents( $json_path ), true );
+
+// Labels-Array für die alte „allowed“-Semantik
+$allowed = array_map(
+    function( $info ) { return $info['label']; },
+    $departments
+);
 
     // 7) Alles als Objekt zurückgeben
     wp_send_json_success([

@@ -11,60 +11,70 @@ $pdo = lsttraining_get_connection();
 
 <!-- Underscore-Template für die Fachbereichs-Auswahl -->
 <script type="text/html" id="tmpl-departments-editor">
-  <form id="departments-edit-form">
+    <div class="departments-edit-content">
+    <form id="departments-edit-form">
 
-    <!-- Hospital-ID verstecken -->
-    <input type="hidden" name="hospital_id" value="{{ data.hospital_id }}">
+      <!-- Hospital-ID verstecken -->
+      <input type="hidden" name="hospital_id" value="{{ data.hospital_id }}">
 
-    <!-- Zweispaltige Checkbox-Liste -->
-    <div id="departments-selector"
-         style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
-                max-height: 200px; overflow-y: auto; margin-bottom: 1em;">
-      <# _.each(data.allowed, function(label, code) { #>
-        <label style="display: flex; align-items: center;">
-          <input class="dept-toggle" type="checkbox" value="{{ code }}">
-          <span style="margin-left: 4px;">{{ label }}</span>
-        </label>
-      <# }); #>
+      <!-- 1) Checkbox-Liste -->
+<div id="departments-selector"
+     style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
+            max-height:200px;overflow-y:auto;margin-bottom:1em;">
+
+  <# _.each( data.departments, function( label, code ){ #>
+    <label style="display:flex;align-items:center;">
+      <input class="dept-toggle" type="checkbox" value="{{ code }}">
+      <span style="margin-left:4px;">{{ label }}</span>
+    </label>
+  <# }); #>
+
+</div>
+
+      <!-- 2) Kurze Anleitung -->
+      <p class="description">
+        Wähle hier aus, welche Fachbereiche verfügbar sein sollen.
+        In der Tabelle unten kannst du Priorität und Standort-Koordinaten anpassen.
+        Klick auf eine Zeile aktiviert deren Marker zum Verschieben.
+      </p>
+
+      <!-- 3) Detail-Tabelle -->
+      <table class="form-table" id="departments-details-table" style="width:100%;">
+        <thead>
+          <tr>
+            <th><?php esc_html_e( 'Aktiv',    'lsttraining' ); ?></th>
+            <th><?php esc_html_e( 'Code',     'lsttraining' ); ?></th>
+            <th><?php esc_html_e( 'Name',     'lsttraining' ); ?></th>
+            <th><?php esc_html_e( 'Koordinaten', 'lsttraining' ); ?></th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- JS fügt hier die Zeilen ein -->
+        </tbody>
+      </table>
+
+      <!-- 4) Speichern + Abbrechen -->
+      <p class="submit" style="display:flex;justify-content:flex-end;gap:0.5em;">
+        <button type="submit" class="button button-primary">
+          <?php esc_html_e( 'Speichern', 'lsttraining' ); ?>
+        </button>
+        <button type="button" id="departments-edit-cancel" class="button">
+          <?php esc_html_e( 'Abbrechen', 'lsttraining' ); ?>
+        </button>
+      </p>
+    </form>
+
+    <!-- 5) Karte -->
+    <div id="dept-map"
+         style="height:300px;
+                width:100%;
+                margin-top:20px;
+                border:1px solid #ccc;">
     </div>
-	<hr>
-	<p class="description">
-      Wähle oben die zur verfügungstehenden Fachbereich aus – in der tablle kannst du Priorität
-      und (falls nötig) die Koordinaten anpassen.  
-      Durch Klick auf eine Tabellenzeile wird ihr Marker zum Verschieben in der Karte aktiviert.
-    </p>
-    <!-- Hier hängen wir die Detail-Tabelle an -->
-    <table class="form-table" id="departments-details-table" style="width:100%;">
-      <thead>
-        <tr>
-          <th><?php esc_html_e( 'Aktiv', 'lsttraining' ); ?></th>
-          <th><?php esc_html_e( 'Code', 'lsttraining' ); ?></th>
-          <th><?php esc_html_e( 'Name', 'lsttraining' ); ?></th>
-          <th><?php esc_html_e( 'Anfahrt', 'lsttraining' ); ?></th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Zeilen kommen hier per JS -->
-      </tbody>
-    </table>
-
-    <!-- Speichern + Abbrechen nebeneinander -->
-    <p class="submit" style="display: flex; justify-content: flex-end; gap: 0.5em;">
-      <button type="submit" class="button button-primary">
-        <?php esc_html_e( 'Speichern', 'lsttraining' ); ?>
-      </button>
-      <button type="button" id="departments-edit-cancel" class="button">
-        <?php esc_html_e( 'Abbrechen', 'lsttraining' ); ?>
-      </button>
-    </p>
-
-  </form>
-
-  	<hr>
-  <div id="dept-map"
-       style="height:300px; width:100%; margin-top:20px; border:1px solid #ccc;">
   </div>
 </script>
+
+
 
 <div class="wrap">
   <h1>Krankenhäuser verwalten</h1>

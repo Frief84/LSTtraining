@@ -33,32 +33,52 @@ add_action( 'admin_enqueue_scripts', function ( $hook ) {
                        [ 'jquery' ], '1.0.2', true );
 
     // --- 2) Assets only for ► Leitstellen ▸ Krankenhäuser ------------------
-    if ( strpos( $hook, '_page_lsttraining_krankenhaeuser' ) !== false ) {
+   // --- 2) Assets only for ► Leitstellen ▸ Krankenhäuser ------------------
+if ( strpos( $hook, '_page_lsttraining_krankenhaeuser' ) !== false ) {
 
+    /* ------------------------------------------------------------------
+       1) JavaScript-Dateien
+    ------------------------------------------------------------------ */
     wp_enqueue_script(
         'lst-departments',
         $root_url . 'js/departments.js',
-        [ 'jquery', 'underscore', 'wp-util' , 'lst-openlayers'],
-        '1.0.0', true
+        [ 'jquery', 'underscore', 'wp-util', 'lst-openlayers' ],
+        '1.0.0',
+        true
     );
 
     wp_enqueue_script(
         'lst-hospitals',
         $root_url . 'js/hospitals.js',
         [ 'jquery', 'lst-openlayers', 'lst-departments' ],
-        '1.0.0', true
+        '1.0.0',
+        true
     );
 
+    /* ------------------------------------------------------------------
+       2) departments.json einlesen  (liegt in /includes/)
+    ------------------------------------------------------------------ */
+$json_path = __DIR__ . '/departments.json';
+if ( ! file_exists( $json_path ) ) {
+    wp_die( 'departments.json nicht gefunden unter: ' . esc_html( $json_path ) );
+}
+$departments = json_decode( file_get_contents( $json_path ), true );
+
+    /* ------------------------------------------------------------------
+       3) Daten für AJAX & Departments an JS übergeben
+    ------------------------------------------------------------------ */
     wp_localize_script(
         'lst-hospitals',
         'lstHospitalsAjax',
         [
-            'ajax_url' => admin_url( 'admin-ajax.php' ),
-            'nonce'    => wp_create_nonce( 'lsttraining_hospitals' ),
-			'plugin_url' => plugin_dir_url( dirname( __FILE__ ) ), 
+            'ajax_url'     => admin_url( 'admin-ajax.php' ),
+            'nonce'        => wp_create_nonce( 'lsttraining_hospitals' ),
+            'plugin_url'   => plugin_dir_url( dirname( __FILE__ ) ),
+            'departments'  => $departments          //  ← NEU
         ]
     );
 }
+
     // --- 3) Assets only for ► Leitstellen ▸ Wachen -------------------------
     if ( $hook === 'lsttraining_leitstellen_page_lsttraining_leitstellen_wachen' ) {
 
