@@ -41,13 +41,11 @@ $pdo = lsttraining_get_connection();
       <!-- 3) Detail-Tabelle -->
       <table class="form-table" id="departments-details-table" style="width:100%;">
         <thead>
-          <tr>
-            <th><?php esc_html_e( 'Aktiv',    'lsttraining' ); ?></th>
-            <th><?php esc_html_e( 'Code',     'lsttraining' ); ?></th>
-            <th><?php esc_html_e( 'Name',     'lsttraining' ); ?></th>
-            <th><?php esc_html_e( 'Koordinaten', 'lsttraining' ); ?></th>
-          </tr>
-        </thead>
+  <tr>
+    <th><?php esc_html_e( 'Aktiv',       'lsttraining' ); ?></th>
+    <th><?php esc_html_e( 'Koordinaten', 'lsttraining' ); ?></th>
+  </tr>
+</thead>
         <tbody>
           <!-- JS fügt hier die Zeilen ein -->
         </tbody>
