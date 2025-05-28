@@ -480,3 +480,99 @@ $allowed = array_map(
         'hospital_lon' => (float) $row['longitude'],
     ]);
 }
+/**
+ * AJAX: liefert für eine Leitstelle die Hospitals-Daten
+ */
+add_action('wp_ajax_get_leitstelle_hospitals', function(){
+    $pdo = lsttraining_get_connection();
+
+    $id = isset($_GET['leitstelle_id']) ? intval($_GET['leitstelle_id']) : 0;
+    if (!$id) {
+        wp_send_json_error('Ungültige Leitstelle');
+    }
+
+    try {
+        // 1) Leitstelle aus DB holen
+        $stmt = $pdo->prepare("
+            SELECT available_hospitals,
+                   latitude   AS leitstelle_lat,
+                   longitude  AS leitstelle_lon,
+                   geojson
+              FROM leitstellen
+             WHERE id = :id
+             LIMIT 1
+        ");
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$row) {
+            wp_send_json_error('Leitstelle nicht gefunden');
+        }
+
+        // 2) Bestehende IDs decoden
+        $existing = json_decode($row['available_hospitals'], true) ?: [];
+
+        // 3) Wenn noch keine Auswahl, automatisch alle Hospitals innerhalb des GeoJSON-Polygons nehmen
+        if (empty($existing)) {
+			$stmt2 = $pdo->prepare("
+				SELECT id
+				  FROM krankenhaeuser
+				 WHERE ST_Contains(
+						 ST_GeomFromText(ST_AsText(ST_GeomFromGeoJSON(:geojson))),
+						 ST_GeomFromText(CONCAT('POINT(', longitude, ' ', latitude, ')'))
+					   )
+			");
+			$stmt2->execute([':geojson' => $row['geojson']]);
+			$existing = $stmt2->fetchAll(PDO::FETCH_COLUMN);
+		}
+
+        // 4) Alle Krankenhäuser für Listing
+        $stmt3 = $pdo->query("
+            SELECT id, name, latitude, longitude
+              FROM krankenhaeuser
+             ORDER BY name
+        ");
+        $hospitals = $stmt3->fetchAll(PDO::FETCH_ASSOC);
+
+        // 5) JSON-Antwort senden
+        wp_send_json_success([
+            'leitstelle_id'   => $id,
+            'existing'        => $existing,
+            'hospitals'       => $hospitals,
+            'leitstelle_lat'  => (float)$row['leitstelle_lat'],
+            'leitstelle_lon'  => (float)$row['leitstelle_lon'],
+            'geojson'         => $row['geojson'],
+        ]);
+
+    } catch (PDOException $e) {
+        wp_send_json_error('Datenbankfehler: ' . $e->getMessage());
+    }
+});
+
+add_action( 'wp_ajax_save_leitstelle_hospitals', function() {
+    $pdo = lsttraining_get_connection();
+
+    $id    = isset( $_POST['leitstelle_id'] ) ? intval( $_POST['leitstelle_id'] ) : 0;
+    $items = isset( $_POST['hospitals'] )         ? json_decode( wp_unslash( $_POST['hospitals'] ), true ) : [];
+
+    if ( ! $id || ! is_array( $items ) ) {
+        wp_send_json_error( 'Ungültige Daten' );
+    }
+
+    // Erzeuge validiertes JSON-Array aus den IDs
+    $json = wp_json_encode( array_map( 'intval', $items ) );
+
+    try {
+        $stmt = $pdo->prepare( "
+            UPDATE `leitstellen`
+               SET `available_hospitals` = :json
+             WHERE `id` = :id
+        " );
+        $stmt->execute( [
+            ':json' => $json,
+            ':id'   => $id,
+        ] );
+        wp_send_json_success();
+    } catch ( \PDOException $e ) {
+        wp_send_json_error( 'Speicherfehler: ' . $e->getMessage() );
+    }
+});

@@ -4,10 +4,14 @@
  * – GeoJSON is loaded via JavaScript and saved in leitstellen.geojson
  *   v2025-05-04  • admin notice instead of late redirect (no header warnings)
  */
-
 if ( ! current_user_can( 'manage_options' ) ) {
     wp_die( 'Keine Berechtigung.' );
 }
+
+
+$leitstelle_id = isset( $_GET['ls_id'] )
+    ? intval( $_GET['ls_id'] )
+    : 0;
 
 require_once plugin_dir_path( __FILE__ ) . '/db.php';
 require_once plugin_dir_path( __FILE__ ) . '/einsatzgebiet-editor.php';
@@ -234,7 +238,16 @@ lsttraining_einsatzgebiet_editor(
         ?>&ls_id='+document.getElementById('lst_update_id').value;">
     Wachen bearbeiten
 </button>
+<input type="hidden" id="lst_update_id" name="ls_id" 
+       value="<?php echo esc_attr( $leitstelle_id ); ?>">
 
+<button
+   type="button"
+   class="button open-leitstelle-hospitals-editor"
+   style="margin-left:10px;"
+>
+   Krankenhäuser bearbeiten
+</button>
         <p>
             <button class="button button-primary">Speichern</button>
             <button type="button" class="button"
@@ -245,5 +258,55 @@ lsttraining_einsatzgebiet_editor(
         </p>
         </div>
     </form>
+</div>
+
+
+<script type="text/html" id="tmpl-leitstellen-hospitals-editor">
+  <div class="leitstellen-hospitals-content">
+    <form id="leitstellen-hospitals-form">
+      <input type="hidden" name="leitstelle_id" value="{{ data.leitstelle_id }}">
+
+      <!-- 0) Karte mit Einsatzgebiet & Krankenhäusern -->
+      <div id="leitstellen-hospitals-map" style="height:300px; margin-bottom:1em; border:1px solid #ccc;"></div>
+	  <input
+  type="text"
+  id="leitstellen-hospitals-filter"
+  placeholder="Nach ID oder Name filtern…"
+  style="width:100%; margin-bottom:8px; padding:4px; box-sizing:border-box;"
+>
+      <!-- 1) Checkbox-Liste -->
+      <div id="leitstellen-hospitals-selector" style="max-height:200px; overflow-y:auto; margin-bottom:1em;">
+        <# _.each( data.hospitals, function( h ){ #>
+          <label style="display:block; padding:4px;">
+            <input class="hos-toggle" type="checkbox" value="{{ h.id }}">
+            {{ h.name }}
+          </label>
+        <# }); #>
+      </div>
+
+      <!-- 2) Beschreibung und Buttons -->
+      <p class="description">
+        Wähle hier aus, welche Krankenhäuser für diese Leitstelle verfügbar sein sollen.
+      </p>
+
+      <p class="submit" style="display:flex; gap:0.5em;">
+        <button type="submit" class="button button-primary">Speichern</button>
+        <button type="button" id="leitstellen-hospitals-cancel" class="button">Abbrechen</button>
+      </p>
+    </form>
+  </div>
+</script>
+
+
+<!-- Modal-Container -->
+<div id="leitstellen-hospitals-modal" class="hidden">
+  <div class="modal-overlay"></div>
+  <div class="modal-wrapper">
+    <div class="modal-header">
+      <h2><?php esc_html_e('Krankenhäuser für Leitstelle bearbeiten','lsttraining'); ?></h2>
+      <button class="modal-close">×</button>
+    </div>
+    <div class="modal-body"></div>
+  </div>
 </div>
 

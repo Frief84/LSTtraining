@@ -32,7 +32,28 @@ add_action( 'admin_enqueue_scripts', function ( $hook ) {
     wp_enqueue_script( 'lst-admin-ui',       $root_url . 'js/admin-ui.js',
                        [ 'jquery' ], '1.0.2', true );
 
-    // --- 2) Assets only for ► Leitstellen ▸ Krankenhäuser ------------------
+// ───────────────────────────────────────────
+    // Assets only for ► Leitstellen (page=lsttraining_leitstellen)
+    // ───────────────────────────────────────────
+if ( $hook === 'toplevel_page_lsttraining_leitstellen' ) {
+error_log( "Lade assets für Hook: {$hook}" );
+    wp_enqueue_script(
+        'lst-leitstellen-editor',
+        $root_url . 'js/leitstellen_editor.js',
+        [ 'jquery', 'wp-util', 'lst-openlayers' ],  // ← lst-hospitals entfernt
+        '1.0.0',
+        true
+    );
+    wp_localize_script(
+        'lst-leitstellen-editor',
+        'lstLeitstellenAjax',                      // eigene Variable
+        [
+            'ajax_url' => admin_url( 'admin-ajax.php' ),
+            'nonce'    => wp_create_nonce( 'lsttraining_leitstellen' ),
+        ]
+    );
+}
+
    // --- 2) Assets only for ► Leitstellen ▸ Krankenhäuser ------------------
 if ( strpos( $hook, '_page_lsttraining_krankenhaeuser' ) !== false ) {
 
