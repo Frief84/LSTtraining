@@ -1,11 +1,10 @@
-// hospitals.js
+// js/hospitals.js
 
 (function($) {
 
     /* -------------------------------------------------------------
        1) Translate-Interaction EINMAL definieren
     ------------------------------------------------------------- */
-    // 1) Translate-Interaction einmal definieren
     function initDeptTranslateInteraction() {
         const dragCollection = new ol.Collection();
         window.deptTranslate = new ol.interaction.Translate({
@@ -26,11 +25,9 @@
     window.initDeptTranslateInteraction = initDeptTranslateInteraction;
 
 
-
     /**
      * Öffnet die Fachbereichs-Seite im Admin
      */
-
     function openDepartmentEditor(hospitalId) {
         const $modal = $('#departments-edit-modal');
         const $container = $modal.find('.departments-edit-content');
@@ -51,7 +48,7 @@
                 }
                 const data = json.data;
 
-                // 1) Template rendern (Checkbox-Liste + ORIGINAL-Header aus Deinem PHP-/Underscore-Template)
+                // 1) Template rendern
                 const tpl = wp.template('departments-editor');
                 $container.html(tpl({
                     hospital_id: data.hospital_id,
@@ -61,7 +58,7 @@
                     departments: data.allowed
                 }));
 
-                // 2) RICHTIG: tbody komplett leeren – ab hier befüllt bindDepartmentForm
+                // 2) tbody komplett leeren – ab hier befüllt bindDepartmentForm
                 const $tbody = $container.find('#departments-details-table tbody').empty();
 
                 // 3) Karte initialisieren
@@ -70,36 +67,16 @@
                 window.deptMap = new ol.Map({
                     target: $mapDiv[0],
                     layers: [
-                        new ol.layer.Tile({
-                            source: new ol.source.OSM()
-                        }),
-                        new ol.layer.Vector({
-                            source: window.deptSource
-                        })
+                        new ol.layer.Tile({ source: new ol.source.OSM() }),
+                        new ol.layer.Vector({ source: window.deptSource })
                     ],
                     view: new ol.View({
                         center: ol.proj.fromLonLat([data.hospital_lon, data.hospital_lat]),
                         zoom: 14
                     })
                 });
-				
-			
-				// ganz oben in hospitals.js, nach dem Map-Setup, aber vor fetchHospitals():
-			document.addEventListener('DOMContentLoaded', () => {
-			  const wrap = document.querySelector('#krankenhaus-map').closest('.wrap');
-			  if (wrap && !wrap.querySelector('#hospital-search')) {
-				const input = document.createElement('input');
-				input.id = 'hospital-search';
-				input.type = 'search';
-				input.placeholder = 'Suche nach ID oder Name…';
-				input.style.cssText = 'margin-bottom:1em; width:100%; padding:4px;';
-				wrap.querySelector('table.widefat.fixed').before(input);
-				// bei Änderung neu laden
-				input.addEventListener('input', () => fetchHospitals());
-			  }
-			});
-			
-                // 4) Translate-Interaction EINMAL initialisieren (Marker verschiebbar machen)
+
+                // 4) Translate-Interaction initialisieren
                 if (typeof initDeptTranslateInteraction === 'function') {
                     initDeptTranslateInteraction();
                 }
@@ -126,7 +103,7 @@
                     .off('click')
                     .on('click', () => $modal.addClass('hidden'));
 
-                // 7) bindDepartmentForm + Vorbelegung bestehender Einträge
+                // 7) bindDepartmentForm + Vorbelegung
                 bindDepartmentForm({
                     hospital_lat: data.hospital_lat,
                     hospital_lon: data.hospital_lon,
@@ -169,10 +146,6 @@
                 alert('Editor konnte nicht geladen werden: ' + err);
             });
     }
-
-
-
-
     window.openDepartmentEditor = openDepartmentEditor;
 
     // Delegierte Buttons auf der Krankenhäuser-Seite
@@ -182,14 +155,11 @@
     });
 
 
-
     // 1. OpenLayers-Map initialisieren
     const map = new ol.Map({
         target: 'krankenhaus-map',
         layers: [
-            new ol.layer.Tile({
-                source: new ol.source.OSM()
-            })
+            new ol.layer.Tile({ source: new ol.source.OSM() })
         ],
         view: new ol.View({
             center: ol.proj.fromLonLat([10.5, 51.2]),
@@ -199,32 +169,36 @@
 
     // 2. Vector-Layer für Krankenhäuser
     const vectorSource = new ol.source.Vector();
-    map.addLayer(new ol.layer.Vector({
-        source: vectorSource
-    }));
+    const hospLayer = new ol.layer.Vector({ source: vectorSource });
+    map.addLayer(hospLayer);
 
     // --- Tooltip-Overlay für Marker ---
     const tooltipContainer = document.createElement('div');
     tooltipContainer.className = 'hospital-tooltip hidden';
     document.body.appendChild(tooltipContainer);
 
+    // stopEvent: true sorgt dafür, dass Klicks auf den Tooltip nicht an die Karte weitergegeben werden
     const tooltipOverlay = new ol.Overlay({
         element: tooltipContainer,
         positioning: 'bottom-center',
         offset: [0, -10],
-        stopEvent: false
+        stopEvent: true
     });
     map.addOverlay(tooltipOverlay);
 
     // Klick auf die Karte abfangen
     map.on('singleclick', evt => {
-        // Prüfen, ob wir auf ein Feature geklickt haben
-        const feature = map.forEachFeatureAtPixel(evt.pixel, f => f);
+        // Nur Features aus dem hospLayer prüfen
+        const clickedFeat = map.forEachFeatureAtPixel(
+            evt.pixel,
+            (feature, layer) => (layer === hospLayer ? feature : null),
+            { hitTolerance: 6 }
+        );
 
-        if (feature) {
-            const coord = feature.getGeometry().getCoordinates();
-            const props = feature.getProperties();
-            const id = props.id; // musst Du beim Erzeugen setzen
+        if (clickedFeat) {
+            const coord = clickedFeat.getGeometry().getCoordinates();
+            const props = clickedFeat.getProperties();
+            const id = props.id;
             const name = props.name;
 
             // Overlay an die Klick-Koordinate setzen
@@ -232,52 +206,47 @@
 
             // Inhalt des Tooltips
             tooltipContainer.innerHTML = `
-      <div class="hospital-tooltip-content">
-        <strong>${name}</strong>
-        <button class="hospital-tooltip-edit button" data-id="${id}" title="Bearbeiten">
-          ✎
-        </button>
-      </div>
-    `;
+                <div class="hospital-tooltip-content">
+                    <strong>${name}</strong>
+                    <button class="hospital-tooltip-edit button" data-id="${id}" title="Bearbeiten">
+                        ✎
+                    </button>
+                </div>
+            `;
             tooltipContainer.classList.remove('hidden');
         } else {
-            // Klick außerhalb → ausblenden
+            // Klick außerhalb → Tooltip ausblenden
             tooltipContainer.classList.add('hidden');
         }
     });
 
-    // Klick auf den Stift führt ins Edit-Formular
-    tooltipContainer.addEventListener('click', e => {
-        const btn = e.target.closest('.hospital-tooltip-edit');
-        if (!btn) return;
-        const id = btn.dataset.id;
-        openEditForm(id);
-    });
-
-
-    let sortField = null; // aktuell nach welchem Feld sortiert wird
-    let sortAsc = true; // auf- oder absteigend
-
+    let sortField = null;
+    let sortAsc = true;
+	 tooltipContainer.addEventListener('click', e => {
+		const btn = e.target.closest('.hospital-tooltip-edit');
+		if (!btn) return;
+		e.stopPropagation();
+		const id = btn.dataset.id;
+		openEditForm(id);
+	});
+	
     // Header-Handler binden
     document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('table.widefat.fixed th[data-field]').forEach(th => {
             th.addEventListener('click', () => {
                 const field = th.dataset.field;
                 if (sortField === field) {
-                    sortAsc = !sortAsc; // Richtung umkehren
+                    sortAsc = !sortAsc;
                 } else {
                     sortField = field;
-                    sortAsc = true; // neu nach oben sortieren
+                    sortAsc = true;
                 }
-                // Markierung im Header aktualisieren (Pfeil einfügen)
                 updateSortIndicators();
-                // Tabelle neu laden und sortieren
                 fetchHospitals();
             });
         });
     });
 
-    // fügt Pfeile ▲ ▼ im Header hinzu
     function updateSortIndicators() {
         document.querySelectorAll('th[data-field]').forEach(th => {
             const f = th.dataset.field;
@@ -288,152 +257,131 @@
         });
     }
 
-// ganz oben in hospitals.js, nach dem Map-Setup, aber vor fetchHospitals():
-document.addEventListener('DOMContentLoaded', () => {
-  const wrap = document.querySelector('#krankenhaus-map').closest('.wrap');
-  if (wrap && !wrap.querySelector('#hospital-search')) {
-    const input = document.createElement('input');
-    input.id = 'hospital-search';
-    input.type = 'search';
-    input.placeholder = 'Suche nach ID oder Name…';
-    input.style.cssText = 'margin-bottom:1em; width:100%; padding:4px;';
-    wrap.querySelector('table.widefat.fixed').before(input);
-    // bei Änderung neu laden
-    input.addEventListener('input', () => fetchHospitals());
-  }
-});
-
-function fetchHospitals() {
-  const term = document.getElementById('hospital-search')?.value.trim().toLowerCase() || '';
-  fetch(`${lstHospitalsAjax.ajax_url}?action=get_krankenhaeuser`, {
-    credentials: 'same-origin'
-  })
-  .then(res => res.json())
-  .then(data => {
-    // Filter auf ID oder Name
-    const filtered = term
-      ? data.filter(kh =>
-          kh.id.toString().includes(term) ||
-          kh.name.toLowerCase().includes(term)
-        )
-      : data;
-
-    // Tabelle & Karte wie gehabt, aber nutze `filtered` statt `data`:
-    const wrap = document.querySelector('#krankenhaus-map').closest('.wrap');
-    const table = wrap.querySelector('table.widefat.fixed');
-    if (table) {
-      table.style.tableLayout = 'auto';
-      table.querySelectorAll('th[width]').forEach(th => th.style.width = 'auto');
-    }
-    const tbody = wrap.querySelector('tbody');
-    tbody.innerHTML = '';
-
-    vectorSource.clear();
-
-    filtered.forEach(kh => {
-      // 3. Zeile anlegen
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${kh.id}</td>
-        <td>${kh.name}</td>
-        <td>${kh.versorgungsstufe}</td>
-        <td>${kh.trauma_level}</td>
-        <td>${kh.latitude}, ${kh.longitude}</td>
-        <td style="white-space: nowrap;">
-          <button class="button edit-krankenhaus" data-id="${kh.id}">Bearbeiten</button>
-          <button class="button button-secondary edit-departments" data-id="${kh.id}">Fachbereiche</button>
-          <button class="button button-link-delete delete-krankenhaus" data-id="${kh.id}">Löschen</button>
-        </td>`;
-      tbody.appendChild(tr);
-
-      // Marker nur für gefilterte Krankenhäuser
-      const lat = parseFloat(kh.latitude), lon = parseFloat(kh.longitude);
-      if (!isNaN(lat) && !isNaN(lon)) {
-        const feat = new ol.Feature({
-          geometry: new ol.geom.Point(ol.proj.fromLonLat([lon, lat])),
-          id: kh.id,
-          name: kh.name
-        });
-        vectorSource.addFeature(feat);
-      }
+    document.addEventListener('DOMContentLoaded', () => {
+        const wrap = document.querySelector('#krankenhaus-map').closest('.wrap');
+        if (wrap && !wrap.querySelector('#hospital-search')) {
+            const input = document.createElement('input');
+            input.id = 'hospital-search';
+            input.type = 'search';
+            input.placeholder = 'Suche nach ID oder Name…';
+            input.style.cssText = 'margin-bottom:1em; width:100%; padding:4px;';
+            wrap.querySelector('table.widefat.fixed').before(input);
+            input.addEventListener('input', () => fetchHospitals());
+        }
     });
 
-    // Zoom auf die verbleibenden
-    if (vectorSource.getFeatures().length) {
-      map.getView().fit(vectorSource.getExtent(), {
-        padding: [20,20,20,20],
-        maxZoom: 12
-      });
-    }
-  })
-  .catch(err => {
-    console.error('Fehler beim Laden der Krankenhäuser:', err);
-    alert('Fehler beim Laden der Krankenhäuser');
-  });
-}
+    function fetchHospitals() {
+        const term = document.getElementById('hospital-search')?.value.trim().toLowerCase() || '';
+        fetch(`${lstHospitalsAjax.ajax_url}?action=get_krankenhaeuser`, { credentials: 'same-origin' })
+            .then(res => res.json())
+            .then(data => {
+                const filtered = term
+                    ? data.filter(kh =>
+                        kh.id.toString().includes(term) ||
+                        kh.name.toLowerCase().includes(term)
+                      )
+                    : data;
 
+                const wrap = document.querySelector('#krankenhaus-map').closest('.wrap');
+                const table = wrap.querySelector('table.widefat.fixed');
+                if (table) {
+                    table.style.tableLayout = 'auto';
+                    table.querySelectorAll('th[width]').forEach(th => th.style.width = 'auto');
+                }
+                const tbody = wrap.querySelector('tbody');
+                tbody.innerHTML = '';
+
+                vectorSource.clear();
+
+                filtered.forEach(kh => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${kh.id}</td>
+                        <td>${kh.name}</td>
+                        <td>${kh.versorgungsstufe}</td>
+                        <td>${kh.trauma_level}</td>
+                        <td>${kh.latitude}, ${kh.longitude}</td>
+                        <td style="white-space: nowrap;">
+                            <button class="button edit-krankenhaus" data-id="${kh.id}">Bearbeiten</button>
+                            <button class="button button-secondary edit-departments" data-id="${kh.id}">Fachbereiche</button>
+                            <button class="button button-link-delete delete-krankenhaus" data-id="${kh.id}">Löschen</button>
+                        </td>`;
+                    tbody.appendChild(tr);
+
+                    const lat = parseFloat(kh.latitude), lon = parseFloat(kh.longitude);
+                    if (!isNaN(lat) && !isNaN(lon)) {
+                        const feat = new ol.Feature({
+                            geometry: new ol.geom.Point(ol.proj.fromLonLat([lon, lat])),
+                            id: kh.id,
+                            name: kh.name
+                        });
+                        vectorSource.addFeature(feat);
+                    }
+                });
+
+                if (vectorSource.getFeatures().length) {
+                    map.getView().fit(vectorSource.getExtent(), {
+                        padding: [20,20,20,20],
+                        maxZoom: 12
+                    });
+                }
+            })
+            .catch(err => {
+                console.error('Fehler beim Laden der Krankenhäuser:', err);
+                alert('Fehler beim Laden der Krankenhäuser');
+            });
+    }
 
     (function($) {
-
-        /* 1) Krankenhaus-Bearbeiten (Stift-Icon) ----------------------------- */
+        /* 1) Krankenhaus-Bearbeiten (Stift-Icon) */
         $(document).on('click', '.edit-krankenhaus', function(e) {
             e.preventDefault();
             openEditForm($(this).data('id'));
         });
 
-        /* 2) Fachbereiche-Button in der Tabelle ------------------------------ */
+        /* 2) Fachbereiche-Button in der Tabelle */
         $(document).on('click', '.edit-departments', function(e) {
             e.preventDefault();
             openDepartmentEditor($(this).data('id'));
         });
 
-        /* 3) Fachbereiche-Button IM Pop-up (#h-departments-button) ----------- */
-        //  – wird erst gerendert, daher ebenfalls delegiert:
+        /* 3) Fachbereiche-Button IM Pop-up */
         $(document).on('click', '#h-departments-button', function(e) {
             e.preventDefault();
             openDepartmentEditor($(this).data('id'));
         });
 
-        /* 4) Krankenhaus löschen --------------------------------------------- */
+        /* 4) Krankenhaus löschen */
         $(document).on('click', '.delete-krankenhaus', function(e) {
             e.preventDefault();
             const id = $(this).data('id');
             if (!confirm('Krankenhaus wirklich löschen?')) return;
 
             $.ajax({
-                    url: lstHospitalsAjax.ajax_url,
-                    type: 'POST',
-                    data: {
-                        action: 'delete_krankenhaus',
-                        id
-                    },
-                    xhrFields: {
-                        withCredentials: true
-                    }
-                })
-                .done(resp => {
-                    if (!resp.success)
-                        return alert(resp.data || 'Löschen fehlgeschlagen');
-                    fetchHospitals(); // Tabelle + Marker neu laden
-                })
-                .fail((_, __, err) => {
-                    console.error('Löschen-Fehler:', err);
-                    alert('Löschen fehlgeschlagen: ' + err);
-                });
+                url: lstHospitalsAjax.ajax_url,
+                type: 'POST',
+                data: { action: 'delete_krankenhaus', id },
+                xhrFields: { withCredentials: true }
+            })
+            .done(resp => {
+                if (!resp.success) return alert(resp.data || 'Löschen fehlgeschlagen');
+                fetchHospitals();
+            })
+            .fail((_, __, err) => {
+                console.error('Löschen-Fehler:', err);
+                alert('Löschen fehlgeschlagen: ' + err);
+            });
         });
+    })(jQuery);
 
-    })(jQuery); //  ← No-Conflict-Alias sicher übergeben
-
-
-
-
-    // 5. Neuer Eintrag
-    jQuery(function($) { // runs when DOM is ready
-        $('#btn-new-krankenhaus') // safe even if the element
-            .on('click', () => openEditForm(null)); // isn’t present yet
+    // 5) Neuer Eintrag
+    jQuery(function($) {
+        $('#btn-new-krankenhaus').on('click', () => openEditForm(null));
     });
-    // 6. Modal öffnen und befüllen
+
+    // 6) Modal öffnen und befüllen
     function openEditForm(id) {
+		console.log("openEditForm")
         const modal = document.getElementById('hospital-edit-modal');
         const content = modal.querySelector('.hospital-edit-content');
         if (!modal || !content) {
@@ -441,17 +389,14 @@ function fetchHospitals() {
             return;
         }
 
-        // Daten laden (bestehendes Krankenhaus oder Default)
-        const loadData = id ?
-            fetch(`${lstHospitalsAjax.ajax_url}?action=get_krankenhaus&id=${id}`, {
-                credentials: 'same-origin'
-            })
-            .then(r => r.json())
-            .then(r => {
-                if (!r.success) throw new Error(r.data || 'Unknown');
-                return r.data;
-            }) :
-            Promise.resolve({
+        const loadData = id
+            ? fetch(`${lstHospitalsAjax.ajax_url}?action=get_krankenhaus&id=${id}`, { credentials: 'same-origin' })
+                .then(r => r.json())
+                .then(r => {
+                    if (!r.success) throw new Error(r.data || 'Unknown');
+                    return r.data;
+                })
+            : Promise.resolve({
                 id: '',
                 name: '',
                 versorgungsstufe: 'Grundversorgung',
@@ -464,28 +409,22 @@ function fetchHospitals() {
 
         loadData
             .then(data => {
-                // 1) Formular-Template rendern
                 const tpl = wp.template('hospital-edit-form');
                 content.innerHTML = tpl(data);
 
-                // 2) Karte initialisieren
                 const mapDiv = document.getElementById('hospital-map-edit');
                 if (mapDiv) {
                     mapDiv.innerHTML = '';
                     const editMap = new ol.Map({
                         target: 'hospital-map-edit',
-                        layers: [new ol.layer.Tile({
-                            source: new ol.source.OSM()
-                        })],
+                        layers: [new ol.layer.Tile({ source: new ol.source.OSM() })],
                         view: new ol.View({
                             center: ol.proj.fromLonLat([+data.longitude, +data.latitude]),
                             zoom: 12
                         })
                     });
                     const editSource = new ol.source.Vector();
-                    editMap.addLayer(new ol.layer.Vector({
-                        source: editSource
-                    }));
+                    editMap.addLayer(new ol.layer.Vector({ source: editSource }));
                     const marker = new ol.Feature({
                         geometry: new ol.geom.Point(
                             ol.proj.fromLonLat([+data.longitude, +data.latitude])
@@ -509,26 +448,50 @@ function fetchHospitals() {
                         document.getElementById('h-lon').value = lon.toFixed(6);
                         document.getElementById('h-coords').value = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
                     });
+					
+					  const coordsInput = document.getElementById('h-coords');
+                if (!coordsInput) {
+                    console.error('Element #h-coords nicht gefunden');
+                } else {
+                    coordsInput.addEventListener('change', () => {
+                        const raw = coordsInput.value.trim();
+                        const parts = raw.split(',');
+                        if (parts.length !== 2) {
+                            console.warn('Ungültiges Koordinaten-Format:', raw);
+                            return;
+                        }
+                        const lat = parseFloat(parts[0].trim().replace(',', '.'));
+                        const lon = parseFloat(parts[1].trim().replace(',', '.'));
+                        if (isNaN(lat) || isNaN(lon)) {
+                            console.warn('Koordinaten konnten nicht als Zahlen geparst werden:', raw);
+                            return;
+                        }
+
+                        // NEU: aus lat/lon WebMercator‐Koordinaten erzeugen
+                        const newCoords = ol.proj.fromLonLat([lon, lat]);
+                        // NEU: direkt das GEOMETRIE‐Objekt von 'marker' verschieben
+                        marker.getGeometry().setCoordinates(newCoords);
+                        // Optional: View zentrieren
+                        editMap.getView().animate({ center: newCoords, duration: 300 });
+
+                        console.log(`Marker verschoben auf: Lat=${lat}, Lon=${lon}`);
+                    });
+                }
+					
+					
                 } else {
                     console.warn('Map-Div nicht gefunden: #hospital-map-edit');
                 }
 
-                // 3) Modal anzeigen
                 modal.classList.remove('hidden');
-
-                // 4) Abbrechen
                 document.getElementById('hospital-edit-cancel')
                     .addEventListener('click', () => modal.classList.add('hidden'));
 
-                // 5) Speichern
                 document.getElementById('hospital-edit-form').addEventListener('submit', e => {
                     e.preventDefault();
                     const form = e.target;
                     const fd = new FormData(form);
-
-                    // Optional: alle dept-* Felder einsammeln und in JSON wandeln
                     const departments = {};
-
                     form.querySelectorAll('input[name^="departments["]').forEach(input => {
                         const match = input.name.match(/^departments\[(.+?)\]\[(.+?)\]$/);
                         if (match) {
@@ -538,7 +501,6 @@ function fetchHospitals() {
                             departments[code][key] = input.type === 'checkbox' ? input.checked : input.value;
                         }
                     });
-
                     fd.set('departments', JSON.stringify(departments));
 
                     fetch(`${lstHospitalsAjax.ajax_url}?action=save_krankenhaus`, {
@@ -546,7 +508,6 @@ function fetchHospitals() {
                             credentials: 'same-origin',
                             body: fd
                         })
-
                         .then(r => r.json())
                         .then(json => {
                             if (!json.success) throw new Error(json.data || 'Speichern fehlgeschlagen');
@@ -558,24 +519,17 @@ function fetchHospitals() {
                             alert('Speichern fehlgeschlagen: ' + err.message);
                         });
                 });
-
-
-                // 6) Löschen
+			
                 const deleteBtn = document.getElementById('hospital-delete-button');
                 if (deleteBtn) {
                     deleteBtn.addEventListener('click', () => {
                         if (!confirm('Krankenhaus wirklich löschen?')) return;
                         const idToDelete = deleteBtn.dataset.id;
-                        console.log('Lösche Krankenhaus mit ID=', idToDelete);
-                        const params = new URLSearchParams({
-                            id: idToDelete
-                        });
+                        const params = new URLSearchParams({ id: idToDelete });
                         fetch(`${lstHospitalsAjax.ajax_url}?action=delete_krankenhaus`, {
                                 method: 'POST',
                                 credentials: 'same-origin',
-                                headers: {
-                                    'Content-Type': 'application/x-www-form-urlencoded'
-                                },
+                                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                                 body: params
                             })
                             .then(r => r.json())
@@ -592,19 +546,16 @@ function fetchHospitals() {
                 } else {
                     console.warn('Delete-Button nicht gefunden: #hospital-delete-button');
                 }
-
-            }) // Ende then(data => { … })
+            })
             .catch(err => {
                 console.error('Daten konnten nicht geladen werden:', err);
                 alert('Daten konnten nicht geladen werden: ' + err.message);
             });
-    } // Ende function openEditForm(id)
+    }
 
-
-    // Initialer Aufruf (nur EINMAL nach Laden des DOM)
+    // Initialer Aufruf
     document.addEventListener('DOMContentLoaded', () => {
         fetchHospitals();
-
     });
 
 })(jQuery);

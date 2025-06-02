@@ -199,7 +199,10 @@ $krankenhaeuser = $stmt->fetchAll(PDO::FETCH_ASSOC);
 	</tr>
       <!-- Karte -->
       <tr>
-        <th>Karte</th>
+        <th>Karte<br>
+<p class="hospital-map-hint">
+  Bitte setzen Sie den Marker genau dort, wo die Rettungswagen (RTWs) halten bzw. am Haupteingang der Notaufnahme.
+</p></th>
         <td>
           <div id="hospital-map-edit"
                style="height:300px; width:100%; border:1px solid #ccc;"></div>

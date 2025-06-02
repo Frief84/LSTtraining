@@ -280,6 +280,8 @@ tr {
   white-space: nowrap;
   box-shadow: 0 1px 4px rgba(0,0,0,0.3);
   font-size: 13px;
+  z-index: 10000; 
+pointer-events: auto; 
 }
 .hospital-tooltip.hidden {
   display: none;
@@ -397,5 +399,6 @@ tr {
   display: block;
 }
 .hospital-tooltip {
-  pointer-events: none;
+  z-index: 10000;
+	pointer-events: auto;
 }
