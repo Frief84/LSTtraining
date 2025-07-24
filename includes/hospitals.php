@@ -1,7 +1,6 @@
 <?php
-if (!current_user_can('manage_options'))
-{
-    wp_die('Keine Berechtigung.');
+if ( ! lsttraining_user_can( 'hospitals' ) ) {
+    wp_die( 'Keine Berechtigung.' );
 }
 
 require_once plugin_dir_path(__FILE__) . '/db.php';

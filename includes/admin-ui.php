@@ -124,13 +124,6 @@ $departments = json_decode( file_get_contents( $json_path ), true );
 });
 
 
-
-
-
-// ─────────────────────────────────────────────
-// Page-Render-Callbacks (nur jeweils EINE Definition!)
-// ─────────────────────────────────────────────
-
 /**
  * Render the Leitstellen page.
  */
@@ -191,6 +184,21 @@ if ( ! function_exists( 'lsttraining_render_leitstellen_wachen' ) ) {
         /* 2 | Seite rendern – ENTWEDER wachen.php einbinden … */
         require_once plugin_dir_path( __FILE__ ) . 'wachen.php';
 
+    }
+}
+/**
+ * Zeigt den Inhalt der Seite „Benutzer“ an
+ */
+if ( ! function_exists( 'lsttraining_render_benutzer_page' ) ) {
+    function lsttraining_render_benutzer_page() {
+        $template = plugin_dir_path( __FILE__ ) . 'benutzer.php';
+        if ( file_exists( $template ) ) {
+            include $template;
+        } else {
+            echo '<div class="notice notice-error"><p>';
+            esc_html_e( 'Die Datei benutzer.php wurde nicht gefunden.', 'lsttraining' );
+            echo '</p></div>';
+        }
     }
 }
 

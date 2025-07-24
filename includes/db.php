@@ -17,4 +17,70 @@ function lsttraining_get_connection() {
         return null;
     }
 }
+
+/**
+ * Prüft, ob ein eingeloggter Benutzer eine bestimmte Resource bearbeiten darf.
+ *
+ * @param string $resource   'leitstellen' | 'nebenstellen' | 'hospitals' | 'wachen' | 'fahrzeuge'
+ * @return bool              true, wenn erlaubt; sonst false
+ */
+function lsttraining_current_user_can_edit( string $resource ): bool {
+    if ( current_user_can( 'manage_options' ) ) {
+        // Admins dürfen immer alles
+        return true;
+    }
+
+    $user = wp_get_current_user();
+    if ( ! $user || ! $user->ID ) {
+        return false;
+    }
+
+    // Mapping: Ressource → Spaltenname in user_permissions
+    $map = [
+        'leitstellen'   => 'can_edit_leitstellen',
+        'nebenstellen'  => 'can_edit_nebenstellen',
+        'hospitals'     => 'can_edit_hospitals',
+        'wachen'        => 'can_edit_wachen',
+        'fahrzeuge'     => 'can_edit_fahrzeuge',
+    ];
+    if ( ! isset( $map[ $resource ] ) ) {
+        return false;
+    }
+    $column = $map[ $resource ];
+
+    // PDO‐Verbindung holen
+    $pdo = lsttraining_get_connection();
+    if ( ! $pdo ) {
+        return false;
+    }
+
+    // Prüfen, ob es einen Eintrag in user_permissions gibt und das Flag = 1
+    $sql  = "SELECT $column FROM user_permissions WHERE user_id = ?";
+    $stmt = $pdo->prepare( $sql );
+    $stmt->execute([ $user->ID ]);
+    $flag = $stmt->fetchColumn();
+
+    return (bool) $flag;
+}
+
+function lsttraining_current_user_leitstellen_ids(): array {
+    if ( current_user_can( 'manage_options' ) ) {
+        return [];
+    }
+
+    $uid = get_current_user_id();
+    if ( ! $uid ) { return []; }
+
+    $pdo = lsttraining_get_connection();
+    if ( ! $pdo ) { return []; }
+
+    $csv = $pdo->prepare(
+        'SELECT leitstellen_ids FROM user_permissions WHERE user_id = ?'
+    )->execute( [ $uid ] )->fetchColumn();
+
+    return $csv
+        ? array_map( 'intval', array_filter( array_map( 'trim', explode( ',', $csv ) ) ) )
+        : [];
+}
+
 ?>

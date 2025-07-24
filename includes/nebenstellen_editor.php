@@ -4,7 +4,7 @@
  * v2025-05-05
  */
 
-if ( ! current_user_can( 'manage_options' ) ) {
+if ( ! lsttraining_user_can( 'nebenstellen' ) ) {
     wp_die( 'Keine Berechtigung.' );
 }
 

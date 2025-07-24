@@ -4,9 +4,6 @@
  * – GeoJSON is loaded via JavaScript and saved in leitstellen.geojson
  *   v2025-05-04  • admin notice instead of late redirect (no header warnings)
  */
-if ( ! current_user_can( 'manage_options' ) ) {
-    wp_die( 'Keine Berechtigung.' );
-}
 
 
 $leitstelle_id = isset( $_GET['ls_id'] )
@@ -19,6 +16,12 @@ require_once plugin_dir_path( __FILE__ ) . '/einsatzgebiet-editor.php';
 $pdo         = lsttraining_get_connection();
 $leitstellen = [];
 $suchbegriff = isset( $_GET['suchbegriff'] ) ? $_GET['suchbegriff'] : '';
+
+
+if ( ! lsttraining_user_can( 'leitstellen', $leitstelle_id ) ) {
+    wp_die( 'Keine Berechtigung.' );
+}
+
 
 /* -------------------------------------------------------------------------
  * DELETE

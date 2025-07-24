@@ -1,8 +1,7 @@
 <?php
-if ( ! current_user_can( 'manage_options' ) ) {
+if ( ! lsttraining_user_can( 'wachen' ) ) {
     wp_die( 'Keine Berechtigung.' );
 }
-
 
 
 require_once plugin_dir_path( __FILE__ ) . '/db.php';

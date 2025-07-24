@@ -8,6 +8,7 @@
 
 defined('ABSPATH') or die('No script kiddies please!');
 
+require_once plugin_dir_path(__FILE__) . 'includes/permissions.php';
 require_once plugin_dir_path(__FILE__) . 'includes/ajax-handlers.php';
 require_once plugin_dir_path(__FILE__) . 'includes/settings.php';        // Optionen
 require_once plugin_dir_path(__FILE__) . 'includes/admin-menu.php';     // Menüstruktur
