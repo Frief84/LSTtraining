@@ -455,96 +455,270 @@ add_action( 'wp_ajax_save_krankenhaus', function () {
 });
 
 
-/**
- * Departments speichern
- * @action wp_ajax_lsttraining_save_departments
- */
-add_action( 'wp_ajax_lsttraining_save_departments', function () {
 
+/* -------------------------------------------------------------------------
+ *  NEW  ·  Krankenhaus anlegen
+ *  @action wp_ajax_lsttraining_create_krankenhaus
+ * ---------------------------------------------------------------------- */
+add_action( 'wp_ajax_lsttraining_create_krankenhaus', function () {
+
+    /* 1 | Rechteprüfung: darf der Nutzer Hospitals bearbeiten? */
     if ( ! lsttraining_user_can( 'hospitals' ) ) {
         wp_send_json_error( 'Keine Berechtigung', 403 );
     }
 
-    $hid = intval( $_POST['hospital_id'] ?? 0 );
-    if ( ! $hid ) {
-        wp_send_json_error( 'Keine Krankenhaus-ID', 400 );
+    /* 2 | Pflichtfeld NAME einlesen und prüfen */
+    $name = sanitize_text_field( $_POST['name'] ?? '' );
+    if ( $name === '' ) {
+        wp_send_json_error( 'Name fehlt', 400 );
     }
 
-    $depts = $_POST['departments'] ?? [];
-    $out   = [];
+    /* 3 | optionale Felder vorbereiten  -------------------------------- */
+    $versorgungsstufe = sanitize_text_field( $_POST['versorgungsstufe'] ?? '' );
+    $trauma_level     = intval( $_POST['trauma_level']     ?? 0 );
 
-    foreach ( $depts as $code => $data ) {
-        $out[] = [
-            'code'      => sanitize_text_field( $code ),
-            'enabled'   => isset( $data['enabled'] ),
-            'latitude'  => floatval( $data['latitude'] ),
-            'longitude' => floatval( $data['longitude'] )
-        ];
+    /* Koordinaten: bevorzugt einzelne Felder latitude/longitude,
+       alternativ gepacktes Feld coords = "lat,lon" (z. B. aus einem <input hidden>) */
+    $lat = floatval( $_POST['latitude']  ?? 0 );
+    $lon = floatval( $_POST['longitude'] ?? 0 );
+    if ( $lat === 0 && $lon === 0 && ! empty( $_POST['coords'] ) ) {
+        [ $lat, $lon ] = array_map( 'floatval', explode( ',', $_POST['coords'] ) );
+    }
+
+    /* Departments als JSON-String (leerer String = kein Dept-Array) */
+    $departments = stripslashes( $_POST['departments'] ?? '' );
+    $departments = $departments === '' ? '[]' : $departments;
+
+    /* Landeplatz vorhanden? (Checkbox) */
+    $helipad = isset( $_POST['helipad'] ) ? 1 : 0;
+
+    /* 4 | Einfügen  ----------------------------------------------------- */
+    $pdo = lsttraining_get_connection();
+    $stmt = $pdo->prepare(
+        'INSERT INTO krankenhaeuser
+             (name, versorgungsstufe, trauma_level, latitude, longitude, departments, helipad)
+         VALUES (?,?,?,?,?,?,?)'
+    );
+
+    $ok = $stmt->execute( [
+        $name,
+        $versorgungsstufe,
+        $trauma_level,
+        $lat,
+        $lon,
+        $departments,
+        $helipad
+    ] );
+
+    /* 5 | Antwort  ------------------------------------------------------ */
+    if ( $ok ) {
+        wp_send_json_success( [
+            'new_id' => (int) $pdo->lastInsertId()
+        ] );
+    }
+    wp_send_json_error( 'Anlegen fehlgeschlagen', 500 );
+} );
+
+
+
+/* -------------------------------------------------------------------------
+ * Departments-Liste speichern
+ *  – erwartet:
+ *        hospital_id   (int)
+ *        departments   • Array   departments[]=CAT&departments[]=ORTH
+ *                      • oder    JSON-String  '["CAT","ORTH"]'
+ *                      • oder    JSON-String  '{"CAT":{"enabled":true}, ...}'
+ * ---------------------------------------------------------------------- */
+add_action( 'wp_ajax_lsttraining_save_departments', 'lsttraining_save_departments' );
+
+function lsttraining_save_departments() {
+
+    /* 1 | Berechtigung */
+    if ( ! lsttraining_user_can( 'hospitals' ) ) {
+        wp_send_json_error( 'Keine Berechtigung', 403 );
+    }
+
+    /* 2 | Krankenhaus-ID */
+    $hid = intval( $_POST['hospital_id'] ?? 0 );
+    if ( $hid <= 0 ) {
+        wp_send_json_error( 'Krankenhaus-ID fehlt', 400 );
+    }
+
+    /* 3 | Rohdaten einlesen */
+    $raw = $_POST['departments'] ?? [];
+    if ( is_string( $raw ) && $raw !== '' ) {
+        $raw = json_decode( wp_unslash( $raw ), true );
+        if ( ! is_array( $raw ) ) {
+            wp_send_json_error( 'Ungültiges JSON', 400 );
+        }
+    }
+    if ( empty( $raw ) ) {
+        wp_send_json_error( 'Keine Departments übermittelt', 400 );
+    }
+
+    /* Default-Koordinaten = Klinik-Lat/Lon (falls gewünscht → mit­schicken) */
+    $defLat = isset( $_POST['hospital_lat'] ) ? floatval( $_POST['hospital_lat'] ) : 0;
+    $defLon = isset( $_POST['hospital_lon'] ) ? floatval( $_POST['hospital_lon'] ) : 0;
+
+    /* 4 | Codes → neues Format mappen */
+    $map = [];  // code => [Lat,Long]
+
+    foreach ( $raw as $key => $val ) {
+
+        /* A) Checkbox-Array (numerischer Key) */
+        if ( is_int( $key ) || ctype_digit( (string) $key ) ) {
+            $code = strtoupper( sanitize_key( $val ) );
+            if ( $code !== '' ) {
+                $map[ $code ] = [ 'Lat' => $defLat, 'Long' => $defLon ];
+            }
+            continue;
+        }
+
+        /* B) Neues JSON: CODE => {Lat,Long} */
+        if ( is_array( $val ) && isset( $val['Lat'], $val['Long'] ) ) {
+            $code = strtoupper( sanitize_key( $key ) );
+            if ( $code !== '' ) {
+                $map[ $code ] = [
+                    'Lat'  => floatval( $val['Lat']  ),
+                    'Long' => floatval( $val['Long'] )
+                ];
+            }
+            continue;
+        }
+
+        /* C) Altes Einzel-Objekt {code, latitude, longitude} */
+        if ( is_array( $val ) && isset( $val['code'] ) ) {
+            $code = strtoupper( sanitize_key( $val['code'] ) );
+            if ( $code !== '' ) {
+                $map[ $code ] = [
+                    'Lat'  => floatval( $val['latitude']  ?? $defLat ),
+                    'Long' => floatval( $val['longitude'] ?? $defLon )
+                ];
+            }
+        }
+    }
+
+    if ( empty( $map ) ) {
+        wp_send_json_error( 'Keine gültigen Codes gefunden', 400 );
+    }
+
+    /* 5 | Endformat bauen */
+    $out = [];
+    foreach ( $map as $code => $latlon ) {
+        $out[] = [ $code => $latlon ];      // exakt gewünschtes Schema
     }
     $json = wp_json_encode( $out );
 
+    /* 6 | DB-Update */
     $pdo  = lsttraining_get_connection();
     $stmt = $pdo->prepare(
         'UPDATE krankenhaeuser
             SET departments = ?
           WHERE id = ?'
     );
+
     $ok = $stmt->execute( [ $json, $hid ] );
 
     $ok ? wp_send_json_success()
         : wp_send_json_error( 'Speichern fehlgeschlagen', 500 );
-});
+}
 
 
-/**
- * Departments abrufen
- * @action wp_ajax_get_departments
- */
-add_action( 'wp_ajax_get_departments', function () {
+/* -------------------------------------------------------------------------
+ * Liefert Fachbereiche für ein Krankenhaus
+ *  – akzeptiert Legacy- und neues Format in der DB
+ *  – gibt IMMER das neue Objekt-Array zurück
+ * ---------------------------------------------------------------------- */
+add_action( 'wp_ajax_get_departments', 'lsttraining_get_departments' );
 
-    $hid = intval( $_REQUEST['hospital_id'] ?? 0 );
-    if ( $hid <= 0 ) {
-        wp_send_json_error( 'Ungültige Krankenhaus-ID.', 400 );
-    }
+function lsttraining_get_departments() {
+
+    /* 1 | Rechteprüfung (Admins oder wer hospitals pflegen darf) */
     if ( ! lsttraining_user_can( 'hospitals' ) ) {
         wp_send_json_error( 'Keine Berechtigung.', 403 );
     }
 
+    /* 2 | Krankenhaus-ID */
+    $hid = intval( $_REQUEST['hospital_id'] ?? 0 );
+    if ( $hid <= 0 ) {
+        wp_send_json_error( 'Ungültige Krankenhaus-ID.', 400 );
+    }
+
+    /* 3 | Datenbank holen */
+    require_once plugin_dir_path( __FILE__ ) . '/db.php';
     $pdo = lsttraining_get_connection();
+
     $stmt = $pdo->prepare(
         'SELECT departments, latitude, longitude
            FROM krankenhaeuser
           WHERE id = :hid'
     );
     if ( ! $stmt->execute( [ ':hid' => $hid ] ) ) {
-        wp_send_json_error( 'Fehler bei der Abfrage.', 500 );
+        wp_send_json_error( 'Datenbankfehler.', 500 );
     }
     $row = $stmt->fetch( PDO::FETCH_ASSOC );
     if ( ! $row ) {
         wp_send_json_error( 'Krankenhaus nicht gefunden.', 404 );
     }
 
-    $existing = json_decode( $row['departments'], true );
-    if ( ! is_array( $existing ) ) {
-        $existing = [];
+    /* 4 | Departments-JSON dekodieren */
+    /* 4 | Departments-JSON dekodieren */
+$existing = json_decode( $row['departments'], true ) ?: [];
+
+/* ---- Alles in ein einheitliches Array wandeln -------------------- */
+$norm = [];
+
+foreach ( $existing as $item ) {
+
+    /* a) Neues Schema  { "CODE": {Lat,Long} } ----------------------- */
+    if ( is_array($item) && count($item) === 1 && isset($item[array_key_first($item)]) ) {
+        $code = array_key_first($item);
+        $lat  = $item[$code]['Lat']  ?? $item[$code]['latitude']  ?? $row['latitude'];
+        $lon  = $item[$code]['Long'] ?? $item[$code]['longitude'] ?? $row['longitude'];
+        $norm[] = [ 'code' => strtoupper($code), 'latitude' => (float)$lat, 'longitude' => (float)$lon ];
+        continue;
     }
 
-    $json_path   = plugin_dir_path( __FILE__ ) . 'departments.json';
-    $departments = json_decode( file_get_contents( $json_path ), true );
+    /* b) Legacy-Eintrag  {code, latitude, longitude} --------------- */
+    if ( isset($item['code']) ) {
+        $norm[] = [
+          'code'      => strtoupper($item['code']),
+          'latitude'  => (float)($item['latitude']  ?? $row['latitude']),
+          'longitude' => (float)($item['longitude'] ?? $row['longitude'])
+        ];
+        continue;
+    }
 
-    $allowed = array_map(
-        function ( $d ) { return $d['label']; },
-        $departments
+    /* c) Reiner Code-String ---------------------------------------- */
+    if ( is_string($item) ) {
+        $norm[] = [
+          'code'      => strtoupper($item),
+          'latitude'  => (float)$row['latitude'],
+          'longitude' => (float)$row['longitude']
+        ];
+    }
+}
+
+$existing = $norm;          // ab hier immer gleiches Format<br>
+
+    /* 5 | Erlaubte Fachbereiche (Codes → Labels) laden */
+    $departments = json_decode(
+        file_get_contents( plugin_dir_path( __FILE__ ) . 'departments.json' ),
+        true
     );
 
-    wp_send_json_success( [
-        'existing'     => $existing,
-        'allowed'      => $allowed,
+    /* 6 | Antwort zurück */
+    wp_send_json_success([
+        'hospital_id'  => $hid,
+        'existing'     => $existing,               // jetzt immer NEUES Format
+        'allowed'      => array_map(
+                            fn($d) => $d['label'],
+                            $departments
+                          ),
         'hospital_lat' => (float) $row['latitude'],
         'hospital_lon' => (float) $row['longitude'],
-    ] );
-});
-
+    ]);
+}
 
 /* -------------------------------------------------------------------------
  * 6. LEITSTELLE ↔ HOSPITAL ZUORDNUNG

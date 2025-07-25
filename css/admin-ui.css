@@ -402,3 +402,6 @@ pointer-events: auto;
   z-index: 10000;
 	pointer-events: auto;
 }
+#departments-selector{
+	padding-top: 10px;
+}

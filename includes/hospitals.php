@@ -17,13 +17,17 @@ $pdo = lsttraining_get_connection();
       <input type="hidden" name="hospital_id" value="{{ data.hospital_id }}">
 
       <!-- 1) Checkbox-Liste -->
+	  <input type="search"
+        id="dept-filter"
+        placeholder="Fachbereich suchen…"
+  style="width:100%;padding:4px;margin-bottom:8px;"></input>
 <div id="departments-selector"
      style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
             max-height:200px;overflow-y:auto;margin-bottom:1em;">
 
   <# _.each( data.departments, function( label, code ){ #>
     <label style="display:flex;align-items:center;">
-      <input class="dept-toggle" type="checkbox" value="{{ code }}">
+      <input class="dept-toggle" type="checkbox" name="departments[]"  value="{{ code }}">
       <span style="margin-left:4px;">{{ label }}</span>
     </label>
   <# }); #>
@@ -107,14 +111,16 @@ $krankenhaeuser = $stmt->fetchAll(PDO::FETCH_ASSOC);
 	
 <!-- Template for the hospital edit form -->
 <script type="text/html" id="tmpl-hospital-edit-form">
-  <form id="hospital-edit-form">
+  <form id="hospital-edit-form" data-mode="{{ data.id ? 'edit' : 'create' }}">
     <input type="hidden" name="id" value="{{ data.id }}">
 
     <table class="form-table">
-	   <tr>
-        <th>ID</th>
-        <td><strong>{{ data.id }}</strong></td>
-      </tr>
+<# if ( data.id ) { #>
+<tr>
+<th>ID</th>
+<td><strong>{{ data.id }}</strong></td>
+   </tr>
+ <# } #>
 	
       <!-- Name -->
       <tr>
@@ -213,12 +219,14 @@ $krankenhaeuser = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <p class="submit">
       <button type="submit" class="button button-primary">Speichern</button>
       <button type="button" id="hospital-edit-cancel" class="button">Abbrechen</button>
-      <button type="button"
-              id="hospital-delete-button"
-              class="button button-link-delete"
-              data-id="{{ data.id }}">
-        Löschen
-      </button>
+<# if ( data.id ) { #>
+   <button type="button"
+           id="hospital-delete-button"
+           class="button button-link-delete"
+           data-id="{{ data.id }}">
+     Löschen
+   </button>
+ <# } #>
     </p>
   </form>
 </script>

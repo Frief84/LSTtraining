@@ -28,7 +28,8 @@ function getColor(code) {
     $form.off('submit').on('submit', e => {
       e.preventDefault();
       const fd = new FormData(e.target);
-      fetch(`${lstHospitalsAjax.ajax_url}?action=save_departments`, {
+  	fd.set('action', 'lsttraining_save_departments'); 
+      fetch(`${lstHospitalsAjax.ajax_url}?action=lsttraining_save_departments`, {
         method:      'POST',
         credentials: 'same-origin',
         body:        fd
@@ -49,7 +50,10 @@ function getColor(code) {
     $selector.off('change').on('change', '.dept-toggle', function() {
       const code = this.value;
       if (this.checked) {
-        const depInfo = existing.find(d => d.code === code) || {};
+        const depInfo = existing.find(d =>
+  (d.code && d.code === code) ||            // altes Format
+  (Object.keys(d)[0] === code)              // neues Format
+) || {};
         addDepartmentRow(code, depInfo, hospital_lat, hospital_lon, $detailsTable);
       } else {
         $detailsTable.find(`tr[data-code="${code}"]`).remove();
@@ -57,12 +61,14 @@ function getColor(code) {
     });
 
     // Vorbelegung bestehender Departments
-    existing.forEach(dep => {
-      $selector
-        .find(`.dept-toggle[value="${dep.code}"]`)
-        .prop('checked', true)
-        .trigger('change');
-    });
+existing.forEach(dep => {
+  const code = dep.code ?? Object.keys(dep)[0];
+  if (!code) return;
+  $selector
+    .find(`.dept-toggle[value="${code}"]`)
+    .prop('checked', true)
+    .trigger('change');
+});
   }
 
   /**
@@ -72,25 +78,35 @@ function getColor(code) {
     if ($detailsTable.find(`tr[data-code="${code}"]`).length) return;
 
     const label = getLabel(code);
-    const lat   = dep.latitude  != null ? dep.latitude  : hospital_lat;
-    const lon   = dep.longitude != null ? dep.longitude : hospital_lon;
+   const lat = dep.latitude  ?? dep[code]?.Lat  ?? hospital_lat;
+const lon = dep.longitude ?? dep[code]?.Long ?? hospital_lon;
 
   // innerhalb addDepartmentRow, statt des bisherigen `$('<tr>…')`-Strings
 const $tr = $(
   `<tr data-code="${code}">` +
-  // 1. Zelle: Checkbox + Label
-  `<td>` +
-    `<input type="checkbox" checked>` +
-    `<span class="dept-label"> ${label}</span>` +
-  `</td>` +
-  // 2. Zelle: Koordinaten-Inputs
-  `<td>` +
-    `<input class="lat-input"  name="departments[${code}][latitude]"  value="${lat.toFixed(6)}" style="width:70px">` +
-    `, ` +
-    `<input class="lon-input" name="departments[${code}][longitude]" value="${lon.toFixed(6)}" style="width:70px">` +
-  `</td>` +
+
+    /* 1. Spalte: Checkbox + Label */
+    `<td>` +
+      `<input type="checkbox" checked>` +
+      `<span class="dept-label">${label}</span>` +
+    `</td>` +
+
+    /* 2. Spalte: Koordinaten */
+    `<td>` +
+      `<input class="lat-input"
+             name="departments[${code}][Lat]"
+             value="${lat.toFixed(6)}"
+             style="width:70px">` +
+      `, ` +
+      `<input class="lon-input"
+             name="departments[${code}][Long]"
+             value="${lon.toFixed(6)}"
+             style="width:70px">` +
+    `</td>` +
+
   `</tr>`
 );
+
 $detailsTable.append($tr);
 
     // Marker anlegen

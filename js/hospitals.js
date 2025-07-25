@@ -1,6 +1,7 @@
 // js/hospitals.js
 
 (function($) {
+	
 
     /* -------------------------------------------------------------
        1) Translate-Interaction EINMAL definieren
@@ -51,7 +52,7 @@
                 // 1) Template rendern
                 const tpl = wp.template('departments-editor');
                 $container.html(tpl({
-                    hospital_id: data.hospital_id,
+                    hospital_id: hospitalId,
                     hospital_lat: data.hospital_lat,
                     hospital_lon: data.hospital_lon,
                     existing: data.existing,
@@ -60,6 +61,18 @@
 
                 // 2) tbody komplett leeren – ab hier befüllt bindDepartmentForm
                 const $tbody = $container.find('#departments-details-table tbody').empty();
+			
+			
+				// === Filter-Funktion für die Checkbox-Liste ==================
+				const $filter = $container.find('#dept-filter');
+				$filter.on('input', () => {
+					const q = $filter.val().trim().toLowerCase();
+
+					$container.find('#departments-selector label').each(function () {
+						const txt = $(this).text().toLowerCase();
+						$(this).toggle(txt.includes(q));
+					});
+				});
 
                 // 3) Karte initialisieren
                 const $mapDiv = $container.find('#dept-map').empty();
@@ -109,13 +122,18 @@
                     hospital_lon: data.hospital_lon,
                     existing: data.existing
                 });
-                data.existing.forEach(dep => {
-                    const code = (typeof dep === 'object') ? dep.code : dep;
-                    $container
-                        .find(`.dept-toggle[value="${code}"]`)
-                        .prop('checked', true)
-                        .trigger('change');
-                });
+				// Checkboxen anhand von existing-Codes setzen
+				const active = data.existing.map(d => {
+  if (d.code) return d.code.toUpperCase();               // erwartetes Format
+  const k = Object.keys(d)[0];                           // { "CODE": {…} }
+  return k ? k.toUpperCase() : '';
+});
+				$container.find('.dept-toggle').each(function () {
+				const code = $(this).val().toUpperCase();
+				if (active.includes(code)) {
+						$(this).prop('checked', true).trigger('change');
+					 }
+				 });
 
                 // 8) Save-Handler
                 $container.find('#departments-edit-form')
@@ -123,7 +141,8 @@
                     .on('submit', e => {
                         e.preventDefault();
                         const fd = new FormData(e.target);
-                        fetch(`${lstHospitalsAjax.ajax_url}?action=save_departments`, {
+						fd.set('action', 'lsttraining_save_departments');
+                        fetch(`${lstHospitalsAjax.ajax_url}?action=lsttraining_save_departments`, {
                                 method: 'POST',
                                 credentials: 'same-origin',
                                 body: fd
@@ -487,38 +506,55 @@
                 document.getElementById('hospital-edit-cancel')
                     .addEventListener('click', () => modal.classList.add('hidden'));
 
-                document.getElementById('hospital-edit-form').addEventListener('submit', e => {
-                    e.preventDefault();
-                    const form = e.target;
-                    const fd = new FormData(form);
-                    const departments = {};
-                    form.querySelectorAll('input[name^="departments["]').forEach(input => {
-                        const match = input.name.match(/^departments\[(.+?)\]\[(.+?)\]$/);
-                        if (match) {
-                            const code = match[1];
-                            const key = match[2];
-                            departments[code] = departments[code] || {};
-                            departments[code][key] = input.type === 'checkbox' ? input.checked : input.value;
-                        }
-                    });
-                    fd.set('departments', JSON.stringify(departments));
+				document.getElementById('hospital-edit-form').addEventListener('submit', e => {
+					e.preventDefault();
+					const form = e.target;
+					const mode = form.dataset.mode;                // 'create' | 'edit'
 
-                    fetch(`${lstHospitalsAjax.ajax_url}?action=save_krankenhaus`, {
-                            method: 'POST',
-                            credentials: 'same-origin',
-                            body: fd
-                        })
-                        .then(r => r.json())
-                        .then(json => {
-                            if (!json.success) throw new Error(json.data || 'Speichern fehlgeschlagen');
-                            document.getElementById('hospital-edit-modal').classList.add('hidden');
-                            fetchHospitals();
-                        })
-                        .catch(err => {
-                            console.error('Speichern-Fehler:', err);
-                            alert('Speichern fehlgeschlagen: ' + err.message);
-                        });
-                });
+					/* ---------------- 1) Payload bauen -------------------- */
+					const fd = new FormData(form);
+
+					// Departments sammeln bleibt unverändert …
+					const departments = {};
+					form.querySelectorAll('input[name^="departments["]').forEach(input => {
+						const m = input.name.match(/^departments\[(.+?)\]\[(.+?)\]$/);
+						if (m) {
+							const [ , code, key ] = m;
+							departments[code] = departments[code] || {};
+							departments[code][key] = input.type === 'checkbox' ? input.checked : input.value;
+						}
+					});
+					fd.set('departments', JSON.stringify(departments));
+
+					/* ---------------- 2) Ziel-Action wählen --------------- */
+					let action;
+					if (mode === 'create') {
+						action = 'lsttraining_create_krankenhaus';
+						fd.delete('id');                     // sicherstellen, dass kein leeres id-Feld gesendet wird
+					} else {
+						action = 'save_krankenhaus';
+						// id bleibt im FormData
+					}
+					fd.append('action', action);
+
+					/* ---------------- 3) Ajax-Aufruf ----------------------- */
+					fetch(lstHospitalsAjax.ajax_url, {
+						method: 'POST',
+						credentials: 'same-origin',
+						body: fd
+					})
+					.then(r => r.json())
+					.then(json => {
+						if (!json.success) throw new Error(json.data || 'Speichern fehlgeschlagen');
+						document.getElementById('hospital-edit-modal').classList.add('hidden');
+						fetchHospitals();                   // Tabelle + Marker neu laden
+					})
+					.catch(err => {
+						console.error('Speichern-Fehler:', err);
+						alert('Speichern fehlgeschlagen: ' + err.message);
+					});
+				});
+
 			
                 const deleteBtn = document.getElementById('hospital-delete-button');
                 if (deleteBtn) {
@@ -552,6 +588,7 @@
                 alert('Daten konnten nicht geladen werden: ' + err.message);
             });
     }
+
 
     // Initialer Aufruf
     document.addEventListener('DOMContentLoaded', () => {

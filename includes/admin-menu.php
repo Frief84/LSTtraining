@@ -131,4 +131,6 @@ add_action( 'admin_menu', function () {
             'lsttraining_render_benutzer_page'
         );
     }
+
+remove_submenu_page( $parent_slug, $parent_slug );
 } );

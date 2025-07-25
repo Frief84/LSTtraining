@@ -195,3 +195,20 @@ CREATE TABLE krankenhaeuser (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 /* ------------------------------------------------------------------ */
 SET foreign_key_checks = 1;
+
+
+
+-- Tabelle für LST-Benutzer-Berechtigungen (inkl. Nebenstellen)
+CREATE TABLE IF NOT EXISTS `wp_lst_user_permissions` (
+  `user_id`               BIGINT(20) UNSIGNED NOT NULL,
+  `can_edit_leitstellen`  TINYINT(1)      NOT NULL DEFAULT 0,
+  `can_edit_nebenstellen` TINYINT(1)      NOT NULL DEFAULT 0,
+  `can_edit_hospitals`    TINYINT(1)      NOT NULL DEFAULT 0,
+  `can_edit_wachen`       TINYINT(1)      NOT NULL DEFAULT 0,
+  `can_edit_fahrzeuge`    TINYINT(1)      NOT NULL DEFAULT 0,
+  PRIMARY KEY (`user_id`),
+  CONSTRAINT `fk_lst_user_permissions_user`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `wp_users` (`ID`)
+    ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
