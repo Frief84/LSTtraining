@@ -402,7 +402,6 @@ add_action( 'wp_ajax_delete_krankenhaus', function () {
         : wp_send_json_error( 'Löschen fehlgeschlagen', 500 );
 });
 
-
 /**
  * Krankenhaus speichern
  * @action wp_ajax_save_krankenhaus
@@ -413,46 +412,50 @@ add_action( 'wp_ajax_save_krankenhaus', function () {
         wp_send_json_error( 'Keine Berechtigung', 403 );
     }
 
+    /* ---------- 1) Eingaben einsammeln ---------- */
     $id               = intval( $_POST['id'] ?? 0 );
     $name             = sanitize_text_field( $_POST['name'] ?? '' );
     $versorgungsstufe = sanitize_text_field( $_POST['versorgungsstufe'] ?? '' );
     $trauma_level     = intval( $_POST['trauma_level'] ?? 0 );
     $latitude         = floatval( $_POST['latitude'] ?? 0 );
     $longitude        = floatval( $_POST['longitude'] ?? 0 );
-    $departments      = stripslashes( $_POST['departments'] ?? '' );
     $helipad          = isset( $_POST['helipad'] ) ? 1 : 0;
+
+    /* ---------- 2) Optional: Departments nur übernehmen, wenn wirklich mitgeschickt ---------- */
+    $departments_in = array_key_exists( 'departments', $_POST )
+                      ? stripslashes( $_POST['departments'] )
+                      : null;                          // wird ggf. nicht gesetzt
 
     if ( $id <= 0 || $name === '' ) {
         wp_send_json_error( 'Ungültige Daten', 400 );
     }
 
-    $pdo  = lsttraining_get_connection();
-    $stmt = $pdo->prepare(
-        'UPDATE krankenhaeuser
-            SET name             = ?,
-                versorgungsstufe = ?,
-                trauma_level     = ?,
-                latitude         = ?,
-                longitude        = ?,
-                departments      = ?,
-                helipad          = ?
-          WHERE id = ?'
-    );
+    /* ---------- 3) Dynamisches UPDATE-Statement bauen ---------- */
+    $set    = '
+        name             = ?,
+        versorgungsstufe = ?,
+        trauma_level     = ?,
+        latitude         = ?,
+        longitude        = ?,
+        helipad          = ?';
+    $params = [ $name, $versorgungsstufe, $trauma_level, $latitude, $longitude, $helipad ];
 
-    $ok = $stmt->execute( [
-        $name,
-        $versorgungsstufe,
-        $trauma_level,
-        $latitude,
-        $longitude,
-        $departments,
-        $helipad,
-        $id
-    ] );
+    if ( $departments_in !== null ) {        // nur wenn das Frontend etwas übermittelt
+        $set     .= ', departments = ?';
+        $params[] = $departments_in;
+    }
+
+    $params[] = $id;                         // WHERE-Parameter immer zuletzt
+
+    $pdo  = lsttraining_get_connection();
+    $stmt = $pdo->prepare( "UPDATE krankenhaeuser SET $set WHERE id = ?" );
+
+    $ok = $stmt->execute( $params );
 
     $ok ? wp_send_json_success()
         : wp_send_json_error( 'Speichern fehlgeschlagen', 500 );
 });
+
 
 
 

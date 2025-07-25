@@ -511,20 +511,25 @@
 					const form = e.target;
 					const mode = form.dataset.mode;                // 'create' | 'edit'
 
+					
 					/* ---------------- 1) Payload bauen -------------------- */
 					const fd = new FormData(form);
 
-					// Departments sammeln bleibt unverändert …
-					const departments = {};
-					form.querySelectorAll('input[name^="departments["]').forEach(input => {
-						const m = input.name.match(/^departments\[(.+?)\]\[(.+?)\]$/);
-						if (m) {
-							const [ , code, key ] = m;
-							departments[code] = departments[code] || {};
-							departments[code][key] = input.type === 'checkbox' ? input.checked : input.value;
+					// ► Nur im CREATE-Modus Departments mitsenden
+					if (mode === 'create') {
+						const departments = {};
+						form.querySelectorAll('input[name^="departments["]').forEach(input => {
+							const m = input.name.match(/^departments\[(.+?)\]\[(.+?)\]$/);
+							if (m) {
+								const [ , code, key ] = m;
+								departments[code] = departments[code] || {};
+								departments[code][key] = input.type === 'checkbox' ? input.checked : input.value;
+							}
+						});
+						if (Object.keys(departments).length) {
+							fd.set('departments', JSON.stringify(departments));
 						}
-					});
-					fd.set('departments', JSON.stringify(departments));
+					}
 
 					/* ---------------- 2) Ziel-Action wählen --------------- */
 					let action;
