@@ -412,7 +412,7 @@ add_action( 'wp_ajax_save_krankenhaus', function () {
         wp_send_json_error( 'Keine Berechtigung', 403 );
     }
 
-    /* ---------- 1) Eingaben einsammeln ---------- */
+    /* ---------- Basisfelder ---------- */
     $id               = intval( $_POST['id'] ?? 0 );
     $name             = sanitize_text_field( $_POST['name'] ?? '' );
     $versorgungsstufe = sanitize_text_field( $_POST['versorgungsstufe'] ?? '' );
@@ -421,31 +421,43 @@ add_action( 'wp_ajax_save_krankenhaus', function () {
     $longitude        = floatval( $_POST['longitude'] ?? 0 );
     $helipad          = isset( $_POST['helipad'] ) ? 1 : 0;
 
-    /* ---------- 2) Optional: Departments nur übernehmen, wenn wirklich mitgeschickt ---------- */
+    /* ---------- optionale Departments ---------- */
     $departments_in = array_key_exists( 'departments', $_POST )
                       ? stripslashes( $_POST['departments'] )
-                      : null;                          // wird ggf. nicht gesetzt
+                      : null;                       // bleibt NULL bei Edit ohne Änderungen
 
+    /* ---------- Metadaten ---------- */
+    $editor_id   = get_current_user_id();           // WordPress-Nutzer
+    $now_mysql   = current_time( 'mysql', 1 );      // UTC | für TIMESTAMP ohne auto-update
+
+    /* ---------- Prüfen ---------- */
     if ( $id <= 0 || $name === '' ) {
         wp_send_json_error( 'Ungültige Daten', 400 );
     }
 
-    /* ---------- 3) Dynamisches UPDATE-Statement bauen ---------- */
-    $set    = '
+    /* ---------- Statement dynamisch zusammenbauen ---------- */
+    $set = '
         name             = ?,
         versorgungsstufe = ?,
         trauma_level     = ?,
         latitude         = ?,
         longitude        = ?,
-        helipad          = ?';
-    $params = [ $name, $versorgungsstufe, $trauma_level, $latitude, $longitude, $helipad ];
+        helipad          = ?,
+        last_update      = ?,
+        last_editor      = ?';
+    $params = [
+        $name, $versorgungsstufe, $trauma_level,
+        $latitude, $longitude, $helipad,
+        $now_mysql,             // nur nötig, wenn last_update NICHT per ON UPDATE gesetzt
+        $editor_id
+    ];
 
-    if ( $departments_in !== null ) {        // nur wenn das Frontend etwas übermittelt
+    if ( $departments_in !== null ) {
         $set     .= ', departments = ?';
         $params[] = $departments_in;
     }
 
-    $params[] = $id;                         // WHERE-Parameter immer zuletzt
+    $params[] = $id;   // WHERE-Parameter
 
     $pdo  = lsttraining_get_connection();
     $stmt = $pdo->prepare( "UPDATE krankenhaeuser SET $set WHERE id = ?" );
@@ -455,7 +467,6 @@ add_action( 'wp_ajax_save_krankenhaus', function () {
     $ok ? wp_send_json_success()
         : wp_send_json_error( 'Speichern fehlgeschlagen', 500 );
 });
-
 
 
 

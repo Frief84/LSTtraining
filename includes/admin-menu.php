@@ -132,5 +132,5 @@ add_action( 'admin_menu', function () {
         );
     }
 
-remove_submenu_page( $parent_slug, $parent_slug );
+
 } );

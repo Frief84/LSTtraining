@@ -134,10 +134,35 @@ if ( ! function_exists( 'lsttraining_render_leitstellen' ) ) {
 }
 
 /**
- * Render the Nebenleitstellen page.
+ * Render-Funktion für die Nebenleitstellen-Adminseite
+ * URL: wp-admin/admin.php?page=lsttraining_nebenleitstellen
  */
 if ( ! function_exists( 'lsttraining_render_nebenleitstellen' ) ) {
     function lsttraining_render_nebenleitstellen() {
+
+        /* 1 | Assets enqueuen */
+        $plugin_url = plugin_dir_url( dirname( __FILE__ ) );      // …/lsttraining-plugin/
+
+        // (falls Deine Nebenstellen-JS OpenLayers braucht, sonst Zeile löschen)
+        wp_enqueue_script(
+            'lst-openlayers',
+            $plugin_url . 'openlayers/ol.js',
+            [], null, true
+        );
+
+        wp_enqueue_script(
+            'lst-nebenstellen-editor',
+            $plugin_url . 'js/nebenstellen_editor.js',
+            [ 'jquery', 'lst-openlayers' ],   // 'lst-openlayers' rausnehmen, wenn unnötig
+            '1.0.0', true                     // Footer laden
+        );
+
+        // Ajax-URL und ggf. weitere Daten ins JS schieben
+        wp_localize_script( 'lst-nebenstellen-editor', 'lstNebenstellenAjax', [
+            'ajax_url' => admin_url( 'admin-ajax.php' ),
+        ] );
+
+        /* 2 | Seite rendern */
         require_once plugin_dir_path( __FILE__ ) . 'nebenstellen_editor.php';
     }
 }
