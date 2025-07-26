@@ -192,3 +192,18 @@ var feld = document.getElementById('neben_update_nachbar');
 if (feld && feld.closest) {
     feld.closest('tr').style.display = 'none';
 }
+	
+;(function(){
+  const input = document.getElementById('nebenstellen-search');
+  const tbody = document.querySelector('.widefat tbody');
+  if (!input || !tbody) return;
+
+  input.addEventListener('input', () => {
+    const term = input.value.trim().toLowerCase();
+    tbody.querySelectorAll('tr').forEach(row => {
+      const text = row.innerText.toLowerCase();
+      row.style.display = term === '' || text.includes(term)
+                        ? '' : 'none';
+    });
+  });
+})();

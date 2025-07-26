@@ -74,9 +74,8 @@ if ( $pdo ) {
 
     <form method="get" style="margin-bottom:20px;">
         <input type="hidden" name="page" value="lsttraining_nebenleitstellen">
-        <input type="text" name="suchbegriff" placeholder="Suchen nach Name oder ID …"
-               value="<?php echo esc_attr( $suchbegriff ); ?>" style="width:300px;">
-        <button class="button">Suchen</button>
+        <input id="nebenstellen-search" type="text" placeholder="Suchen nach Name oder ID …" style="width:300px;">
+
     </form>
 
     <table class="widefat">
