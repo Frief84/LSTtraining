@@ -7,7 +7,7 @@ function lsttraining_einsatzgebiet_editor($mapId = 'polygon_map', $inputId = 'ei
     echo '<div id="popup_' . esc_attr($mapId) . '" class="einsatzgebiet-popup" style="
         display: none;
         position: fixed;
-        top: 50%;
+        top: 40%;
         left: 50%;
         transform: translate(-50%, -40%);
         z-index: 9999;
@@ -17,7 +17,7 @@ function lsttraining_einsatzgebiet_editor($mapId = 'polygon_map', $inputId = 'ei
         padding: 20px;
         width: 650px;
         max-width: 95%;
-        height: 750px;
+        height: 800px;
         overflow: auto;
     "
     data-map-id="' . esc_attr($mapId) . '"
@@ -42,20 +42,45 @@ function lsttraining_einsatzgebiet_editor($mapId = 'polygon_map', $inputId = 'ei
         </ul>
     </div>';
 
-    echo '<div id="' . esc_attr($mapId) . '" style="height: 300px; border: 1px solid #ccc; margin-bottom: 10px;"></div>';
+    echo '<div id="' . esc_attr($mapId) . '" data-einsatzgebiet-map
+          style="height:300px;border:1px solid #ccc;margin-bottom:10px;"></div>';
     echo '<textarea id="' . esc_attr($inputId) . '" style="display:none">' . esc_textarea($geojson) . '</textarea>';
+   
+echo '<div style="margin-top:15px;">
+  <label><strong>GeoJSON hochladen:</strong></label><br>
+  <input type="file" id="geojson-file"
+         accept=".geojson,application/geo+json,application/json"
+         class="regular-text">
+  <button type="button"
+          id="geojson-process"
+          class="button button-secondary"
+          disabled>
+      GeoJSON übernehmen &amp; Vorschau
+  </button>
+</div>';
 
-    echo '<p>
-        <button type="button" class="button button-primary btn-einsatzgebiet-save">Speichern</button>
-        <button type="button" class="button btn-einsatzgebiet-close">Schließen</button>
-        <button type="button" class="button btn-einsatzgebiet-delete" style="display:none">Einsatzgebiet löschen</button>
-    </p>';
+      
 
-    echo '<div style="margin-top: 15px;">
+echo '<div style="margin-top:15px;">
         <label><strong>GeoJSON manuell einfügen:</strong></label><br>
-        <textarea id="manual_geojson" style="width: 100%; height: 100px;"></textarea><br>
-        <button type="button" class="button" id="btn-geojson-import">GeoJSON übernehmen</button>
-    </div>';
+        <textarea id="manual_geojson" style="width:100%;height:100px;"></textarea><br>
+        <button type="button" class="button" id="btn-geojson-import">
+            GeoJSON übernehmen
+        </button>
+      </div>
+      <p>
+        <button type="button" class="button button-primary btn-einsatzgebiet-save">
+            Speichern
+        </button>
+        <button type="button" class="button btn-einsatzgebiet-close">
+            Schließen
+        </button>
+        <button type="button" class="button btn-einsatzgebiet-delete" style="display:none">
+            Einsatzgebiet löschen
+        </button>
+      </p>';
 
-    echo '</div>';
+
+    echo '<textarea name="coords" id="coords" hidden></textarea><br>
+<textarea id="geojson" name="geojson" hidden></textarea></div>';
 }

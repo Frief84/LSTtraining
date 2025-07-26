@@ -21,6 +21,7 @@ window.initEinsatzgebietEditor = function (container) {
 
     const format = new ol.format.GeoJSON();
     const vectorSource = new ol.source.Vector();
+	window.vectorSource = vectorSource;
     const vectorLayer = new ol.layer.Vector({ source: vectorSource });
 
     let center = [13.4, 52.5]; // Fallback Deutschland
@@ -169,135 +170,83 @@ try {
         updateGeoJSON();
     });
 
-    container.querySelector('.btn-einsatzgebiet-save')?.addEventListener('click', () => {
-        updateGeoJSON();
-        let rawGeoJson = geojsonTextarea.value;
+   container.querySelector('.btn-einsatzgebiet-save')?.addEventListener('click', () => {
 
-        try {
-            const parsed = JSON.parse(rawGeoJson);
-            rawGeoJson = JSON.stringify(parsed);
-        } catch (err) {
-            alert('GeoJSON ist ungültig und konnte nicht gespeichert werden.');
-            console.error(err);
-            return;
-        }
+  /* 1 | Aktuelle GeoJSON aus der Karte holen */
+  updateGeoJSON();
+  let rawGeoJson = geojsonTextarea.value;
 
-        const context = container.dataset.context || 'leitstelle';
-        const action = (context === 'neben') ? 'lsttraining_save_neben_einsatzgebiet' : 'lsttraining_save_einsatzgebiet';
+  try {           // valide JSON erzwingen
+    rawGeoJson = JSON.stringify(JSON.parse(rawGeoJson));
+  } catch (err) {
+    alert('GeoJSON ist ungültig.');
+    console.error(err);
+    return;
+  }
 
-        const bodyData = {
-            action: action,
-            geojson: rawGeoJson
-        };
-        bodyData[context === 'neben' ? 'neben_id' : 'leitstelle_id'] = leitstelleId;
+  /* 2 | Ajax-Call */
+  const context   = container.dataset.context === 'neben' ? 'neben' : 'leitstelle';
+  const action    = (context === 'neben')
+        ? 'lsttraining_save_neben_einsatzgebiet'
+        : 'lsttraining_save_einsatzgebiet';
 
-        fetch(ajaxurl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: new URLSearchParams(bodyData)
+  const bodyData  = { action, geojson: rawGeoJson };
+  bodyData[ context === 'neben' ? 'neben_id' : 'leitstelle_id' ] = leitstelleId;
+
+  fetch( ajaxurl, {
+    method : 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body   : new URLSearchParams(bodyData)
+  })
+  .then(r => r.json())
+  .then(result => {
+
+    if (!result.success) {
+      alert('Fehler: ' + result.data);
+      return;
+    }
+
+    /* 3 | Modal schließen */
+    container.style.display = 'none';
+    alert('Einsatzgebiet gespeichert');
+
+    /* 4 | Nebenstellen-Hauptkarte live aktualisieren */
+    const nebenMap = window._openlayersMaps?.['nebenstelle_map']; // liegt dort seit Listen-Aufbau
+    if (!nebenMap) return;    // keine Hauptkarte? → fertig
+
+    const fmt    = new ol.format.GeoJSON();
+    const feats  = fmt.readFeatures(rawGeoJson, {
+                    featureProjection: nebenMap.getView().getProjection()
+                  });
+
+    /* Layer anlegen / ersetzen */
+    let polyLayer = nebenMap.getLayers().getArray()
+                     .find(l => l.get('isPolygonLayer'));
+    if (!polyLayer) {
+      polyLayer = new ol.layer.Vector({
+        source: new ol.source.Vector(),
+        style : new ol.style.Style({
+          stroke: new ol.style.Stroke({ color:'rgba(0,128,255,0.8)', width:2 }),
+          fill  : new ol.style.Fill ({ color:'rgba(0,128,255,0.2)' })
         })
-            .then(r => r.json())
-            .then(result => {
-                if (result.success) {
-                    alert('Einsatzgebiet gespeichert');
-                    container.style.display = 'none';
-
-                    if (context === 'leitstelle' && window.mapEdit) {
-                        const format = new ol.format.GeoJSON();
-                        const editFeatures = format.readFeatures(rawGeoJson, {
-                            featureProjection: window.mapEdit.getView().getProjection()
-                        });
-
-                        const editLayers = window.mapEdit.getLayers().getArray();
-                        const polygonLayer = editLayers.find(layer => layer.get('isPolygonLayer'));
-
-                        if (polygonLayer) {
-                            polygonLayer.getSource().clear();
-                            polygonLayer.getSource().addFeatures(editFeatures);
-                        } else {
-                            const newPolygonLayer = new ol.layer.Vector({
-                                source: new ol.source.Vector({ features: editFeatures }),
-                                style: new ol.style.Style({
-                                    stroke: new ol.style.Stroke({ color: 'rgba(0, 128, 255, 0.8)', width: 2 }),
-                                    fill: new ol.style.Fill({ color: 'rgba(0, 128, 255, 0.2)' })
-                                })
-                            });
-                            newPolygonLayer.set('isPolygonLayer', true);
-                            window.mapEdit.addLayer(newPolygonLayer);
-                        }
-
-                        const newExtent = ol.extent.createEmpty();
-                        editFeatures.forEach(f => ol.extent.extend(newExtent, f.getGeometry().getExtent()));
-                        if (!ol.extent.isEmpty(newExtent)) {
-                            window.mapEdit.getView().fit(newExtent, {
-                                padding: [50, 50, 50, 50],
-                                duration: 300,
-                                maxZoom: 8
-                            });
-                        }
-                    }
-                } else {
-                    alert('Fehler: ' + result.data);
-                }
-            });
-    });
-
-	requestAnimationFrame(() => {
-    container.style.display = "block";
-    map.updateSize(); // <== wichtig!
-	});
-
-    importButton?.addEventListener('click', () => {
-    const input = manualTextarea?.value.trim();
-    if (!input) {
-        alert("Bitte GeoJSON einfügen.");
-        return;
+      });
+      polyLayer.set('isPolygonLayer', true);
+      nebenMap.addLayer(polyLayer);
     }
 
-    try {
-        const parsed = JSON.parse(input);
+    polyLayer.getSource().clear();
+    polyLayer.getSource().addFeatures(feats);
 
-        if (parsed.type !== 'FeatureCollection' || !Array.isArray(parsed.features)) {
-            alert("Ungültiges GeoJSON: Es muss ein FeatureCollection-Objekt mit 'features' sein.");
-            console.warn("GeoJSON-Struktur falsch:", parsed);
-            return;
-        }
-
-        const features = format.readFeatures(parsed, {
-            featureProjection: map.getView().getProjection()
-        });
-
-        if (features.length === 0) {
-            alert("Keine Features im GeoJSON enthalten.");
-            return;
-        }
-
-        vectorSource.clear();
-        vectorSource.addFeatures(features);
-        updateGeoJSON();
-
-        const extent = vectorSource.getExtent();
-        if (!ol.extent.isEmpty(extent)) {
-            map.getView().fit(extent, {
-                padding: [40, 40, 40, 40],
-                duration: 300,
-                maxZoom: 8
-            });
-        }
-
-        if (deleteButton) {
-            deleteButton.style.display = 'inline-block';
-        }
-
-        alert("GeoJSON erfolgreich übernommen.");
-    } catch (err) {
-        alert("GeoJSON ist ungültig oder konnte nicht geparst werden.");
-        console.error("Fehler beim Parsen:", err);
+    const ext = polyLayer.getSource().getExtent();
+    if (!ol.extent.isEmpty(ext)) {
+      nebenMap.getView().fit(ext, {
+        padding : [50,50,50,50],
+        duration: 300,
+        maxZoom : 8
+      });
     }
-});
-
+  });
+}); 
     deleteButton?.addEventListener('click', () => {
         vectorSource.clear();
         updateGeoJSON();
@@ -324,7 +273,7 @@ try {
 
     container.style.display = 'block';
 
-    // Wenn Karte existiert, Größe aktualisieren
+  
     const mapId = container.dataset.mapId;
     const map = window._openlayersMaps?.[mapId];
     if (map) {

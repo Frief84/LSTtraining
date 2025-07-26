@@ -134,38 +134,58 @@ if ( ! function_exists( 'lsttraining_render_leitstellen' ) ) {
 }
 
 /**
- * Render-Funktion für die Nebenleitstellen-Adminseite
- * URL: wp-admin/admin.php?page=lsttraining_nebenleitstellen
+ * Render-Funktion für „Nebenstellen“
  */
 if ( ! function_exists( 'lsttraining_render_nebenleitstellen' ) ) {
     function lsttraining_render_nebenleitstellen() {
 
-        /* 1 | Assets enqueuen */
-        $plugin_url = plugin_dir_url( dirname( __FILE__ ) );      // …/lsttraining-plugin/
+        $plugin_url = plugin_dir_url( dirname( __FILE__ ) );
 
-        // (falls Deine Nebenstellen-JS OpenLayers braucht, sonst Zeile löschen)
+        /* 1 | OpenLayers (wenn du es hier brauchst) */
         wp_enqueue_script(
             'lst-openlayers',
             $plugin_url . 'openlayers/ol.js',
             [], null, true
         );
 
+        /* 2 | GeoJSON-Utilities (CDN) */
+      wp_enqueue_script(
+		'turf',                                   // Handle
+		$plugin_url . 'js/turf.min.js',           // liegt in /js/
+		[], null, true
+	);
+
+        /* 3 | ► ALT: Nebenstellen-Editor  –  HIER steckt editNebenstelle() */
         wp_enqueue_script(
             'lst-nebenstellen-editor',
             $plugin_url . 'js/nebenstellen_editor.js',
-            [ 'jquery', 'lst-openlayers' ],   // 'lst-openlayers' rausnehmen, wenn unnötig
-            '1.0.0', true                     // Footer laden
+            [ 'jquery', 'lst-openlayers' ],   // oder nur ['jquery'] falls OL hier nicht nötig
+            '1.1.1',                          // Version hochziehen!
+            true
         );
 
-        // Ajax-URL und ggf. weitere Daten ins JS schieben
-        wp_localize_script( 'lst-nebenstellen-editor', 'lstNebenstellenAjax', [
-            'ajax_url' => admin_url( 'admin-ajax.php' ),
-        ] );
+        /* 4  GeoJSON-Upload */
+        wp_enqueue_script(
+		'lst-einsatzgebiet-upload',
+		$plugin_url . 'js/einsatzgebiet_upload.js',
+		[ 'jquery', 'lst-nebenstellen-editor', 'turf' ],   // ← geojson-utilities raus!
+		'1.1.3',                                           // Version hochziehen
+		true
+	);
 
-        /* 2 | Seite rendern */
+        /* 5 | Ajax-Variablen, falls benötigt */
+        wp_localize_script(
+            'lst-nebenstellen-editor',
+            'lstNebenstellenAjax',
+            [ 'ajax_url' => admin_url( 'admin-ajax.php' ) ]
+        );
+
+        /* 6 | Seite ausgeben */
         require_once plugin_dir_path( __FILE__ ) . 'nebenstellen_editor.php';
     }
 }
+
+
 
 /**
  * Render the Fahrzeuge page.
@@ -197,6 +217,12 @@ if ( ! function_exists( 'lsttraining_render_leitstellen_wachen' ) ) {
 
         wp_enqueue_script( 'lst-openlayers',
             $plugin_url . 'openlayers/ol.js', [], null, true );
+		
+		wp_enqueue_script(
+			'geojson-utilities',
+			'https://cdn.jsdelivr.net/npm/@opendatalab/geojson-utilities@2/dist/index.umd.js',
+			[], null, true
+		);
 
         wp_enqueue_script( 'lst-wachen',
             $plugin_url . 'js/wachen.js',
