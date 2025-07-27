@@ -79,22 +79,62 @@ $all_nls = $pdo->query(
 
   <!-- Tabelle -->
   <?php
-  $sql    = 'SELECT id, name, typ, latitude, longitude FROM wachen WHERE 1=1';
+  // ────────────────────────────────────────────────────────────────
+  // Tabelle: Wachen abfragen über die neuen Pivot-Tabellen
+  $sql    = '
+    SELECT
+      w.id,
+      w.name,
+      w.typ,
+      w.latitude,
+      w.longitude
+    FROM wachen AS w
+  ';
+  $joins  = '';
+  $where  = [];
   $params = [];
 
+  // Filter nach Leitstelle: über wache_leitstellen pivot
   if ( $filter_leitstelle ) {
-      // nur nach Leitstelle filtern
-      $sql      .= ' AND leitstelle_id = ?';
+      $joins .= '
+        INNER JOIN wache_leitstellen AS wl
+          ON w.id = wl.wache_id
+      ';
+      $where[]  = 'wl.leitstelle_id = ?';
       $params[] = $filter_leitstelle;
-  } elseif ( $filter_nebenleitstelle ) {
-      // nur nach Nebenleitstelle filtern
-      $sql      .= ' AND nebenleitstelle_id = ?';
+  }
+
+  // Filter nach Nebenleitstelle: über wache_nebenleitstellen pivot
+  if ( $filter_nebenleitstelle ) {
+      $joins .= '
+        INNER JOIN wache_nebenleitstellen AS wn
+          ON w.id = wn.wache_id
+      ';
+      $where[]  = 'wn.nebenleitstelle_id = ?';
       $params[] = $filter_nebenleitstelle;
   }
 
-  $stmt = $pdo->prepare( $sql );
-  $stmt->execute( $params );
-  $wachen = $stmt->fetchAll( PDO::FETCH_ASSOC );
+  // SQL zusammenbauen
+  $sql .= $joins;
+  if ( $where ) {
+      $sql .= ' WHERE ' . implode( ' AND ', $where );
+  }
+  $sql .= ' ORDER BY w.name';
+
+  // Abfrage vorbereiten und ausführen
+  try {
+      $stmt = $pdo->prepare( $sql );
+      $stmt->execute( $params );
+      $wachen = $stmt->fetchAll( PDO::FETCH_ASSOC );
+  } catch ( PDOException $e ) {
+      echo '<div class="notice notice-error"><p>';
+      echo esc_html__( 'Fehler beim Laden der Wachen:', 'lsttraining' ) . ' ';
+      echo esc_html( $e->getMessage() );
+      echo '</p></div>';
+      $wachen = [];
+  }
+  // ────────────────────────────────────────────────────────────────
+
   ?>
   <table class="widefat fixed">
     <thead>
