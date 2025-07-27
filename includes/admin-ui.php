@@ -276,15 +276,16 @@ add_action('admin_enqueue_scripts', function ($hook) {
         $stmt->execute();
         $all_ls = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        wp_localize_script(
-            'lst-nebenstellen-editor',
-            'lstNebenstellenAjax',
-            [
-                'ajax_url'       => admin_url('admin-ajax.php'),
-                'nonce'          => wp_create_nonce('lsttraining_copy_leitstelle'),
-                'allLeitstellen' => $all_ls,
-            ]
-        );
+		wp_localize_script(
+			'lst-nebenstellen-editor',
+			'lstNebenstellenAjax',
+			[
+				'ajax_url'       => admin_url('admin-ajax.php'),
+				'nonce_copy'     => wp_create_nonce('lsttraining_copy_leitstelle'),
+				'nonce_delete'   => wp_create_nonce('lsttraining_delete_nebenstelle'),
+				'allLeitstellen' => $all_ls,
+			]
+		);
     }
 });
 

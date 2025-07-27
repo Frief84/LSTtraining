@@ -115,10 +115,11 @@ if ( $pdo ) {
                 <td><?php echo $n->has_geojson ? '✅' : '❌'; ?></td>
                 <td>
                     <a href="#" class="button" onclick="<?php echo htmlspecialchars( $onclick ); ?>">Bearbeiten</a>
-                    <a href="<?php echo admin_url(
-                        'admin.php?page=lsttraining_nebenleitstellen&delete_id=' . $n->id ); ?>"
-                       class="button button-link-delete"
-                       onclick="return confirm('Wirklich löschen?');">Löschen</a>
+                    <button type="button"
+							class="button button-link-delete js-delete-nebenstelle"
+							data-id="<?php echo esc_attr( $n->id ); ?>">
+					  Löschen
+					</button>
                 </td>
             </tr>
         <?php endforeach; ?>
@@ -145,7 +146,7 @@ if ( $pdo ) {
             <tr><td>Name</td>          <td><input type="text"  name="neben_update_name"          id="neben_update_name" required></td></tr>
             <tr><td>Zuständigkeit</td> <td><input type="text"  name="neben_update_zustandigkeit" id="neben_update_zustandigkeit"></td></tr>
             <tr><td>Einwohner</td>     <td><input type="number"name="neben_update_einwohner"     id="neben_update_einwohner"></td></tr>
-            <tr><td>Fläche (km²)</td>  <td><input type="number" step="0.01" name="neben_update_flaeche" id="neben_update_flaeche"></td></tr>
+            <tr><td>Fläche (km²)</td>  <td><input type="number" step="0.01" name="neben_update_flaeche" id="neben_update_flaeche"> <button type="button" id="calc-flaeche" class="button">Berechnen</button></td></tr>
             <tr><td>Standort</td>      <td><input type="text"  name="neben_update_gps"           id="neben_update_gps" placeholder="z.B. 48.12345, 9.12345"></td></tr>
             <tr><td colspan="2"><div id="nebenstelle_map" style="height:250px;"></div></td></tr>
             <tr style="display:none"><td>Nachbarleitstelle</td><td><input type="number" name="neben_update_nachbar" id="neben_update_nachbar"></td></tr>

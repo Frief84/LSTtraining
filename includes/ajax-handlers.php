@@ -113,6 +113,38 @@ add_action( 'wp_ajax_lsttraining_save_neben_einsatzgebiet', function () {
     wp_send_json_success();
 });
 
+/**
+ * Löscht eine Nebenstelle via AJAX
+ * @action wp_ajax_lsttraining_delete_nebenstelle
+ */
+add_action( 'wp_ajax_lsttraining_delete_nebenstelle', function() {
+    // Rechte prüfen
+    if ( ! lsttraining_user_can( 'nebenstellen' ) ) {
+        wp_send_json_error( 'Keine Berechtigung', 403 );
+    }
+    // Nonce prüfen
+    check_ajax_referer( 'lsttraining_delete_nebenstelle', '_wpnonce' );
+
+    // ID validieren
+    $id = filter_input( INPUT_POST, 'id', FILTER_VALIDATE_INT );
+    if ( ! $id ) {
+        wp_send_json_error( 'Ungültige ID', 400 );
+    }
+
+    $pdo = lsttraining_get_connection();
+    // Nebenstelle löschen
+    $stmt = $pdo->prepare( "DELETE FROM nebenleitstellen WHERE id = ?" );
+    $ok   = $stmt->execute( [ $id ] );
+    // Pivot-Beziehungen löschen
+    $pdo->prepare( "DELETE FROM wache_nebenleitstellen WHERE nebenleitstelle_id = ?" )
+        ->execute( [ $id ] );
+
+    if ( $ok ) {
+        wp_send_json_success();
+    } else {
+        wp_send_json_error( 'Löschen fehlgeschlagen', 500 );
+    }
+});
 
 /* -------------------------------------------------------------------------
  * 3. POP-UP-EDITOR (gemeinsamer Render-Endpunkt)
