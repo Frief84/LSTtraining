@@ -212,3 +212,25 @@ CREATE TABLE IF NOT EXISTS `wp_lst_user_permissions` (
     REFERENCES `wp_users` (`ID`)
     ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+
+-- Beziehung Wache ⇆ Leitstelle
+CREATE TABLE `wache_leitstellen` (
+  `wache_id`      INT NOT NULL,
+  `leitstelle_id` INT NOT NULL,
+  PRIMARY KEY (`wache_id`, `leitstelle_id`),
+  INDEX (`leitstelle_id`),
+  FOREIGN KEY (`wache_id`)      REFERENCES `wachen`(`id`)       ON DELETE CASCADE,
+  FOREIGN KEY (`leitstelle_id`) REFERENCES `leitstellen`(`id`) ON DELETE CASCADE
+);
+
+-- Beziehung Wache ⇆ Nebenleitstelle
+CREATE TABLE `wache_nebenleitstellen` (
+  `wache_id`           INT NOT NULL,
+  `nebenleitstelle_id` INT NOT NULL,
+  PRIMARY KEY (`wache_id`, `nebenleitstelle_id`),
+  INDEX (`nebenleitstelle_id`),
+  FOREIGN KEY (`wache_id`)           REFERENCES `wachen`(`id`)            ON DELETE CASCADE,
+  FOREIGN KEY (`nebenleitstelle_id`) REFERENCES `nebenleitstellen`(`id`) ON DELETE CASCADE
+);

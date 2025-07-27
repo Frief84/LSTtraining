@@ -134,57 +134,170 @@ if ( ! function_exists( 'lsttraining_render_leitstellen' ) ) {
 }
 
 /**
- * Render-Funktion für „Nebenstellen“
+ * Admin‐Assets nur für die Nebenstellen‐Seite enqueuen,
+ * inkl. aller Leitstellen für das Copy-Modal
  */
-if ( ! function_exists( 'lsttraining_render_nebenleitstellen' ) ) {
-    function lsttraining_render_nebenleitstellen() {
+add_action( 'admin_enqueue_scripts', function( $hook ) {
 
-        $plugin_url = plugin_dir_url( dirname( __FILE__ ) );
+    // nur auf page=lsttraining_nebenstellen laden
+    if ( $hook !== 'toplevel_page_lsttraining_nebenstellen' ) {
+        return;
+    }
 
-        /* 1 | OpenLayers (wenn du es hier brauchst) */
+    $plugin_url = plugin_dir_url( dirname( __FILE__ ) );
+
+    // 1) OpenLayers
+    wp_enqueue_script(
+        'lst-openlayers',
+        $plugin_url . 'openlayers/ol.js',
+        [], null, true
+    );
+
+    // 2) Turf (Simplify & Union)
+    wp_enqueue_script(
+        'turf',
+        $plugin_url . 'js/turf.min.js',
+        [], null, true
+    );
+
+    // 3) Nebenstellen‐Editor (editNebenstelle(), Copy-Modal JS)
+    wp_enqueue_script(
+        'lst-nebenstellen-editor',
+        $plugin_url . 'js/nebenstellen_editor.js',
+        [ 'jquery', 'lst-openlayers' ],
+        '1.1.1',
+        true
+    );
+
+    // 4) GeoJSON-Upload
+    wp_enqueue_script(
+        'lst-einsatzgebiet-upload',
+        $plugin_url . 'js/einsatzgebiet_upload.js',
+        [ 'jquery', 'lst-nebenstellen-editor', 'turf' ],
+        '1.1.4',
+        true
+    );
+
+    // 5) Alle Leitstellen für das „Leitstelle übernehmen“-Modal verfügbar machen
+    global $wpdb;
+    $all_ls = $wpdb->get_results(
+        "SELECT id, name
+           FROM {$wpdb->prefix}leitstellen
+          ORDER BY name",
+        ARRAY_A
+    );
+
+    wp_localize_script(
+        'lst-nebenstellen-editor',
+        'lstNebenstellenAjax',
+        [
+            'ajax_url'       => admin_url( 'admin-ajax.php' ),
+            'nonce'          => wp_create_nonce( 'lsttraining_copy_leitstelle' ),
+            'allLeitstellen' => $all_ls,
+        ]
+    );
+} );
+
+add_action('admin_enqueue_scripts', function ($hook) {
+    $root_url = plugin_dir_url(dirname(__FILE__));
+    
+    // ────────────────────────────────────────────────────────────────
+    // Common assets (all pages)
+    wp_enqueue_style('dashicons');
+    wp_enqueue_style('lst-openlayers-css', $root_url . 'openlayers/ol.css');
+    wp_enqueue_script('lst-openlayers', $root_url . 'openlayers/ol.js', [], null, true);
+    wp_enqueue_style('lst-admin-css', $root_url . 'css/admin-ui.css', [], '1.0.0');
+    wp_enqueue_script('lst-admin-ui', $root_url . 'js/admin-ui.js', ['jquery'], '1.0.2', true);
+    
+    // ────────────────────────────────────────────────────────────────
+    // Leitstellen & Wachen page=lsttraining_leitstellen_wachen
+    if ($hook === 'lsttraining_leitstellen_page_lsttraining_leitstellen_wachen') {
+        wp_enqueue_script('lst-wachen', $root_url . 'js/wachen.js', ['jquery', 'lst-openlayers'], '1.0.0', true);
+        wp_localize_script('lst-wachen', 'lstWachenAjax', [
+            'ajax_url' => admin_url('admin-ajax.php'),
+        ]);
+    }
+    
+    // ────────────────────────────────────────────────────────────────
+    // Krankenhäuser (hook contains lsttraining_krankenhaeuser)
+    if (strpos($hook, '_page_lsttraining_krankenhaeuser') !== false) {
+        wp_enqueue_script('lst-departments', $root_url . 'js/departments.js', ['jquery', 'underscore', 'wp-util', 'lst-openlayers'], '1.0.0', true);
+        wp_enqueue_script('lst-hospitals', $root_url . 'js/hospitals.js', ['jquery', 'lst-openlayers', 'lst-departments'], '1.0.0', true);
+        $json_path = __DIR__ . '/departments.json';
+        if (!file_exists($json_path)) {
+            wp_die('departments.json not found at ' . esc_html($json_path));
+        }
+        $departments = json_decode(file_get_contents($json_path), true);
+        wp_localize_script('lst-hospitals', 'lstHospitalsAjax', [
+            'ajax_url'    => admin_url('admin-ajax.php'),
+            'nonce'       => wp_create_nonce('lsttraining_hospitals'),
+            'plugin_url'  => plugin_dir_url(dirname(__FILE__)),
+            'departments' => $departments,
+        ]);
+    }
+    
+// ────────────────────────────────────────────────────────────────
+    // Nebenstellen page=lsttraining_nebenstellen
+    if ( isset($_GET['page']) && $_GET['page'] === 'lsttraining_nebenstellen' ) {
+        // Turf für simplify & union
         wp_enqueue_script(
-            'lst-openlayers',
-            $plugin_url . 'openlayers/ol.js',
-            [], null, true
-        );
-
-        /* 2 | GeoJSON-Utilities (CDN) */
-      wp_enqueue_script(
-		'turf',                                   // Handle
-		$plugin_url . 'js/turf.min.js',           // liegt in /js/
-		[], null, true
-	);
-
-        /* 3 | ► ALT: Nebenstellen-Editor  –  HIER steckt editNebenstelle() */
-        wp_enqueue_script(
-            'lst-nebenstellen-editor',
-            $plugin_url . 'js/nebenstellen_editor.js',
-            [ 'jquery', 'lst-openlayers' ],   // oder nur ['jquery'] falls OL hier nicht nötig
-            '1.1.1',                          // Version hochziehen!
+            'turf',
+            $root_url . 'js/turf.min.js',
+            [],
+            null,
             true
         );
 
-        /* 4  GeoJSON-Upload */
+        // Nebenstellen-Editor (editNebenstelle + Copy-Modal JS)
         wp_enqueue_script(
-		'lst-einsatzgebiet-upload',
-		$plugin_url . 'js/einsatzgebiet_upload.js',
-		[ 'jquery', 'lst-nebenstellen-editor', 'turf' ],   // ← geojson-utilities raus!
-		'1.1.3',                                           // Version hochziehen
-		true
-	);
+            'lst-nebenstellen-editor',
+            $root_url . 'js/nebenstellen_editor.js',
+            ['jquery', 'lst-openlayers'],
+            '1.1.1',
+            true
+        );
 
-        /* 5 | Ajax-Variablen, falls benötigt */
+        // GeoJSON-Upload
+        wp_enqueue_script(
+            'lst-einsatzgebiet-upload',
+            $root_url . 'js/einsatzgebiet_upload.js',
+            ['jquery', 'lst-nebenstellen-editor', 'turf'],
+            '1.1.3',
+            true
+        );
+
+        // alle Leitstellen aus externer DB per PDO
+        $pdo = lsttraining_get_connection();
+        $stmt = $pdo->prepare(
+            "SELECT id, name
+             FROM leitstellen
+             ORDER BY name"
+        );
+        $stmt->execute();
+        $all_ls = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
         wp_localize_script(
             'lst-nebenstellen-editor',
             'lstNebenstellenAjax',
-            [ 'ajax_url' => admin_url( 'admin-ajax.php' ) ]
+            [
+                'ajax_url'       => admin_url('admin-ajax.php'),
+                'nonce'          => wp_create_nonce('lsttraining_copy_leitstelle'),
+                'allLeitstellen' => $all_ls,
+            ]
         );
+    }
+});
 
-        /* 6 | Seite ausgeben */
+
+/**
+ * Render-Funktion für „Nebenstellen“
+ *  – hier nur das Template einbinden
+ */
+if ( ! function_exists( 'lsttraining_render_nebenleitstellen' ) ) {
+    function lsttraining_render_nebenleitstellen() {
         require_once plugin_dir_path( __FILE__ ) . 'nebenstellen_editor.php';
     }
 }
-
 
 
 /**

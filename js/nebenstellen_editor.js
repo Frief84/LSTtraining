@@ -188,12 +188,14 @@ window.closeNebenstellePvopup = function () {
     document.getElementById('edit-nebenstelle-formular')?.style.setProperty('display', 'none');
 };
 
-var feld = document.getElementById('neben_update_nachbar');
+// Nachbar-Feld ausblenden (optional)
+const feld = document.getElementById('neben_update_nachbar');
 if (feld && feld.closest) {
-    feld.closest('tr').style.display = 'none';
+  feld.closest('tr').style.display = 'none';
 }
-	
+
 ;(function(){
+  // Live-Filter für Nebenstellen-Tabelle
   const input = document.getElementById('nebenstellen-search');
   const tbody = document.querySelector('.widefat tbody');
   if (!input || !tbody) return;
@@ -207,3 +209,99 @@ if (feld && feld.closest) {
     });
   });
 })();
+
+
+
+;(function(){
+  // 1) DOM-Elemente referenzieren
+  const modal       = document.getElementById('copy-leit-modal');
+  const btnCancel   = document.getElementById('cancel-copy-leit');
+  const btnConfirm  = document.getElementById('confirm-copy-leit');
+  const inputSearch = document.getElementById('copy_ls_search');
+  const selectLS    = document.getElementById('copy_ls_select');
+  const hiddenId    = document.getElementById('neben_update_id');
+
+  // 2) Daten & Default-Option
+  const allLS      = lstNebenstellenAjax.allLeitstellen || [];
+  const defaultOpt = '<option value="0">– bitte wählen –</option>';
+
+  // 3) Funktion zum Aufbau des Dropdowns
+  function buildOptions(term = '') {
+    const lower = term.trim().toLowerCase();
+    const filtered = allLS.filter(ls =>
+      ls.name.toLowerCase().includes(lower)
+    );
+    const opts = [
+      defaultOpt,
+      ...filtered.map(ls =>
+        `<option value="${ls.id}">${ls.name}</option>`
+      )
+    ];
+    selectLS.innerHTML = opts.join('');
+  }
+
+  // 4) Dropdown initial befüllen & Live-Filter setzen
+  buildOptions();
+  inputSearch.addEventListener('input', e => buildOptions(e.target.value));
+
+  // 5) Öffnen des Copy-Modals per Button
+  document.querySelectorAll('.open-copy-leit-modal').forEach(openBtn => {
+    openBtn.addEventListener('click', () => {
+      // buildOptions() erneut aufrufen, damit das Dropdown aktuell ist
+      buildOptions();
+      btnConfirm.disabled = true;
+      modal.classList.remove('hidden');
+      inputSearch.focus();
+    });
+  });
+
+  // 6) Abbrechen-Button
+  btnCancel.addEventListener('click', () => {
+    modal.classList.add('hidden');
+  });
+
+  // 7) Confirm-Knopf aktivieren, sobald eine Leitstelle ausgewählt wurde
+  selectLS.addEventListener('change', () => {
+    btnConfirm.disabled = (selectLS.value === '0');
+  });
+
+btnConfirm.addEventListener('click', () => {
+  const nebenId = document.getElementById('neben_update_id').value;
+  const leitId  = selectLS.value;
+  if (leitId === '0') return;
+
+  fetch( lstNebenstellenAjax.ajax_url, {
+    method:      'POST',
+    credentials: 'same-origin',
+    body: new URLSearchParams({
+      action:    'lsttraining_copy_leitstelle',
+      _wpnonce:  lstNebenstellenAjax.nonce,
+      neben_id:  nebenId,
+      leit_id:   leitId,
+    })
+  })
+  .then(response => {
+    if (!response.ok) throw new Error('Server-Fehler ' + response.status);
+    return response.json();
+  })
+  .then(json => {
+    if (!json.success) {
+      // wenn PHP einen Fehler gesendet hat
+      throw new Error(json.data || 'Unbekannter Fehler');
+    }
+    // ---- NEUER BLOCK: Erfolg anzeigen ----
+    alert(json.data || 'Nebenstelle übernommen');
+    console.log('AJAX Success:', json);
+    // --------------------------------------
+    modal.classList.add('hidden');
+    if (typeof fetchNebenstellen === 'function') fetchNebenstellen();
+  })
+  .catch(err => {
+    console.error('AJAX Error:', err);
+    alert('Konnte nicht übernehmen: ' + err.message);
+  });
+});
+
+})();
+
+

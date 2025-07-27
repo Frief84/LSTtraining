@@ -11,9 +11,16 @@ $pdo = lsttraining_get_connection();
 $filter_leitstelle      = isset( $_GET['ls_id'] )  ? intval( $_GET['ls_id'] )  : 0;
 $filter_nebenleitstelle = isset( $_GET['nls_id'] ) ? intval( $_GET['nls_id'] ) : 0;
 
-// 1) Alle Leitstellen laden (gleich für Nebenleitstellen)
-$all_ls  = $pdo->query( 'SELECT id, name FROM leitstellen ORDER BY name' )->fetchAll( PDO::FETCH_ASSOC );
-$all_nls = $all_ls;
+// 1) Alle Leitstellen laden
+$all_ls  = $pdo->query(
+    'SELECT id, name FROM leitstellen ORDER BY name'
+)->fetchAll( PDO::FETCH_ASSOC );
+
+// 2) Alle Nebenleitstellen laden
+$all_nls = $pdo->query(
+    'SELECT id, name FROM nebenleitstellen ORDER BY name'
+)->fetchAll( PDO::FETCH_ASSOC );
+
 ?>
 <div class="wrap">
   <h1>Wachen verwalten</h1>

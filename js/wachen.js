@@ -516,6 +516,24 @@ function openNewWacheModal() {
     ensureWacheEditMap(51.0, 9.0);          // Mitte DE
   });
 }
+	
+;(function(){
+  const input  = document.getElementById('nls_search');
+  const select = document.getElementById('nls_id');
+  if (!input || !select) return;
 
+  // Presave alle Optionen
+  const allOptions = Array.from(select.options);
+
+  input.addEventListener('input', () => {
+    const term = input.value.trim().toLowerCase();
+
+    // immer die Default-Option behalten
+    select.innerHTML = '';
+    allOptions
+      .filter(opt => opt.value === '0' || opt.text.toLowerCase().includes(term))
+      .forEach(opt => select.appendChild(opt.cloneNode(true)));
+  });
+})();
 	
 })(jQuery);

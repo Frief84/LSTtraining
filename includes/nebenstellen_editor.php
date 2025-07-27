@@ -72,11 +72,12 @@ if ( $pdo ) {
 <div class="wrap">
     <h1>Nebenleitstellen verwalten</h1>
 
-    <form method="get" style="margin-bottom:20px;">
-        <input type="hidden" name="page" value="lsttraining_nebenleitstellen">
-        <input id="nebenstellen-search" type="text" placeholder="Suchen nach Name oder ID …" style="width:300px;">
-
-    </form>
+    <div style="margin-bottom:20px;">
+  <input id="nebenstellen-search"
+         type="text"
+         placeholder="Suchen nach Name oder ID …"
+         style="width:300px;">
+</div>
 
     <table class="widefat">
         <thead>
@@ -160,6 +161,42 @@ if ( $pdo ) {
                     data-context="neben">
                 Einsatzgebiet bearbeiten
             </button>
+					  <!-- Button öffnet Modal -->
+  <button
+    type="button"
+    class="button button-secondary open-copy-leit-modal"
+    style="margin-left:10px"
+  >
+    Leitstelle übernehmen
+  </button>
+
+<!-- Copy-Leitstelle Modal (initial ausgeblendet) -->
+<div id="copy-leit-modal" class="hidden" style="position:fixed;top:0;left:0;
+     width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;
+     align-items:center;justify-content:center;z-index:1000;">
+  <div style="background:#fff;padding:20px;border-radius:4px;
+              width:320px;max-width:90%;">
+    <h2 style="margin-top:0">Leitstelle übernehmen</h2>
+    <p>
+      <label for="copy_ls_search"><strong>Filter:</strong></label><br>
+      <input type="text" id="copy_ls_search"
+             placeholder="Leitstelle suchen…" style="width:100%;box-sizing:border-box;">
+    </p>
+    <p>
+      <label for="copy_ls_select"><strong>Leitstelle wählen:</strong></label><br>
+      <select id="copy_ls_select" style="width:100%;box-sizing:border-box;">
+        <option value="0">– bitte wählen –</option>
+      </select>
+    </p>
+    <p style="text-align:right;margin-top:1em;">
+      <button type="button" id="cancel-copy-leit" class="button">Abbrechen</button>
+      <button type="button" id="confirm-copy-leit" class="button button-primary" disabled>
+        Diese Leitstelle übernehmen
+      </button>
+    </p>
+  </div>
+</div>
+
         </div>
 
         <p style="margin-top:1rem;">
