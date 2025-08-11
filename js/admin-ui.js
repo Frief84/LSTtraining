@@ -221,57 +221,61 @@ document.addEventListener('click', (ev) => {
   const btn = ev.target.closest('.open-einsatzgebiet-editor');
   if (!btn) return;
 
-  const mapId        = btn.dataset.mapId;          // e.g. einsatzgebiet_42
-  const geojsonId    = 'geojson_edit';             // fixed hidden field
-  const context      = btn.dataset.context;        // leitstelle | neben
-  const leitstelleId = btn.dataset.leitstelleId;
+  const mapId        = btn.dataset.mapId;           // z.B. "einsatzgebiet_new"
+  const context      = btn.dataset.context;         // "leitstelle" oder "neben"
+  const leitstelleId = btn.dataset.leitstelleId;    // "0" beim Erstellen
+  const rawGeo       = btn.dataset.geojson || '[]'; // kann '[]' sein
 
-  /* correct Ajax action */
-  const action =
-    context === 'neben'
-      ? `lsttraining_get_neben_einsatzgebiet&neben_id=${leitstelleId}`
-      : `lsttraining_get_einsatzgebiet&leitstelle_id=${leitstelleId}`;
+  // Versuche GeoJSON zu parsen – bei Fehlern mache daraus eine leere Collection
+  let poly;
+  try {
+    const parsed = JSON.parse(rawGeo);
+    if (parsed?.type === 'FeatureCollection') {
+      poly = parsed;
+    } else {
+      poly = { type: 'FeatureCollection', features: [] };
+    }
+  } catch {
+    poly = { type: 'FeatureCollection', features: [] };
+  }
 
-  fetch(`${ajaxurl}?action=${action}`)
-    .then((r) => r.json())
-    .then((res) => {
-      if (!res.success) {
-        console.error('Polygon load failed');
-        return;
+  // Anstatt loadPolygon(…) direkt den Popup-HTML anfordern
+  const qs = new URLSearchParams({
+    action        : 'lsttraining_render_einsatzgebiet_editor',
+    map_id        : mapId,
+    input_id      : 'geojson_edit',
+    leitstelle_id: leitstelleId,
+    context       : context,
+    center        : btn.dataset.center || ''
+  });
+
+  fetch(`${ajaxurl}?${qs.toString()}`)
+    .then(r => r.text())
+    .then(html => {
+      // Popup aus dem Server-HTML erzeugen
+      const tmp   = document.createElement('div');
+      tmp.innerHTML = html.trim();
+      const popup = tmp.firstElementChild;
+      document.body.appendChild(popup);
+
+      // GeoJSON injizieren
+      const geoEl = popup.querySelector('#geojson_edit');
+      if (geoEl) geoEl.value = JSON.stringify(poly);
+
+      popup.style.display = 'block';
+
+      // Editor initialisieren (funktioniert jetzt auch ohne initiales Polygon)
+      if (typeof window.initEinsatzgebietEditor === 'function') {
+        window.initEinsatzgebietEditor(popup);
       }
-
-      const poly = res.data ?? { type: 'FeatureCollection', features: [] };
-
-      /* request editor HTML */
-      const qs = new URLSearchParams({
-        action       : 'lsttraining_render_einsatzgebiet_editor',
-        map_id       : mapId,
-        input_id     : geojsonId,
-        leitstelle_id: leitstelleId,
-        context,
-        center       : btn.dataset.center || ''
-      });
-
-      fetch(`${ajaxurl}?${qs.toString()}`)
-        .then((r) => r.text())
-        .then((html) => {
-          const tmp = document.createElement('div');
-          tmp.innerHTML = html.trim();
-          const popup = tmp.firstElementChild;
-          document.body.appendChild(popup);
-
-          /* inject GeoJSON */
-          const geoEl = popup.querySelector('#' + geojsonId);
-		  if (geoEl) geoEl.value = JSON.stringify(poly);
-
-          popup.style.display = 'block';
-
-          if (typeof window.initEinsatzgebietEditor === 'function') {
-            window.initEinsatzgebietEditor(popup);
-          }
-        });
+    })
+    .catch(err => {
+      console.error('Fehler beim Laden des Einsatzgebiet-Editors:', err);
+      // Fallback: wenn das Popup mal nicht vom Server kommt, können wir es hier alternativ bauen
     });
 });
+
+
 
 function resetValue(id) {
   const el = document.getElementById(id);

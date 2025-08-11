@@ -68,7 +68,7 @@ add_action( 'admin_menu', function () {
             'Nebenstellen',
             'read',
             'lsttraining_nebenstellen',
-            'lsttraining_render_nebenleitstellen'
+            'lsttraining_render_nebenstellen'
         );
     }
 

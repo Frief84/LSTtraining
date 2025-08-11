@@ -8,6 +8,12 @@ if ( ! lsttraining_user_can( 'nebenstellen' ) ) {
     wp_die( 'Keine Berechtigung.' );
 }
 
+add_action('wp_ajax_lsttraining_get_next_neben_id', function() {
+    global $pdo;
+    $next = (int) $pdo->query('SELECT MAX(id)+1 FROM nebenleitstellen')->fetchColumn() ?: 1;
+    wp_send_json_success($next);
+});
+
 $base = plugin_dir_url( __FILE__ ) . '..';
 require_once plugin_dir_path( __FILE__ ) . '/db.php';
 require_once plugin_dir_path( __FILE__ ) . '/einsatzgebiet-editor.php';
@@ -23,6 +29,9 @@ wp_enqueue_script(
 $pdo          = lsttraining_get_connection();
 $nebenstellen = [];
 $suchbegriff  = $_GET['suchbegriff'] ?? '';
+
+
+$nextId = (int) $pdo->query('SELECT MAX(id)+1 FROM nebenleitstellen')->fetchColumn() ?: 1;
 
 /* --- delete & update  (identisch zu deiner Version) -------------------- */
 if ( isset( $_GET['delete_id'] ) && $pdo ) {
@@ -68,18 +77,37 @@ if ( $pdo ) {
     $nebenstellen = $stmt->fetchAll( PDO::FETCH_OBJ );
 }
 
+if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['neben_create'] ) && $pdo ) {
+    $stmt = $pdo->prepare(
+        'INSERT INTO nebenleitstellen
+         (name,zustandigkeit,einwohner,flaeche_km2,gps,nachbarleitstelle,geojson)
+         VALUES (?, ?, ?, ?, ?, ?, ?)'
+    );
+    $stmt->execute([
+        sanitize_text_field( $_POST['neben_update_name'] ),
+        sanitize_text_field( $_POST['neben_update_zustandigkeit'] ),
+        intval( $_POST['neben_update_einwohner'] ),
+        floatval( $_POST['neben_update_flaeche'] ),
+        sanitize_text_field( $_POST['neben_update_gps'] ),
+        intval( $_POST['neben_update_nachbar'] ?? 0 ),
+        stripslashes( $_POST['geojson_edit'] ?? '[]' ),
+    ]);
+    wp_safe_redirect( admin_url( 'admin.php?page=lsttraining_nebenleitstellen' ) );
+    exit;
+}
+
+
 ?>
 <div class="wrap">
     <h1>Nebenleitstellen verwalten</h1>
 
     <div style="margin-bottom:20px;">
-  <input id="nebenstellen-search"
-         type="text"
-         placeholder="Suchen nach Name oder ID …"
-         style="width:300px;">
-</div>
+  		<input id="nebenstellen-search" data-target="#nebenstellen-table" type="text" placeholder="Suchen nach Name oder ID …" style="width:300px;">
+		<button    id="create-nebenstelle"    class="button"     data-next-id="<?php echo esc_attr( $nextId ); ?>"    style="margin-left:10px;"
+>+ Nebenstelle erstellen</button>
+	</div>
 
-    <table class="widefat">
+    <table class="widefat" id="nebenstellen-table">
         <thead>
             <tr><th>ID</th><th>Name</th><th>Zuständigkeit</th><th>Einwohner</th>
                 <th>Fläche</th><th>Standort</th><th>Einsatzgebiet</th><th>Aktionen</th></tr>
@@ -142,6 +170,7 @@ if ( $pdo ) {
 
     <form method="post">
         <input type="hidden" name="neben_update_id" id="neben_update_id">
+		<input type="hidden" name="neben_create" id="neben_create" value="0">
         <table class="form-table">
             <tr><td>Name</td>          <td><input type="text"  name="neben_update_name"          id="neben_update_name" required></td></tr>
             <tr><td>Zuständigkeit</td> <td><input type="text"  name="neben_update_zustandigkeit" id="neben_update_zustandigkeit"></td></tr>
@@ -201,7 +230,7 @@ if ( $pdo ) {
         </div>
 
         <p style="margin-top:1rem;">
-            <button class="button button-primary">Speichern</button>
+            <button class="button button-primary" id="nebenstelle-save-button" >Speichern</button>
             <button type="button" class="button" onclick="closeNebenstellePopup()">Abbrechen</button>
         </p>
     </form>
@@ -213,4 +242,33 @@ function closeNebenstellePopup () {
   document.getElementById('popup-overlay').style.display        = 'none';
   document.getElementById('edit-nebenstelle-formular').style.display = 'none';
 }
+(function () {
+  const input = document.getElementById('nebenstellen-search');
+  const table = document.getElementById('nebenstellen-table');
+  if (!input || !table) return;
+
+  const tbody = table.tBodies && table.tBodies[0] ? table.tBodies[0] : table.querySelector('tbody');
+  if (!tbody) return;
+
+  // Mehrfaches Binden verhindern
+  if (input._lstFilterBound) return;
+  input._lstFilterBound = true;
+
+  input.addEventListener('input', function () {
+    const term = input.value.trim().toLowerCase();
+    // Alle Zeilen durchgehen (ohne thead)
+    tbody.querySelectorAll('tr').forEach(function (row) {
+      // Falls du später data-search setzt, nimm row.dataset.search || …
+      const hay = (row.innerText || '').toLowerCase();
+      row.style.display = term === '' || hay.includes(term) ? '' : 'none';
+    });
+  });
+
+  // Falls beim Laden schon Text im Input steht → sofort anwenden
+  input.dispatchEvent(new Event('input'));
+	
+	
+	
+	
+})();
 </script>

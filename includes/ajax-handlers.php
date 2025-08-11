@@ -114,6 +114,162 @@ add_action( 'wp_ajax_lsttraining_save_neben_einsatzgebiet', function () {
 });
 
 /**
+ * Ajax: neue Nebenleitstelle anlegen
+ * @action wp_ajax_lsttraining_create_nebenleitstelle
+ */
+add_action('wp_ajax_lsttraining_create_nebenleitstelle', function () use ($wpdb) {
+
+	error_log('[AJAX] reached lsttraining_create_nebenstelle');
+	check_ajax_referer('lst_nebenstellen_nonce');
+    $table = $wpdb->prefix . 'nebenleitstellen';
+
+    $id   = intval($_POST['id'] ?? 0); // optional, falls externe ID-Vergabe
+    $name = sanitize_text_field($_POST['name'] ?? '');
+
+    if ($name !== '') {
+        $exists = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table WHERE name=%s", $name));
+        if ($exists) {
+            wp_send_json_error(['code' => 'name_conflict', 'message' => 'Name bereits vorhanden'], 409);
+        }
+    }
+
+    $data = [
+        'name'                => $name,
+        'zustandigkeit'       => sanitize_text_field($_POST['zustandigkeit'] ?? ''),
+        'einwohner'           => intval($_POST['einwohner'] ?? 0),
+        'flaeche_km2'         => floatval($_POST['flaeche'] ?? 0),
+        'gps'                 => sanitize_text_field($_POST['gps'] ?? ''),
+        'nachbarleitstelle'   => 0,
+        'geojson'             => null,
+        'created_by'          => get_current_user_id(),
+        'created_at'          => current_time('mysql', 1),
+    ];
+
+    $format = ['%s','%s','%d','%f','%s','%d','%s','%d','%s'];
+    if ($id > 0) {
+        $data['id'] = $id;
+        array_unshift($format, '%d');
+    }
+
+    $ok = $wpdb->insert($table, $data, $format);
+    if (!$ok) wp_send_json_error('Insert fehlgeschlagen', 500);
+
+    $new_id = $wpdb->insert_id ?: $id;
+    wp_send_json_success(['id' => $new_id]);
+});
+
+/**
+ * Speichern einer Nebenleitstelle (Insert oder Update)
+ * @action wp_ajax_lsttraining_save_nebenleitstelle
+ */
+add_action('wp_ajax_lsttraining_save_nebenleitstelle', function () {
+    // 1) Nonce + Rechte prüfen (ohne wp_die)
+    if ( ! check_ajax_referer('lst_nebenstellen_nonce', '_ajax_nonce', false) ) {
+        wp_send_json_error(['code'=>'bad_nonce','msg'=>'Nonce ungültig'], 403);
+    }
+    if ( function_exists('lsttraining_user_can') && ! lsttraining_user_can('nebenstellen') ) {
+        wp_send_json_error(['code'=>'forbidden','msg'=>'Keine Berechtigung'], 403);
+    }
+
+    // 2) DB verbinden (PDO aus db.php, nicht $wpdb)
+    require_once plugin_dir_path(__FILE__) . 'db.php';
+    try {
+        $pdo = lsttraining_get_connection(); // verbindet zu deiner externen DB
+        if ( ! $pdo ) {
+            wp_send_json_error(['code'=>'db','msg'=>'DB-Verbindung fehlgeschlagen'], 500);
+        }
+    } catch (Throwable $e) {
+        wp_send_json_error(['code'=>'db','msg'=>'DB-Verbindung: '.$e->getMessage()], 500);
+    }
+
+    // 3) Eingaben
+    $id          = intval($_POST['id'] ?? 0);          // 0/leer => INSERT
+    $desired_id  = intval($_POST['desired_id'] ?? 0);  // optional bei INSERT
+    $name        = sanitize_text_field($_POST['name'] ?? '');
+    $zust        = sanitize_text_field($_POST['zustandigkeit'] ?? '');
+    $einwohner   = intval($_POST['einwohner'] ?? 0);
+    $flaeche_km2 = floatval($_POST['flaeche'] ?? 0);
+    $gps         = sanitize_text_field($_POST['gps'] ?? '');
+
+    if ($name === '') {
+        wp_send_json_error(['code'=>'validation','msg'=>'Name darf nicht leer sein'], 400);
+    }
+
+    // 4) Eindeutigkeit Name prüfen
+    try {
+        if ($id > 0) {
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM nebenleitstellen WHERE name = :name AND id <> :id");
+            $stmt->execute([':name'=>$name, ':id'=>$id]);
+        } else {
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM nebenleitstellen WHERE name = :name");
+            $stmt->execute([':name'=>$name]);
+        }
+        if ((int)$stmt->fetchColumn() > 0) {
+            wp_send_json_error(['code'=>'name_conflict','msg'=>'Name bereits vorhanden'], 409);
+        }
+    } catch (Throwable $e) {
+        wp_send_json_error(['code'=>'db','msg'=>'Prüfung fehlgeschlagen: '.$e->getMessage()], 500);
+    }
+
+    // 5) INSERT oder UPDATE mit PDO
+    try {
+        if ($id > 0) {
+            // UPDATE
+            $stmt = $pdo->prepare("
+                UPDATE nebenleitstellen
+                   SET name = :name,
+                       zustandigkeit = :zust,
+                       einwohner = :einwohner,
+                       flaeche_km2 = :flaeche_km2,
+                       gps = :gps
+                 WHERE id = :id
+            ");
+            $stmt->execute([
+                ':name'=>$name, ':zust'=>$zust, ':einwohner'=>$einwohner,
+                ':flaeche_km2'=>$flaeche_km2, ':gps'=>$gps, ':id'=>$id
+            ]);
+            wp_send_json_success(['id'=>$id]);
+
+        } else {
+            // INSERT
+            if ($desired_id > 0) {
+                // gewünschte ID frei?
+                $chk = $pdo->prepare("SELECT 1 FROM nebenleitstellen WHERE id = :id LIMIT 1");
+                $chk->execute([':id'=>$desired_id]);
+                if ($chk->fetchColumn()) {
+                    wp_send_json_error(['code'=>'id_conflict','msg'=>'Gewünschte ID bereits vergeben'], 409);
+                }
+                $stmt = $pdo->prepare("
+                    INSERT INTO nebenleitstellen (id, name, zustandigkeit, einwohner, flaeche_km2, gps)
+                    VALUES (:id, :name, :zust, :einwohner, :flaeche_km2, :gps)
+                ");
+                $stmt->execute([
+                    ':id'=>$desired_id, ':name'=>$name, ':zust'=>$zust,
+                    ':einwohner'=>$einwohner, ':flaeche_km2'=>$flaeche_km2, ':gps'=>$gps
+                ]);
+                wp_send_json_success(['id'=>$desired_id]);
+            } else {
+                $stmt = $pdo->prepare("
+                    INSERT INTO nebenleitstellen (name, zustandigkeit, einwohner, flaeche_km2, gps)
+                    VALUES (:name, :zust, :einwohner, :flaeche_km2, :gps)
+                ");
+                $stmt->execute([
+                    ':name'=>$name, ':zust'=>$zust, ':einwohner'=>$einwohner,
+                    ':flaeche_km2'=>$flaeche_km2, ':gps'=>$gps
+                ]);
+                $newId = (int)$pdo->lastInsertId();
+                wp_send_json_success(['id'=>$newId]);
+            }
+        }
+    } catch (Throwable $e) {
+        wp_send_json_error(['code'=>'db','msg'=>'Speichern fehlgeschlagen: '.$e->getMessage()], 500);
+    }
+});
+
+
+
+
+/**
  * Löscht eine Nebenstelle via AJAX
  * @action wp_ajax_lsttraining_delete_nebenstelle
  */

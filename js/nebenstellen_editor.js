@@ -1,3 +1,5 @@
+
+console.log('[neben] ready')
 window.initNebenstelleMap = function(gps, geojson = null, hauptLat = null, hauptLon = null) {
     // 1) Default-Zentrum
     let lat = 51.0,
@@ -159,70 +161,138 @@ document.getElementById('neben_update_gps')?.addEventListener('blur', function()
     }
 });
 
-window.editNebenstelle = function(
-    id, name, zust, einwohner, flaeche, gps, nachbar, geojsonStub
-) {
-    /* ---- cache popup elements --------------------------------------- */
-    var overlay = document.getElementById('popup-overlay');
-    var formBox = document.getElementById('edit-nebenstelle-formular');
+// Öffnet Editor mit vorhandenen Daten; EG-Button aktiv; Speichern = UPDATE
+// Hilfsfunktionen (einmalig definieren, wenn noch nicht vorhanden)
+function setVal(id, val) {
+  var el = document.getElementById(id);
+  if (el) el.value = val;
+}
+function getTrim(id) {
+  var el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
 
-    /* ---- fill inputs ------------------------------------------------- */
-    document.getElementById('neben_update_id').value = id;
-    document.getElementById('neben_update_name').value = name;
-    document.getElementById('neben_update_zustandigkeit').value = zust;
-    document.getElementById('neben_update_einwohner').value = einwohner;
-    document.getElementById('neben_update_flaeche').value = flaeche;
-    document.getElementById('neben_update_gps').value = gps;
-    document.getElementById('neben_update_nachbar').value = nachbar;
-    document.getElementById('geojson_edit').value = '[]';
+window.editNebenstelle = function (id, name, zust, einwohner, flaeche, gps, nachbar, geojson) {
+  var overlay  = document.getElementById('popup-overlay');
+  var formBox  = document.getElementById('edit-nebenstelle-formular');
+  var saveBtn  = document.getElementById('nebenstelle-save-button');
+  var idField  = document.getElementById('neben_update_id');
+  var egBtn    = formBox ? formBox.querySelector('.open-einsatzgebiet-editor') : null;
+  var geoField = document.getElementById('geojson_edit');
 
-    /* ---- show popup -------------------------------------------------- */
-    overlay.style.display = 'block';
-    formBox.style.display = 'block';
+  // Alte Handler lösen
+  if (saveBtn) saveBtn.onclick = null;
 
-    /* ---- reset map container ---------------------------------------- */
-    if (window.nebenstelleMap) {
-        window.nebenstelleMap.setTarget(null);
-        window.nebenstelleMap = null;
-    }
-    document.getElementById('nebenstelle_map').innerHTML = '';
+  // Felder befüllen
+  setVal('neben_update_name',            name || '');
+  setVal('neben_update_zustandigkeit',   zust || '');
+  setVal('neben_update_einwohner',       (einwohner != null ? String(einwohner) : ''));
+  setVal('neben_update_flaeche',         (flaeche   != null ? String(flaeche)   : ''));
+  setVal('neben_update_gps',             gps || '');
+  setVal('neben_update_nachbar',         (nachbar != null ? String(nachbar) : ''));
 
-    /* ---- button INSIDE current popup -------------------------------- */
-    var egBtn = formBox.querySelector('.open-einsatzgebiet-editor');
-    if (egBtn) {
-        egBtn.dataset.mapId = 'einsatzgebiet_' + id;
-        egBtn.dataset.leitstelleId = String(id);
-        egBtn.dataset.center = gps || '';
-        egBtn.dataset.context = 'neben';
-    }
+  // GeoJSON als String abspeichern
+  var geoStr = (typeof geojson === 'string')
+    ? (geojson && geojson.length ? geojson : '[]')
+    : JSON.stringify(geojson || []);
+  if (geoField) geoField.value = geoStr;
 
-    /* ---- load polygon, then init map -------------------------------- */
-    fetch(
-            ajaxurl +
-            '?action=lsttraining_get_neben_einsatzgebiet&neben_id=' + id
-        )
-        .then(function(r) {
-            return r.json();
+  if (idField) idField.value = String(id);
+
+  // Titel
+  if (formBox) {
+    var heading = formBox.querySelector('h2');
+    if (heading) heading.textContent = 'Nebenleitstelle bearbeiten';
+  }
+
+  // Buttons
+  if (saveBtn) {
+    saveBtn.textContent = 'Speichern';
+    saveBtn.disabled = false;
+    // gewünschte ID wird beim Bearbeiten nicht verwendet
+    saveBtn.dataset.desiredId = '';
+  }
+
+  // EG-Button aktivieren + Daten setzen
+  if (egBtn) {
+    egBtn.disabled = false;
+    egBtn.setAttribute('data-leitstelle-id', String(id));
+    egBtn.setAttribute('data-map-id', 'einsatzgebiet_' + String(id));
+    egBtn.setAttribute('data-center', gps || '');
+  }
+
+  // Modal öffnen
+  if (overlay) overlay.style.display = 'block';
+  if (formBox)  formBox.style.display  = 'block';
+
+  // Karte (vorherige Instanz aufräumen)
+  var mapContainer = document.getElementById('nebenstelle_map');
+  if (mapContainer) mapContainer.innerHTML = '';
+  if (window.nebenstelleMap) {
+    window.nebenstelleMap.setTarget(null);
+    window.nebenstelleMap = null;
+  }
+  // Initialisierung mit vorhandenen Werten
+  if (typeof window.initNebenstelleMap === 'function') {
+    window.initNebenstelleMap(gps || '', geoStr);
+  }
+
+  // Speichern = UPDATE
+  if (saveBtn) {
+    saveBtn.onclick = function (e) {
+      e.preventDefault();
+
+      var nameNow = getTrim('neben_update_name');
+      if (!nameNow) { alert('Bitte einen Namen vergeben.'); return; }
+
+      var fd = new FormData();
+      fd.append('action', 'lsttraining_save_nebenleitstelle');
+      if (window.LSTTRAINING && window.LSTTRAINING.nonce_nebenstellen) {
+        fd.append('_ajax_nonce', window.LSTTRAINING.nonce_nebenstellen);
+      }
+      fd.append('id', String(id));
+      fd.append('name', nameNow);
+      fd.append('zustandigkeit', getTrim('neben_update_zustandigkeit'));
+      fd.append('einwohner',     getTrim('neben_update_einwohner') || '0');
+      fd.append('flaeche',       getTrim('neben_update_flaeche')   || '0');
+      fd.append('gps',           getTrim('neben_update_gps'));
+
+      saveBtn.disabled = true;
+      fetch(ajaxurl, { method: 'POST', body: fd })
+        .then(function(res){ return res.json(); })
+        .then(function(json){
+          if (!json || !json.success) {
+            var msg = (json && json.data && (json.data.msg || json.data)) || 'Speichern fehlgeschlagen.';
+            alert(msg);
+            return;
+          }
+          
+		  // Erfolgreich – Modal schließen
+    		if (overlay) overlay.style.display = 'none';
+    		if (formBox) formBox.style.display = 'none';
+		  
+          if (typeof window.refreshNebenstellenListe === 'function') {
+            window.refreshNebenstellenListe();
+          }
         })
-        .then(function(res) {
-            var geoStr =
-                res.success && res.data ?
-                (typeof res.data === 'string' ? res.data : JSON.stringify(res.data)) :
-                '[]';
-
-            /* write to hidden field */
-            document.getElementById('geojson_edit').value = geoStr;
-
-            /* map with polygon */
-            window.initNebenstelleMap(gps, geoStr);
-
-            /* re-init polygon editor if already injected */
-            var polyPopup = formBox.querySelector('.einsatzgebiet-popup');
-            if (polyPopup && typeof window.initEinsatzgebietEditor === 'function') {
-                window.initEinsatzgebietEditor(polyPopup);
-            }
+        .catch(function(err){
+          console.error('RAW response?', err);
+          alert('Speichern fehlgeschlagen (Antwort war kein gültiges JSON).');
+        })
+        .finally(function(){
+          saveBtn.disabled = false;
         });
+    };
+  }
 };
+
+if (typeof window.editNebenstelle !== 'function') {
+  window.editNebenstelle = window.editNebenstelle;
+}
+function editNebenstelle(id, name, zust, einwohner, flaeche, gps, nachbar, geojson) {
+  return window.editNebenstelle(id, name, zust, einwohner, flaeche, gps, nachbar, geojson);
+}
+
 
 
 
@@ -277,25 +347,28 @@ if (feld && feld.closest) {
 }
 
 ;
-(function() {
-    // Live-Filter für Nebenstellen-Tabelle
+function initNebenstellenFilter() {
     const input = document.getElementById('nebenstellen-search');
-    const tbody = document.querySelector('.widefat tbody');
+    // erst gezielt versuchen, dann Fallback
+    const tbody = document.querySelector('#nebenstellen-table tbody') || document.querySelector('.widefat tbody');
     if (!input || !tbody) return;
+
+    // mehrfaches Binden vermeiden
+    if (input._lstFilterBound) return;
+    input._lstFilterBound = true;
 
     input.addEventListener('input', () => {
         const term = input.value.trim().toLowerCase();
         tbody.querySelectorAll('tr').forEach(row => {
-            const text = row.innerText.toLowerCase();
-            row.style.display = term === '' || text.includes(term) ?
-                '' : 'none';
+            const hay = (row.dataset.search || row.innerText).toLowerCase();
+            row.style.display = term === '' || hay.includes(term) ? '' : 'none';
         });
     });
-})();
+}
+
+document.addEventListener('DOMContentLoaded', initNebenstellenFilter);
 
 
-
-;
 (function() {
     // 1) DOM-Elemente referenzieren
     const modal = document.getElementById('copy-leit-modal');
@@ -359,7 +432,7 @@ if (feld && feld.closest) {
                 credentials: 'same-origin',
                 body: new URLSearchParams({
                     action: 'lsttraining_copy_leitstelle',
-                    _wpnonce: lstNebenstellenAjax.nonce,
+                    wpnonce: lstNebenstellenAjax.nonce_copy,
                     neben_id: nebenId,
                     leit_id: leitId,
                 })
@@ -450,6 +523,133 @@ if (feld && feld.closest) {
       });
     });
   });
+});
+
+// Öffnet nur den Editor im Create-Modus; kein Server-Call hier.
+window.createNebenstelle = function () {
+  const overlay   = document.getElementById('popup-overlay');
+  const formBox   = document.getElementById('edit-nebenstelle-formular');
+  const saveBtn   = document.getElementById('nebenstelle-save-button');
+  const egBtn     = formBox.querySelector('.open-einsatzgebiet-editor');
+  const idField   = document.getElementById('neben_update_id');
+  const geoField  = document.getElementById('geojson_edit');
+  const createBtn = document.getElementById('create-nebenstelle');
+
+  if (saveBtn) saveBtn.onclick = null;
+
+  // Felder leeren
+  ['neben_update_name','neben_update_zustandigkeit','neben_update_einwohner','neben_update_flaeche','neben_update_gps','neben_update_nachbar']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  if (geoField) geoField.value = '[]';
+
+  // Titel & ID
+  const heading = formBox.querySelector('h2');
+  if (heading) heading.textContent = 'Nebenleitstelle erstellen';
+  if (idField) idField.value = ''; // noch keine ID
+
+  // gewünschte ID (nur merken, nicht speichern)
+  const desiredId = createBtn ? (createBtn.getAttribute('data-next-id') || '') : '';
+  if (saveBtn) saveBtn.dataset.desiredId = desiredId;
+
+  // Buttons
+  if (saveBtn) {
+    saveBtn.textContent = 'Speichern um Einsatzgebiet anzulegen';
+    saveBtn.disabled = false;
+  }
+  if (egBtn) egBtn.disabled = true; // erst nach echtem INSERT
+
+  // Modal öffnen
+  if (overlay) overlay.style.display = 'block';
+  if (formBox)  formBox.style.display  = 'block';
+
+  // leere Karte
+  const mapContainer = document.getElementById('nebenstelle_map');
+  if (mapContainer) mapContainer.innerHTML = '';
+  if (window.nebenstelleMap) { window.nebenstelleMap.setTarget(null); window.nebenstelleMap = null; }
+  window.initNebenstelleMap('', '[]');
+
+  // Save-Handler: 1. Klick = INSERT, weitere Klicks = UPDATE
+  if (saveBtn) {
+    saveBtn.onclick = async function (e) {
+      e.preventDefault();
+
+      const nebenId = (document.getElementById('neben_update_id')?.value || '').trim();
+      const name    = (document.getElementById('neben_update_name')?.value || '').trim();
+      if (!name) { alert('Bitte einen Namen vergeben.'); return; }
+
+      const fd = new FormData();
+      fd.append('action', 'lsttraining_save_nebenleitstelle');
+      if (window.LSTTRAINING?.nonce_nebenstellen) {
+        fd.append('_ajax_nonce', window.LSTTRAINING.nonce_nebenstellen);
+      }
+      fd.append('id', nebenId); // leer => INSERT
+      fd.append('name', name);
+      fd.append('zustandigkeit', (document.getElementById('neben_update_zustandigkeit')?.value || '').trim());
+      fd.append('einwohner', (document.getElementById('neben_update_einwohner')?.value || '0').trim());
+      fd.append('flaeche', (document.getElementById('neben_update_flaeche')?.value || '0').trim());
+      fd.append('gps', (document.getElementById('neben_update_gps')?.value || '').trim());
+
+      if (!nebenId && this.dataset.desiredId) {
+        fd.append('desired_id', this.dataset.desiredId);
+      }
+
+      this.disabled = true;
+      try {
+        const res  = await fetch(ajaxurl, { method: 'POST', body: fd });
+        const json = await res.json();
+        if (!json || !json.success) { alert(json?.data?.msg || json?.data || 'Speichern fehlgeschlagen.'); return; }
+
+        // INSERT → echte ID setzen, EG aktivieren, Label wechseln, Modal offen lassen
+        if (!nebenId) {
+          const newId = json.data?.id;
+          if (newId && idField) idField.value = String(newId);
+
+          if (egBtn) {
+            egBtn.disabled = false;
+            egBtn.setAttribute('data-leitstelle-id', newId);
+            egBtn.setAttribute('data-map-id', 'einsatzgebiet_' + newId);
+            const gpsVal = document.getElementById('neben_update_gps')?.value?.trim() || '';
+            egBtn.setAttribute('data-center', gpsVal);
+          }
+
+          this.textContent = 'Speichern'; // ab jetzt UPDATE
+          return; // Modal bleibt offen
+        }
+
+        // UPDATE → Modal bleibt offen
+        // optional: kleine Erfolgsmeldung einblenden
+
+      } catch (err) {
+        console.error('RAW response?', err);
+        alert('Speichern fehlgeschlagen (Antwort war kein gültiges JSON).');
+      } finally {
+        this.disabled = false;
+      }
+    };
+  }
+};
+
+
+
+
+// Hook up the create button
+document.addEventListener('DOMContentLoaded', function () {
+  const createBtn = document.getElementById('create-nebenstelle');
+  if (createBtn) {
+    createBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      window.createNebenstelle();
+    });
+  }
+
+  // Wenn GPS-Feld sich ändert, center an den Editor-Button hängen
+  const gpsInput = document.getElementById('neben_update_gps');
+  const egBtn = document.querySelector('#edit-nebenstelle-formular .open-einsatzgebiet-editor');
+  if (gpsInput && egBtn) {
+    gpsInput.addEventListener('input', function () {
+      egBtn.setAttribute('data-center', (gpsInput.value || '').trim());
+    });
+  }
 });
 
 
