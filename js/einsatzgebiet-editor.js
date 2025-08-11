@@ -155,6 +155,10 @@ window.initEinsatzgebietEditor = function (container) {
     container.querySelector('.btn-einsatzgebiet-save')?.addEventListener('click', () => {
         updateGeoJSON();
         const rawGeoJson = geojsonTextarea.value;
+		 // Hidden-Feld im Haupt-Modal ist jetzt aktuell; Karte gleich mitziehen:
+	if (typeof window.updateNebenstellenMapFromGeo === 'function') {
+	   window.updateNebenstellenMapFromGeo(rawGeoJson);
+	 }
         if (container.dataset.context === 'neben' && container.dataset.leitstelleId === '0') {
             // Create-Modus: nur schließen
             container.style.display = 'none';
@@ -179,7 +183,9 @@ window.initEinsatzgebietEditor = function (container) {
                 }
                 container.style.display = 'none';
                 alert('Einsatzgebiet gespeichert');
-                // Hauptkarte live updaten...
+                if (typeof window.updateNebenstellenMapFromGeo === 'function') {
+      window.updateNebenstellenMapFromGeo(rawGeoJson);
+    }
             });
     });
 

@@ -808,5 +808,49 @@ window.refreshNebenstellenListe = function () {
   row.dataset.search = search;
 };
 
+// Aktualisiert die Nebenstellen-Karte (#nebenstelle_map) aus einem GeoJSON-String (EPSG:4326)
+window.updateNebenstellenMapFromGeo = function(geoStr) {
+  try {
+    if (!window.nebenstelleMap) return; // Karte noch nicht offen
+    let obj = geoStr ? JSON.parse(geoStr) : null;
+    if (!obj) return;
+
+    // immer FeatureCollection herstellen
+    if (Array.isArray(obj)) obj = { type:'FeatureCollection', features: obj };
+    if (obj.type === 'Feature') obj = { type:'FeatureCollection', features:[obj] };
+
+    const fmt  = new ol.format.GeoJSON();
+    const feats = fmt.readFeatures(obj, {
+      dataProjection: 'EPSG:4326',
+      featureProjection: window.nebenstelleMap.getView().getProjection()
+    });
+
+    // Source vorhanden? sonst neu anlegen + Layer hinzufügen
+    if (!window.nebenPolygonSource) {
+      window.nebenPolygonSource = new ol.source.Vector();
+      const polygonLayer = new ol.layer.Vector({
+        source: window.nebenPolygonSource,
+        style: new ol.style.Style({
+          stroke: new ol.style.Stroke({ color:'rgba(0,128,255,0.8)', width:2 }),
+          fill:   new ol.style.Fill({   color:'rgba(0,128,255,0.2)' })
+        })
+      });
+      window.nebenstelleMap.addLayer(polygonLayer);
+    }
+
+    window.nebenPolygonSource.clear();
+    if (feats && feats.length) {
+      window.nebenPolygonSource.addFeatures(feats);
+      const ext = window.nebenPolygonSource.getExtent();
+      if (!ol.extent.isEmpty(ext)) {
+        window.nebenstelleMap.getView().fit(ext, { padding:[20,20,20,20], duration:300 });
+      }
+    }
+  } catch (e) {
+    console.warn('updateNebenstellenMapFromGeo: Parse/Update-Fehler', e, geoStr);
+  }
+};
+											
+											
 
 })();
