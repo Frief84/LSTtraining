@@ -214,67 +214,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-/* ---------------------------------------------------------- */
-/* Open polygon editor popup                                  */
-/* ---------------------------------------------------------- */
-document.addEventListener('click', (ev) => {
-  const btn = ev.target.closest('.open-einsatzgebiet-editor');
-  if (!btn) return;
-
-  const mapId        = btn.dataset.mapId;           // z.B. "einsatzgebiet_new"
-  const context      = btn.dataset.context;         // "leitstelle" oder "neben"
-  const leitstelleId = btn.dataset.leitstelleId;    // "0" beim Erstellen
-  const rawGeo       = btn.dataset.geojson || '[]'; // kann '[]' sein
-
-  // Versuche GeoJSON zu parsen – bei Fehlern mache daraus eine leere Collection
-  let poly;
-  try {
-    const parsed = JSON.parse(rawGeo);
-    if (parsed?.type === 'FeatureCollection') {
-      poly = parsed;
-    } else {
-      poly = { type: 'FeatureCollection', features: [] };
-    }
-  } catch {
-    poly = { type: 'FeatureCollection', features: [] };
-  }
-
-  // Anstatt loadPolygon(…) direkt den Popup-HTML anfordern
-  const qs = new URLSearchParams({
-    action        : 'lsttraining_render_einsatzgebiet_editor',
-    map_id        : mapId,
-    input_id      : 'geojson_edit',
-    leitstelle_id: leitstelleId,
-    context       : context,
-    center        : btn.dataset.center || ''
-  });
-
-  fetch(`${ajaxurl}?${qs.toString()}`)
-    .then(r => r.text())
-    .then(html => {
-      // Popup aus dem Server-HTML erzeugen
-      const tmp   = document.createElement('div');
-      tmp.innerHTML = html.trim();
-      const popup = tmp.firstElementChild;
-      document.body.appendChild(popup);
-
-      // GeoJSON injizieren
-      const geoEl = popup.querySelector('#geojson_edit');
-      if (geoEl) geoEl.value = JSON.stringify(poly);
-
-      popup.style.display = 'block';
-
-      // Editor initialisieren (funktioniert jetzt auch ohne initiales Polygon)
-      if (typeof window.initEinsatzgebietEditor === 'function') {
-        window.initEinsatzgebietEditor(popup);
-      }
-    })
-    .catch(err => {
-      console.error('Fehler beim Laden des Einsatzgebiet-Editors:', err);
-      // Fallback: wenn das Popup mal nicht vom Server kommt, können wir es hier alternativ bauen
-    });
-});
-
 
 
 function resetValue(id) {

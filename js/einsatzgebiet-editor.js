@@ -21,6 +21,10 @@ window.initEinsatzgebietEditor = function (container) {
 
 		const vectorSource   = new ol.source.Vector();
     const vectorLayer    = new ol.layer.Vector({ source: vectorSource });
+	
+	window._egSources = window._egSources || {};
+	window._egSources[mapId] = vectorSource;
+	
     // für Upload-/Vorschau-Script sichtbar machen:
     window.vectorSource  = vectorSource;
     window.vectorLayer   = vectorLayer;
@@ -81,9 +85,10 @@ window.initEinsatzgebietEditor = function (container) {
 
     function updateGeoJSON() {
         const features = vectorSource.getFeatures();
-        const geojson  = format.writeFeatures(features, {
-            featureProjection: map.getView().getProjection()
-        });
+  	const geojson  = format.writeFeatures(features, {
+     dataProjection: 'EPSG:4326',
+     featureProjection: map.getView().getProjection()
+ });
         geojsonTextarea.value = geojson;
         if (manualTextarea) {
             manualTextarea.value = JSON.stringify(JSON.parse(geojson), null, 2);
@@ -94,7 +99,7 @@ window.initEinsatzgebietEditor = function (container) {
     map.on('modifyend', updateGeoJSON);
 
     // Vorhandenes GeoJSON laden (nur wenn nicht '[]')
-    const rawValue = geojsonTextarea.value?.trim();
+    const rawValue = geojsonTextarea?.value?.trim();
     let parsed = null;
     if (rawValue && rawValue !== '[]') {
         try {
@@ -110,14 +115,15 @@ window.initEinsatzgebietEditor = function (container) {
             parsed = { type: 'FeatureCollection', features: [parsed] };
         }
     }
-    if (parsed?.type === 'FeatureCollection' && parsed.features.length) {
-        if (parsed.crs) delete parsed.crs;
-        const geojson  = format.writeFeatures(features, {
-            dataProjection: 'EPSG:4326',
-            featureProjection: map.getView().getProjection()
-        });
-        vectorSource.clear();
-        vectorSource.addFeatures(feats);
+	if (parsed?.type === 'FeatureCollection' && parsed.features.length) {
+     if (parsed.crs) delete parsed.crs;
+     const feats = format.readFeatures(parsed, {
+         dataProjection: 'EPSG:4326',
+         featureProjection: map.getView().getProjection()
+     });
+     vectorSource.clear();
+     vectorSource.addFeatures(feats);
+
         if (deleteButton) deleteButton.style.display = 'inline-block';
         requestAnimationFrame(() => {
             const ext = vectorSource.getExtent();

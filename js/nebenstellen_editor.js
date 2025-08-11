@@ -1,5 +1,98 @@
 
-console.log('[neben] ready')
+/* ---------------------------------------------------------- */
+/* Open polygon editor popup                                  */
+/* ---------------------------------------------------------- */
+document.addEventListener('click', (ev) => {
+  const btn = ev.target.closest('.open-einsatzgebiet-editor');
+  if (!btn) return;
+
+  const mapId        = btn.dataset.mapId;           // z.B. "einsatzgebiet_new"
+  const context      = btn.dataset.context;         // "leitstelle" oder "neben"
+  const leitstelleId = btn.dataset.leitstelleId;    // "0" beim Erstellen
+  const rawGeo       = btn.dataset.geojson || '[]'; // kann '[]' sein
+
+  // Versuche GeoJSON zu parsen – bei Fehlern mache daraus eine leere Collection
+  let poly;
+  try {
+    const parsed = JSON.parse(rawGeo);
+    if (parsed?.type === 'FeatureCollection') {
+      poly = parsed;
+    } else {
+      poly = { type: 'FeatureCollection', features: [] };
+    }
+  } catch {
+    poly = { type: 'FeatureCollection', features: [] };
+  }
+
+  // Anstatt loadPolygon(…) direkt den Popup-HTML anfordern
+  const qs = new URLSearchParams({
+    action        : 'lsttraining_render_einsatzgebiet_editor',
+    map_id        : mapId,
+    input_id      : 'geojson_edit',
+    leitstelle_id: leitstelleId,
+    context       : context,
+    center        : btn.dataset.center || ''
+  });
+
+  fetch(`${ajaxurl}?${qs.toString()}`)
+    .then(r => r.text())
+    .then(html => {
+      // Popup aus dem Server-HTML erzeugen
+      const tmp   = document.createElement('div');
+      tmp.innerHTML = html.trim();
+      const popup = tmp.firstElementChild;
+      document.body.appendChild(popup);
+
+      // GeoJSON injizieren
+      const geoEl = popup.querySelector('#geojson_edit');
+      if (geoEl) geoEl.value = JSON.stringify(poly);
+
+      popup.style.display = 'block';
+
+      // Editor initialisieren (funktioniert jetzt auch ohne initiales Polygon)
+      if (typeof window.initEinsatzgebietEditor === 'function') {
+        window.initEinsatzgebietEditor(popup);
+      }
+	  
+// nach initEinsatzgebietEditor(popup)
+requestAnimationFrame(() => {
+  const map    = window._openlayersMaps?.[mapId];
+  const srcTo  = window._egSources?.[mapId];
+  const srcFrom = window.nebenPolygonSource; // kommt aus der Nebenstellen-Karte
+
+  if (!map || !srcTo || !srcFrom) return;
+
+  const feats = srcFrom.getFeatures().map(f => f.clone());
+  srcTo.clear();
+  srcTo.addFeatures(feats);
+
+  const ext = srcTo.getExtent();
+  if (!ol.extent.isEmpty(ext)) {
+    map.getView().fit(ext, { padding: [50,50,50,50], duration: 200 });
+  }
+
+  // Hidden-Feld synchron halten (für Save)
+  const fmt = new ol.format.GeoJSON();
+  const geo = fmt.writeFeatures(feats, {
+    dataProjection: 'EPSG:4326',
+    featureProjection: map.getView().getProjection()
+  });
+  popup.querySelector('#geojson_edit')?.setAttribute('value', geo);
+  const ta = document.getElementById('geojson_edit');
+  if (ta) ta.value = geo;
+});
+
+	  
+    })
+    .catch(err => {
+      console.error('Fehler beim Laden des Einsatzgebiet-Editors:', err);
+      // Fallback: wenn das Popup mal nicht vom Server kommt, können wir es hier alternativ bauen
+    });
+});
+
+
+
+
 window.initNebenstelleMap = function(gps, geojson = null, hauptLat = null, hauptLon = null) {
     // 1) Default-Zentrum
     let lat = 51.0,
