@@ -122,16 +122,16 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['neben_create'] ) &&
                             : ( ! $n->has_geojson ? 'missing-geojson' : '' ) );
 
                 /* onclick (GeoJSON loaded via Ajax in editor) */
-                $onclick = sprintf(
-                    "editNebenstelle(%d, %s, %s, %d, %f, %s, %d, '') ; return false;",
-                    $n->id,
-                    json_encode( $n->name ),
-                    json_encode( $n->zustandigkeit ),
-                    $n->einwohner,
-                    $n->flaeche_km2,
-                    json_encode( $n->gps ),
-                    0
-                );
+               $onclick = sprintf(
+				  "loadNebenstelleAndOpen(%d, %s, %s, %d, %f, %s, %d); return false;",
+				  $n->id,
+				  json_encode($n->name),
+				  json_encode($n->zustandigkeit),
+				  (int)$n->einwohner,
+				  (float)$n->flaeche_km2,
+				  json_encode($n->gps),
+				  0
+				);
             ?>
             <tr class="<?php echo esc_attr( $rowClass ); ?>">
                 <td><?php echo esc_html( $n->id ); ?></td>

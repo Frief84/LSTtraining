@@ -172,6 +172,28 @@ function getTrim(id) {
   return el ? el.value.trim() : '';
 }
 
+
+window.loadNebenstelleAndOpen = async function (id, name, zust, einwohner, flaeche, gps, nachbar) {
+  let geoStr = '[]';
+  try {
+    const url  = `${ajaxurl}?action=lsttraining_get_neben_einsatzgebiet&neben_id=${encodeURIComponent(id)}&t=${Date.now()}`;
+    const res  = await fetch(url, { credentials: 'same-origin' });
+    const json = await res.json();
+if (json && json.success && json.data) {
+      let data = json.data;
+      if (typeof data === 'string') {
+        try { data = JSON.parse(data); } catch(e) { data = null; }
+      }
+      if (Array.isArray(data)) data = { type: 'FeatureCollection', features: data };
+      if (!data.type && data.features) data.type = 'FeatureCollection';
+      geoStr = JSON.stringify(data);
+    }
+  } catch (_) {}
+
+  return window.editNebenstelle(id, name, zust, einwohner, flaeche, gps, nachbar, geoStr);
+};
+
+
 window.editNebenstelle = function (id, name, zust, einwohner, flaeche, gps, nachbar, geojson) {
   var overlay  = document.getElementById('popup-overlay');
   var formBox  = document.getElementById('edit-nebenstelle-formular');
@@ -217,7 +239,7 @@ window.editNebenstelle = function (id, name, zust, einwohner, flaeche, gps, nach
   if (egBtn) {
     egBtn.disabled = false;
     egBtn.setAttribute('data-leitstelle-id', String(id));
-    egBtn.setAttribute('data-map-id', 'einsatzgebiet_' + String(id));
+    egBtn.setAttribute('data-map-id', 'einsatzgebiet_edit');
     egBtn.setAttribute('data-center', gps || '');
   }
 
@@ -286,18 +308,7 @@ window.editNebenstelle = function (id, name, zust, einwohner, flaeche, gps, nach
   }
 };
 
-if (typeof window.editNebenstelle !== 'function') {
-  window.editNebenstelle = window.editNebenstelle;
-}
-function editNebenstelle(id, name, zust, einwohner, flaeche, gps, nachbar, geojson) {
-  return window.editNebenstelle(id, name, zust, einwohner, flaeche, gps, nachbar, geojson);
-}
-
-
-
-
-
-window.closeNebenstellePvopup = function () {
+window.closeNebenstellePopup = function () {
   // 1) Popup schließen
   document.getElementById('popup-overlay')?.style.setProperty('display', 'none');
   document.getElementById('edit-nebenstelle-formular')?.style.setProperty('display', 'none');
@@ -321,9 +332,10 @@ window.closeNebenstellePvopup = function () {
     }
 
     // b) Neue Features laden
-    const feats = new ol.format.GeoJSON().readFeatures(obj, {
-      featureProjection: map.getView().getProjection()
-    });
+	const features = format.readFeatures(obj, {
+         dataProjection: 'EPSG:4326',
+          featureProjection: map.getView().getProjection()
+      });
     src.clear();
     src.addFeatures(feats);
 
