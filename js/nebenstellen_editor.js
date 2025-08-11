@@ -337,12 +337,6 @@ window.closeNebenstellePopup = function () {
       dataProjection: 'EPSG:4326',
       featureProjection: map.getView().getProjection()
     });
-    src.clear();
-   const fmt = new ol.format.GeoJSON();
-	const feats = fmt.readFeatures(obj, {
-	  dataProjection: 'EPSG:4326',
-	  featureProjection: map.getView().getProjection()
-	});
 	src.clear();
 	src.addFeatures(feats);
 
@@ -670,6 +664,56 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 });
+
+// Aktualisiert die Zeile der Nebenstelle in der Tabelle – oder fällt auf Fetch/Reload zurück
+window.refreshNebenstellenListe = function () {
+  // 1) Versuche: Falls es schon eine Fetch-Funktion gibt, nutze die (du rufst sie z.B. nach "copy").
+  if (typeof window.fetchNebenstellen === 'function') {
+    window.fetchNebenstellen();
+    return;
+  }
+
+  // 2) Sonst: Row im DOM direkt updaten aus den aktuellen Formularwerten
+  const id    = (document.getElementById('neben_update_id')?.value || '').trim();
+  const name  = (document.getElementById('neben_update_name')?.value || '').trim();
+  const zust  = (document.getElementById('neben_update_zustandigkeit')?.value || '').trim();
+  const einw  = (document.getElementById('neben_update_einwohner')?.value || '').trim();
+  const flae  = (document.getElementById('neben_update_flaeche')?.value || '').trim();
+  const gps   = (document.getElementById('neben_update_gps')?.value || '').trim();
+
+  if (!id) return;
+
+  // versuche übliche Datenattribute
+  let row = document.querySelector(`#nebenstellen-table tr[data-id="${id}"]`)
+        || document.querySelector(`#nebenstellen-table tr[data-neben-id="${id}"]`)
+        || document.querySelector(`tr[data-id="${id}"]`);
+
+  if (!row) {
+    // 3) Wenn keine Zeile gefunden wurde, als Fallback komplette Liste neu laden
+    if (typeof window.fetchNebenstellen === 'function') {
+      window.fetchNebenstellen();
+    } else {
+      // letzter Fallback: Reload
+      location.reload();
+    }
+    return;
+  }
+
+  // 4) Zellen anpassen – ggf. Indizes an deine Spaltenreihenfolge anpassen!
+  const tds = row.querySelectorAll('td');
+
+  // Beispiel: [0]=ID, [1]=Name, [2]=Zuständigkeit, [3]=Einwohner, [4]=Fläche, [5]=GPS
+  // Passe die Indizes an deine tatsächliche Tabelle an:
+  if (tds[1]) tds[1].textContent = name;
+  if (tds[2]) tds[2].textContent = zust;
+  if (tds[3]) tds[3].textContent = einw;
+  if (tds[4]) tds[4].textContent = flae;
+  if (tds[5]) tds[5].textContent = gps;
+
+  // 5) Für die Suchfunktion den zusammengesetzten Text aktualisieren
+  const search = [id, name, zust, einw, flae, gps].filter(Boolean).join(' ').toLowerCase();
+  row.dataset.search = search;
+};
 
 
 })();
