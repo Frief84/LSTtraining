@@ -111,7 +111,7 @@ Jedes Array-Element ist ein Objekt mit folgenden Feldern:
   "priority": 2,          // 1 = höchste Priorität, höhere Zahlen = weniger wichtig
   "capacity": 24          // optional: Betten- bzw. Behandlungsplätze
 }
-
+```
 > Hinweis:
 > Die Felder versorgungsstufe, trauma_level und helipad
 > beeinflussen das Routing/Handling in der Simulation.
