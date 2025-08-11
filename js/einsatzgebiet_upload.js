@@ -46,7 +46,10 @@
 	}
 
     /* 3) Ergebnis ins versteckte Feld */
-    document.getElementById('geojson').value = JSON.stringify(outline);
+    const popup  = document.querySelector('.einsatzgebiet-popup');
+	const geoId  = popup?.dataset.geojsonId;
+	const target = geoId ? document.getElementById(geoId) : document.getElementById('geojson');
+	if (target) target.value = JSON.stringify(outline);
 
     /* 4) Vorschau – vorhandene Map & Layer nutzen */
     const mapEl   = document.querySelector('[data-einsatzgebiet-map]'); // DIV hat dieses Data-Attribut

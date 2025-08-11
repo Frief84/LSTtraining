@@ -332,12 +332,19 @@ window.closeNebenstellePopup = function () {
     }
 
     // b) Neue Features laden
-	const features = format.readFeatures(obj, {
-         dataProjection: 'EPSG:4326',
-          featureProjection: map.getView().getProjection()
-      });
+    const fmt = new ol.format.GeoJSON();
+    const feats = fmt.readFeatures(obj, {
+      dataProjection: 'EPSG:4326',
+      featureProjection: map.getView().getProjection()
+    });
     src.clear();
-    src.addFeatures(feats);
+   const fmt = new ol.format.GeoJSON();
+	const feats = fmt.readFeatures(obj, {
+	  dataProjection: 'EPSG:4326',
+	  featureProjection: map.getView().getProjection()
+	});
+	src.clear();
+	src.addFeatures(feats);
 
     // c) Auf Polygon-Extent zoomen
     const ext = src.getExtent();

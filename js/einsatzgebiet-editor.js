@@ -18,8 +18,16 @@ window.initEinsatzgebietEditor = function (container) {
     const deleteButton   = container.querySelector('.btn-einsatzgebiet-delete');
     const manualTextarea = container.querySelector('#manual_geojson');
     const format         = new ol.format.GeoJSON();
-    const vectorSource   = new ol.source.Vector();
+
+		const vectorSource   = new ol.source.Vector();
     const vectorLayer    = new ol.layer.Vector({ source: vectorSource });
+    // für Upload-/Vorschau-Script sichtbar machen:
+    window.vectorSource  = vectorSource;
+    window.vectorLayer   = vectorLayer;
+		
+	
+	window.vectorSource  = vectorSource;
+	window.vectorLayer   = vectorLayer;
 
     // Initiale Kartenansicht
     let center = [13.4, 52.5];
@@ -104,7 +112,8 @@ window.initEinsatzgebietEditor = function (container) {
     }
     if (parsed?.type === 'FeatureCollection' && parsed.features.length) {
         if (parsed.crs) delete parsed.crs;
-        const feats = format.readFeatures(parsed, {
+        const geojson  = format.writeFeatures(features, {
+            dataProjection: 'EPSG:4326',
             featureProjection: map.getView().getProjection()
         });
         vectorSource.clear();
