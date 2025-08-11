@@ -234,6 +234,34 @@ Jedes Modul ist als eigenständige Datei umgesetzt, um die Verantwortlichkeiten 
 3. **Wachen verwalten**: Karte & Liste laden Daten über `lsttraining_get_wachen`  
 4. **Wache bearbeiten**: Pop-up-Formular per AJAX (`lsttraining_get_wache`/`lsttraining_save_wache`)
 
+
+
+## 🗺️ Nebenstellen- und Einsatzgebietsverwaltung
+
+### Nebenstellen anlegen und bearbeiten
+Nebenstellen sind zusätzliche Dispositionsbereiche, die einer Hauptleitstelle zugeordnet werden können.  
+Im Admin-Interface kannst du:
+- **Neue Nebenstellen** mit Name, Zuständigkeit, Einwohnerzahl, Fläche und GPS-Standort anlegen
+- **Bestehende Nebenstellen** bearbeiten
+- **Leitstelle übernehmen**: Übernimmt Einsatzgebiet, Wachen, Fahrzeuge, Standort und Stammdaten einer bestehenden Leitstelle in die Nebenstelle  
+  > Aktuell bei nur einer Leitstelle noch nicht relevant, wird aber bei mehreren Leitstellen nützlich
+
+**Hinweis:** Einwohnerzahl und Fläche einer Nebenstelle fließen statistisch in die Einsatzhäufigkeit ein.  
+Eine größere Fläche oder mehr Einwohner bedeuten in der Simulation tendenziell mehr Einsätze.
+
+### Einsatzgebiets-Editor
+Der Einsatzgebiets-Editor erlaubt:
+- Zeichnen und Bearbeiten von Polygonen direkt auf einer OpenLayers-Karte
+- Importieren von GeoJSON-Dateien per Datei-Upload
+- Manuelles Einfügen von GeoJSON-Code
+- Sofortige Aktualisierung der Karte der Nebenstelle nach dem Speichern
+
+**GeoJSON-Quelle:**  
+Für exakte Verwaltungsgrenzen kann das Tool **GeoJSON Utilities** genutzt werden: https://opendatalab.de/projects/geojson-utilities/  
+Damit lassen sich Flächen auf Gemeinde-, Kreis- oder Bundeslandebene auswählen, optional vereinfachen („Simplify“) und als GeoJSON exportieren.  
+Exportierte Dateien können direkt im Einsatzgebiets-Editor hochgeladen werden.
+
+
 ## 📄 Lizenz
 
 MIT License. Siehe `LICENSE.md`.
