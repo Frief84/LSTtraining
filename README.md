@@ -45,6 +45,26 @@ Das Schema in `database/schema.sql` definiert acht Tabellen:
 5. **spielinstanzen**, **instanz_wachen**, **instanz_user**: Multi-User-Instanzen für Trainingsszenarien  
 6. **einsatzvorlagen**: Vorlagen für wiederkehrende Übungen  
 
+
+## 🚒 Wachentypen
+
+Im Plugin werden für jede Wache folgende **Typ-Kürzel** verwendet. Diese sind im Admin-Formular als `<select>`-Liste hinterlegt und werden im Feld `typ` in der Tabelle `wachen` gespeichert.
+
+Erlaubte Werte:
+
+| Kürzel | Bezeichnung                     | Beschreibung |
+|--------|----------------------------------|--------------|
+| *(leer)* | – keine Auswahl –               | Kein Typ gesetzt (z. B. bei neuen oder unspezifischen Wachen) |
+| FW     | Feuerwache                       | Haupt- oder Berufsfeuerwache |
+| FFW    | Freiwillige Feuerwehr            | Ortsfeuerwehren / freiwillige Einheiten |
+| SEG    | Sondereinsatzgruppe              | Spezialisierte Sanitäts- oder Katastrophenschutzeinheit |
+| RD     | Rettungswache                    | Standort für Rettungsdienstfahrzeuge |
+| FRRD   | Rettungsdienst + Feuerwehr       | Kombination aus Rettungswache und Feuerwehrstandort |
+
+**Hinweis:**  
+Der Typ beeinflusst u. a. die Symbolfarbe auf der Karte und kann für Auswertungen oder Filter verwendet werden.
+
+
 ## 🏥 Krankenhäuser
 
 Wir haben jetzt eine vollständige statische „Hospitalkatalog“-Tabelle für die Simulation definiert. Die SQL-Definition dient nur als Referenz – in der README beschreiben wir die Felder:
