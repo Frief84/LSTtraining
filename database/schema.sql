@@ -24,29 +24,24 @@ CREATE TABLE leitstellen (
 /* ------------------------------------------------------------------ */
 /* 2. Wachen                                                           */
 /* ------------------------------------------------------------------ */
-CREATE TABLE wachen (
-  id                   INT UNSIGNED AUTO_INCREMENT,
-  leitstelle_id        INT UNSIGNED NULL,
-  nebenleitstelle_id   INT UNSIGNED NULL,
-
-  name                 VARCHAR(100) NOT NULL,
-  typ                  VARCHAR(10)  NOT NULL,
-
-  latitude             DECIMAL(10,6) NOT NULL,
-  longitude            DECIMAL(10,6) NOT NULL,
-
-  arrival_pos          VARCHAR(50) NULL,
-  departure_pos        VARCHAR(50) NULL,
-
-  bild                 VARCHAR(255) NULL,
-  created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-  PRIMARY KEY (id),
-  CONSTRAINT chk_eine_eltern CHECK (
-    (leitstelle_id IS NOT NULL AND nebenleitstelle_id IS NULL)
-    OR
-    (leitstelle_id IS NULL     AND nebenleitstelle_id IS NOT NULL)
-  )
+CREATE TABLE `wachen` (
+  `id`                   INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name`                 VARCHAR(255) NOT NULL,
+  `typ`                  VARCHAR(50) NOT NULL DEFAULT '',
+  `latitude`             DOUBLE NOT NULL,
+  `longitude`            DOUBLE NOT NULL,
+  `arrival_pos`          VARCHAR(50) NULL,
+  `departure_pos`        VARCHAR(50) NULL,
+  `bild_datei`           VARCHAR(255) NOT NULL DEFAULT '',
+  `created_at`           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `exists_in_reality`    TINYINT(1) NOT NULL DEFAULT 1,
+  `placed_by_user_id`    BIGINT UNSIGNED NULL,
+  `source_note`          VARCHAR(255) NULL,
+  `verified_by`          BIGINT UNSIGNED NULL,
+  `verified_at`          DATETIME NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_wachen_exists` (`exists_in_reality`),
+  KEY `idx_wachen_user` (`placed_by_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 /* ------------------------------------------------------------------ */
