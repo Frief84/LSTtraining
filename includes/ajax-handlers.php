@@ -340,76 +340,97 @@ add_action( 'wp_ajax_lsttraining_render_einsatzgebiet_editor', function () {
  * Liste der Wachen für Karte/Tabelle
  * @action wp_ajax_lsttraining_get_wachen
  */
-add_action( 'wp_ajax_lsttraining_get_wachen', function () {
+add_action('wp_ajax_lsttraining_get_wachen', 'lsttraining_get_wachen');
 
-    if ( ! lsttraining_user_can( 'wachen' ) ) {
-        wp_send_json_error( 'Keine Berechtigung.', 403 );
+function lsttraining_get_wachen() {
+    // Keine vorherige Ausgabe → pures JSON
+    while (function_exists('ob_get_level') && ob_get_level() > 0) { ob_end_clean(); }
+
+    // 1) DB verbinden: IMMER deinen funktionierenden Helper benutzen
+    //    (so machst du es auch bei save/delete/create)
+    //    db.php nur einbinden, wenn nicht ohnehin geladen
+    if (!function_exists('lsttraining_get_connection')) {
+        require_once plugin_dir_path(__FILE__) . 'db.php';
+    }
+    try {
+        $pdo = lsttraining_get_connection();
+        if (!$pdo instanceof PDO) {
+            wp_send_json_error(['msg' => 'DB-Verbindung fehlgeschlagen'], 500);
+        }
+    } catch (Throwable $e) {
+        wp_send_json_error(['msg' => 'DB-Verbindung fehlgeschlagen'], 500);
     }
 
-    $ls  = intval( $_GET['ls_id']  ?? 0 );
-    $nls = intval( $_GET['nls_id'] ?? 0 );
+    // 2) Filter lesen & Exklusivität erzwingen (BL > LS > NLS)
+    $ls  = isset($_REQUEST['ls_id'])  ? (int)$_REQUEST['ls_id']  : 0;
+    $nls = isset($_REQUEST['nls_id']) ? (int)$_REQUEST['nls_id'] : 0;
+    $bl  = isset($_REQUEST['bundesland']) ? sanitize_text_field($_REQUEST['bundesland']) : '';
 
-    if ( ! $ls && ! $nls ) {
-        wp_send_json_error( 'Kein Filter angegeben.', 400 );
+    if ($bl !== '') { $ls = 0; $nls = 0; }
+    elseif ($ls)    { $nls = 0; $bl = ''; }
+    elseif ($nls)   { $ls  = 0; $bl = ''; }
+
+    if (!$ls && !$nls && $bl === '') {
+        wp_send_json_error(['msg' => 'Kein Filter angegeben.'], 400);
     }
 
-    $pdo = lsttraining_get_connection();
-    if ( ! $pdo instanceof PDO ) {
-        wp_send_json_error( 'Datenbankfehler', 500 );
-    }
-
-    // Basis-SELECT
-    $sql    = "
+    // 3) SQL wie in wachen.php: Pivot-Tabellen für LS/NLS, direktes Feld für BL
+    $sql = "
         SELECT
-          w.id,
-          w.name,
-          w.typ,
-          w.latitude,
-          w.longitude,
-          w.arrival_pos,
-          w.departure_pos
+            w.id,
+            w.name,
+            w.typ,
+            w.latitude,
+            w.longitude
         FROM wachen AS w
     ";
     $joins  = '';
     $where  = [];
     $params = [];
 
-    // Join auf Pivot-Leitstellen, falls gefiltert
-    if ( $ls ) {
-        $joins .= "
-            INNER JOIN wache_leitstellen AS wl
-              ON w.id = wl.wache_id
-        ";
-        $where[]  = "wl.leitstelle_id = ?";
-        $params[] = $ls;
+    if ($bl !== '') {
+        if ($bl === '__none__') {
+            $where[] = '(w.bundesland IS NULL OR w.bundesland = \'\')';
+        } else {
+            $where[]   = 'w.bundesland = :bl';
+            $params[':bl'] = $bl;
+        }
+    } elseif ($ls) {
+        $joins   .= ' INNER JOIN wache_leitstellen AS wl ON w.id = wl.wache_id ';
+        $where[]  = 'wl.leitstelle_id = :ls';
+        $params[':ls'] = $ls;
+    } elseif ($nls) {
+        $joins   .= ' INNER JOIN wache_nebenleitstellen AS wn ON w.id = wn.wache_id ';
+        $where[]  = 'wn.nebenleitstelle_id = :nls';
+        $params[':nls'] = $nls;
     }
 
-    // Join auf Pivot-Nebenleitstellen, falls gefiltert
-    if ( $nls ) {
-        $joins .= "
-            INNER JOIN wache_nebenleitstellen AS wn
-              ON w.id = wn.wache_id
-        ";
-        $where[]  = "wn.nebenleitstelle_id = ?";
-        $params[] = $nls;
-    }
-
-    // Zusammenbauen und ausführen
     $sql .= $joins;
-    if ( $where ) {
-        $sql .= ' WHERE ' . implode( ' AND ', $where );
+    if ($where) {
+        $sql .= ' WHERE ' . implode(' AND ', $where);
     }
+    $sql .= ' ORDER BY w.name ASC LIMIT 2000';
 
+    // 4) Ausführen und JSON liefern
     try {
-        $stmt = $pdo->prepare( $sql );
-        $stmt->execute( $params );
-        $data = $stmt->fetchAll( PDO::FETCH_ASSOC );
-        wp_send_json_success( $data );
-    } catch ( PDOException $e ) {
-        error_log( 'lsttraining_get_wachen ERROR: ' . $e->getMessage() );
-        wp_send_json_error( 'Datenbankfehler', 500 );
+        $stmt = $pdo->prepare($sql);
+        foreach ($params as $k => $v) {
+            $stmt->bindValue($k, $v, is_int($v) ? PDO::PARAM_INT : PDO::PARAM_STR);
+        }
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        while (function_exists('ob_get_level') && ob_get_level() > 0) { ob_end_clean(); }
+        wp_send_json_success(['count' => count($rows), 'wachen' => $rows], 200);
+
+    } catch (Throwable $e) {
+        // Fehlermeldung absichtlich generisch halten
+        error_log('lsttraining_get_wachen SQL ERROR: ' . $e->getMessage());
+        wp_send_json_error(['msg' => 'DB-Fehler'], 500);
     }
-});
+}
+
+
 
 
 

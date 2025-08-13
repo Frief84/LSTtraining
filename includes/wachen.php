@@ -10,6 +10,21 @@ $pdo = lsttraining_get_connection();
 // Filter aus Request
 $filter_leitstelle      = isset( $_GET['ls_id'] )  ? intval( $_GET['ls_id'] )  : 0;
 $filter_nebenleitstelle = isset( $_GET['nls_id'] ) ? intval( $_GET['nls_id'] ) : 0;
+$selectedBundesland = isset($_GET['bundesland']) ? sanitize_text_field($_GET['bundesland']) : '';
+
+if ($selectedBundesland !== '') {
+    // Bundesland hat Vorrang
+    $filter_leitstelle = 0;
+    $filter_nebenleitstelle = 0;
+} elseif ($filter_leitstelle) {
+    // Leitstelle aktiv -> andere zurücksetzen
+    $filter_nebenleitstelle = 0;
+    $selectedBundesland = '';
+} elseif ($filter_nebenleitstelle) {
+    // Nebenleitstelle aktiv -> andere zurücksetzen
+    $filter_leitstelle = 0;
+    $selectedBundesland = '';
+}
 
 // 1) Alle Leitstellen laden
 $all_ls  = $pdo->query(
@@ -69,6 +84,28 @@ $all_nls = $pdo->query(
       </select>
     </p>
   </div>
+<?php
+// Ausgewählter Wert (GET)
+
+$bundeslaender = [
+  'Baden-Württemberg','Bayern','Berlin','Brandenburg','Bremen','Hamburg','Hessen',
+  'Mecklenburg-Vorpommern','Niedersachsen','Nordrhein-Westfalen','Rheinland-Pfalz',
+  'Saarland','Sachsen','Sachsen-Anhalt','Schleswig-Holstein','Thüringen'
+];
+?>
+<div class="filters">
+  <!-- Bestehende LS/NLS-Filter bleiben -->
+  <label>Bundesland:</label>
+  <select id="bundesland" name="bundesland">
+    <option value="">— Bitte wählen —</option>
+    <option value="__none__" <?php selected($selectedBundesland, '__none__'); ?>>Ohne Bundesland</option>
+    <?php foreach ($bundeslaender as $bl): ?>
+      <option value="<?php echo esc_attr($bl); ?>" <?php selected($selectedBundesland, $bl); ?>>
+        <?php echo esc_html($bl); ?>
+      </option>
+    <?php endforeach; ?>
+  </select>
+</div>
 </form>
 	
 <button id="btn-new-wache" class="button button-primary" style="margin-left:10px;">
@@ -78,64 +115,87 @@ $all_nls = $pdo->query(
   <div id="wachen-map" style="height: 400px; margin-bottom: 20px;"></div>
 
   <!-- Tabelle -->
-  <?php
-  // ────────────────────────────────────────────────────────────────
-  // Tabelle: Wachen abfragen über die neuen Pivot-Tabellen
-  $sql    = '
-    SELECT
-      w.id,
-      w.name,
-      w.typ,
-      w.latitude,
-      w.longitude
-    FROM wachen AS w
-  ';
-  $joins  = '';
-  $where  = [];
-  $params = [];
+<?php
+// ────────────────────────────────────────────────────────────────
+// Tabelle: Wachen abfragen (mit optionalem Bundesland-Filter + Pivot-Filter)
 
-  // Filter nach Leitstelle: über wache_leitstellen pivot
-  if ( $filter_leitstelle ) {
-      $joins .= '
-        INNER JOIN wache_leitstellen AS wl
-          ON w.id = wl.wache_id
-      ';
-      $where[]  = 'wl.leitstelle_id = ?';
-      $params[] = $filter_leitstelle;
-  }
+$selectedBundesland    = isset($_GET['bundesland']) ? trim((string)$_GET['bundesland']) : '';
+$filter_leitstelle     = isset($filter_leitstelle) ? $filter_leitstelle : 0;         // bleibt wie bei dir
+$filter_nebenleitstelle= isset($filter_nebenleitstelle) ? $filter_nebenleitstelle : 0;
+	
+	$anyFilterSet = ($selectedBundesland !== '' || $filter_leitstelle || $filter_nebenleitstelle);
 
-  // Filter nach Nebenleitstelle: über wache_nebenleitstellen pivot
-  if ( $filter_nebenleitstelle ) {
-      $joins .= '
-        INNER JOIN wache_nebenleitstellen AS wn
-          ON w.id = wn.wache_id
-      ';
-      $where[]  = 'wn.nebenleitstelle_id = ?';
-      $params[] = $filter_nebenleitstelle;
-  }
+if (!$anyFilterSet) {
+    echo '<p><em>Bitte zunächst einen Filter (Leitstelle, Nebenleitstelle oder Bundesland) wählen.</em></p>';
+    // optional: leere Tabelle oder gar nichts rendern
+    return;
+}
 
-  // SQL zusammenbauen
-  $sql .= $joins;
-  if ( $where ) {
-      $sql .= ' WHERE ' . implode( ' AND ', $where );
-  }
-  $sql .= ' ORDER BY w.name';
+$sql    = '
+  SELECT
+    w.id,
+    w.name,
+    w.typ,
+    w.latitude,
+    w.longitude
+  FROM wachen AS w
+';
+$joins  = '';
+$where  = [];
+$params = [];
 
-  // Abfrage vorbereiten und ausführen
-  try {
-      $stmt = $pdo->prepare( $sql );
-      $stmt->execute( $params );
-      $wachen = $stmt->fetchAll( PDO::FETCH_ASSOC );
-  } catch ( PDOException $e ) {
-      echo '<div class="notice notice-error"><p>';
-      echo esc_html__( 'Fehler beim Laden der Wachen:', 'lsttraining' ) . ' ';
-      echo esc_html( $e->getMessage() );
-      echo '</p></div>';
-      $wachen = [];
-  }
-  // ────────────────────────────────────────────────────────────────
+/** 1) Bundesland-Filter (hat Vorrang, wenn gesetzt) */
+if ($selectedBundesland !== '') {
+    if ($selectedBundesland === '__none__') {
+        // Wachen ohne Bundesland
+        $where[] = '(w.bundesland IS NULL OR w.bundesland = \'\')';
+    } else {
+        // Konkretes Bundesland
+        $where[]  = 'w.bundesland = ?';
+        $params[] = $selectedBundesland;
+    }
+} else {
+    /** 2) Falls KEIN Bundesland-Filter: vorhandene LS/NLS-Filter wie bisher */
+    if ($filter_leitstelle) {
+        $joins .= '
+          INNER JOIN wache_leitstellen AS wl
+            ON w.id = wl.wache_id
+        ';
+        $where[]  = 'wl.leitstelle_id = ?';
+        $params[] = (int)$filter_leitstelle;
+    }
 
-  ?>
+    if ($filter_nebenleitstelle) {
+        $joins .= '
+          INNER JOIN wache_nebenleitstellen AS wn
+            ON w.id = wn.wache_id
+        ';
+        $where[]  = 'wn.nebenleitstelle_id = ?';
+        $params[] = (int)$filter_nebenleitstelle;
+    }
+}
+
+// SQL zusammensetzen
+$sql .= $joins;
+if ($where) {
+    $sql .= ' WHERE ' . implode(' AND ', $where);
+}
+$sql .= ' ORDER BY w.name';
+
+// Abfrage
+try {
+    $stmt   = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $wachen = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    echo '<div class="notice notice-error"><p>';
+    echo esc_html__('Fehler beim Laden der Wachen:', 'lsttraining') . ' ';
+    echo esc_html($e->getMessage());
+    echo '</p></div>';
+    $wachen = [];
+}
+// ────────────────────────────────────────────────────────────────
+?>
   <table class="widefat fixed">
     <thead>
       <tr>
@@ -146,7 +206,7 @@ $all_nls = $pdo->query(
         <th width="120">Aktionen</th>
       </tr>
     </thead>
-    <tbody>
+    <tbody id="wachen-tbody">
       <?php if ( empty( $wachen ) ) : ?>
         <tr><td colspan="5">Keine Wachen gefunden.</td></tr>
       <?php else : ?>

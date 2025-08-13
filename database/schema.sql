@@ -28,6 +28,7 @@ CREATE TABLE `wachen` (
   `id`                   INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `name`                 VARCHAR(255) NOT NULL,
   `typ`                  VARCHAR(50) NOT NULL DEFAULT '',
+  `bundesland`           VARCHAR(50) NULL,
   `latitude`             DOUBLE NOT NULL,
   `longitude`            DOUBLE NOT NULL,
   `arrival_pos`          VARCHAR(50) NULL,
@@ -41,7 +42,8 @@ CREATE TABLE `wachen` (
   `verified_at`          DATETIME NULL,
   PRIMARY KEY (`id`),
   KEY `idx_wachen_exists` (`exists_in_reality`),
-  KEY `idx_wachen_user` (`placed_by_user_id`)
+  KEY `idx_wachen_user` (`placed_by_user_id`),
+  KEY `idx_wachen_bundesland` (`bundesland`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 /* ------------------------------------------------------------------ */

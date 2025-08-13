@@ -9,8 +9,7 @@
     openNewWacheModal();
   });
 });
-
-
+	
 	const styleMain = new ol.style.Style({
   image: new ol.style.Circle({ radius: 6, fill: new ol.style.Fill({ color: '#e31b23' }) })
 });
@@ -72,105 +71,128 @@ function lonLatToField(selectorLatLon, lonLat) {
   // --------------------------------------------------------
   // 3) AJAX: Wachen laden und als Marker rendern
   // --------------------------------------------------------
-  function loadWachen(lsId, nlsId) {
-    if (!lsId && !nlsId) return;
+// Style der Marker – VOR Benutzung definieren
+function styleFn(feature) {
+  const typ = feature.get('typ') || '';
+  const isFW  = (typ === 'FW'   || typ === 'FRRD');
+  const isRD  = (typ === 'RD'   || typ === 'FRRD');
+  const isFFW = (typ === 'FFW');
+  const isSEG = (typ === 'SEG');
 
-  const params = new URLSearchParams();
-  if (lsId)  params.set('ls_id',  lsId);
-  if (nlsId) params.set('nls_id', nlsId);
+  let fillColor = '#999';
+  if (isFW && !isRD && !isFFW && !isSEG)      fillColor = 'red';
+  else if (!isFW && isRD && !isFFW && !isSEG) fillColor = 'blue';
+  else if (isFW && isRD)                      fillColor = '#b700ff';
+  else if (isFFW)                             fillColor = '#ff9999';
+  else if (isSEG)                             fillColor = '#00800f';
 
-    fetch(lstWachenAjax.ajax_url + '?action=lsttraining_get_wachen&' + params.toString())
-      .then(res => {
-        if (!res.ok) throw new Error('Server antwortete mit ' + res.status);
-        return res.json();
-      })
-      .then(json => {
-        if (!json.success) throw new Error('Server-Fehler: ' + json.data);
-        const data = json.data;
+  return new ol.style.Style({
+    image: new ol.style.Circle({
+      radius: 7,
+      fill:   new ol.style.Fill({ color: fillColor }),
+      stroke: new ol.style.Stroke({ color: '#000', width: 1 })
+    })
+  });
+}
 
-        // alte „wachen“-Layer entfernen
-        map.getLayers().getArray()
-          .filter(l => l.get('title') === 'wachen')
-          .forEach(l => map.removeLayer(l));
+let markerLayer = null;
+const AJAX_URL = (window.ajaxurl || (window.lstWachenAjax && window.lstWachenAjax.ajax_url));
 
-        // Features erzeugen
-        const features = data.map(w => new ol.Feature({
-          geometry: new ol.geom.Point(
-            ol.proj.fromLonLat([+w.longitude, +w.latitude])
-          ),
-          id:   w.id,
-          name: w.name,
-          typ:  w.typ
-        }));
+// Marker auf der Karte ersetzen
+function renderMarkers(wachen) {
+  if (!map) return;
 
-		// Style-Funktion: Kreis-Markierung, Farbe abhängig vom Typ-Code
-		const styleFn = feature => {
-		  const typ = feature.get('typ') || '';
-		  const isFW  = (typ === 'FW'   || typ === 'FRRD');
-		  const isRD  = (typ === 'RD'   || typ === 'FRRD');
-		  const isFFW = (typ === 'FFW');
-		  const isSEG = (typ === 'SEG');
-
-		  let fillColor = '#999'; // Default-Grau
-		  if (isFW && !isRD && !isFFW && !isSEG)      fillColor = 'red';      // Nur Feuerwehr
-		  else if (!isFW && isRD && !isFFW && !isSEG) fillColor = 'blue';     // Nur Rettungsdienst
-		  else if (isFW && isRD)                      fillColor = '#b700ff';     // FRRD: Rettungsdienst + Feuerwehr
-		  else if (isFFW)                             fillColor = '#ff9999';  // Freiwillige Feuerwehr
-		  else if (isSEG)                             fillColor = '#00800f';  // Sondereinsatzgruppe
-
-		  return new ol.style.Style({
-			image: new ol.style.Circle({
-			  radius: 7,
-			  fill:   new ol.style.Fill({ color: fillColor }),
-			  stroke: new ol.style.Stroke({ color: '#000', width: 1 })
-			})
-		  });
-		};
-
-
-        const vectorSource = new ol.source.Vector({ features });
-        const vectorLayer  = new ol.layer.Vector({
-          source: vectorSource,
-          title:  'wachen',
-          style:  styleFn
-        });
-        map.addLayer(vectorLayer);
-
-        // auf Marker zoomen
-        const ext = vectorSource.getExtent();
-        if (!ol.extent.isEmpty(ext)) {
-          view.fit(ext, { padding: [50,50,50,50], maxZoom: 12 });
-        }
-      })
-      .catch(err => console.error('Fehler beim Laden der Wachen:', err));
+  if (markerLayer) {
+    map.removeLayer(markerLayer);
+    markerLayer = null;
   }
-/**
- * Rendert das Bearbeitungs-Formular ins Modal, blendet es ein
- * und initialisiert die Map erst, wenn der Container sichtbar ist.
- *
- * @param {Object} data   Wachen-Datensatz (AJAX-Antwort)
- */
-function openWacheModal(data) {
 
-  /* Template → HTML */
-  const tpl  = $('#tmpl-wache-edit-form').html();
-  const html = renderTemplate(tpl, data);
+  const feats = [];
+  for (const w of (wachen || [])) {
+    const lat = parseFloat(w.latitude);
+    const lon = parseFloat(w.longitude);
+    if (!isFinite(lat) || !isFinite(lon)) continue;
 
-  $('#wache-edit-modal .wache-edit-content').html(html);
+    const ft = new ol.Feature({
+      geometry: new ol.geom.Point(ol.proj.fromLonLat([lon, lat])),
+      id: w.id,
+      name: w.name || '',
+      typ: w.typ || ''
+    });
+    feats.push(ft);
+  }
 
-  /* Modal zuerst sichtbar machen */
-  $('#wache-edit-modal').removeClass('hidden');
+  const vectorSource = new ol.source.Vector({ features: feats });
+  markerLayer = new ol.layer.Vector({ source: vectorSource, title: 'wachen', style: styleFn });
+  map.addLayer(markerLayer);
 
- requestAnimationFrame(() => {
-   // vierte und fünfte Arg. sind optionale Strings
-   ensureWacheEditMap(
-     +data.latitude,
-     +data.longitude,
-     data.arrival_pos   || '',
-     data.departure_pos || ''
-   );
-   $('#w-typ').val(data.typ);
- });
+  const ext = vectorSource.getExtent();
+  if (!ol.extent.isEmpty(ext)) {
+    view.fit(ext, { padding: [50, 50, 50, 50], maxZoom: 12 });
+  }
+}
+
+// Tabelle <tbody> neu rendern
+function renderTable(wachen) {
+  const tbody = document.querySelector('.widefat.fixed tbody');
+  if (!tbody) return;
+
+  if (!wachen || wachen.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="99"><em>Keine Wachen gefunden.</em></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = wachen.map(w => `
+    <tr data-id="${w.id}">
+      <td>${w.id ?? ''}</td>
+      <td>${w.name ?? ''}</td>
+      <td>${w.typ ?? ''}</td>
+      <td>${w.latitude ?? ''}, ${w.longitude ?? ''}</td>
+      <td><button class="button edit-wache" data-id="${w.id}">Bearbeiten</button></td>
+    </tr>
+  `).join('');
+}
+
+// Daten laden (einziger gültiger Loader)
+function loadWachen(ls, nls, bl) {
+  const hasFilter =
+    (parseInt(ls, 10) || 0) ||
+    (parseInt(nls, 10) || 0) ||
+    ((bl || '').trim() !== '' && bl !== '__none__');
+
+  if (!hasFilter) {
+    renderMarkers([]);
+    renderTable([]);
+    return Promise.resolve({ count: 0, wachen: [] });
+  }
+
+  const params = new URLSearchParams({ action: 'lsttraining_get_wachen' });
+  if (ls)  params.set('ls_id', String(ls));
+  if (nls) params.set('nls_id', String(nls));
+  if (bl)  params.set('bundesland', bl);
+
+  return fetch(AJAX_URL + '?' + params.toString(), { credentials: 'same-origin' })
+    .then(res => {
+      const ct = res.headers.get('content-type') || '';
+      if (!res.ok) return res.text().then(t => { throw new Error('HTTP ' + res.status + ': ' + t.slice(0, 200)); });
+      if (!ct.includes('application/json')) return res.text().then(t => { throw new Error('Antwort kein JSON: ' + t.slice(0, 200)); });
+      return res.json();
+    })
+    .then(json => {
+      if (!json || json.success !== true) {
+        const msg = (json && json.data && (json.data.msg || json.data)) || 'Unbekannter Fehler';
+        throw new Error(msg);
+      }
+      const data = json.data || { wachen: [] };
+      renderMarkers(data.wachen);
+      renderTable(data.wachen);
+      return data;
+    })
+    .catch(err => {
+      console.error('Fehler beim Laden der Wachen:', err);
+      // Marker leeren; Tabelle so belassen, damit man den alten Stand noch sieht
+      renderMarkers([]);
+    });
 }
 	
 // --------------------------------------------------------
@@ -293,9 +315,10 @@ $('body').on('submit', '#wache-edit-form', function (e) {
         .find('.wache-edit-content').empty();
 
       /* reload list without losing filters */
-      const ls  = $('select[name="ls_id"]').val();
-      const nls = $('select[name="nls_id"]').val();
-      loadWachen(ls, nls);
+ const ls  = $('#ls_id').val();
+ const nls = $('#nls_id').val();
+ const bl  = $('#bundesland').val();
+ loadWachen(ls, nls, bl);
 
     } else {
       alert('Fehler: ' + res.data);
@@ -307,49 +330,50 @@ $('body').on('submit', '#wache-edit-form', function (e) {
 // --------------------------------------------------------
 // 7) Initial, Live-Filter und gegenseitiges Zurücksetzen (+ optionales Submit)
 // --------------------------------------------------------
-$(function () {
-  const lsSelect  = $('#ls_id');     // main control centre
-  const nlsSelect = $('#nls_id');    // sub control centre
-  const lsSearch  = $('#ls_search');
-  const nlsSearch = $('#nls_search');
-  const $form     = lsSelect.closest('form');
 
-  /* --- 7.1  First load ------------------------------------------- */
-  const initLs  = parseInt(lsSelect.val(),  10) || 0;
-  const initNls = parseInt(nlsSelect.val(), 10) || 0;
-  if (initLs || initNls) {           // only call when at least one filter exists
-    loadWachen(initLs, initNls);
-  }
+  function updateDisabled() {
+  const hasLS  = parseInt($ls.val(), 10) || 0;
+  const hasNLS = parseInt($nls.val(), 10) || 0;
+  const hasBL  = ($bl.val() || '').trim() !== '';
 
-  /* --- 7.2  Live search ------------------------------------------ */
-  lsSearch.on('keyup', function () {
-    const term = this.value.toLowerCase();
-    lsSelect.find('option').each(function () {
-      $(this).toggle($(this).text().toLowerCase().includes(term));
-    });
-  });
-  nlsSearch.on('keyup', function () {
-    const term = this.value.toLowerCase();
-    nlsSelect.find('option').each(function () {
-      $(this).toggle($(this).text().toLowerCase().includes(term));
-    });
-  });
+  $ls.prop('disabled',  !!hasNLS || !!hasBL);
+  $nls.prop('disabled', !!hasLS  || !!hasBL);
+  $bl.prop('disabled',  !!hasLS  || !!hasNLS);
+}
 
-  /* --- 7.3  Leitstelle changed ----------------------------------- */
-  lsSelect.on('change', function () {
-    nlsSelect.val('0');                   // reset sub-station
-    loadWachen(lsSelect.val(), 0);        // reload map
-    $form.submit();                       // reload table via page refresh
-  });
+const $ls  = $('#ls_id');
+const $nls = $('#nls_id');
+const $bl  = $('#bundesland');
 
-  /* --- 7.4  Nebenleitstelle changed ------------------------------ */
-  nlsSelect.on('change', function () {
-    lsSelect.val('0');                    // reset main station
-    loadWachen(0, nlsSelect.val());       // reload map
-    $form.submit();                       // reload table via page refresh
-  });
+function loadCurrent() {
+  const ls  = parseInt($ls.val(), 10) || 0;
+  const nls = parseInt($nls.val(), 10) || 0;
+  const bl  = ($bl.val() || '').trim();
+  loadWachen(ls, nls, bl);
+}
+
+// nur laden, wenn initial ein Filter gesetzt ist
+if ((parseInt($ls.val(),10)||0) || (parseInt($nls.val(),10)||0) || (($bl.val()||'').trim() !== '')) {
+  loadCurrent();
+}
+updateDisabled();
+
+$ls.on('change', function() {
+  $nls.val('0'); $bl.val('');
+  updateDisabled();
+  loadCurrent();
 });
-
+$nls.on('change', function() {
+  $ls.val('0'); $bl.val('');
+  updateDisabled();
+  loadCurrent();
+});
+$bl.on('change', function() {
+  $ls.val('0'); $nls.val('0');
+  updateDisabled();
+  loadCurrent();
+});
+	
 	
 	// --------------------------------------------------------
 // 8) Delete im Modal
