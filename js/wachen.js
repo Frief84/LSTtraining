@@ -559,5 +559,62 @@ function openNewWacheModal() {
       .forEach(opt => select.appendChild(opt.cloneNode(true)));
   });
 })();
-	
+
+/**
+ * Öffnet das Bearbeiten-Modal mit bestehenden Daten.
+ * Erwartet Felder: id, name, typ, latitude, longitude, arrival_pos, departure_pos
+ * (Fallbacks auf wache_id / lat / lon sind eingebaut)
+ */
+function openWacheModal(wache) {
+  // 1) Daten normalisieren
+  var id   = (wache && (wache.id ?? wache.wache_id)) ?? '';
+  var name = (wache && wache.name) ?? '';
+  var typ  = (wache && wache.typ)  ?? '';
+
+  var lat = parseFloat((wache && (wache.latitude ?? wache.lat)) ?? 51.0);
+  var lon = parseFloat((wache && (wache.longitude ?? wache.lon)) ?? 9.0);
+  if (!isFinite(lat)) lat = 51.0;
+  if (!isFinite(lon)) lon = 9.0;
+
+  var arrival = (wache && (wache.arrival_pos ?? wache.arrival)) ?? '';
+  var depart  = (wache && (wache.departure_pos ?? wache.departure)) ?? '';
+
+  // 2) Template holen
+  var tplEl = document.getElementById('tmpl-wache-edit-form');
+  if (!tplEl) {
+    alert('Fehlendes Template: #tmpl-wache-edit-form');
+    return;
+  }
+  var tpl = tplEl.innerHTML;
+
+  // 3) HTML aus Template erzeugen (nutzt deine vorhandene renderTemplate)
+  var html = renderTemplate(tpl, {
+    id: id,
+    name: name,
+    typ: typ,
+    latitude: lat,
+    longitude: lon,
+    arrival_pos: arrival,
+    departure_pos: depart
+  });
+
+  // 4) Modal befüllen und anzeigen
+  var $modal = $('#wache-edit-modal');
+  $modal.find('.wache-edit-content').html(html);
+  $('#w-form-mode').val('update'); // Update-Modus
+
+  // Sichtbar machen
+  $modal.removeClass('hidden');
+
+  // 5) sichtbare Felder füllen (Positions-String usw.)
+  $('#w-pos').val(lat.toFixed(6) + ', ' + lon.toFixed(6));
+  if (arrival) $('#w-arr').val(arrival);
+  if (depart)  $('#w-dep').val(depart);
+
+  // 6) Karte im Modal initialisieren (nachdem es sichtbar ist)
+  requestAnimationFrame(function() {
+    ensureWacheEditMap(lat, lon);
+  });
+}
+
 })(jQuery);
