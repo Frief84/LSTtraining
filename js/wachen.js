@@ -401,10 +401,10 @@ $('body').on('submit', '#wache-edit-form', function (e) {
 
 
 // --------------------------------------------------------
-// 7) Initial, Live-Filter und gegenseitiges Zurücksetzen (+ optionales Submit)
+// 7) Initial, Live-Filter und gegenseitiges Zurücksetzen
 // --------------------------------------------------------
 
-  function updateDisabled() {
+function updateDisabled() {
   const hasLS  = parseInt($ls.val(), 10) || 0;
   const hasNLS = parseInt($nls.val(), 10) || 0;
   const hasBL  = ($bl.val() || '').trim() !== '';
@@ -414,9 +414,54 @@ $('body').on('submit', '#wache-edit-form', function (e) {
   $bl.prop('disabled',  !!hasLS  || !!hasNLS);
 }
 
-const $ls  = $('#ls_id');
-const $nls = $('#nls_id');
-const $bl  = $('#bundesland');
+const $ls   = $('#ls_id');
+const $nls  = $('#nls_id');
+const $bl   = $('#bundesland');
+const $land = $('#land');
+
+// Länder→Bundesländer-Mapping aus data-map lesen (und NICHT "map" nennen!)
+const blMap = (function(){
+  try { return JSON.parse($bl.attr('data-map') || '{}'); }
+  catch(e){ return {}; }
+})();
+
+function fillBundeslaender(land, selected) {
+  const arr = blMap[land] || [];
+  const opts = [];
+  opts.push('<option value="">— Bitte wählen —</option>');
+  opts.push('<option value="__none__"' + (selected==='__none__'?' selected':'') + '>Ohne Bundesland</option>');
+  for (var i=0; i<arr.length; i++) {
+    var bl = arr[i];
+    var sel = (selected === bl) ? ' selected' : '';
+    opts.push('<option value="'+ bl.replace(/"/g,'&quot;') +'"'+ sel +'>'+ bl +'</option>');
+  }
+  $bl.html(opts.join(''));
+}
+
+// Initial befüllen (falls Land aus GET kommt)
+if ($land.length && $bl.length) {
+  fillBundeslaender($land.val() || 'Deutschland', $bl.val() || '');
+	if (!$land.val()) {
+  $land.val('Deutschland');
+}
+fillBundeslaender($land.val(), $bl.val() || '');
+  // Land-Wechsel: BL-Liste neu aufbauen, LS/NLS leeren
+  $land.on('change', function(){
+    fillBundeslaender($land.val() || 'Deutschland', '');
+    if ($ls.length)  $ls.val('0');
+    if ($nls.length) $nls.val('0');
+    updateDisabled();
+    // Kein sofortiges loadCurrent hier – erst bei BL-Änderung laden
+  });
+
+  // Bundesland-Wechsel: Exklusivität erzwingen + laden
+  $bl.on('change', function(){
+    if ($ls.length)  $ls.val('0');
+    if ($nls.length) $nls.val('0');
+    updateDisabled();
+    loadCurrent();
+  });
+}
 
 function loadCurrent() {
   const ls  = parseInt($ls.val(), 10) || 0;
@@ -447,8 +492,7 @@ $bl.on('change', function() {
   loadCurrent();
 });
 	
-	
-	// --------------------------------------------------------
+// --------------------------------------------------------
 // 8) Delete im Modal
 // --------------------------------------------------------
 $('body').on('click', '.button-delete-wache', function(e){
@@ -632,7 +676,5 @@ function openNewWacheModal() {
       .forEach(opt => select.appendChild(opt.cloneNode(true)));
   });
 })();
-
-
 
 })(jQuery);

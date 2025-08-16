@@ -471,3 +471,7 @@ pointer-events: auto;
 #wache-edit-modal .submit .button-delete-wache:hover {
   background: #c82333;
 }
+
+#btn-new-wache{
+	margin-bottom: 10px;
+}

@@ -11,6 +11,7 @@ $pdo = lsttraining_get_connection();
 $filter_leitstelle      = isset( $_GET['ls_id'] )  ? intval( $_GET['ls_id'] )  : 0;
 $filter_nebenleitstelle = isset( $_GET['nls_id'] ) ? intval( $_GET['nls_id'] ) : 0;
 $selectedBundesland = isset($_GET['bundesland']) ? sanitize_text_field($_GET['bundesland']) : '';
+$selectedLand        = isset($_GET['land']) ? sanitize_text_field($_GET['land']) : 'Deutschland';
 
 if ($selectedBundesland !== '') {
     // Bundesland hat Vorrang
@@ -85,30 +86,72 @@ $all_nls = $pdo->query(
     </p>
   </div>
 <?php
-// Ausgewählter Wert (GET)
+// Pfad relativ zu /includes/ → /data/bundeslaender.json
+$plugin_root = dirname(__DIR__); // .../your-plugin
+$json_path   = $plugin_root . '/data/bundeslaender.json';
 
-$bundeslaender = [
-  'Baden-Württemberg','Bayern','Berlin','Brandenburg','Bremen','Hamburg','Hessen',
-  'Mecklenburg-Vorpommern','Niedersachsen','Nordrhein-Westfalen','Rheinland-Pfalz',
-  'Saarland','Sachsen','Sachsen-Anhalt','Schleswig-Holstein','Thüringen'
-];
+$bundeslaender_by_land = [];
+if (file_exists($json_path)) {
+    $json = file_get_contents($json_path);
+    $bundeslaender_by_land = json_decode($json, true) ?: [];
+}
+
+// Defaults
+$selectedLand       = isset($_GET['land']) ? sanitize_text_field($_GET['land']) : 'Deutschland';
+$selectedBundesland = isset($_GET['bundesland']) ? sanitize_text_field($_GET['bundesland']) : '';
+
+// Wenn unbekanntes Land kommt → auf Deutschland zurückfallen
+if (!array_key_exists($selectedLand, $bundeslaender_by_land)) {
+    $selectedLand = 'Deutschland';
+}
+
+// Länder-Liste aus JSON-Schlüsseln
+$laender = array_keys($bundeslaender_by_land);
+
+// Bundesländer-Liste passend zum Land
+$bundeslaender = $bundeslaender_by_land[$selectedLand] ?? [];
+
+// JSON für data-map sicher encodieren (Umlaute erhalten, Quotes escapen)
+$data_map_json = wp_json_encode($bundeslaender_by_land, JSON_UNESCAPED_UNICODE | JSON_HEX_APOS | JSON_HEX_QUOT);
 ?>
-<div class="filters">
-  <!-- Bestehende LS/NLS-Filter bleiben -->
-  <label>Bundesland:</label>
-  <select id="bundesland" name="bundesland">
-    <option value="">— Bitte wählen —</option>
-    <option value="__none__" <?php selected($selectedBundesland, '__none__'); ?>>Ohne Bundesland</option>
-    <?php foreach ($bundeslaender as $bl): ?>
-      <option value="<?php echo esc_attr($bl); ?>" <?php selected($selectedBundesland, $bl); ?>>
-        <?php echo esc_html($bl); ?>
-      </option>
-    <?php endforeach; ?>
-  </select>
+<div class="filter-box" style="flex:1; border:1px solid #ddd; padding:10px; border-radius:4px;">
+  <h2 style="margin-top:0;">Land</h2>
+  <p>
+    <label for="land">Land auswählen:</label><br>
+    <select id="land" name="land" style="width:100%; box-sizing:border-box;">
+      <?php foreach ($laender as $land): ?>
+        <option value="<?php echo esc_attr($land); ?>" <?php selected($selectedLand, $land); ?>>
+          <?php echo esc_html($land); ?>
+        </option>
+      <?php endforeach; ?>
+    </select>
+  </p>
+</div>
+
+<div class="filter-box" style="flex:1; border:1px solid #ddd; padding:10px; border-radius:4px;">
+  <h2 style="margin-top:0;">Bundesland</h2>
+  <p>
+    <label for="bundesland">Bundesland auswählen:</label><br>
+    <select
+      id="bundesland"
+      name="bundesland"
+      style="width:100%; box-sizing:border-box;"
+      data-map='<?php echo esc_attr($data_map_json); ?>'
+    >
+      <option value="">— Bitte wählen —</option>
+      <option value="__none__" <?php selected($selectedBundesland, '__none__'); ?>>Ohne Bundesland</option>
+      <?php foreach ($bundeslaender as $bl): ?>
+        <option value="<?php echo esc_attr($bl); ?>" <?php selected($selectedBundesland, $bl); ?>>
+          <?php echo esc_html($bl); ?>
+        </option>
+      <?php endforeach; ?>
+    </select>
+    <small class="description">„Ohne Bundesland“ findet Einträge mit NULL oder leerem Feld.</small>
+  </p>
 </div>
 </form>
 	
-<button id="btn-new-wache" class="button button-primary" style="margin-left:10px;">
+<button id="btn-new-wache" class="button button-primary">
   + Neue Wache
 </button>
   <!-- Karte -->
