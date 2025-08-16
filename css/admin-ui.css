@@ -172,7 +172,6 @@ tr {
 .button-delete-wache {
   position: absolute;
   right: 20px;
-  bottom: 45px;
   background: #dc3545;    /* Bootstrap-Rot */
   color: #fff;
   border: none;
@@ -444,4 +443,31 @@ pointer-events: auto;
   max-height: 90%;
   overflow-y: auto;
   z-index: 10001; /* über Overlay */
+}
+
+#wache-edit-modal .submit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;        /* falls schmaler Screen */
+}
+
+#wache-edit-modal .submit .button {
+  margin: 0;         /* Standard-Margins überschreiben */
+}
+
+/* Lösch-Button nach rechts schieben + Styling */
+#wache-edit-modal .submit .button-delete-wache {
+  margin-left: auto;      /* schiebt ihn an den rechten Rand */
+  background: #dc3545;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* optional: Hover-Farbe */
+#wache-edit-modal .submit .button-delete-wache:hover {
+  background: #c82333;
 }

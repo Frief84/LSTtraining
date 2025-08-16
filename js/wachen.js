@@ -229,9 +229,9 @@ function renderTable(wachen) {
 // Daten laden (einziger gültiger Loader)
 function loadWachen(ls, nls, bl) {
   const hasFilter =
-    (parseInt(ls, 10) || 0) ||
-    (parseInt(nls, 10) || 0) ||
-    ((bl || '').trim() !== '' && bl !== '__none__');
+  (parseInt(ls, 10) || 0) ||
+  (parseInt(nls, 10) || 0) ||
+  ((bl || '') !== '');  
 
   if (!hasFilter) {
     renderMarkers([]);
