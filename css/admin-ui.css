@@ -405,3 +405,43 @@ pointer-events: auto;
 #departments-selector{
 	padding-top: 10px;
 }
+
+/* Grundstruktur: ausgeblendet per default */
+#wache-edit-modal.hidden {
+  display: none;
+}
+
+/* Vollflächiger Container */
+#wache-edit-modal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10000; /* über Admin-Menüs */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Halbtransparentes Overlay */
+#wache-edit-modal .wache-edit-overlay {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+}
+
+/* Eigentliches Content-Fenster */
+#wache-edit-modal .wache-edit-content {
+  position: relative;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 4px 25px rgba(0,0,0,0.3);
+  padding: 20px;
+  max-width: 800px;
+  width: 90%;
+  max-height: 90%;
+  overflow-y: auto;
+  z-index: 10001; /* über Overlay */
+}

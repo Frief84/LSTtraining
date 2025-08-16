@@ -116,122 +116,197 @@ $bundeslaender = [
 
   <!-- Tabelle -->
 <?php
-// ────────────────────────────────────────────────────────────────
-// Tabelle: Wachen abfragen (mit optionalem Bundesland-Filter + Pivot-Filter)
+// 0) Exklusivität noch einmal serverseitig absichern (BL > LS > NLS)
+if ($selectedBundesland !== '') {
+    $filter_leitstelle      = 0;
+    $filter_nebenleitstelle = 0;
+} elseif ($filter_leitstelle) {
+    $filter_nebenleitstelle = 0;
+    $selectedBundesland     = '';
+} elseif ($filter_nebenleitstelle) {
+    $filter_leitstelle  = 0;
+    $selectedBundesland = '';
+}
 
-$selectedBundesland    = isset($_GET['bundesland']) ? trim((string)$_GET['bundesland']) : '';
-$filter_leitstelle     = isset($filter_leitstelle) ? $filter_leitstelle : 0;         // bleibt wie bei dir
-$filter_nebenleitstelle= isset($filter_nebenleitstelle) ? $filter_nebenleitstelle : 0;
-	
-	$anyFilterSet = ($selectedBundesland !== '' || $filter_leitstelle || $filter_nebenleitstelle);
+// 1) Flag + Default
+$anyFilterSet = ($selectedBundesland !== '' || $filter_leitstelle || $filter_nebenleitstelle);
+$wachen = [];
 
+// 2) Wenn kein Filter: Hinweis ausgeben, aber NICHT returnen
 if (!$anyFilterSet) {
     echo '<p><em>Bitte zunächst einen Filter (Leitstelle, Nebenleitstelle oder Bundesland) wählen.</em></p>';
-    // optional: leere Tabelle oder gar nichts rendern
-    return;
-}
-
-$sql    = '
-  SELECT
-    w.id,
-    w.name,
-    w.typ,
-    w.latitude,
-    w.longitude
-  FROM wachen AS w
-';
-$joins  = '';
-$where  = [];
-$params = [];
-
-/** 1) Bundesland-Filter (hat Vorrang, wenn gesetzt) */
-if ($selectedBundesland !== '') {
-    if ($selectedBundesland === '__none__') {
-        // Wachen ohne Bundesland
-        $where[] = '(w.bundesland IS NULL OR w.bundesland = \'\')';
-    } else {
-        // Konkretes Bundesland
-        $where[]  = 'w.bundesland = ?';
-        $params[] = $selectedBundesland;
-    }
 } else {
-    /** 2) Falls KEIN Bundesland-Filter: vorhandene LS/NLS-Filter wie bisher */
-    if ($filter_leitstelle) {
-        $joins .= '
-          INNER JOIN wache_leitstellen AS wl
-            ON w.id = wl.wache_id
-        ';
-        $where[]  = 'wl.leitstelle_id = ?';
-        $params[] = (int)$filter_leitstelle;
+    // 3) SQL aufbauen wie gehabt
+    $sql    = '
+      SELECT
+        w.id,
+        w.name,
+        w.typ,
+        w.latitude,
+        w.longitude
+      FROM wachen AS w
+    ';
+    $joins  = '';
+    $where  = [];
+    $params = [];
+
+    // 3a) Bundesland
+    if ($selectedBundesland !== '') {
+        if ($selectedBundesland === '__none__') {
+            $where[] = '(w.bundesland IS NULL OR w.bundesland = \'\')';
+        } else {
+            $where[]  = 'w.bundesland = ?';
+            $params[] = $selectedBundesland;
+        }
+    } else {
+        // 3b) LS/NLS über Pivot-Tabellen
+        if ($filter_leitstelle) {
+            $joins   .= ' INNER JOIN wache_leitstellen AS wl ON w.id = wl.wache_id ';
+            $where[]  = 'wl.leitstelle_id = ?';
+            $params[] = (int)$filter_leitstelle;
+        }
+        if ($filter_nebenleitstelle) {
+            $joins   .= ' INNER JOIN wache_nebenleitstellen AS wn ON w.id = wn.wache_id ';
+            $where[]  = 'wn.nebenleitstelle_id = ?';
+            $params[] = (int)$filter_nebenleitstelle;
+        }
     }
 
-    if ($filter_nebenleitstelle) {
-        $joins .= '
-          INNER JOIN wache_nebenleitstellen AS wn
-            ON w.id = wn.wache_id
-        ';
-        $where[]  = 'wn.nebenleitstelle_id = ?';
-        $params[] = (int)$filter_nebenleitstelle;
+    // 3c) SQL zusammensetzen
+    $sql .= $joins;
+    if ($where) {
+        $sql .= ' WHERE ' . implode(' AND ', $where);
+    }
+    $sql .= ' ORDER BY w.name';
+
+    // 4) Abfrage
+    try {
+        $stmt   = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $wachen = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        echo '<div class="notice notice-error"><p>' .
+             esc_html__('Fehler beim Laden der Wachen:', 'lsttraining') . ' ' .
+             esc_html($e->getMessage()) . '</p></div>';
+        $wachen = [];
     }
 }
-
-// SQL zusammensetzen
-$sql .= $joins;
-if ($where) {
-    $sql .= ' WHERE ' . implode(' AND ', $where);
-}
-$sql .= ' ORDER BY w.name';
-
-// Abfrage
-try {
-    $stmt   = $pdo->prepare($sql);
-    $stmt->execute($params);
-    $wachen = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    echo '<div class="notice notice-error"><p>';
-    echo esc_html__('Fehler beim Laden der Wachen:', 'lsttraining') . ' ';
-    echo esc_html($e->getMessage());
-    echo '</p></div>';
-    $wachen = [];
-}
-// ────────────────────────────────────────────────────────────────
 ?>
-  <table class="widefat fixed">
-    <thead>
-      <tr>
-        <th width="50">ID</th>
-        <th>Name</th>
-        <th>Typ</th>
-        <th>Koordinaten</th>
-        <th width="120">Aktionen</th>
-      </tr>
-    </thead>
-    <tbody id="wachen-tbody">
-      <?php if ( empty( $wachen ) ) : ?>
-        <tr><td colspan="5">Keine Wachen gefunden.</td></tr>
-      <?php else : ?>
-        <?php foreach ( $wachen as $w ) : ?>
-          <tr>
-            <td><?php echo esc_html( $w['id'] ); ?></td>
-            <td><?php echo esc_html( $w['name'] ); ?></td>
-            <td><?php echo esc_html( $w['typ'] ); ?></td>
-            <td><?php echo esc_html( $w['latitude'] . ', ' . $w['longitude'] ); ?></td>
-            <td>
-              <button class="button edit-wache" data-id="<?php echo esc_attr( $w['id'] ); ?>">
-                Bearbeiten
-              </button>
-              <a href="<?php echo esc_url( admin_url( 'admin.php?page=lsttraining_leitstellen_wachen&delete_id=' . $w['id'] ) );?>"
-                 class="button button-link-delete"
-                 onclick="return confirm('Wache wirklich löschen?');">
-                 Löschen
-              </a>
-            </td>
-          </tr>
-        <?php endforeach; ?>
-      <?php endif; ?>
-    </tbody>
-  </table>
+
+<!-- 5) Tabelle steht IMMER im DOM, Body wird je nach $wachen gefüllt -->
+<table class="widefat fixed">
+  <thead>
+    <tr>
+      <th width="50">ID</th>
+      <th>Name</th>
+      <th>Typ</th>
+      <th>Koordinaten</th>
+      <th width="120">Aktionen</th>
+    </tr>
+  </thead>
+  <tbody id="wachen-tbody">
+    <?php if (empty($wachen)) : ?>
+      <tr><td colspan="5"><em>Keine Wachen gefunden.</em></td></tr>
+    <?php else : ?>
+      <?php foreach ($wachen as $w) : ?>
+        <tr>
+          <td><?php echo esc_html($w['id']); ?></td>
+          <td><?php echo esc_html($w['name']); ?></td>
+          <td><?php echo esc_html($w['typ']); ?></td>
+          <td><?php echo esc_html($w['latitude'] . ', ' . $w['longitude']); ?></td>
+          <td>
+            <button class="button edit-wache" data-id="<?php echo esc_attr($w['id']); ?>">
+              Bearbeiten
+            </button>
+            <a href="<?php echo esc_url(admin_url('admin.php?page=lsttraining_leitstellen_wachen&delete_id=' . $w['id'])); ?>"
+               class="button button-link-delete"
+               onclick="return confirm('Wache wirklich löschen?');">
+              Löschen
+            </a>
+          </td>
+        </tr>
+      <?php endforeach; ?>
+    <?php endif; ?>
+  </tbody>
+</table>
+
+<!-- 6) Modal + Template: immer ausgeben, außerhalb von Tabellen -->
+<div id="wache-edit-modal" class="hidden">
+  <div class="wache-edit-overlay"></div>
+  <div class="wache-edit-content"></div>
 </div>
+
+<script type="text/html" id="tmpl-wache-edit-form">
+  <form id="wache-edit-form">
+    <input type="hidden" id="w-form-mode" name="mode" value="update">
+    <input type="hidden" name="id" value="{{id}}">
+
+    <table class="form-table">
+      <tr>
+        <th>ID</th><td><strong>{{id}}</strong></td>
+      </tr>
+      <tr>
+        <th><label for="w-name">Name</label></th>
+        <td><input type="text" id="w-name" name="name" value="{{name}}" class="regular-text" required></td>
+      </tr>
+      <tr>
+        <th><label for="w-typ">Typ</label></th>
+        <td>
+          <select id="w-typ" name="typ">
+            <option value="">– wählen –</option>
+            <option value="FW">Feuerwache</option>
+            <option value="FFW">Freiwillige Feuerwehr</option>
+            <option value="SEG">Sondereinsatzgruppe</option>
+            <option value="RD">Rettungswache</option>
+            <option value="FRRD">Rettungsdienst + Feuerwehr</option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <th><label for="w-pos">Position (lat, lon)</label></th>
+        <td>
+          <input type="text" id="w-pos" name="position"
+                 value="{{latitude}}, {{longitude}}"
+                 class="regular-text"
+                 pattern="^\s*-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?\s*$"
+                 title="Format: Breitengrad, Längengrad">
+          <input type="hidden" id="w-lat" name="latitude"  value="{{latitude}}">
+          <input type="hidden" id="w-lon" name="longitude" value="{{longitude}}">
+        </td>
+      </tr>
+      <tr>
+        <th><label for="w-arr">Anfahrts-Position</label></th>
+        <td><input type="text" id="w-arr" name="arrival_pos" value="{{arrival_pos}}" placeholder="52.704615, 12.520004"></td>
+      </tr>
+      <tr>
+        <th><label for="w-dep">Abfahrts-Position</label></th>
+        <td><input type="text" id="w-dep" name="departure_pos" value="{{departure_pos}}" placeholder="52.704615, 12.520004"></td>
+      </tr>
+      <tr>
+        <th>Koordinaten-Karte</th>
+        <td>
+          <div id="map_wache_edit" style="height:280px; border:1px solid #ccc;"></div>
+          <p class="description">Marker ziehen oder Position eingeben.</p>
+          <p class="description">
+            <strong>Arrival-Marker:</strong> Shift + Klick |
+            <strong>Departure-Marker:</strong> Strg + Klick |
+            <strong>Marker löschen:</strong> Feld leeren
+          </p>
+        </td>
+      </tr>
+      <tr>
+        <th><label for="w-bild">Bild (optional)</label></th>
+        <td><input type="file" id="w-bild" name="bild_datei" accept="image/*"></td>
+      </tr>
+    </table>
+
+    <p class="submit">
+      <button type="submit" class="button button-primary">Speichern</button>
+      <button type="button" id="wache-edit-cancel" class="button">Abbrechen</button>
+      <button type="button" class="button-delete-wache" data-id="{{id}}">Wache löschen</button>
+    </p>
+  </form>
+</script>
 
 <!-- -------------- -->
 <!-- Edit-Modal HTML -->
