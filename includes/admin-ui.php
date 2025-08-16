@@ -34,25 +34,58 @@ add_action('admin_enqueue_scripts', function ($hook) {
         ['ajax_url' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('lsttraining_leitstellen'), ]);
     }
     // --- 2) Assets only for ► Leitstellen ▸ Krankenhäuser ------------------
-    if (strpos($hook, '_page_lsttraining_krankenhaeuser') !== false) {
-        /* ------------------------------------------------------------------
-        1) JavaScript-Dateien
-        ------------------------------------------------------------------ */
-        wp_enqueue_script('lst-departments', $root_url . 'js/departments.js', ['jquery', 'underscore', 'wp-util', 'lst-openlayers'], '1.0.0', true);
-        wp_enqueue_script('lst-hospitals', $root_url . 'js/hospitals.js', ['jquery', 'lst-openlayers', 'lst-departments'], '1.0.0', true);
-        /* ------------------------------------------------------------------
-        2) departments.json einlesen  (liegt in /includes/)
-        ------------------------------------------------------------------ */
-        $json_path = __DIR__ . '/departments.json';
-        if (!file_exists($json_path)) {
-            wp_die('departments.json nicht gefunden unter: ' . esc_html($json_path));
+   if (strpos($hook, '_page_lsttraining_krankenhaeuser') !== false) {
+        // 1) Scripts
+        wp_enqueue_script(
+            'lst-departments',
+            $root_url . 'js/departments.js',
+            ['jquery', 'underscore', 'wp-util', 'lst-openlayers'],
+            '1.0.0',
+            true
+        );
+        wp_enqueue_script(
+            'lst-hospitals',
+            $root_url . 'js/hospitals.js',
+            ['jquery', 'lst-openlayers', 'lst-departments'],
+            '1.0.0',
+            true
+        );
+
+        // 2) departments.json laden (aus /data/)
+        $json_path = LSTTRAINING_PATH . 'data/departments.json';
+        $departments = [];
+        if (is_readable($json_path)) {
+            $tmp = json_decode(file_get_contents($json_path), true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($tmp)) {
+                $departments = $tmp;
+            } else {
+                error_log('lsttraining: departments.json invalid JSON: ' . json_last_error_msg());
+            }
+        } else {
+            error_log('lsttraining: departments.json not readable at ' . $json_path);
         }
-        $departments = json_decode(file_get_contents($json_path), true);
-        /* ------------------------------------------------------------------
-        3) Daten für AJAX & Departments an JS übergeben
-        ------------------------------------------------------------------ */
-        wp_localize_script('lst-hospitals', 'lstHospitalsAjax', ['ajax_url' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('lsttraining_hospitals'), 'plugin_url' => plugin_dir_url(dirname(__FILE__)), 'departments' => $departments
-        //  ← NEU
+
+        // 3) Daten an JS
+        wp_localize_script('lst-hospitals', 'lstHospitalsAjax', [
+            'ajax_url'    => admin_url('admin-ajax.php'),
+            'nonce'       => wp_create_nonce('lsttraining_hospitals'),
+            'plugin_url'  => LSTTRAINING_URL, // nicht plugin_dir_url(dirname(__FILE__))
+            'departments' => $departments,    // leeres Array, falls Datei fehlte
+        ]);
+    }
+
+    /* --- Leitstellen ▸ Wachen ------------------------------------------- */
+    if ($hook === 'lsttraining_leitstellen_page_lsttraining_leitstellen_wachen') {
+        wp_enqueue_script(
+            'lst-wachen',
+            $root_url . 'js/wachen.js',
+            ['jquery', 'lst-openlayers'],
+            '1.0.0',
+            true
+        );
+        wp_localize_script('lst-wachen', 'lstWachenAjax', [
+            'ajax_url'  => admin_url('admin-ajax.php'),
+            'admin_url' => admin_url('admin.php'),
         ]);
     }
     // --- 3) Assets only for ► Leitstellen ▸ Wachen -------------------------
@@ -142,7 +175,7 @@ add_action('admin_enqueue_scripts', function ($hook) {
     if (strpos($hook, '_page_lsttraining_krankenhaeuser') !== false) {
         wp_enqueue_script('lst-departments', $root_url . 'js/departments.js', ['jquery', 'underscore', 'wp-util', 'lst-openlayers'], '1.0.0', true);
         wp_enqueue_script('lst-hospitals', $root_url . 'js/hospitals.js', ['jquery', 'lst-openlayers', 'lst-departments'], '1.0.0', true);
-        $json_path = __DIR__ . '/departments.json';
+        $json_path = LSTTRAINING_PATH . 'data/departments.json';
         if (!file_exists($json_path)) {
             wp_die('departments.json not found at ' . esc_html($json_path));
         }
