@@ -503,3 +503,4 @@ pointer-events: auto;
 	margin-top: 10px;
 }
 
+.widefat td.num { text-align: right; }

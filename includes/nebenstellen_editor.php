@@ -61,21 +61,36 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['neben_update_id'] )
 /* -------------------------------------------------------------------------
  * LIST – fetch only small cols + Boolean flag (no big JSON)
  * ---------------------------------------------------------------------- */
-if ( $pdo ) {
-    $sql  = 'SELECT id,name,zustandigkeit,einwohner,flaeche_km2,gps,
-                    (CHAR_LENGTH(TRIM(COALESCE(geojson,""))) > 2) AS has_geojson
-               FROM nebenleitstellen';
+if ($pdo) {
+    $sql = '
+        SELECT
+            n.id,
+            n.name,
+            n.zustandigkeit,
+            n.einwohner,
+            n.flaeche_km2,
+            n.gps,
+            (CHAR_LENGTH(TRIM(COALESCE(n.geojson, ""))) > 2) AS has_geojson,
+            COALESCE(cnt.cnt, 0) AS wachen_cnt
+        FROM nebenleitstellen AS n
+        LEFT JOIN (
+            SELECT nebenleitstelle_id, COUNT(*) AS cnt
+            FROM wache_nebenleitstellen
+            GROUP BY nebenleitstelle_id
+        ) AS cnt
+          ON cnt.nebenleitstelle_id = n.id';
+
     $args = [];
 
-    if ( $suchbegriff !== "" ) {
-        $sql .= ' WHERE name LIKE ? OR id = ?';
-        $args = [ "%$suchbegriff%", $suchbegriff ];
+    if ($suchbegriff !== '') {
+        $sql  .= ' WHERE n.name LIKE ? OR n.id = ?';
+        $args  = [ "%$suchbegriff%", $suchbegriff ];
     }
-    /* intentionally no ORDER BY → avoids large sort buffer */
 
-    $stmt = $pdo->prepare( $sql );
-    $stmt->execute( $args );
-    $nebenstellen = $stmt->fetchAll( PDO::FETCH_OBJ );
+    // bewusst kein ORDER BY → entspricht deinem aktuellen Verhalten
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($args);
+    $nebenstellen = $stmt->fetchAll(PDO::FETCH_OBJ);
 }
 
 if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['neben_create'] ) && $pdo ) {
@@ -111,46 +126,45 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['neben_create'] ) &&
     <table class="widefat" id="nebenstellen-table">
         <thead>
             <tr><th>ID</th><th>Name</th><th>Zuständigkeit</th><th>Einwohner</th>
-                <th>Fläche</th><th>Standort</th><th>Einsatzgebiet</th><th>Aktionen</th></tr>
+                <th>Fläche</th><th>Standort</th><th>Einsatzgebiet</th><th>Wachen</th><th>Aktionen</th></tr>
         </thead>
         <tbody>
-        <?php foreach ( $nebenstellen as $n ) : ?>
-            <?php
-                /* row colouring */
-                $missingGps = empty( trim( $n->gps ) ) || strtolower( $n->gps ) === 'none';
-                $rowClass   = $missingGps && ! $n->has_geojson ? 'missing-both'
-                            : ( $missingGps ? 'missing-gps'
-                            : ( ! $n->has_geojson ? 'missing-geojson' : '' ) );
+        <?php foreach ($nebenstellen as $n) : ?>
+  <?php
+    $missingGps = empty(trim($n->gps)) || strtolower($n->gps) === 'none';
+    $rowClass   = $missingGps && !$n->has_geojson ? 'missing-both'
+               : ($missingGps ? 'missing-gps'
+               : (!$n->has_geojson ? 'missing-geojson' : ''));
 
-                /* onclick (GeoJSON loaded via Ajax in editor) */
-               $onclick = sprintf(
-				  "loadNebenstelleAndOpen(%d, %s, %s, %d, %f, %s, %d); return false;",
-				  $n->id,
-				  json_encode($n->name),
-				  json_encode($n->zustandigkeit),
-				  (int)$n->einwohner,
-				  (float)$n->flaeche_km2,
-				  json_encode($n->gps),
-				  0
-				);
-            ?>
-            <tr class="<?php echo esc_attr( $rowClass ); ?>">
-                <td><?php echo esc_html( $n->id ); ?></td>
-                <td><?php echo esc_html( $n->name ); ?></td>
-                <td><?php echo esc_html( $n->zustandigkeit ); ?></td>
-                <td><?php echo esc_html( $n->einwohner ); ?></td>
-                <td><?php echo esc_html( $n->flaeche_km2 ); ?></td>
-                <td><?php echo esc_html( $n->gps ); ?></td>
-                <td><?php echo $n->has_geojson ? '✅' : '❌'; ?></td>
-                <td>
-                    <a href="#" class="button"  onclick="<?php echo htmlspecialchars( $onclick ); ?>" style="    margin-bottom: 5px;">Bearbeiten</a>
-                    <button type="button" class="button button-link-delete js-delete-nebenstelle" data-id="<?php echo esc_attr( $n->id ); ?>" style="width: 85px;">
-					  Löschen
-					</button>
-                </td>
-            </tr>
-        <?php endforeach; ?>
-        </tbody>
+    $onclick = sprintf(
+      "loadNebenstelleAndOpen(%d, %s, %s, %d, %f, %s, %d); return false;",
+      $n->id,
+      json_encode($n->name),
+      json_encode($n->zustandigkeit),
+      (int)$n->einwohner,
+      (float)$n->flaeche_km2,
+      json_encode($n->gps),
+      0
+    );
+  ?>
+  <tr class="<?php echo esc_attr($rowClass); ?>">
+    <td><?php echo esc_html($n->id); ?></td>
+    <td><?php echo esc_html($n->name); ?></td>
+    <td><?php echo esc_html($n->zustandigkeit); ?></td>
+    <td><?php echo esc_html($n->einwohner); ?></td>
+    <td><?php echo esc_html($n->flaeche_km2); ?></td>
+    <td><?php echo esc_html($n->gps); ?></td>
+    <td><?php echo $n->has_geojson ? '✅' : '❌'; ?></td>
+    <td class="num"><?php echo (int)$n->wachen_cnt; ?></td> <!-- NEU -->
+    <td>
+      <a href="#" class="button" onclick="<?php echo htmlspecialchars($onclick); ?>" style="margin-bottom:5px;">Bearbeiten</a>
+      <button type="button" class="button button-link-delete js-delete-nebenstelle" data-id="<?php echo esc_attr($n->id); ?>" style="width:85px;">
+        Löschen
+      </button>
+    </td>
+  </tr>
+<?php endforeach; ?>
+</tbody>
     </table>
 </div>
 

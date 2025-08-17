@@ -1882,4 +1882,103 @@ add_action('wp_ajax_lsttraining_unassign_wachen_in_polygon', function(){
     wp_send_json_success(['removed'=>count($w_ids)]);
 });
 
+// Wachen im sichtbaren Kartenausschnitt laden (ohne zuzuordnen)
+add_action('wp_ajax_lsttraining_get_wachen_bbox', function () {
+    // Rechte – hier reichen Wachen-Rechte; passe an, wenn du enger willst
+    if (!function_exists('lsttraining_user_can') || !lsttraining_user_can('wachen')) {
+        wp_send_json_error('Keine Berechtigung', 403);
+    }
 
+    $type = sanitize_key($_POST['entity_type'] ?? '');
+    $eid  = (int)($_POST['entity_id'] ?? 0);
+    if (!in_array($type, ['leitstelle','nebenleitstelle'], true) || $eid <= 0) {
+        wp_send_json_error('Ungültige Parameter', 400);
+    }
+
+    $minLon = (float)($_POST['min_lon'] ?? 0);
+    $minLat = (float)($_POST['min_lat'] ?? 0);
+    $maxLon = (float)($_POST['max_lon'] ?? 0);
+    $maxLat = (float)($_POST['max_lat'] ?? 0);
+    $limit  = (int)($_POST['limit'] ?? 800);
+    if ($limit < 1)   $limit = 1;
+    if ($limit > 2000) $limit = 2000;
+
+    require_once plugin_dir_path(__FILE__) . '/db.php';
+    $pdo = lsttraining_get_connection();
+    if (!$pdo instanceof PDO) {
+        wp_send_json_error('DB-Verbindung fehlgeschlagen', 500);
+    }
+
+    $pivotTbl = ($type === 'leitstelle') ? 'wache_leitstellen' : 'wache_nebenleitstellen';
+    $ownerCol = ($type === 'leitstelle') ? 'leitstelle_id'    : 'nebenleitstelle_id';
+
+    $sql = "
+        SELECT
+          w.id, w.name, w.typ, w.latitude, w.longitude,
+          CASE WHEN wn.wache_id IS NULL THEN 0 ELSE 1 END AS assigned
+        FROM wachen w
+        LEFT JOIN {$pivotTbl} wn
+          ON wn.wache_id = w.id AND wn.{$ownerCol} = :eid
+        WHERE w.longitude BETWEEN :minLon AND :maxLon
+          AND w.latitude  BETWEEN :minLat AND :maxLat
+        ORDER BY w.id
+        LIMIT {$limit}
+    ";
+
+    $st = $pdo->prepare($sql);
+    $st->bindValue(':eid',    $eid,    PDO::PARAM_INT);
+    $st->bindValue(':minLon', $minLon);
+    $st->bindValue(':maxLon', $maxLon);
+    $st->bindValue(':minLat', $minLat);
+    $st->bindValue(':maxLat', $maxLat);
+    $st->execute();
+    $rows = $st->fetchAll(PDO::FETCH_ASSOC);
+
+    // Keine vorangegangene Ausgabe – pures JSON
+    while (function_exists('ob_get_level') && ob_get_level() > 0) { ob_end_clean(); }
+    wp_send_json_success(['wachen' => $rows]);
+});
+
+
+add_action('wp_ajax_lsttraining_toggle_wache_assignment', function () {
+    lst_z_check();
+
+    $type    = sanitize_key($_POST['entity_type'] ?? '');
+    $ownerId = (int)($_POST['entity_id'] ?? 0);
+    $wacheId = (int)($_POST['wache_id'] ?? 0);
+    $assign  = isset($_POST['assign']) ? (int)$_POST['assign'] : 1;
+
+    if (!in_array($type, ['leitstelle','nebenleitstelle'], true) || $ownerId <= 0 || $wacheId <= 0) {
+        wp_send_json_error('Ungültige Parameter', 400);
+    }
+
+    if ($type === 'leitstelle'      && !lsttraining_user_can('leitstellen', $ownerId)) wp_send_json_error('Keine Berechtigung', 403);
+    if ($type === 'nebenleitstelle' && !lsttraining_user_can('nebenstellen'))          wp_send_json_error('Keine Berechtigung', 403);
+
+    require_once plugin_dir_path(__FILE__) . 'db.php';
+    $pdo = lsttraining_get_connection();
+    if (!$pdo) wp_send_json_error('DB-Verbindung fehlgeschlagen', 500);
+
+    $pivot_table = ($type === 'leitstelle') ? 'wache_leitstellen' : 'wache_nebenleitstellen';
+    $owner_col   = ($type === 'leitstelle') ? 'leitstelle_id'     : 'nebenleitstelle_id';
+
+    try {
+        if ($assign) {
+            // Insert wenn nicht vorhanden
+            $stmt = $pdo->prepare("SELECT 1 FROM {$pivot_table} WHERE wache_id = ? AND {$owner_col} = ? LIMIT 1");
+            $stmt->execute([$wacheId, $ownerId]);
+            if (!$stmt->fetchColumn()) {
+                $ins = $pdo->prepare("INSERT INTO {$pivot_table} (wache_id, {$owner_col}) VALUES (?, ?)");
+                $ins->execute([$wacheId, $ownerId]);
+            }
+        } else {
+            // Delete falls vorhanden
+            $del = $pdo->prepare("DELETE FROM {$pivot_table} WHERE wache_id = ? AND {$owner_col} = ?");
+            $del->execute([$wacheId, $ownerId]);
+        }
+        wp_send_json_success(['wache_id'=>$wacheId, 'assigned'=> (bool)$assign ]);
+    } catch (Throwable $e) {
+        error_log('lsttraining_toggle_wache_assignment: '.$e->getMessage());
+        wp_send_json_error('DB-Fehler', 500);
+    }
+});
