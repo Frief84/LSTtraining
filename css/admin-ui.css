@@ -475,3 +475,22 @@ pointer-events: auto;
 #btn-new-wache{
 	margin-bottom: 10px;
 }
+
+/* 2 Spalten im Modal nebeneinander */
+#wache-edit-modal .row-2col {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+#wache-edit-modal .row-2col .col {
+  flex: 1 1 0;
+}
+#wache-edit-modal .row-2col label {
+  display: block;
+  margin-bottom: 6px;
+}
+#wache-edit-modal .row-2col select {
+  width: 100%;
+  box-sizing: border-box;
+}
+

@@ -235,14 +235,21 @@ if (!$anyFilterSet) {
     }
 }
 ?>
-
+<div class="filter-box" style="margin:10px 0; display:flex; gap:10px; align-items:center;">
+  <label for="wachen-search" style="font-weight:600;">Suche (ID oder Name):</label>
+  <input type="text"
+         id="wachen-search"
+         placeholder="z. B. 123 oder Babelsberg"
+         style="width:300px; max-width:100%;"
+         autocomplete="off">
+</div>
 <!-- 5) Tabelle steht IMMER im DOM, Body wird je nach $wachen gefüllt -->
-<table class="widefat fixed">
+<table class="widefat fixed" id="wachen-table">
   <thead>
     <tr>
-      <th width="50">ID</th>
-      <th>Name</th>
-      <th>Typ</th>
+      <th width="50"  data-sort="id"   style="cursor:pointer;">ID</th>
+      <th            data-sort="name" style="cursor:pointer;">Name</th>
+      <th            data-sort="typ"  style="cursor:pointer;">Typ</th>
       <th>Koordinaten</th>
       <th width="120">Aktionen</th>
     </tr>
@@ -305,6 +312,30 @@ if (!$anyFilterSet) {
           </select>
         </td>
       </tr>
+	  <!-- im <script type="text/html" id="tmpl-wache-edit-form"> ... innerhalb des <form> -->
+<tr>
+  <th colspan="2">
+    <div class="row-2col">
+      <div class="col">
+        <label for="mw-land">Land</label>
+        <select id="mw-land" name="land"
+                data-map='<?= esc_attr( wp_json_encode($bundeslaender_by_land, JSON_UNESCAPED_UNICODE|JSON_HEX_APOS|JSON_HEX_QUOT) ); ?>'>
+          <?php foreach (array_keys($bundeslaender_by_land) as $land): ?>
+            <option value="<?= esc_attr($land) ?>"><?= esc_html($land) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="col">
+        <label for="mw-bundesland">Bundesland</label>
+        <select id="mw-bundesland" name="bundesland">
+          <option value="">— Bitte wählen —</option>
+          <option value="">Ohne Bundesland</option>
+        </select>
+      </div>
+    </div>
+  </th>
+</tr>
+
       <tr>
         <th><label for="w-pos">Position (lat, lon)</label></th>
         <td>

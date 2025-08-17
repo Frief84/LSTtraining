@@ -27,23 +27,25 @@ CREATE TABLE leitstellen (
 CREATE TABLE `wachen` (
   `id`                   INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `name`                 VARCHAR(255) NOT NULL,
-  `typ`                  VARCHAR(50) NOT NULL DEFAULT '',
-  `bundesland`           VARCHAR(50) NULL,
-  `latitude`             DOUBLE NOT NULL,
-  `longitude`            DOUBLE NOT NULL,
-  `arrival_pos`          VARCHAR(50) NULL,
-  `departure_pos`        VARCHAR(50) NULL,
+  `typ`                  VARCHAR(50)  NOT NULL DEFAULT '',
+  `land`                 VARCHAR(64)  NULL     DEFAULT 'Deutschland',   -- NEU
+  `bundesland`           VARCHAR(50)  NULL,
+  `latitude`             DOUBLE       NOT NULL,
+  `longitude`            DOUBLE       NOT NULL,
+  `arrival_pos`          VARCHAR(50)  NULL,
+  `departure_pos`        VARCHAR(50)  NULL,
   `bild_datei`           VARCHAR(255) NOT NULL DEFAULT '',
-  `created_at`           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `exists_in_reality`    TINYINT(1) NOT NULL DEFAULT 1,
+  `created_at`           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `exists_in_reality`    TINYINT(1)   NOT NULL DEFAULT 1,
   `placed_by_user_id`    BIGINT UNSIGNED NULL,
   `source_note`          VARCHAR(255) NULL,
   `verified_by`          BIGINT UNSIGNED NULL,
-  `verified_at`          DATETIME NULL,
+  `verified_at`          DATETIME     NULL,
   PRIMARY KEY (`id`),
-  KEY `idx_wachen_exists` (`exists_in_reality`),
-  KEY `idx_wachen_user` (`placed_by_user_id`),
-  KEY `idx_wachen_bundesland` (`bundesland`)
+  KEY `idx_wachen_exists`      (`exists_in_reality`),
+  KEY `idx_wachen_user`        (`placed_by_user_id`),
+  KEY `idx_wachen_bundesland`  (`bundesland`),
+  KEY `idx_wachen_land`        (`land`)                              -- NEU
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 /* ------------------------------------------------------------------ */

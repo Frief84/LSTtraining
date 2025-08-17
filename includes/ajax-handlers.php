@@ -337,6 +337,20 @@ add_action( 'wp_ajax_lsttraining_render_einsatzgebiet_editor', function () {
  * ---------------------------------------------------------------------- */
 
 /**
+ * (Optional) Hilfsfunktion: Spaltenexistenz prüfen
+ * Kann bleiben, falls du sie später erneut brauchst.
+ */
+function lst_col_exists(PDO $pdo, string $table, string $col): bool {
+    try {
+        $st = $pdo->prepare("SHOW COLUMNS FROM `$table` LIKE :c");
+        $st->execute([':c' => $col]);
+        return (bool)$st->fetch();
+    } catch (Throwable $e) {
+        return false;
+    }
+}
+
+/**
  * Liste der Wachen für Karte/Tabelle
  * @action wp_ajax_lsttraining_get_wachen
  */
@@ -346,9 +360,7 @@ function lsttraining_get_wachen() {
     // Keine vorherige Ausgabe → pures JSON
     while (function_exists('ob_get_level') && ob_get_level() > 0) { ob_end_clean(); }
 
-    // 1) DB verbinden: IMMER deinen funktionierenden Helper benutzen
-    //    (so machst du es auch bei save/delete/create)
-    //    db.php nur einbinden, wenn nicht ohnehin geladen
+    // 1) DB verbinden
     if (!function_exists('lsttraining_get_connection')) {
         require_once plugin_dir_path(__FILE__) . 'db.php';
     }
@@ -361,9 +373,9 @@ function lsttraining_get_wachen() {
         wp_send_json_error(['msg' => 'DB-Verbindung fehlgeschlagen'], 500);
     }
 
-    // 2) Filter lesen & Exklusivität erzwingen (BL > LS > NLS)
-    $ls  = isset($_REQUEST['ls_id'])  ? (int)$_REQUEST['ls_id']  : 0;
-    $nls = isset($_REQUEST['nls_id']) ? (int)$_REQUEST['nls_id'] : 0;
+    // 2) Filter lesen & Exklusivität (BL > LS > NLS)
+    $ls  = isset($_REQUEST['ls_id'])      ? (int) $_REQUEST['ls_id']      : 0;
+    $nls = isset($_REQUEST['nls_id'])     ? (int) $_REQUEST['nls_id']     : 0;
     $bl  = isset($_REQUEST['bundesland']) ? sanitize_text_field($_REQUEST['bundesland']) : '';
 
     if ($bl !== '') { $ls = 0; $nls = 0; }
@@ -374,14 +386,16 @@ function lsttraining_get_wachen() {
         wp_send_json_error(['msg' => 'Kein Filter angegeben.'], 400);
     }
 
-    // 3) SQL wie in wachen.php: Pivot-Tabellen für LS/NLS, direktes Feld für BL
+    // 3) SQL (LS/NLS via Pivot, Bundesland direkt)
     $sql = "
         SELECT
             w.id,
             w.name,
             w.typ,
             w.latitude,
-            w.longitude
+            w.longitude,
+            w.land,
+            w.bundesland
         FROM wachen AS w
     ";
     $joins  = '';
@@ -390,19 +404,19 @@ function lsttraining_get_wachen() {
 
     if ($bl !== '') {
         if ($bl === '__none__') {
-            $where[] = '(w.bundesland IS NULL OR w.bundesland = \'\')';
+            $where[] = "(w.bundesland IS NULL OR w.bundesland = '')";
         } else {
-            $where[]   = 'w.bundesland = :bl';
-            $params[':bl'] = $bl;
+            $where[]        = 'w.bundesland = :bl';
+            $params[':bl']  = $bl;
         }
     } elseif ($ls) {
-        $joins   .= ' INNER JOIN wache_leitstellen AS wl ON w.id = wl.wache_id ';
-        $where[]  = 'wl.leitstelle_id = :ls';
-        $params[':ls'] = $ls;
+        $joins           .= ' INNER JOIN wache_leitstellen AS wl ON w.id = wl.wache_id ';
+        $where[]          = 'wl.leitstelle_id = :ls';
+        $params[':ls']    = $ls;
     } elseif ($nls) {
-        $joins   .= ' INNER JOIN wache_nebenleitstellen AS wn ON w.id = wn.wache_id ';
-        $where[]  = 'wn.nebenleitstelle_id = :nls';
-        $params[':nls'] = $nls;
+        $joins           .= ' INNER JOIN wache_nebenleitstellen AS wn ON w.id = wn.wache_id ';
+        $where[]          = 'wn.nebenleitstelle_id = :nls';
+        $params[':nls']   = $nls;
     }
 
     $sql .= $joins;
@@ -422,51 +436,50 @@ function lsttraining_get_wachen() {
 
         while (function_exists('ob_get_level') && ob_get_level() > 0) { ob_end_clean(); }
         wp_send_json_success(['count' => count($rows), 'wachen' => $rows], 200);
-
     } catch (Throwable $e) {
-        // Fehlermeldung absichtlich generisch halten
         error_log('lsttraining_get_wachen SQL ERROR: ' . $e->getMessage());
         wp_send_json_error(['msg' => 'DB-Fehler'], 500);
     }
 }
 
-
-
-
-
 /**
  * Daten einer einzelnen Wache laden
  * @action wp_ajax_lsttraining_get_wache
  */
-add_action( 'wp_ajax_lsttraining_get_wache', function () {
+add_action('wp_ajax_lsttraining_get_wache', function () {
     // 1) Capability check
-    if ( ! lsttraining_user_can( 'wachen' ) ) {
-        wp_send_json_error( 'Keine Berechtigung', 403 );
+    if (!lsttraining_user_can('wachen')) {
+        wp_send_json_error('Keine Berechtigung', 403);
     }
 
     // 2) Parameter prüfen
-    $id = intval( $_GET['wache_id'] ?? 0 );
-    if ( ! $id ) {
-        wp_send_json_error( 'Wache-ID fehlt', 400 );
+    $id = intval($_GET['wache_id'] ?? 0);
+    if (!$id) {
+        wp_send_json_error('Wache-ID fehlt', 400);
     }
 
+    if (!function_exists('lsttraining_get_connection')) {
+        require_once plugin_dir_path(__FILE__) . 'db.php';
+    }
     $pdo = lsttraining_get_connection();
-    if ( ! $pdo instanceof PDO ) {
-        wp_send_json_error( 'Datenbankfehler', 500 );
+    if (!$pdo instanceof PDO) {
+        wp_send_json_error('Datenbankfehler', 500);
     }
 
     try {
-        // 3) Basis-Daten der Wache
+        // 3) Basis-Daten der Wache (inkl. Land/Bundesland)
         $stmt = $pdo->prepare(
-            'SELECT id, name, typ, latitude, longitude, arrival_pos, departure_pos
+            'SELECT id, name, typ, latitude, longitude,
+                    arrival_pos, departure_pos,
+                    land, bundesland
                FROM wachen
               WHERE id = ?'
         );
-        $stmt->execute( [ $id ] );
-        $row = $stmt->fetch( PDO::FETCH_ASSOC );
+        $stmt->execute([$id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ( ! $row ) {
-            wp_send_json_error( 'Nicht gefunden', 404 );
+        if (!$row) {
+            wp_send_json_error('Nicht gefunden', 404);
         }
 
         // 4) Zugeordnete Leitstellen holen
@@ -475,8 +488,8 @@ add_action( 'wp_ajax_lsttraining_get_wache', function () {
                FROM wache_leitstellen
               WHERE wache_id = ?'
         );
-        $stmt2->execute( [ $id ] );
-        $row['leitstellen'] = $stmt2->fetchAll( PDO::FETCH_COLUMN );
+        $stmt2->execute([$id]);
+        $row['leitstellen'] = $stmt2->fetchAll(PDO::FETCH_COLUMN);
 
         // 5) Zugeordnete Nebenleitstellen holen
         $stmt3 = $pdo->prepare(
@@ -484,206 +497,249 @@ add_action( 'wp_ajax_lsttraining_get_wache', function () {
                FROM wache_nebenleitstellen
               WHERE wache_id = ?'
         );
-        $stmt3->execute( [ $id ] );
-        $row['nebenleitstellen'] = $stmt3->fetchAll( PDO::FETCH_COLUMN );
+        $stmt3->execute([$id]);
+        $row['nebenleitstellen'] = $stmt3->fetchAll(PDO::FETCH_COLUMN);
 
-        // 6) Alles ok, JSON zurückliefern
-        wp_send_json_success( $row );
-
-    } catch ( PDOException $e ) {
-        error_log( 'lsttraining_get_wache ERROR: ' . $e->getMessage() );
-        wp_send_json_error( 'Datenbankfehler', 500 );
+        // 6) Alles ok
+        wp_send_json_success($row);
+    } catch (PDOException $e) {
+        error_log('lsttraining_get_wache ERROR: ' . $e->getMessage());
+        wp_send_json_error('Datenbankfehler', 500);
     }
-} );
-
-
-
+});
 
 /**
  * Speichert eine bestehende Wache (Basis-Daten + Zuordnungen)
  * @action wp_ajax_lsttraining_save_wache
  */
-add_action( 'wp_ajax_lsttraining_save_wache', function () {
-    // 1) Rechte prüfen: nur Nutzer mit „wachen“-Capability dürfen
-    if ( ! lsttraining_user_can( 'wachen' ) ) {
-        wp_send_json_error( 'Keine Berechtigung', 403 );
+add_action('wp_ajax_lsttraining_save_wache', function () {
+    // 1) Rechte prüfen
+    if (!lsttraining_user_can('wachen')) {
+        wp_send_json_error('Keine Berechtigung', 403);
     }
 
-    // 2) Eingabe holen & validieren
-    $id        = intval(   $_POST['id']           ?? 0 );
-    $name      = sanitize_text_field( $_POST['name']      ?? '' );
-    $typ       = sanitize_text_field( $_POST['typ']       ?? '' );
-    $latitude  = floatval( $_POST['latitude']  ?? 0 );
-    $longitude = floatval( $_POST['longitude'] ?? 0 );
-    $arrival   = sanitize_text_field( $_POST['arrival_pos']   ?? '' );
-    $departure = sanitize_text_field( $_POST['departure_pos'] ?? '' );
-    // Pivot-IDs: Arrays aus dem JS (z.B. [1,3,5])
-    $leit_ids  = array_map('intval', (array) ($_POST['leitstellen']      ?? []) );
-    $neben_ids = array_map('intval', (array) ($_POST['nebenleitstellen'] ?? []) );
+    // 2) Eingaben
+    $id        = intval($_POST['id']            ?? 0);
+    $name      = sanitize_text_field($_POST['name'] ?? '');
+    $typ       = sanitize_text_field($_POST['typ']  ?? '');
+    $latitude  = floatval($_POST['latitude']   ?? 0);
+    $longitude = floatval($_POST['longitude']  ?? 0);
+    $arrival   = sanitize_text_field($_POST['arrival_pos']   ?? '');
+    $departure = sanitize_text_field($_POST['departure_pos'] ?? '');
 
-    if ( $id <= 0 ) {
-        wp_send_json_error( 'Ungültige Wache-ID', 400 );
+    $land       = sanitize_text_field($_POST['land']       ?? 'Deutschland');
+    $bundesland = sanitize_text_field($_POST['bundesland'] ?? '');
+    $bundesland = ($bundesland === '') ? null : $bundesland; // '' → NULL
+
+    // Pivot-IDs
+    $leit_ids  = array_map('intval', (array)($_POST['leitstellen']      ?? []));
+    $neben_ids = array_map('intval', (array)($_POST['nebenleitstellen'] ?? []));
+
+    if ($id <= 0) {
+        wp_send_json_error('Ungültige Wache-ID', 400);
     }
 
+    if (!function_exists('lsttraining_get_connection')) {
+        require_once plugin_dir_path(__FILE__) . 'db.php';
+    }
     $pdo = lsttraining_get_connection();
+
     try {
         $pdo->beginTransaction();
 
-        // 3) Basis-Daten in `wachen` updaten
+        // 3) Basis-Daten updaten (named params + korrektes NULL-Binding)
         $stmt = $pdo->prepare(
             'UPDATE wachen
-                SET name          = ?,
-                    typ           = ?,
-                    latitude      = ?,
-                    longitude     = ?,
-                    arrival_pos   = ?,
-                    departure_pos = ?
-              WHERE id = ?'
+                SET name          = :name,
+                    typ           = :typ,
+                    latitude      = :lat,
+                    longitude     = :lon,
+                    arrival_pos   = :arr,
+                    departure_pos = :dep,
+                    land          = :land,
+                    bundesland    = :bundesland
+              WHERE id = :id'
         );
-        $ok = $stmt->execute( [
-            $name, $typ, $latitude, $longitude,
-            $arrival, $departure, $id
-        ] );
-        if ( ! $ok ) {
-            throw new Exception( 'Basis-Update fehlgeschlagen: '. implode(', ', $stmt->errorInfo()) );
+
+        $stmt->bindValue(':name', $name);
+        $stmt->bindValue(':typ',  $typ);
+        $stmt->bindValue(':lat',  $latitude);
+        $stmt->bindValue(':lon',  $longitude);
+        $stmt->bindValue(':arr',  $arrival);
+        $stmt->bindValue(':dep',  $departure);
+        $stmt->bindValue(':land', $land);
+
+        if (is_null($bundesland)) {
+            $stmt->bindValue(':bundesland', null, PDO::PARAM_NULL);
+        } else {
+            $stmt->bindValue(':bundesland', $bundesland, PDO::PARAM_STR);
+        }
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+
+        $ok = $stmt->execute();
+        if (!$ok) {
+            throw new Exception('Basis-Update fehlgeschlagen: ' . implode(', ', $stmt->errorInfo()));
         }
 
-        // 4) Pivot-Tabelle `wache_leitstellen` neu befüllen
-        //    ➔ alle alten Einträge für diese Wache löschen…
-        $pdo->prepare('DELETE FROM wache_leitstellen WHERE wache_id = ?')
-            ->execute([ $id ]);
-        //    ➔ …und dann alle neuen Zuordnungen einfügen
-        if ( ! empty( $leit_ids ) ) {
+        // 4) Pivot wache_leitstellen
+        $pdo->prepare('DELETE FROM wache_leitstellen WHERE wache_id = ?')->execute([$id]);
+        if (!empty($leit_ids)) {
             $ins = $pdo->prepare('INSERT INTO wache_leitstellen (wache_id, leitstelle_id) VALUES (?, ?)');
-            foreach ( $leit_ids as $lid ) {
-                $ins->execute([ $id, $lid ]);
+            foreach ($leit_ids as $lid) {
+                $ins->execute([$id, $lid]);
             }
         }
 
-        // 5) Pivot-Tabelle `wache_nebenleitstellen` neu befüllen
-        $pdo->prepare('DELETE FROM wache_nebenleitstellen WHERE wache_id = ?')
-            ->execute([ $id ]);
-        if ( ! empty( $neben_ids ) ) {
+        // 5) Pivot wache_nebenleitstellen
+        $pdo->prepare('DELETE FROM wache_nebenleitstellen WHERE wache_id = ?')->execute([$id]);
+        if (!empty($neben_ids)) {
             $ins2 = $pdo->prepare('INSERT INTO wache_nebenleitstellen (wache_id, nebenleitstelle_id) VALUES (?, ?)');
-            foreach ( $neben_ids as $nlid ) {
-                $ins2->execute([ $id, $nlid ]);
+            foreach ($neben_ids as $nlid) {
+                $ins2->execute([$id, $nlid]);
             }
         }
 
         $pdo->commit();
         wp_send_json_success();
-    } catch ( Exception $e ) {
+    } catch (Exception $e) {
         $pdo->rollBack();
-        error_log( 'lsttraining_save_wache ERROR: ' . $e->getMessage() );
-        wp_send_json_error( 'Speichern fehlgeschlagen', 500 );
+        error_log('lsttraining_save_wache ERROR: ' . $e->getMessage());
+        wp_send_json_error('Speichern fehlgeschlagen', 500);
     }
 });
-
 
 /**
  * Löscht eine Wache inklusive aller Pivot-Beziehungen
  * @action wp_ajax_lsttraining_delete_wache
  */
-add_action( 'wp_ajax_lsttraining_delete_wache', function () {
-    if ( ! lsttraining_user_can( 'wachen' ) ) {
-        wp_send_json_error( 'Keine Berechtigung', 403 );
+add_action('wp_ajax_lsttraining_delete_wache', function () {
+    if (!lsttraining_user_can('wachen')) {
+        wp_send_json_error('Keine Berechtigung', 403);
     }
 
-    $id = intval( $_POST['wache_id'] ?? 0 );
-    if ( $id <= 0 ) {
-        wp_send_json_error( 'Ungültige Wache-ID', 400 );
+    $id = intval($_POST['wache_id'] ?? 0);
+    if ($id <= 0) {
+        wp_send_json_error('Ungültige Wache-ID', 400);
     }
 
+    if (!function_exists('lsttraining_get_connection')) {
+        require_once plugin_dir_path(__FILE__) . 'db.php';
+    }
     $pdo = lsttraining_get_connection();
+
     try {
         $pdo->beginTransaction();
 
-        // 1) Alle Pivot-Beziehungen löschen
-        $pdo->prepare('DELETE FROM wache_leitstellen WHERE wache_id = ?')->execute([ $id ]);
-        $pdo->prepare('DELETE FROM wache_nebenleitstellen WHERE wache_id = ?')->execute([ $id ]);
+        // 1) Pivots löschen
+        $pdo->prepare('DELETE FROM wache_leitstellen WHERE wache_id = ?')->execute([$id]);
+        $pdo->prepare('DELETE FROM wache_nebenleitstellen WHERE wache_id = ?')->execute([$id]);
 
-        // 2) Die Wache selbst entfernen
+        // 2) Wache löschen
         $stmt = $pdo->prepare('DELETE FROM wachen WHERE id = ?');
-        $ok   = $stmt->execute([ $id ]);
-        if ( ! $ok ) {
-            throw new Exception( 'Löschen fehlgeschlagen: '. implode(', ', $stmt->errorInfo()) );
+        $ok   = $stmt->execute([$id]);
+        if (!$ok) {
+            throw new Exception('Löschen fehlgeschlagen: ' . implode(', ', $stmt->errorInfo()));
         }
 
         $pdo->commit();
         wp_send_json_success();
-    } catch ( Exception $e ) {
+    } catch (Exception $e) {
         $pdo->rollBack();
-        error_log( 'lsttraining_delete_wache ERROR: ' . $e->getMessage() );
-        wp_send_json_error( 'Löschen fehlgeschlagen', 500 );
+        error_log('lsttraining_delete_wache ERROR: ' . $e->getMessage());
+        wp_send_json_error('Löschen fehlgeschlagen', 500);
     }
 });
-
 
 /**
  * Legt eine neue Wache an und setzt erste Zuordnungen
  * @action wp_ajax_lsttraining_create_wache
  */
-add_action( 'wp_ajax_lsttraining_create_wache', function () {
-    if ( ! lsttraining_user_can( 'wachen' ) ) {
-        wp_send_json_error( 'Keine Berechtigung', 403 );
+add_action('wp_ajax_lsttraining_create_wache', function () {
+    if (!lsttraining_user_can('wachen')) {
+        wp_send_json_error('Keine Berechtigung', 403);
     }
 
     // Eingaben bereinigen
-    $name       = sanitize_text_field( $_POST['name']      ?? '' );
-    $typ        = sanitize_text_field( $_POST['typ']       ?? '' );
-    $latitude   = floatval( $_POST['latitude']   ?? 0 );
-    $longitude  = floatval( $_POST['longitude']  ?? 0 );
-    $arrival    = sanitize_text_field( $_POST['arrival_pos']   ?? '' );
-    $departure  = sanitize_text_field( $_POST['departure_pos'] ?? '' );
-    $ls_ids     = array_map('intval', (array) ($_POST['leitstellen']      ?? []) );
-    $nls_ids    = array_map('intval', (array) ($_POST['nebenleitstellen'] ?? []) );
+    $name       = sanitize_text_field($_POST['name']      ?? '');
+    $typ        = sanitize_text_field($_POST['typ']       ?? '');
+    $latitude   = floatval($_POST['latitude']   ?? 0);
+    $longitude  = floatval($_POST['longitude']  ?? 0);
+    $arrival    = sanitize_text_field($_POST['arrival_pos']   ?? '');
+    $departure  = sanitize_text_field($_POST['departure_pos'] ?? '');
+
+    $land       = sanitize_text_field($_POST['land']       ?? 'Deutschland');
+    $bundesland = sanitize_text_field($_POST['bundesland'] ?? '');
+    $bundesland = ($bundesland === '') ? null : $bundesland; // '' → NULL
+
+    $ls_ids     = array_map('intval', (array)($_POST['leitstellen']      ?? []));
+    $nls_ids    = array_map('intval', (array)($_POST['nebenleitstellen'] ?? []));
 
     // Pflichtfelder prüfen
-    if ( $name === '' || $latitude === 0 || $longitude === 0 ) {
-        wp_send_json_error( 'Pflichtfelder fehlen', 400 );
+    if ($name === '' || $latitude === 0 || $longitude === 0) {
+        wp_send_json_error('Pflichtfelder fehlen', 400);
     }
 
+    if (!function_exists('lsttraining_get_connection')) {
+        require_once plugin_dir_path(__FILE__) . 'db.php';
+    }
     $pdo = lsttraining_get_connection();
+
     try {
         $pdo->beginTransaction();
 
         // 1) Neue Wache anlegen
         $stmt = $pdo->prepare(
-            'INSERT INTO wachen (name, typ, latitude, longitude, arrival_pos, departure_pos)
-             VALUES (?, ?, ?, ?, ?, ?)'
+            'INSERT INTO wachen
+                (name, typ, latitude, longitude, arrival_pos, departure_pos, land, bundesland)
+             VALUES
+                (:name, :typ, :lat, :lon, :arr, :dep, :land, :bundesland)'
         );
-        $ok = $stmt->execute([
-            $name, $typ, $latitude, $longitude, $arrival, $departure
-        ]);
-        if ( ! $ok ) {
-            throw new Exception( 'Anlegen fehlgeschlagen: '. implode(', ', $stmt->errorInfo()) );
+        $stmt->bindValue(':name', $name);
+        $stmt->bindValue(':typ',  $typ);
+        $stmt->bindValue(':lat',  $latitude);
+        $stmt->bindValue(':lon',  $longitude);
+        $stmt->bindValue(':arr',  $arrival);
+        $stmt->bindValue(':dep',  $departure);
+        $stmt->bindValue(':land', $land);
+
+        if (is_null($bundesland)) {
+            $stmt->bindValue(':bundesland', null, PDO::PARAM_NULL);
+        } else {
+            $stmt->bindValue(':bundesland', $bundesland, PDO::PARAM_STR);
+        }
+
+        $ok = $stmt->execute();
+        if (!$ok) {
+            throw new Exception('Anlegen fehlgeschlagen: ' . implode(', ', $stmt->errorInfo()));
         }
         $new_id = $pdo->lastInsertId();
 
         // 2) Pivot-Zuordnungen: Leitstellen
-        if ( ! empty( $ls_ids ) ) {
+        if (!empty($ls_ids)) {
             $ins = $pdo->prepare('INSERT INTO wache_leitstellen (wache_id, leitstelle_id) VALUES (?, ?)');
-            foreach ( $ls_ids as $lid ) {
-                $ins->execute([ $new_id, $lid ]);
+            foreach ($ls_ids as $lid) {
+                $ins->execute([$new_id, $lid]);
             }
         }
 
         // 3) Pivot-Zuordnungen: Nebenleitstellen
-        if ( ! empty( $nls_ids ) ) {
+        if (!empty($nls_ids)) {
             $ins2 = $pdo->prepare('INSERT INTO wache_nebenleitstellen (wache_id, nebenleitstelle_id) VALUES (?, ?)');
-            foreach ( $nls_ids as $nlid ) {
-                $ins2->execute([ $new_id, $nlid ]);
+            foreach ($nls_ids as $nlid) {
+                $ins2->execute([$new_id, $nlid]);
             }
         }
 
         $pdo->commit();
-        wp_send_json_success([ 'id' => $new_id ]);
-    } catch ( Exception $e ) {
+        wp_send_json_success(['id' => $new_id]);
+    } catch (Exception $e) {
         $pdo->rollBack();
-        error_log( 'lsttraining_create_wache ERROR: ' . $e->getMessage() );
-        wp_send_json_error( 'Anlegen fehlgeschlagen', 500 );
+        error_log('lsttraining_create_wache ERROR: ' . $e->getMessage());
+        wp_send_json_error('Anlegen fehlgeschlagen', 500);
     }
 });
+
+
 
 
 
