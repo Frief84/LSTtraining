@@ -251,6 +251,20 @@ lsttraining_einsatzgebiet_editor(
 >
    Krankenhäuser bearbeiten
 </button>
+<?php
+$zuo_url = admin_url( 'admin.php?page=lsttraining_zuordnung_modal'
+    . '&entity_type=leitstelle&entity_id=' . intval($leitstelle_id)
+    . '&TB_iframe=true&width=1100&height=760' );
+?>
+<button type="button"
+        class="button"
+        id="w_zuord_button_l"
+        style="margin-left:10px;"
+        disabled
+        title="Bitte zuerst speichern">
+  Zuordnung der Wachen bearbeiten
+</button>
+
         <p>
             <button class="button button-primary">Speichern</button>
             <button type="button" class="button"

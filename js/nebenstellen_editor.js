@@ -312,7 +312,10 @@ window.editNebenstelle = function (id, name, zust, einwohner, flaeche, gps, nach
     : JSON.stringify(geojson || []);
   if (geoField) geoField.value = geoStr;
 
-  if (idField) idField.value = String(id);
+  if (idField) {
+  idField.value = String(id);
+  idField.dispatchEvent(new Event('input'));
+}
 
   // Titel
   if (formBox) {
@@ -708,7 +711,10 @@ window.createNebenstelle = function () {
         // INSERT → echte ID setzen, EG aktivieren, Label wechseln, Modal offen lassen
         if (!nebenId) {
           const newId = json.data?.id;
-          if (newId && idField) idField.value = String(newId);
+if (newId && idField) {
+  idField.value = String(newId);
+  idField.dispatchEvent(new Event('input'));
+}
 
           if (egBtn) {
             egBtn.disabled = false;
@@ -735,11 +741,48 @@ window.createNebenstelle = function () {
   }
 };
 
+function wireZuordnungButtonNeben() {
+  var btn     = document.getElementById('btn-open-zuordnung-neben');
+  var idField = document.getElementById('neben_update_id');
+  if (!btn || !idField) return;
+
+  // Mehrfach-Bindung verhindern
+  if (btn._zuoBound) return;
+  btn._zuoBound = true;
+
+  function getValidId() {
+    var v = (idField.value || '').trim();
+    return (/^\d+$/).test(v) && v !== '0' ? v : null;
+  }
+
+  function syncBtn() {
+    var id = getValidId();
+    btn.disabled = !id;
+    btn.title    = btn.disabled ? 'Bitte zuerst speichern' : '';
+  }
+
+  btn.addEventListener('click', function (e) {
+    e.preventDefault();
+    var id = getValidId();
+    if (!id) return;
+    // vorausgesetzt: zuordnung_modal.js ist enqueued und exportiert window.openZuordnungPopup
+    window.openZuordnungPopup({ entityType: 'nebenleitstelle', entityId: id });
+  });
+
+  // bei ID-Änderungen Button-State aktualisieren
+  idField.addEventListener('input',  syncBtn);
+  idField.addEventListener('change', syncBtn);
+
+  // initialer Zustand
+  syncBtn();
+}
 
 
 
 // Hook up the create button
 document.addEventListener('DOMContentLoaded', function () {
+ wireZuordnungButtonNeben();											
+											
   const createBtn = document.getElementById('create-nebenstelle');
   if (createBtn) {
     createBtn.addEventListener('click', function (e) {
@@ -849,8 +892,39 @@ window.updateNebenstellenMapFromGeo = function(geoStr) {
   } catch (e) {
     console.warn('updateNebenstellenMapFromGeo: Parse/Update-Fehler', e, geoStr);
   }
-};
-											
-											
+};											
+
+	  document.addEventListener('DOMContentLoaded', function(){
+  var btn = document.getElementById('btn-open-zuordnung-neben');
+  if (!btn) return;
+
+  function getId(){ return (document.getElementById('neben_update_id') || {}).value || ''; }
+  function valid(v){ return /^\d+$/.test(v) && v !== '0'; }
+
+  function sync(){
+    var id = getId();
+    btn.disabled = !valid(id);
+    btn.title    = btn.disabled ? 'Bitte zuerst speichern' : '';
+  }
+
+  if (!btn._bound){
+    btn._bound = true;
+    btn.addEventListener('click', function(e){
+      e.preventDefault();
+      var id = getId(); if (!valid(id)) return;
+      window.openZuordnungPopup({ entityType:'nebenleitstelle', entityId:id });
+    });
+  }
+
+  sync();
+  var idEl = document.getElementById('neben_update_id');
+  if (idEl && !idEl._obs){
+    idEl._obs = true;
+    idEl.addEventListener('input',  sync);
+    idEl.addEventListener('change', sync);
+  }
+});
+
+
 
 })();

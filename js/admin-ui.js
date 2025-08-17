@@ -311,4 +311,50 @@ function resetEditMaps() {
   if (poly) poly.value = '';
 }
 
+// === Gemeinsamer Inline-Popup-Opener (kein IFrame) ==========================
+function wireZuordnungButtonCommon(opts) {
+  var btn   = document.getElementById(opts.buttonId);
+  if (!btn) return;
+
+  // doppelte Bindung verhindern
+  if (btn._zuoBound) return;
+  btn._zuoBound = true;
+
+  function getValidId() {
+    var raw = (opts.getEntityId() || '').trim();
+    return (/^\d+$/).test(raw) && raw !== '0' ? raw : null;
+  }
+
+  function syncState() {
+    var id = getValidId();
+    if (id) {
+      btn.disabled = false;
+      btn.removeAttribute('title');
+    } else {
+      btn.disabled = true;
+      btn.title = 'Bitte zuerst speichern';
+    }
+  }
+
+  function onClick(e) {
+    e.preventDefault();
+    var id = getValidId();
+    if (!id) return;
+    openZuordnungPopup({ entityType: opts.entityType, entityId: id });
+  }
+
+  // initial und bei ID-Änderungen reagieren
+  syncState();
+  btn.addEventListener('click', onClick);
+
+  // wenn die ID aus einem Hidden-Feld kommt, hier die Quellen verdrahten:
+  (opts.watchIds || []).forEach(function(inputId){
+    var el = document.getElementById(inputId);
+    if (el && !el._zuoObs) {
+      el._zuoObs = true;
+      el.addEventListener('input',  syncState);
+      el.addEventListener('change', syncState);
+    }
+  });
+}
 

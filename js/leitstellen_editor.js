@@ -348,5 +348,54 @@
     openLeitstelleHospitalsEditor(id);
   });
 
-  console.log('[leitstellen_editor.js] Ready');
+document.addEventListener('DOMContentLoaded', function(){
+  // Wir lesen die ID primär aus #lst_update_id, optional aus ?ls_id
+  wireZuordnungButtonCommon({
+    buttonId  : 'w_zuord_button_l',
+    entityType: 'leitstelle',
+    getEntityId: function(){
+      var v = (document.getElementById('lst_update_id') || {}).value || '';
+      if (!v) v = new URLSearchParams(location.search).get('ls_id') || '';
+      return v;
+    },
+    watchIds: ['lst_update_id'] // bei Änderungen neu bewerten
+  });
+});
+
+document.addEventListener('DOMContentLoaded', function(){
+  var btn = document.getElementById('w_zuord_button_l');
+  if (!btn) return;
+
+  function getId(){
+    return (document.getElementById('lst_update_id') || {}).value
+        || new URLSearchParams(location.search).get('ls_id') || '';
+  }
+  function valid(v){ return /^\d+$/.test(v) && v !== '0'; }
+
+  function sync(){
+    var id = getId();
+    btn.disabled = !valid(id);
+    btn.title    = btn.disabled ? 'Bitte zuerst speichern' : '';
+  }
+
+  if (!btn._bound){
+    btn._bound = true;
+    btn.addEventListener('click', function(e){
+      e.preventDefault();
+      var id = getId(); if (!valid(id)) return;
+      window.openZuordnungPopup({ entityType:'leitstelle', entityId:id });
+    });
+  }
+
+  sync();
+  var idEl = document.getElementById('lst_update_id');
+  if (idEl && !idEl._obs){
+    idEl._obs = true;
+    idEl.addEventListener('input',  sync);
+    idEl.addEventListener('change', sync);
+  }
+});
+
+
+
 })(jQuery);

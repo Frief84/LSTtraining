@@ -493,4 +493,13 @@ pointer-events: auto;
   width: 100%;
   box-sizing: border-box;
 }
+#wache-edit-modal #mw-land{
+	
+}
+#calc-flaeche{
+	    margin-top: 10px;
+}
+#einsatzgebiet_container{
+	margin-top: 10px;
+}
 

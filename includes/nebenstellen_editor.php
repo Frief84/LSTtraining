@@ -14,6 +14,7 @@ add_action('wp_ajax_lsttraining_get_next_neben_id', function() {
     wp_send_json_success($next);
 });
 
+
 $base = plugin_dir_url( __FILE__ ) . '..';
 require_once plugin_dir_path( __FILE__ ) . '/db.php';
 require_once plugin_dir_path( __FILE__ ) . '/einsatzgebiet-editor.php';
@@ -142,10 +143,8 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['neben_create'] ) &&
                 <td><?php echo esc_html( $n->gps ); ?></td>
                 <td><?php echo $n->has_geojson ? '✅' : '❌'; ?></td>
                 <td>
-                    <a href="#" class="button" onclick="<?php echo htmlspecialchars( $onclick ); ?>">Bearbeiten</a>
-                    <button type="button"
-							class="button button-link-delete js-delete-nebenstelle"
-							data-id="<?php echo esc_attr( $n->id ); ?>">
+                    <a href="#" class="button"  onclick="<?php echo htmlspecialchars( $onclick ); ?>" style="    margin-bottom: 5px;">Bearbeiten</a>
+                    <button type="button" class="button button-link-delete js-delete-nebenstelle" data-id="<?php echo esc_attr( $n->id ); ?>" style="width: 85px;">
 					  Löschen
 					</button>
                 </td>
@@ -200,6 +199,26 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['neben_create'] ) &&
     Leitstelle übernehmen
   </button>
 
+<button type="button"
+        class="button"
+        id="btn-open-zuordnung-neben"
+        style="margin-left:10px;"
+        disabled
+        title="Bitte zuerst speichern">
+  Zuordnung der Wachen bearbeiten
+</button>
+
+
+
+
+        </div>
+
+        <p style="margin-top:1rem;">
+            <button class="button button-primary" id="nebenstelle-save-button" >Speichern</button>
+            <button type="button" class="button" onclick="closeNebenstellePopup()">Abbrechen</button>
+        </p>
+    </form>
+</div>
 <!-- Copy-Leitstelle Modal (initial ausgeblendet) -->
 <div id="copy-leit-modal" class="hidden" style="position:fixed;top:0;left:0;
      width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;
@@ -224,18 +243,9 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['neben_create'] ) &&
         Diese Leitstelle übernehmen
       </button>
     </p>
+
   </div>
 </div>
-
-        </div>
-
-        <p style="margin-top:1rem;">
-            <button class="button button-primary" id="nebenstelle-save-button" >Speichern</button>
-            <button type="button" class="button" onclick="closeNebenstellePopup()">Abbrechen</button>
-        </p>
-    </form>
-</div>
-
 <script>
 /* helper to close the popup */
 function closeNebenstellePopup () {

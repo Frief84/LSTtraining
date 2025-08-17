@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 require_once plugin_dir_path( __FILE__ ) . '/db.php';
 require_once plugin_dir_path( __FILE__ ) . '/permissions.php';
-
+require_once plugin_dir_path( __FILE__ ) . '/geo.php';
 
 /* -------------------------------------------------------------------------
  * 1. LEITSTELLEN (GeoJSON-Editor)
@@ -113,50 +113,7 @@ add_action( 'wp_ajax_lsttraining_save_neben_einsatzgebiet', function () {
     wp_send_json_success();
 });
 
-/**
- * Ajax: neue Nebenleitstelle anlegen
- * @action wp_ajax_lsttraining_create_nebenleitstelle
- */
-add_action('wp_ajax_lsttraining_create_nebenleitstelle', function () use ($wpdb) {
 
-	error_log('[AJAX] reached lsttraining_create_nebenstelle');
-	check_ajax_referer('lst_nebenstellen_nonce');
-    $table = $wpdb->prefix . 'nebenleitstellen';
-
-    $id   = intval($_POST['id'] ?? 0); // optional, falls externe ID-Vergabe
-    $name = sanitize_text_field($_POST['name'] ?? '');
-
-    if ($name !== '') {
-        $exists = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table WHERE name=%s", $name));
-        if ($exists) {
-            wp_send_json_error(['code' => 'name_conflict', 'message' => 'Name bereits vorhanden'], 409);
-        }
-    }
-
-    $data = [
-        'name'                => $name,
-        'zustandigkeit'       => sanitize_text_field($_POST['zustandigkeit'] ?? ''),
-        'einwohner'           => intval($_POST['einwohner'] ?? 0),
-        'flaeche_km2'         => floatval($_POST['flaeche'] ?? 0),
-        'gps'                 => sanitize_text_field($_POST['gps'] ?? ''),
-        'nachbarleitstelle'   => 0,
-        'geojson'             => null,
-        'created_by'          => get_current_user_id(),
-        'created_at'          => current_time('mysql', 1),
-    ];
-
-    $format = ['%s','%s','%d','%f','%s','%d','%s','%d','%s'];
-    if ($id > 0) {
-        $data['id'] = $id;
-        array_unshift($format, '%d');
-    }
-
-    $ok = $wpdb->insert($table, $data, $format);
-    if (!$ok) wp_send_json_error('Insert fehlgeschlagen', 500);
-
-    $new_id = $wpdb->insert_id ?: $id;
-    wp_send_json_success(['id' => $new_id]);
-});
 
 /**
  * Speichern einer Nebenleitstelle (Insert oder Update)
@@ -171,7 +128,7 @@ add_action('wp_ajax_lsttraining_save_nebenleitstelle', function () {
         wp_send_json_error(['code'=>'forbidden','msg'=>'Keine Berechtigung'], 403);
     }
 
-    // 2) DB verbinden (PDO aus db.php, nicht $wpdb)
+    // 2) DB verbinden 
     require_once plugin_dir_path(__FILE__) . 'db.php';
     try {
         $pdo = lsttraining_get_connection(); // verbindet zu deiner externen DB
@@ -1539,5 +1496,390 @@ function lsttraining_ajax_copy_leitstelle() {
         wp_send_json_error( 'Server-Fehler beim Übernehmen', 500 );
     }
 }
+
+// Sicherheits-Helper
+function lst_z_check($cap = 'manage_options'){
+    if ( ! current_user_can($cap) ) {
+        wp_send_json_error(['msg'=>'Keine Berechtigung'], 403);
+    }
+    $nonce = $_POST['_wpnonce'] ?? $_POST['wpnonce'] ?? $_POST['nonce'] ?? '';
+    if ( ! wp_verify_nonce($nonce, 'lst_zuordnung') ) {
+        wp_send_json_error(['msg'=>'Ungültiger Nonce'], 403);
+    }
+}
+
+// Wachen im Polygon finden + Zuordnungsstatus (PDO + GeoJSON-Override)
+add_action('wp_ajax_lsttraining_find_wachen_in_polygon', function () {
+    // Rechte + Nonce prüfen (dein Helper, der KEINE DB benötigt)
+    lst_z_check();
+
+    $type = sanitize_key($_POST['entity_type'] ?? '');
+    $id   = (int)($_POST['entity_id'] ?? 0);
+    if (!in_array($type, ['leitstelle','nebenleitstelle'], true) || $id <= 0) {
+        wp_send_json_error(['msg' => 'Ungültige Parameter'], 400);
+    }
+
+    // 1) GeoJSON laden: bevorzugt Override vom Client, sonst aus DB (Spalte: geojson)
+    $geojson = trim(stripslashes($_POST['geojson'] ?? ''));
+    try {
+        if ($geojson === '') {
+            require_once plugin_dir_path(__FILE__) . 'db.php';
+            $pdo   = lsttraining_get_connection();
+            $table = ($type === 'leitstelle') ? 'leitstellen' : 'nebenleitstellen';
+            $st    = $pdo->prepare("SELECT geojson FROM {$table} WHERE id = ?");
+            $st->execute([$id]);
+            $geojson = (string)$st->fetchColumn();
+        }
+        if ($geojson === '') {
+            wp_send_json_success(['wachen' => []]); // kein Gebiet → keine Treffer
+        }
+        $obj = json_decode($geojson, true, 512, JSON_THROW_ON_ERROR);
+    } catch (Throwable $e) {
+        wp_send_json_error(['msg' => 'Defektes GeoJSON'], 400);
+    }
+
+    // 2) In MultiPolygon normalisieren + BBOX berechnen
+    $mp = lst_geo_to_multipolygon($obj);      // Liste von Außenringen
+    if (!$mp) {
+        wp_send_json_success(['wachen' => []]);
+    }
+    [$minLon,$minLat,$maxLon,$maxLat] = lst_mpoly_bbox($mp);
+
+    // 3) Kandidaten mit PDO holen (deine echte Wachen-Tabelle)
+    $pdo = isset($pdo) ? $pdo : lsttraining_get_connection();
+    $st  = $pdo->prepare("
+        SELECT id, name, typ, latitude, longitude
+          FROM wachen
+         WHERE longitude BETWEEN ? AND ?
+           AND latitude  BETWEEN ? AND ?
+    ");
+    $st->execute([$minLon, $maxLon, $minLat, $maxLat]);
+    $cands = $st->fetchAll(PDO::FETCH_ASSOC);
+
+    // 4) Zuordnungsstatus (Pivot) per PDO
+    $relTable = ($type === 'leitstelle') ? 'wache_leitstellen' : 'wache_nebenleitstellen';
+    $ownerCol = ($type === 'leitstelle') ? 'leitstelle_id'     : 'nebenleitstelle_id';
+    $assigned = [];
+    if ($cands) {
+        $ids = array_map('intval', array_column($cands, 'id'));
+        $in  = implode(',', array_fill(0, count($ids), '?'));
+        $st2 = $pdo->prepare("SELECT wache_id FROM {$relTable} WHERE {$ownerCol} = ? AND wache_id IN ($in)");
+        $st2->execute(array_merge([$id], $ids));
+        foreach ($st2->fetchAll(PDO::FETCH_COLUMN) as $wid) {
+            $assigned[(int)$wid] = true;
+        }
+    }
+
+    // 5) Punkt-in-Polygon filtern (lon,lat!)
+    $inside = [];
+    foreach ($cands as $w) {
+        $pt = [(float)$w['longitude'], (float)$w['latitude']];
+        if (lst_point_in_mpoly($pt, $mp)) {
+            $w['assigned'] = !empty($assigned[(int)$w['id']]);
+            $inside[] = $w;
+        }
+    }
+
+    wp_send_json_success(['wachen' => $inside]);
+});
+
+
+
+// Einsatzgebiet laden
+// Einsatzgebiet laden (mit optionalem GeoJSON-Override)
+add_action('wp_ajax_lsttraining_get_entity_polygon', function(){
+    lst_z_check();
+
+    $type = sanitize_key($_POST['entity_type'] ?? '');
+    $id   = (int)($_POST['entity_id'] ?? 0);
+    if (!in_array($type, ['leitstelle','nebenleitstelle'], true) || $id <= 0) {
+        wp_send_json_error(['msg'=>'Ungültige Parameter'], 400);
+    }
+
+    // 1) Override: wenn mitgesendet, direkt zurückgeben – kein DB-Lesezugriff
+    if (isset($_POST['geojson']) && $_POST['geojson'] !== '') {
+        $geojson = wp_unslash($_POST['geojson']);
+        wp_send_json_success(['geojson' => $geojson]);
+    }
+
+    // 2) Fallback: aus DB via PDO (Tabellen/Spalte lt. Schema: geojson)
+    $pdo = lsttraining_get_connection();
+    if (! $pdo instanceof PDO) {
+        wp_send_json_error(['msg'=>'DB-Verbindung fehlgeschlagen'], 500);
+    }
+
+    // Rechte passend prüfen
+    if ($type === 'leitstelle') {
+        if (!lsttraining_user_can('leitstellen', $id)) wp_send_json_error(['msg'=>'Keine Berechtigung'], 403);
+        $stmt = $pdo->prepare('SELECT geojson FROM leitstellen WHERE id = ?');
+    } else {
+        if (!lsttraining_user_can('nebenstellen')) wp_send_json_error(['msg'=>'Keine Berechtigung'], 403);
+        $stmt = $pdo->prepare('SELECT geojson FROM nebenleitstellen WHERE id = ?');
+    }
+
+    $stmt->execute([$id]);
+    $geojson = $stmt->fetchColumn();
+
+    if (!$geojson) {
+        wp_send_json_error(['msg'=>'Kein Einsatzgebiet hinterlegt'], 404);
+    }
+
+    wp_send_json_success(['geojson' => $geojson]);
+});
+
+
+// Einsatzgebiet laden (mit optionalem GeoJSON-Override)
+add_action('wp_ajax_lsttraining_get_entity_polygon', function(){
+    lst_z_check();
+
+    $type = sanitize_key($_POST['entity_type'] ?? '');
+    $id   = (int)($_POST['entity_id'] ?? 0);
+    if (!in_array($type, ['leitstelle','nebenleitstelle'], true) || $id <= 0) {
+        wp_send_json_error(['msg'=>'Ungültige Parameter'], 400);
+    }
+
+    // 1) Override: wenn mitgesendet, direkt zurückgeben – kein DB-Lesezugriff
+    if (isset($_POST['geojson']) && $_POST['geojson'] !== '') {
+        $geojson = wp_unslash($_POST['geojson']);
+        wp_send_json_success(['geojson' => $geojson]);
+    }
+
+    // 2) Fallback: aus DB via PDO (Tabellen/Spalte lt. Schema: geojson)
+    $pdo = lsttraining_get_connection();
+    if (! $pdo instanceof PDO) {
+        wp_send_json_error(['msg'=>'DB-Verbindung fehlgeschlagen'], 500);
+    }
+
+    // Rechte passend prüfen
+    if ($type === 'leitstelle') {
+        if (!lsttraining_user_can('leitstellen', $id)) wp_send_json_error(['msg'=>'Keine Berechtigung'], 403);
+        $stmt = $pdo->prepare('SELECT geojson FROM leitstellen WHERE id = ?');
+    } else {
+        if (!lsttraining_user_can('nebenstellen')) wp_send_json_error(['msg'=>'Keine Berechtigung'], 403);
+        $stmt = $pdo->prepare('SELECT geojson FROM nebenleitstellen WHERE id = ?');
+    }
+
+    $stmt->execute([$id]);
+    $geojson = $stmt->fetchColumn();
+
+    if (!$geojson) {
+        wp_send_json_error(['msg'=>'Kein Einsatzgebiet hinterlegt'], 404);
+    }
+
+    wp_send_json_success(['geojson' => $geojson]);
+});
+
+
+
+
+/** ===== Helpers ===== **/
+
+function lst_poly_bbox(array $geo){
+    // unterstützt Polygon und MultiPolygon
+    $coords = [];
+    if (isset($geo['type']) && $geo['type'] === 'Polygon') {
+        $coords = $geo['coordinates'][0];
+    } elseif (isset($geo['type']) && $geo['type'] === 'MultiPolygon') {
+        foreach ($geo['coordinates'] as $poly) {
+            $coords = array_merge($coords, $poly[0]);
+        }
+    }
+    $minLon = $minLat =  999;
+    $maxLon = $maxLat = -999;
+    foreach ($coords as $c) {
+        $lon = (float)$c[0]; $lat = (float)$c[1];
+        if ($lon < $minLon) $minLon = $lon;
+        if ($lon > $maxLon) $maxLon = $lon;
+        if ($lat < $minLat) $minLat = $lat;
+        if ($lat > $maxLat) $maxLat = $lat;
+    }
+    return [$minLon,$minLat,$maxLon,$maxLat];
+}
+
+function lst_point_in_polygon(array $pt, array $geo){
+    // Ray-Casting, unterstützt Polygon/MultiPolygon, pt = [lon,lat]
+    if ($geo['type'] === 'Polygon') {
+        return lst_pip_polygon($pt, $geo['coordinates'][0]);
+    } elseif ($geo['type'] === 'MultiPolygon') {
+        foreach ($geo['coordinates'] as $poly) {
+            if (lst_pip_polygon($pt, $poly[0])) return true;
+        }
+    }
+    return false;
+}
+function lst_pip_polygon($pt, $ring){
+    $x = $pt[0]; $y = $pt[1];
+    $inside = false;
+    for ($i = 0, $j = count($ring)-1; $i < count($ring); $j = $i++) {
+        $xi = $ring[$i][0]; $yi = $ring[$i][1];
+        $xj = $ring[$j][0]; $yj = $ring[$j][1];
+        $intersect = (($yi > $y) != ($yj > $y))
+            && ($x < ($xj - $xi) * ($y - $yi) / (($yj - $yi) ?: 1e-12) + $xi);
+        if ($intersect) $inside = !$inside;
+    }
+    return $inside;
+}
+
+
+
+function lsttraining_find_wachen_in_polygon_core_pdo(PDO $pdo, string $type, int $id, ?string $geoOverride = null): array {
+    // Polygon laden
+    if ($geoOverride !== null && $geoOverride !== '') {
+        $geojson = $geoOverride;
+    } else {
+        if ($type === 'leitstelle') {
+            $stmt = $pdo->prepare('SELECT geojson FROM leitstellen WHERE id = ?');
+        } else {
+            $stmt = $pdo->prepare('SELECT geojson FROM nebenleitstellen WHERE id = ?');
+        }
+        $stmt->execute([$id]);
+        $geojson = $stmt->fetchColumn();
+        if (!$geojson) return ['ok'=>false,'msg'=>'Kein Einsatzgebiet'];
+    }
+
+    $poly = json_decode($geojson, true);
+    if (!$poly) return ['ok'=>false,'msg'=>'Defektes GeoJSON'];
+
+    list($minLon,$minLat,$maxLon,$maxLat) = lst_poly_bbox($poly);
+
+    $stmtW = $pdo->prepare(
+        'SELECT id, latitude, longitude
+           FROM wachen
+          WHERE longitude BETWEEN :minLon AND :maxLon
+            AND latitude  BETWEEN :minLat AND :maxLat'
+    );
+    $stmtW->execute([
+        ':minLon'=>$minLon, ':maxLon'=>$maxLon, ':minLat'=>$minLat, ':maxLat'=>$maxLat
+    ]);
+    $cands = $stmtW->fetchAll(PDO::FETCH_ASSOC);
+
+    $ids = [];
+    foreach ($cands as $w) {
+        if (lst_point_in_polygon([(float)$w['longitude'], (float)$w['latitude']], $poly)) {
+            $ids[] = (int)$w['id'];
+        }
+    }
+    return ['ok'=>true,'ids'=>$ids];
+}
+
+// Alle Wachen im Einsatzgebiet zuordnen (exklusiv je Dimension) – PDO
+add_action('wp_ajax_lsttraining_assign_wachen_in_polygon', function () {
+    lst_z_check();
+    $type = sanitize_key($_POST['entity_type'] ?? '');
+    $id   = (int)($_POST['entity_id'] ?? 0);
+    if (!in_array($type, ['leitstelle','nebenleitstelle'], true) || $id <= 0) {
+        wp_send_json_error(['msg'=>'Ungültige Parameter'], 400);
+    }
+
+    // dieselbe Logik wie oben (GeoJSON laden/normalisieren) → hole $ids der Wachen im Gebiet:
+    $ids = lst_find_ids_via_geo_override($type, $id); // siehe Helper unten
+    if (!$ids) wp_send_json_success(['assigned' => 0]);
+
+    $pdo = lsttraining_get_connection();
+    $rel = ($type==='leitstelle') ? 'wache_leitstellen' : 'wache_nebenleitstellen';
+    $col = ($type==='leitstelle') ? 'leitstelle_id'     : 'nebenleitstelle_id';
+
+    // exklusiv in dieser Dimension
+    $in = implode(',', array_fill(0, count($ids), '?'));
+    $pdo->prepare("DELETE FROM {$rel} WHERE wache_id IN ($in)")->execute($ids);
+
+    $vals = [];
+    foreach ($ids as $wid) $vals[] = '(' . (int)$wid . ', ' . (int)$id . ')';
+    $sql = "INSERT INTO {$rel} (wache_id, {$col}) VALUES " . implode(',', $vals);
+    $pdo->exec($sql);
+
+    wp_send_json_success(['assigned' => count($ids)]);
+});
+
+add_action('wp_ajax_lsttraining_unassign_wachen_in_polygon', function () {
+    lst_z_check();
+    $type = sanitize_key($_POST['entity_type'] ?? '');
+    $id   = (int)($_POST['entity_id'] ?? 0);
+    if (!in_array($type, ['leitstelle','nebenleitstelle'], true) || $id <= 0) {
+        wp_send_json_error(['msg'=>'Ungültige Parameter'], 400);
+    }
+    $ids = lst_find_ids_via_geo_override($type, $id);
+    if (!$ids) wp_send_json_success(['removed' => 0]);
+
+    $pdo = lsttraining_get_connection();
+    $rel = ($type==='leitstelle') ? 'wache_leitstellen' : 'wache_nebenleitstellen';
+    $col = ($type==='leitstelle') ? 'leitstelle_id'     : 'nebenleitstelle_id';
+
+    $in  = implode(',', array_fill(0, count($ids), '?'));
+    $st  = $pdo->prepare("DELETE FROM {$rel} WHERE {$col} = ? AND wache_id IN ($in)");
+    $st->execute(array_merge([$id], $ids));
+
+    wp_send_json_success(['removed' => count($ids)]);
+});
+
+// Helper: IDs via aktuellem (Override-)GeoJSON bestimmen
+function lst_find_ids_via_geo_override(string $type, int $id): array {
+    $geojson = trim(stripslashes($_POST['geojson'] ?? ''));
+    $pdo     = lsttraining_get_connection();
+
+    if ($geojson === '') {
+        $table = ($type === 'leitstelle') ? 'leitstellen' : 'nebenleitstellen';
+        $st = $pdo->prepare("SELECT geojson FROM {$table} WHERE id = ?");
+        $st->execute([$id]);
+        $geojson = (string)$st->fetchColumn();
+    }
+    if ($geojson === '') return [];
+
+    $obj = json_decode($geojson, true);
+    $mp  = lst_geo_to_multipolygon($obj);
+    if (!$mp) return [];
+
+    [$minLon,$minLat,$maxLon,$maxLat] = lst_mpoly_bbox($mp);
+    $st = $pdo->prepare("
+        SELECT id, latitude, longitude
+          FROM wachen
+         WHERE longitude BETWEEN ? AND ?
+           AND latitude  BETWEEN ? AND ?
+    ");
+    $st->execute([$minLon,$maxLon,$minLat,$maxLat]);
+    $cands = $st->fetchAll(PDO::FETCH_ASSOC);
+
+    $ids = [];
+    foreach ($cands as $w) {
+        $pt = [(float)$w['longitude'], (float)$w['latitude']];
+        if (lst_point_in_mpoly($pt, $mp)) $ids[] = (int)$w['id'];
+    }
+    return $ids;
+}
+
+
+// Alle Wachen im Einsatzgebiet von DIESER Entity abmelden – PDO
+add_action('wp_ajax_lsttraining_unassign_wachen_in_polygon', function(){
+    lst_z_check();
+
+    $type = sanitize_key($_POST['entity_type'] ?? '');
+    $id   = (int)($_POST['entity_id'] ?? 0);
+    if (!in_array($type, ['leitstelle','nebenleitstelle'], true) || $id <= 0) {
+        wp_send_json_error(['msg'=>'Ungültige Parameter'], 400);
+    }
+
+    $pdo = lsttraining_get_connection();
+    if (! $pdo instanceof PDO) {
+        wp_send_json_error(['msg'=>'DB-Verbindung fehlgeschlagen'], 500);
+    }
+
+    $geoOverride = isset($_POST['geojson']) ? wp_unslash($_POST['geojson']) : null;
+    $res = lsttraining_find_wachen_in_polygon_core_pdo($pdo, $type, $id, $geoOverride);
+    if (!$res['ok']) wp_send_json_error(['msg'=>$res['msg'] ?? 'Fehler'], 500);
+
+    $w_ids = $res['ids'];
+    if (!$w_ids) wp_send_json_success(['removed'=>0]);
+
+    $relTable = ($type === 'leitstelle') ? 'wache_leitstellen' : 'wache_nebenleitstellen';
+    $ownerCol = ($type === 'leitstelle') ? 'leitstelle_id'    : 'nebenleitstelle_id';
+
+    $in = implode(',', array_fill(0, count($w_ids), '?'));
+    $sql = "DELETE FROM $relTable WHERE $ownerCol = ? AND wache_id IN ($in)";
+    $stmt = $pdo->prepare($sql);
+    $args = array_merge([$id], $w_ids);
+    $stmt->execute($args);
+
+    wp_send_json_success(['removed'=>count($w_ids)]);
+});
 
 

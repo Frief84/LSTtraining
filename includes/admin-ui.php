@@ -32,6 +32,21 @@ add_action('admin_enqueue_scripts', function ($hook) {
         '1.0.0', true);
         wp_localize_script('lst-leitstellen-editor', 'lstLeitstellenAjax', // eigene Variable
         ['ajax_url' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('lsttraining_leitstellen'), ]);
+		
+		// Inline-Overlay (ohne iFrame) laden
+wp_enqueue_script(
+    'lst-zuordnung-inline',
+    $root_url . 'js/zuordnung_modal.js',
+    ['lst-openlayers'],
+    '1.0.0',
+    true
+);
+
+// Nonce + ajax_url für die Zuordnungs-Calls
+wp_localize_script('lst-zuordnung-inline', 'lstZuordnungAjax', [
+    'ajax_url' => admin_url('admin-ajax.php'),
+    'nonce'    => wp_create_nonce('lst_zuordnung'),
+]);
     }
     // --- 2) Assets only for ► Leitstellen ▸ Krankenhäuser ------------------
    if (strpos($hook, '_page_lsttraining_krankenhaeuser') !== false) {
@@ -123,6 +138,20 @@ add_action('admin_enqueue_scripts', function ($hook) {
     wp_enqueue_script('lst-nebenstellen-editor', $plugin_url . 'js/nebenstellen_editor.js', ['jquery', 'lst-openlayers'], '1.1.2', true);
     // 4) GeoJSON-Upload
     wp_enqueue_script('lst-einsatzgebiet-upload', $plugin_url . 'js/einsatzgebiet_upload.js', ['jquery', 'lst-nebenstellen-editor', 'turf'], '1.1.4', true);
+	
+wp_enqueue_script(
+    'lst-zuordnung-inline',
+    $plugin_url . 'js/zuordnung_modal.js',
+    ['lst-openlayers'],
+    '1.0.0',
+    true
+);
+
+wp_localize_script('lst-zuordnung-inline', 'lstZuordnungAjax', [
+    'ajax_url' => admin_url('admin-ajax.php'),
+    'nonce'    => wp_create_nonce('lst_zuordnung'),
+]);
+
     // 5) Daten/Nonces für Ajax
     require_once plugin_dir_path(__FILE__) . 'db.php';
     $all_ls = [];
@@ -238,3 +267,6 @@ if (!function_exists('lsttraining_render_benutzer_page')) {
         }
     }
 }
+
+
+
