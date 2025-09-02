@@ -10,68 +10,47 @@ $pdo = lsttraining_get_connection();
 
 <!-- Underscore-Template für die Fachbereichs-Auswahl -->
 <script type="text/html" id="tmpl-departments-editor">
-    <div class="departments-edit-content">
+  <div class="departments-edit-content">
     <form id="departments-edit-form">
-
-      <!-- Hospital-ID verstecken -->
       <input type="hidden" name="hospital_id" value="{{ data.hospital_id }}">
 
-      <!-- 1) Checkbox-Liste -->
-	  <input type="search"
-        id="dept-filter"
-        placeholder="Fachbereich suchen…"
-  style="width:100%;padding:4px;margin-bottom:8px;"></input>
-<div id="departments-selector"
-     style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
-            max-height:200px;overflow-y:auto;margin-bottom:1em;">
+      <input type="search" id="dept-filter" placeholder="Fachbereich suchen…" style="width:100%;padding:4px;margin-bottom:8px;">
 
-  <# _.each( data.departments, function( label, code ){ #>
-    <label style="display:flex;align-items:center;">
-      <input class="dept-toggle" type="checkbox" name="departments[]"  value="{{ code }}">
-      <span style="margin-left:4px;">{{ label }}</span>
-    </label>
-  <# }); #>
+      <div id="departments-selector" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-height:200px;overflow-y:auto;margin-bottom:1em;">
+        <# _.each(data.allowed_pairs, function(item){ #>
+          <label style="display:flex;align-items:center;">
+            <input class="dept-toggle" type="checkbox"
+                   name="departments[]"
+                   value="{{ item.code }}"
+                   data-code="{{ item.code }}">
+            <span style="margin-left:4px;">{{ item.label }}</span>
+          </label>
+        <# }); #>
+      </div>
 
-</div>
-
-      <!-- 2) Kurze Anleitung -->
       <p class="description">
         Wähle hier aus, welche Fachbereiche verfügbar sein sollen.
         In der Tabelle unten kannst du Priorität und Standort-Koordinaten anpassen.
         Klick auf eine Zeile aktiviert deren Marker zum Verschieben.
       </p>
 
-      <!-- 3) Detail-Tabelle -->
       <table class="form-table" id="departments-details-table" style="width:100%;">
         <thead>
-  <tr>
-    <th><?php esc_html_e( 'Aktiv',       'lsttraining' ); ?></th>
-    <th><?php esc_html_e( 'Koordinaten', 'lsttraining' ); ?></th>
-  </tr>
-</thead>
-        <tbody>
-          <!-- JS fügt hier die Zeilen ein -->
-        </tbody>
+          <tr>
+            <th>Aktiv</th>
+            <th>Koordinaten</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
       </table>
 
-      <!-- 4) Speichern + Abbrechen -->
       <p class="submit" style="display:flex;justify-content:flex-end;gap:0.5em;">
-        <button type="submit" class="button button-primary">
-          <?php esc_html_e( 'Speichern', 'lsttraining' ); ?>
-        </button>
-        <button type="button" id="departments-edit-cancel" class="button">
-          <?php esc_html_e( 'Abbrechen', 'lsttraining' ); ?>
-        </button>
+        <button type="submit" class="button button-primary">Speichern</button>
+        <button type="button" id="departments-edit-cancel" class="button">Abbrechen</button>
       </p>
     </form>
 
-    <!-- 5) Karte -->
-    <div id="dept-map"
-         style="height:300px;
-                width:100%;
-                margin-top:20px;
-                border:1px solid #ccc;">
-    </div>
+    <div id="dept-map" style="height:300px;width:100%;margin-top:20px;border:1px solid #ccc;"></div>
   </div>
 </script>
 

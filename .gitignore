@@ -14,3 +14,9 @@ dwsync.xml
 "includes/_notes/" 
 "js/_notes/" 
 **/_notes/"**/_notes/" 
+
+# ignore everything in database
+/database/*
+
+# but keep schema.sql under version control
+!/database/schema.sql

@@ -1,7 +1,24 @@
 // js/wachen.js
 
 (function($) {
-
+	
+if (typeof window.escapeHtml !== 'function') {
+  window.escapeHtml = function (input) {
+    if (input == null) return '';
+    return String(input).replace(/[&<>"'`=\/]/g, function (c) {
+      return {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+        '/': '&#x2F;',
+        '`': '&#x60;',
+        '=': '&#x3D;'
+      }[c] || c;
+    });
+  };
+}
     document.addEventListener('DOMContentLoaded', () => {
         const btn = document.getElementById('btn-new-wache');
         if (btn) btn.addEventListener('click', e => {
@@ -10,6 +27,15 @@
         });
     });
 
+    /**
+     * Erzeugt die Optionsliste für das Bundesland-Select im Wachen-Modal.
+     * Erwartet ein Mapping-Objekt { [land: string]: string[] }.
+     *
+     * @param {string} land - Länderkey (z. B. "Deutschland").
+     * @param {string} selected - Vorbelegung (exakter Match in der Liste).
+     * @param {Object.<string, string[]>} mapJson - Mapping Land → Bundesländer.
+     * @returns {string} HTML-String mit <option>-Elementen.
+     */
     function buildBundeslandOptionsForModal(land, selected, mapJson) {
         const list = (mapJson && mapJson[land]) || [];
         const opts = [];
@@ -21,10 +47,15 @@
         }
         return opts.join('');
     }
+
     /**
-     * Öffnet das Bearbeiten-Modal mit bestehenden Daten.
-     * Erwartet Felder: id, name, typ, latitude, longitude, arrival_pos, departure_pos
-     * (Fallbacks auf wache_id / lat / lon sind eingebaut)
+     * Öffnet das Bearbeiten-Modal (Update) mit bestehenden Stationsdaten.
+     * Nutzt #tmpl-wache-edit-form, fällt bei Bedarf auf bestehendes Formular #wache-edit-form zurück.
+     * Initialisiert im Modal die Edit-Karte.
+     *
+     * Erwartete Felder in `wache`: id|wache_id, name, typ, latitude|lat, longitude|lon, arrival_pos|arrival, departure_pos|departure
+     *
+     * @param {Object} wache - Datensatz der Wache.
      */
     function openWacheModal(wache) {
         // 1) Daten normalisieren
@@ -114,7 +145,6 @@
             $blM.html(buildBundeslandOptionsForModal($(this).val() || 'Deutschland', '', mapJson));
         });
 
-
         // Werte aus Datensatz
         var land = (wache && (wache.land || wache.country)) || 'Deutschland';
         var bl = (wache && wache.bundesland) || '';
@@ -128,13 +158,9 @@
             const newLand = $(this).val() || 'Deutschland';
             $blM.html(buildBundeslandOptionsForModal(newLand, '', mapJson));
         });
-
-
-
     }
 
-
-
+    /** Markerstil für Hauptposition (rot). @type {ol.style.Style} */
     const styleMain = new ol.style.Style({
         image: new ol.style.Circle({
             radius: 6,
@@ -143,6 +169,8 @@
             })
         })
     });
+
+    /** Markerstil für Anfahrt (grün). @type {ol.style.Style} */
     const styleArr = new ol.style.Style({
         image: new ol.style.Circle({
             radius: 5,
@@ -151,6 +179,8 @@
             })
         })
     });
+
+    /** Markerstil für Abfahrt (blau). @type {ol.style.Style} */
     const styleDep = new ol.style.Style({
         image: new ol.style.Circle({
             radius: 5,
@@ -160,21 +190,38 @@
         })
     });
 
-    /* Helper – lat/lon-String → [lon,lat] oder null */
+    /**
+     * Wandelt einen "lat,lon"-String in ein LonLat-Tupel um.
+     *
+     * @param {string} str - Eingabe "lat,lon".
+     * @returns {[number, number] | null} [lon, lat] oder null bei ungültig.
+     */
     function strToLonLat(str) {
         const p = str.split(',');
         return p.length === 2 ? [parseFloat(p[1]), parseFloat(p[0])] : null;
     }
 
-    /* Helper – Feature-Koordinate → Feld aktualisieren */
+    /**
+     * Schreibt ein LonLat (WGS84) als "lat, lon" in ein Input-Feld.
+     *
+     * @param {string} selectorLatLon - jQuery-Selector des Input-Feldes.
+     * @param {[number, number]} lonLat - [lon, lat].
+     */
     function lonLatToField(selectorLatLon, lonLat) {
         $(selectorLatLon).val(`${lonLat[1].toFixed(6)}, ${lonLat[0].toFixed(6)}`);
     }
 
-
     // --------------------------------------------------------
     // 1) Hilfsfunktion: Template mit Daten füllen
     // --------------------------------------------------------
+
+    /**
+     * Minimaler Template-Renderer für {{key}}-Platzhalter.
+     *
+     * @param {string} tpl - Template-HTML.
+     * @param {Record<string, any>} data - Schlüsseldaten.
+     * @returns {string} Gerendertes HTML.
+     */
     function renderTemplate(tpl, data) {
         return tpl.replace(/\{\{(\w+)\}\}/g, function(_, key) {
             return data[key] !== undefined ? data[key] : '';
@@ -184,10 +231,14 @@
     // --------------------------------------------------------
     // 2) Karten- und Modal-Setup
     // --------------------------------------------------------
+
+    /** @type {ol.View} */
     const view = new ol.View({
         center: ol.proj.fromLonLat([13.0, 52.5]),
         zoom: 8
     });
+
+    /** Hauptkarte für die Wachen-Liste. @type {ol.Map} */
     const map = new ol.Map({
         target: 'wachen-map',
         layers: [new ol.layer.Tile({
@@ -202,6 +253,7 @@
     tooltipEl.style.pointerEvents = 'auto';
     document.body.appendChild(tooltipEl);
 
+    /** Overlay für Tooltip auf der Hauptkarte. @type {ol.Overlay} */
     const tooltipOverlay = new ol.Overlay({
         element: tooltipEl,
         offset: [0, -15],
@@ -213,7 +265,16 @@
     // --------------------------------------------------------
     // 3) AJAX: Wachen laden und als Marker rendern
     // --------------------------------------------------------
-    // Style der Marker – VOR Benutzung definieren
+
+    /**
+     * Originale Farblogik für Wachen-Marker.
+     * Hinweis: Diese Variante wird NUR in älteren Pfaden verwendet;
+     * im aktuellen Code nutzen wir die identische Logik innerhalb
+     * der styleFn in renderMarkers() (damit der Filter dort greift).
+     *
+     * @param {ol.Feature} feature
+     * @returns {ol.style.Style}
+     */
     function styleFn(feature) {
         const typ = feature.get('typ') || '';
         const isFW = (typ === 'FW' || typ === 'FRRD');
@@ -242,10 +303,24 @@
         });
     }
 
+    /** Layer mit den Wachen-Markern. @type {ol.layer.Vector|null} */
     let markerLayer = null;
+
+    /**
+     * Aktueller Suchbegriff aus #wachen-search (für Tabellensuche UND Markerfilter).
+     * @type {string}
+     */
+    let currentSearchTerm = '';
+
+    /** AJAX-URL aus WP-Context. @type {string} */
     const AJAX_URL = (window.ajaxurl || (window.lstWachenAjax && window.lstWachenAjax.ajax_url));
 
-    // Marker auf der Karte ersetzen
+    /**
+     * Ersetzt alle Marker auf der Hauptkarte basierend auf einem Wachen-Array.
+     * Berücksichtigt currentSearchTerm (Marker werden via StyleFn unsichtbar).
+     *
+     * @param {Array<{id:number,name:string,typ:string,latitude:number,longitude:number}>} wachen
+     */
     function renderMarkers(wachen) {
         if (!map) return;
 
@@ -260,21 +335,72 @@
             const lon = parseFloat(w.longitude);
             if (!isFinite(lat) || !isFinite(lon)) continue;
 
-            const ft = new ol.Feature({
+            const f = new ol.Feature({
                 geometry: new ol.geom.Point(ol.proj.fromLonLat([lon, lat])),
                 id: w.id,
                 name: w.name || '',
                 typ: w.typ || ''
             });
-            feats.push(ft);
+
+            // Suchbare Felder vormerken (String + lowercase Name)
+            f.set('idStr', String(w.id || ''));
+            f.set('nameLC', (w.name || '').toLowerCase());
+
+            feats.push(f);
         }
 
         const vectorSource = new ol.source.Vector({
             features: feats
         });
+
+        /**
+         * Karten-Style mit eingebautem Textfilter.
+         * Gibt bei Nicht-Match `null` zurück → Feature wird nicht gerendert.
+         *
+         * @param {ol.Feature} feature
+         * @returns {ol.style.Style|null}
+         */
+        const styleFn = function(feature) {
+            // Filter: Marker ausblenden, wenn Suchbegriff nicht passt
+            const term = (currentSearchTerm || '').toLowerCase().trim();
+            if (term) {
+                const idTxt = feature.get('idStr') || '';
+                const nameTxt = feature.get('nameLC') || '';
+                if (!(idTxt.includes(term) || nameTxt.includes(term))) {
+                    return null; // nicht rendern
+                }
+            }
+
+            // ORIGINAL-FARBLOGIK UNVERÄNDERT ÜBERNEHMEN
+            const typ = feature.get('typ') || '';
+            const isFW = (typ === 'FW' || typ === 'FRRD');
+            const isRD = (typ === 'RD' || typ === 'FRRD');
+            const isFFW = (typ === 'FFW');
+            const isSEG = (typ === 'SEG');
+
+            let fillColor = '#999';
+            if (isFW && !isRD && !isFFW && !isSEG) fillColor = 'red';
+            else if (!isFW && isRD && !isFFW && !isSEG) fillColor = 'blue';
+            else if (isFW && isRD) fillColor = '#b700ff';
+            else if (isFFW) fillColor = '#ff9999';
+            else if (isSEG) fillColor = '#00800f';
+
+            return new ol.style.Style({
+                image: new ol.style.Circle({
+                    radius: 7,
+                    fill: new ol.style.Fill({
+                        color: fillColor
+                    }),
+                    stroke: new ol.style.Stroke({
+                        color: '#000',
+                        width: 1
+                    })
+                })
+            });
+        };
+
         markerLayer = new ol.layer.Vector({
             source: vectorSource,
-            title: 'wachen',
             style: styleFn
         });
         map.addLayer(markerLayer);
@@ -288,32 +414,73 @@
         }
     }
 
-    // Tabelle <tbody> neu rendern
-    function renderTable(wachen) {
-        const tbody = document.querySelector('.widefat.fixed tbody');
-        if (!tbody) return;
+    /**
+     * Rendert die Tabelle (#wachen-table tbody) basierend auf dem Wachen-Array.
+     * Initialisiert die Tabellen-Enhancements (Sortierung, Suche) einmalig.
+     *
+     * @param {Array<{id:number,name:string,typ:string,latitude:number,longitude:number}>} wachen
+     */
+function renderTable(wachen) {
+  const tbody = document.getElementById('wachen-tbody') || document.querySelector('#wachen-table tbody');
+  if (!tbody) return;
 
-        if (!wachen || wachen.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="99"><em>Keine Wachen gefunden.</em></td></tr>';
-            return;
-        }
+  if (!wachen || wachen.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="99"><em>Keine Wachen gefunden.</em></td></tr>';
+    return;
+  }
 
-        // --- Sortieren & Filtern für die Wachen-Tabelle ----------------------------
-		initWachenTableEnhancements();
+  // Tabellen-Enhancements nur einmal initialisieren
+  initWachenTableEnhancements();
+
+  // Admin-URL für Link zur Fahrzeug-Seite
+  const baseAdmin = new URL(window.location.origin + '/wp-admin/admin.php');
+
+  tbody.innerHTML = wachen.map(w => {
+    const id   = w.id ?? '';
+    const name = w.name ?? '';
+    const typ  = w.typ ?? '';
+    const lat  = w.latitude ?? '';
+    const lon  = w.longitude ?? '';
+
+    // Zahl der Fahrzeuge (API-Feldnamen tolerant)
+	// neu – Strings werden korrekt zu Zahlen
+	const fcnt = parseInt(
+	  (w.fahrzeuge_count ?? w.cnt ?? w.vehicles ?? 0),
+	  10
+	) || 0;
+
+    // Link auf Fahrzeuge-Ansicht mit Filter auf diese Wache
+    const fahrzeugUrl = new URL(baseAdmin);
+    fahrzeugUrl.searchParams.set('page', 'lsttraining_fahrzeuge');
+    fahrzeugUrl.searchParams.set('wache_id', String(id));
+
+    return `
+      <tr data-id="${id}" data-fcount="${fcnt}">
+        <td>${id}</td>
+        <td>${escapeHtml(name)}</td>
+        <td>${escapeHtml(typ)}</td>
+        <td style="white-space:nowrap;">${lat}, ${lon}</td>
+        <td class="col-fahrzeuge" style="text-align:center;">
+          <a href="${fahrzeugUrl.toString()}" title="Fahrzeuge dieser Wache anzeigen">${fcnt}</a>
+        </td>
+        <td>
+          <button class="button edit-wache" data-id="${id}">Bearbeiten</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
 
 
-        tbody.innerHTML = wachen.map(w => `
-    <tr data-id="${w.id}">
-      <td>${w.id ?? ''}</td>
-      <td>${w.name ?? ''}</td>
-      <td>${w.typ ?? ''}</td>
-      <td>${w.latitude ?? ''}, ${w.longitude ?? ''}</td>
-      <td><button class="button edit-wache" data-id="${w.id}">Bearbeiten</button></td>
-    </tr>
-  `).join('');
-    }
-
-    // Daten laden (einziger gültiger Loader)
+    /**
+     * Lädt Wachen gefiltert nach Leitstelle, Nebenleitstelle oder Bundesland.
+     * Ergebnis wird in Karte und Tabelle gerendert.
+     *
+     * @param {number} ls - Leitstellen-ID (oder 0).
+     * @param {number} nls - Nebenleitstellen-ID (oder 0).
+     * @param {string} bl - Bundesland ('' = kein BL-Filter).
+     * @returns {Promise<{count:number,wachen:Array}>}
+     */
     function loadWachen(ls, nls, bl) {
         const hasFilter =
             (parseInt(ls, 10) || 0) ||
@@ -371,7 +538,8 @@
     // --------------------------------------------------------
     // 4) Tabellen-Button: Modal öffnen
     // --------------------------------------------------------
-    $('body').on('click', '.edit-wache', function(e) {
+
+    $( 'body' ).on('click', '.edit-wache', function(e) {
         e.preventDefault();
         const id = $(this).data('id');
 
@@ -388,84 +556,124 @@
         });
     });
 
-function initWachenTableEnhancements() {
-  var table  = document.getElementById('wachen-table');
-  var tbody  = document.getElementById('wachen-tbody') || (table && table.tBodies[0]);
-  var search = document.getElementById('wachen-search');
-  if (!tbody) return;
+    /**
+     * Initialisiert Sortierung & Suche der Tabelle.
+     * Die Suche filtert zusätzlich die Marker auf der Karte (via currentSearchTerm + markerLayer.changed()).
+     */
+    function initWachenTableEnhancements() {
+        var table = document.getElementById('wachen-table');
+        var tbody = document.getElementById('wachen-tbody') || (table && table.tBodies[0]);
+        var search = document.getElementById('wachen-search');
+        if (!tbody) return;
 
-  function cellText(tr, idx){
-    var td = tr.cells[idx];
-    return td ? (td.textContent || '').trim() : '';
-  }
+        /**
+         * Liefert den Textinhalt einer Tabellenzelle.
+         *
+         * @param {HTMLTableRowElement} tr
+         * @param {number} idx - Spaltenindex.
+         * @returns {string}
+         */
+        function cellText(tr, idx) {
+            var td = tr.cells[idx];
+            return td ? (td.textContent || '').trim() : '';
+        }
 
-  function sortRows(colIdx, type, dir){
-    var rows = Array.prototype.slice.call(tbody.rows);
-    var mul  = (dir === 'desc') ? -1 : 1;
+        /**
+         * Sortiert die Rows im tbody nach einer Spalte.
+         *
+         * @param {number} colIdx - Spaltenindex.
+         * @param {'num'|'text'} type - Sorttyp.
+         * @param {'asc'|'desc'} dir - Richtung.
+         */
+        function sortRows(colIdx, type, dir) {
+            var rows = Array.prototype.slice.call(tbody.rows);
+            var mul = (dir === 'desc') ? -1 : 1;
 
-    rows.sort(function(a, b){
-      var av = cellText(a, colIdx);
-      var bv = cellText(b, colIdx);
-      if (type === 'num') {
-        var an = parseFloat(av.replace(',', '.')) || 0;
-        var bn = parseFloat(bv.replace(',', '.')) || 0;
-        return (an < bn ? -1 : an > bn ? 1 : 0) * mul;
-      } else {
-        return av.toLowerCase().localeCompare(bv.toLowerCase()) * mul;
-      }
+            rows.sort(function(a, b) {
+                var av = cellText(a, colIdx);
+                var bv = cellText(b, colIdx);
+                if (type === 'num') {
+                    var an = parseFloat(av.replace(',', '.')) || 0;
+                    var bn = parseFloat(bv.replace(',', '.')) || 0;
+                    return (an < bn ? -1 : an > bn ? 1 : 0) * mul;
+                } else {
+                    return av.toLowerCase().localeCompare(bv.toLowerCase()) * mul;
+                }
+            });
+
+            var frag = document.createDocumentFragment();
+            rows.forEach(function(tr) {
+                frag.appendChild(tr);
+            });
+            tbody.appendChild(frag);
+        }
+
+        // Sortier-Header nur einmal binden
+if (table && !table.__sortBound) {
+  var ths = table.querySelectorAll('thead th[data-sort]');
+  ths.forEach(function(th) {
+    th.addEventListener('click', function() {
+      var key = th.getAttribute('data-sort'); // id | name | typ | fahrzeuge
+      var map = { id: 0, name: 1, typ: 2, fahrzeuge: 4 };
+      var idx = map[key];
+      if (idx == null) return;
+
+      var current = th.getAttribute('data-dir') || 'asc';
+      var next = current === 'asc' ? 'desc' : 'asc';
+
+      // Pfeilzustand zurücksetzen und auf aktuellem TH setzen
+      ths.forEach(function(other) { other.removeAttribute('data-dir'); });
+      th.setAttribute('data-dir', next);
+
+      // Typ bestimmen: id und fahrzeuge sind Zahlen
+      var type = (key === 'id' || key === 'fahrzeuge') ? 'num' : 'text';
+      sortRows(idx, type, next);
     });
-
-    var frag = document.createDocumentFragment();
-    rows.forEach(function(tr){ frag.appendChild(tr); });
-    tbody.appendChild(frag);
-  }
-
-  // Sortier-Header nur einmal binden
-  if (table && !table.__sortBound) {
-    var ths = table.querySelectorAll('thead th[data-sort]');
-    ths.forEach(function(th){
-      th.addEventListener('click', function(){
-        var key = th.getAttribute('data-sort'); // id | name | typ
-        var map = { id:0, name:1, typ:2 };
-        var idx = map[key];
-        if (idx == null) return;
-
-        var current = th.getAttribute('data-dir') || 'asc';
-        var next    = current === 'asc' ? 'desc' : 'asc';
-
-        ths.forEach(function(other){ other.removeAttribute('data-dir'); });
-        th.setAttribute('data-dir', next);
-
-        var type = (key === 'id') ? 'num' : 'text';
-        sortRows(idx, type, next);
-      });
-    });
-    table.__sortBound = true;
-  }
-
-  // Suche: immer auf aktuelle Rows zugreifen, nicht cachen
-  if (search && !search.__filterBound) {
-    function applyFilter(q){
-      q = (q || '').toLowerCase();
-      var rows = tbody.rows; // live HTMLCollection
-      for (var i = 0; i < rows.length; i++) {
-        var r = rows[i];
-        var idTxt   = cellText(r, 0).toLowerCase();
-        var nameTxt = cellText(r, 1).toLowerCase();
-        var match = (q === '') || idTxt.indexOf(q) !== -1 || nameTxt.indexOf(q) !== -1;
-        r.style.display = match ? '' : 'none';
-      }
-    }
-    applyFilter(search.value);
-    search.addEventListener('input', function(){ applyFilter(this.value); });
-    search.__filterBound = true;
-  }
+  });
+  table.__sortBound = true;
 }
+        // Suche: immer auf aktuelle Rows zugreifen, nicht cachen
+        if (search && !search.__filterBound) {
+            /**
+             * Filtert Tabelle und triggert das Redraw der Marker (Style-Abgleich).
+             *
+             * @param {string} q - Suchstring.
+             */
+            function applyFilter(q) {
+                var qLower = (q || '').toLowerCase();
 
+                // 1) Tabelle filtern
+                var rows = tbody.rows;
+                for (var i = 0; i < rows.length; i++) {
+                    var r = rows[i];
+                    var idTxt = cellText(r, 0).toLowerCase();
+                    var nameTxt = cellText(r, 1).toLowerCase();
+                    var match = (qLower === '') || idTxt.indexOf(qLower) !== -1 || nameTxt.indexOf(qLower) !== -1;
+                    r.style.display = match ? '' : 'none';
+                }
+
+                // 2) Karte filtern (Style-Funktion nutzt currentSearchTerm)
+                currentSearchTerm = q || '';
+                if (markerLayer) {
+                    markerLayer.changed(); // StyleFn erneut ausführen lassen
+                }
+            }
+
+            // initial anwenden (falls bereits vorbefüllt)
+            applyFilter(search.value);
+
+            search.addEventListener('input', function() {
+                applyFilter(this.value);
+            });
+
+            search.__filterBound = true;
+        }
+    }
 
     // --------------------------------------------------------
     // 5) Tooltip: marker click & pencil button
     // --------------------------------------------------------
+
     map.on('singleclick', evt => {
         const feature = map.forEachFeatureAtPixel(evt.pixel, f => f);
         if (feature) {
@@ -507,11 +715,10 @@ function initWachenTableEnhancements() {
         });
     });
 
-
-
     // --------------------------------------------------------
     // 6) Cancel & Submit im Modal
     // --------------------------------------------------------
+
     $('body').on(
         'click',
         '#wache-edit-cancel, #wache-edit-modal .wache-edit-overlay',
@@ -548,10 +755,9 @@ function initWachenTableEnhancements() {
                 o[kv.name] = kv.value;
                 return o;
             }, {
-                action: mode === 'create' ?
-                    'lsttraining_create_wache' // INSERT-Hook
-                    :
-                    'lsttraining_save_wache' // UPDATE-Hook
+                action: mode === 'create'
+                    ? 'lsttraining_create_wache' // INSERT-Hook
+                    : 'lsttraining_save_wache'   // UPDATE-Hook
             });
 
         $.post(lstWachenAjax.ajax_url, data).done(res => {
@@ -578,11 +784,14 @@ function initWachenTableEnhancements() {
         });
     });
 
-
     // --------------------------------------------------------
     // 7) Initial, Live-Filter und gegenseitiges Zurücksetzen
     // --------------------------------------------------------
 
+    /**
+     * Schaltet die Filter-Selects gegeneinander exklusiv.
+     * Deaktiviert je nach Auswahl die anderen Selects.
+     */
     function updateDisabled() {
         const hasLS = parseInt($ls.val(), 10) || 0;
         const hasNLS = parseInt($nls.val(), 10) || 0;
@@ -593,12 +802,20 @@ function initWachenTableEnhancements() {
         $bl.prop('disabled', !!hasLS || !!hasNLS);
     }
 
+    /** @type {jQuery} */
     const $ls = $('#ls_id');
+    /** @type {jQuery} */
     const $nls = $('#nls_id');
+    /** @type {jQuery} */
     const $bl = $('#bundesland');
+    /** @type {jQuery} */
     const $land = $('#land');
 
     // Länder→Bundesländer-Mapping aus data-map lesen (und NICHT "map" nennen!)
+    /**
+     * Mapping Land → Bundesländer (aus data-map des BL-Selects).
+     * @type {Object.<string, string[]>}
+     */
     const blMap = (function() {
         try {
             return JSON.parse($bl.attr('data-map') || '{}');
@@ -607,6 +824,12 @@ function initWachenTableEnhancements() {
         }
     })();
 
+    /**
+     * Füllt das Bundesland-Select basierend auf dem Land.
+     *
+     * @param {string} land - Länderkey (z. B. "Deutschland").
+     * @param {string} selected - Vorbelegung.
+     */
     function fillBundeslaender(land, selected) {
         const arr = blMap[land] || [];
         const opts = [];
@@ -636,15 +859,27 @@ function initWachenTableEnhancements() {
             // Kein sofortiges loadCurrent hier – erst bei BL-Änderung laden
         });
 
-        // Bundesland-Wechsel: Exklusivität erzwingen + laden
-        $bl.on('change', function() {
-            if ($ls.length) $ls.val('0');
-            if ($nls.length) $nls.val('0');
-            updateDisabled();
-            loadCurrent();
-        });
+		// Land-Wechsel
+		$land.off('change.filters').on('change.filters', function () {
+		  fillBundeslaender($land.val() || 'Deutschland', '');
+		  if ($ls.length) $ls.val('0');
+		  if ($nls.length) $nls.val('0');
+		  updateDisabled();
+		  // kein loadCurrent hier – erst wenn BL gewählt/geleert wird
+		});
+
+		// Bundesland-Wechsel (nur dieser eine Handler!)
+		$bl.off('change.filters').on('change.filters', function () {
+		  if ($ls.length) $ls.val('0');
+		  if ($nls.length) $nls.val('0');
+		  updateDisabled();
+		  loadCurrent();
+		});
     }
 
+    /**
+     * Liest die aktuellen Filterwerte und lädt die Wachen.
+     */
     function loadCurrent() {
         const ls = parseInt($ls.val(), 10) || 0;
         const nls = parseInt($nls.val(), 10) || 0;
@@ -670,17 +905,13 @@ function initWachenTableEnhancements() {
         updateDisabled();
         loadCurrent();
     });
-    $bl.on('change', function() {
-        $ls.val('0');
-        $nls.val('0');
-        updateDisabled();
-        loadCurrent();
-    });
+
 
     // --------------------------------------------------------
     // 8) Delete im Modal
     // --------------------------------------------------------
-    $('body').on('click', '.button-delete-wache', function(e) {
+
+    $( 'body' ).on('click', '.button-delete-wache', function(e) {
         e.preventDefault();
         const id = $(this).data('id');
         if (!confirm('Wirklich löschen? Dieser Vorgang ist unwiderruflich.')) {
@@ -703,17 +934,20 @@ function initWachenTableEnhancements() {
     });
 
     /**
-     * (Re)builds the edit-map every time the modal opens.
-     * Creates three drag-enabled markers:
-     *   main  = station position   (red)
-     *   arr   = arrival position   (green)   – optional
-     *   dep   = departure position (blue)    – optional
+     * Erzeugt / aktualisiert die Karte im Wachen-Modal.
+     * Stellt drei (drag-bare) Marker dar:
+     *  - main: Station (rot)
+     *  - arr : Arrival (grün, optional)
+     *  - dep : Departure (blau, optional)
      *
-     * Shift + click  → add / move arrival marker
-     * Ctrl  + click  → add / move departure marker
+     * Interaktionen:
+     *  - Shift + Klick → Anfahrtsmarker setzen/verschieben
+     *  - Ctrl  + Klick → Abfahrtsmarker setzen/verschieben
      *
-     * @param {number} lat  Station latitude
-     * @param {number} lon  Station longitude
+     * Änderungen werden live zurück in die Felder geschrieben.
+     *
+     * @param {number} lat - Latitude der Station.
+     * @param {number} lon - Longitude der Station.
      */
     function ensureWacheEditMap(lat, lon) {
 
@@ -794,7 +1028,7 @@ function initWachenTableEnhancements() {
                 if (!arrFt) {
                     arrFt = new ol.Feature({
                         geometry: new ol.geom.Point(evt.coordinate)
-                    }); // ← arrFt ohne window.
+                    });
                     arrFt.setStyle(styleArr);
                     vSrc.addFeature(arrFt);
                 } else {
@@ -807,7 +1041,7 @@ function initWachenTableEnhancements() {
                 if (!depFt) {
                     depFt = new ol.Feature({
                         geometry: new ol.geom.Point(evt.coordinate)
-                    }); // ← depFt ohne window.
+                    });
                     depFt.setStyle(styleDep);
                     vSrc.addFeature(depFt);
                 } else {
@@ -816,6 +1050,84 @@ function initWachenTableEnhancements() {
                 lonLatToField('#w-dep', lonLat);
             }
         });
+
+		/* -------------------------------------------------- */
+/* 4b) Eingaben -> Marker & View aktualisieren        */
+/* -------------------------------------------------- */
+
+/** Robust "lat, lon" Parser -> {lat, lon} | null */
+function parseLatLon(str) {
+  if (!str) return null;
+  var m = String(str).trim().match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
+  if (!m) return null;
+  var lat = parseFloat(m[1]), lon = parseFloat(m[2]);
+  if (!isFinite(lat) || !isFinite(lon)) return null;
+  return { lat: lat, lon: lon };
+}
+
+/** Marker bewegen + Karte zentrieren */
+function moveAndCenter(feature, lat, lon, doCenter) {
+  var coord3857 = ol.proj.fromLonLat([lon, lat]);
+  feature.getGeometry().setCoordinates(coord3857);
+  if (doCenter) {
+    mapWEdit.getView().animate({ center: coord3857, duration: 250 });
+  }
+}
+
+/* 4b.1) Main-Position: Eingabe in #w-pos */
+$('#w-pos')
+  .off('change.wpos blur.wpos input.wpos')
+  .on('change.wpos blur.wpos', function () {
+    var p = parseLatLon(this.value);
+    if (!p) return;           // ungültig -> nichts tun
+    moveAndCenter(mainFt, p.lat, p.lon, true);
+    // Hidden-Felder angleichen (Geometrie-Listener macht das zwar auch, hier explizit):
+    $('#w-lat').val(p.lat.toFixed(6));
+    $('#w-lon').val(p.lon.toFixed(6));
+  })
+  // leichte Live-Reaktion beim Tippen (debounced)
+  .on('input.wpos', (function () {
+    var t = null;
+    return function () {
+      clearTimeout(t);
+      var el = this;
+      t = setTimeout(function () {
+        var p = parseLatLon(el.value);
+        if (!p) return;
+        moveAndCenter(mainFt, p.lat, p.lon, false); // beim Tippen ohne Animation
+      }, 300);
+    };
+  })());
+
+/* 4b.2) Optional: Arrival/Departure aus Feldern setzen/verschieben */
+$('#w-arr')
+  .off('change.warr blur.warr input.warr')
+  .on('change.warr blur.warr', function () {
+    var p = parseLatLon(this.value);
+    if (!p) return;
+    if (!arrFt) {
+      arrFt = new ol.Feature({ geometry: new ol.geom.Point(ol.proj.fromLonLat([p.lon, p.lat])) });
+      arrFt.setStyle(styleArr);
+      vSrc.addFeature(arrFt);
+    } else {
+      moveAndCenter(arrFt, p.lat, p.lon, false);
+    }
+  });
+
+$('#w-dep')
+  .off('change.wdep blur.wdep input.wdep')
+  .on('change.wdep blur.wdep', function () {
+    var p = parseLatLon(this.value);
+    if (!p) return;
+    if (!depFt) {
+      depFt = new ol.Feature({ geometry: new ol.geom.Point(ol.proj.fromLonLat([p.lon, p.lat])) });
+      depFt.setStyle(styleDep);
+      vSrc.addFeature(depFt);
+    } else {
+      moveAndCenter(depFt, p.lat, p.lon, false);
+    }
+  });
+
 
         /* -------------------------------------------------- */
         /* 5) empty input  → marker removal                   */
@@ -834,6 +1146,7 @@ function initWachenTableEnhancements() {
 
     /**
      * Öffnet das Modal leer zum Anlegen einer neuen Wache.
+     * Setzt den Formularmodus auf "create" und initialisiert die Edit-Karte.
      */
     function openNewWacheModal() {
 
@@ -852,6 +1165,33 @@ function initWachenTableEnhancements() {
 
         /* Modus → create */
         $('#w-form-mode').val('create');
+		
+		// Land/Bundesland-Selects im CREATE-Modal initialisieren
+		const $landM = $('#mw-land');
+		const $blM   = $('#mw-bundesland');
+
+		// Mapping aus data-map lesen
+		const mapJson = (function(){
+		  try { return JSON.parse($landM.attr('data-map') || '{}'); }
+		  catch(e){ return {}; }
+		})();
+
+		// Default-Land setzen, falls leer
+		if (!$landM.val()) {
+		  $landM.val('Deutschland');
+		}
+
+		// Bundesländer-Liste zum Start befüllen
+		$blM.html(
+		  buildBundeslandOptionsForModal($landM.val() || 'Deutschland', '', mapJson)
+		);
+
+		// Wechsel des Landes → BL neu aufbauen
+		$landM.off('change.mw').on('change.mw', function(){
+		  const newLand = $(this).val() || 'Deutschland';
+		  $blM.html(buildBundeslandOptionsForModal(newLand, '', mapJson));
+		});
+
 
         /* Modal zuerst einblenden, dann Karte initialisieren */
         $('#wache-edit-modal').removeClass('hidden');
@@ -860,7 +1200,7 @@ function initWachenTableEnhancements() {
         });
     }
 
-    ;
+    // Mini-Filter für Nebenstellen-Select (separater UI-Block)
     (function() {
         const input = document.getElementById('nls_search');
         const select = document.getElementById('nls_id');

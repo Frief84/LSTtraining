@@ -1,16 +1,22 @@
-﻿// js/departments.js
+﻿/* js/departments.js */
 (function($) {
-  // Departments-Daten aus wp_localize_script
-  // Helfer: Label und Farbe direkt zur Laufzeit aus lstHospitalsAjax holen
-function getLabel(code) {
-  return window.lstHospitalsAjax?.departments?.[code]?.label || code;
-}
-function getColor(code) {
-  return window.lstHospitalsAjax?.departments?.[code]?.color || '#1976d2';
-}
-  /**
-   * bindDepartmentForm – bindet Checkbox-Logik und Vorbelegung
-   */
+  // ==== Helper (im IIFE-Scope für alle Funktionen sichtbar) ====
+
+  function getLabel(code) {
+    try {
+      const m = window.lstHospitalsAjax && window.lstHospitalsAjax.departments;
+      return (m && m[code] && m[code].label) ? m[code].label : code;
+    } catch(e){ return code; }
+  }
+  function getColor(code) {
+    try {
+      const m = window.lstHospitalsAjax && window.lstHospitalsAjax.departments;
+      return (m && m[code] && m[code].color) ? m[code].color : '#1976d2';
+    } catch(e){ return '#1976d2'; }
+  }
+
+  // ==== Hauptformular-Bindings ====
+
   function bindDepartmentForm({ hospital_lat, hospital_lon, existing }) {
     const $modal        = $('#departments-edit-modal');
     const $container    = $modal.find('.departments-edit-content');
@@ -28,11 +34,11 @@ function getColor(code) {
     $form.off('submit').on('submit', e => {
       e.preventDefault();
       const fd = new FormData(e.target);
-  	fd.set('action', 'lsttraining_save_departments'); 
+      fd.set('action', 'lsttraining_save_departments');
       fetch(`${lstHospitalsAjax.ajax_url}?action=lsttraining_save_departments`, {
-        method:      'POST',
+        method: 'POST',
         credentials: 'same-origin',
-        body:        fd
+        body: fd
       })
       .then(res => res.json())
       .then(json => {
@@ -46,116 +52,152 @@ function getColor(code) {
       });
     });
 
-    // Checkbox-Change: Zeile anlegen oder entfernen
+    // 0) Selector ggf. befüllen: aus globalem depMap (code -> {label,color})
+    const depMap = (window.lstHospitalsAjax && window.lstHospitalsAjax.departments) || {};
+    if ($selector.find('.dept-toggle').length === 0) {
+      const items = Object.keys(depMap).map(code => ({
+        code: String(code).toUpperCase(),
+        label: depMap[code]?.label || code
+      }));
+      items.sort((a, b) => a.label.localeCompare(b.label, 'de'));
+      const frag = document.createDocumentFragment();
+      items.forEach(({code, label}) => {
+        const lab = document.createElement('label');
+        lab.style.cssText = 'display:flex;align-items:center;';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.className = 'dept-toggle';
+        cb.name = 'departments[]';
+        cb.value = code;
+        cb.setAttribute('data-code', code);
+        const span = document.createElement('span');
+        span.style.marginLeft = '4px';
+        span.textContent = label;
+        lab.appendChild(cb);
+        lab.appendChild(span);
+        frag.appendChild(lab);
+      });
+      $selector.empty()[0].appendChild(frag);
+    }
+
+    // Hilfsfunktion: Checkbox für CODE finden
+    function findCheckboxForCode(rawCode) {
+      const code = String(rawCode).toUpperCase().trim();
+      let $cb = $selector.find(`.dept-toggle[value="${code}"]`);
+      if ($cb.length) return $cb;
+      $cb = $selector.find(`.dept-toggle[data-code="${code}"]`);
+      return $cb.length ? $cb : $();
+    }
+
+    // 1) Change-Delegation für Checkboxen
     $selector.off('change').on('change', '.dept-toggle', function() {
-      const code = this.value;
+      let code = this.getAttribute('data-code') || this.value || '';
+      code = String(code).toUpperCase().trim();
+
       if (this.checked) {
-        const depInfo = existing.find(d =>
-  (d.code && d.code === code) ||            // altes Format
-  (Object.keys(d)[0] === code)              // neues Format
-) || {};
+        const depInfo = existing.find(d => {
+          const dcode = String(
+            (d && d.code) ? d.code :
+            (d && typeof d === 'object' ? Object.keys(d)[0] : '')
+          ).toUpperCase().trim();
+          return dcode === code;
+        }) || {};
         addDepartmentRow(code, depInfo, hospital_lat, hospital_lon, $detailsTable);
       } else {
         $detailsTable.find(`tr[data-code="${code}"]`).remove();
+        // Marker-Removal erfolgt in addDepartmentRow-Handler
       }
     });
 
-    // Vorbelegung bestehender Departments
-existing.forEach(dep => {
-  const code = dep.code ?? Object.keys(dep)[0];
-  if (!code) return;
-  $selector
-    .find(`.dept-toggle[value="${code}"]`)
-    .prop('checked', true)
-    .trigger('change');
-});
+    // 2) Vorbelegung: bestehende Departments anhaken und Zeilen erzeugen
+    existing.forEach(dep => {
+      const raw = (dep && dep.code) ? dep.code
+                : (dep && typeof dep === 'object' ? Object.keys(dep)[0] : '');
+      if (!raw) return;
+      const code = String(raw).toUpperCase().trim();
+
+      const $cb = findCheckboxForCode(code);
+      if ($cb.length) {
+        $cb.prop('checked', true).trigger('change');
+      } else {
+        addDepartmentRow(code, dep, hospital_lat, hospital_lon, $detailsTable);
+      }
+    });
   }
 
-  /**
-   * addDepartmentRow – Zeile mit Checkbox+Label und Koordinaten hinzufügen
-   */
+  // ==== Zeilenaufbau + Marker ====
+
   function addDepartmentRow(code, dep, hospital_lat, hospital_lon, $detailsTable) {
     if ($detailsTable.find(`tr[data-code="${code}"]`).length) return;
 
     const label = getLabel(code);
-   const lat = dep.latitude  ?? dep[code]?.Lat  ?? hospital_lat;
-const lon = dep.longitude ?? dep[code]?.Long ?? hospital_lon;
+    const lat   = Number(dep?.latitude  ?? dep?.[code]?.Lat  ?? hospital_lat);
+    const lon   = Number(dep?.longitude ?? dep?.[code]?.Long ?? hospital_lon);
 
-  // innerhalb addDepartmentRow, statt des bisherigen `$('<tr>…')`-Strings
-const $tr = $(
-  `<tr data-code="${code}">` +
+    const latVal = Number.isFinite(lat) ? lat : Number(hospital_lat) || 0;
+    const lonVal = Number.isFinite(lon) ? lon : Number(hospital_lon) || 0;
 
-    /* 1. Spalte: Checkbox + Label */
-    `<td>` +
-      `<input type="checkbox" checked>` +
-      `<span class="dept-label">${label}</span>` +
-    `</td>` +
+    const $tr = $(
+      `<tr data-code="${code}">` +
+        `<td>` +
+          `<input type="checkbox" checked>` +
+          `<span class="dept-label">${label}</span>` +
+        `</td>` +
+        `<td>` +
+          `<input class="lat-input" name="departments[${code}][Lat]"  value="${latVal.toFixed(6)}"  style="width:70px">` +
+          `, ` +
+          `<input class="lon-input" name="departments[${code}][Long]" value="${lonVal.toFixed(6)}" style="width:70px">` +
+        `</td>` +
+      `</tr>`
+    );
+    $detailsTable.append($tr);
 
-    /* 2. Spalte: Koordinaten */
-    `<td>` +
-      `<input class="lat-input"
-             name="departments[${code}][Lat]"
-             value="${lat.toFixed(6)}"
-             style="width:70px">` +
-      `, ` +
-      `<input class="lon-input"
-             name="departments[${code}][Long]"
-             value="${lon.toFixed(6)}"
-             style="width:70px">` +
-    `</td>` +
+    // Marker
+    if (window.ol && window.deptSource) {
+      const feature = new ol.Feature({
+        geometry: new ol.geom.Point(ol.proj.fromLonLat([lonVal, latVal])),
+        code, type: 'department'
+      });
+      const haloStyle = new ol.style.Style({
+        image: new ol.style.Circle({ radius: 14, fill: new ol.style.Fill({ color: 'rgba(0,0,0,0)' }) })
+      });
+      const markerStyle = new ol.style.Style({
+        image: new ol.style.Circle({
+          radius: 6,
+          fill:   new ol.style.Fill({ color: getColor(code) }),
+          stroke: new ol.style.Stroke({ color: '#fff', width: 2 })
+        })
+      });
+      feature.setStyle([ haloStyle, markerStyle ]);
+      window.deptSource.addFeature(feature);
 
-  `</tr>`
-);
+      // Inputs ↔ Marker sync
+      $tr.find('.lat-input, .lon-input').on('change', () => {
+        const nlat = parseFloat($tr.find('.lat-input').val());
+        const nlon = parseFloat($tr.find('.lon-input').val());
+        if (!isNaN(nlat) && !isNaN(nlon)) {
+          feature.getGeometry().setCoordinates(ol.proj.fromLonLat([nlon, nlat]));
+        }
+      });
 
-$detailsTable.append($tr);
-
-    // Marker anlegen
-    const feature = new ol.Feature({
-      geometry: new ol.geom.Point(ol.proj.fromLonLat([lon, lat])),
-      code, type: 'department'
-    });
-
-    // unsichtbarer Halo für besseren Trefferbereich
-    const haloStyle = new ol.style.Style({
-      image: new ol.style.Circle({
-        radius: 14,
-        fill:   new ol.style.Fill({ color: 'rgba(0,0,0,0)' })
-      })
-    });
-    // sichtbarer Marker mit Farbe
-    const markerStyle = new ol.style.Style({
-      image: new ol.style.Circle({
-        radius: 6,
-        fill:   new ol.style.Fill({ color: getColor(code) }),
-        stroke: new ol.style.Stroke({ color: '#fff', width: 2 })
-      })
-    });
-    feature.setStyle([ haloStyle, markerStyle ]);
-    window.deptSource.addFeature(feature);
-
-    // Koordinaten-Inputs ↔ Marker synchronisieren
-    $tr.find('.lat-input, .lon-input').on('change', () => {
-      const nlat = parseFloat($tr.find('.lat-input').val());
-      const nlon = parseFloat($tr.find('.lon-input').val());
-      if (!isNaN(nlat) && !isNaN(nlon)) {
-        feature.getGeometry().setCoordinates(ol.proj.fromLonLat([nlon, nlat]));
-      }
-    });
-
-    // Zeile entfernen per Checkbox
-    $tr.find('input[type="checkbox"]').on('change', function() {
-      if (!this.checked) {
-        $tr.remove();
-        window.deptSource.removeFeature(feature);
-        window.deptDragCollection.clear();
-      }
-    });
+      // Deaktivieren = entfernen
+      $tr.find('input[type="checkbox"]').on('change', function() {
+        if (!this.checked) {
+          $tr.remove();
+          try { window.deptSource.removeFeature(feature); } catch(e){}
+          if (window.deptDragCollection && typeof window.deptDragCollection.clear === 'function') {
+            window.deptDragCollection.clear();
+          }
+        }
+      });
+    }
   }
 
-  /**
-   * initDeptTranslateInteraction – Marker verschiebbar machen
-   */
+  // ==== Drag/Translate-Interaction ====
+
   function initDeptTranslateInteraction() {
+    if (!window.ol || !window.deptMap) return;
+
     const dragCollection = new ol.Collection();
     window.deptTranslate = new ol.interaction.Translate({
       features:     dragCollection,
@@ -167,7 +209,9 @@ $detailsTable.append($tr);
     const origHandle = window.deptTranslate.handleEvent;
     window.deptTranslate.handleEvent = function(evt) {
       const handled = origHandle.call(this, evt);
-      if (handled) evt.stopPropagation();
+      if (handled && evt && typeof evt.stopPropagation === 'function') {
+        evt.stopPropagation();
+      }
       return handled;
     };
 
@@ -176,8 +220,10 @@ $detailsTable.append($tr);
         const [lon, lat] = ol.proj.toLonLat(f.getGeometry().getCoordinates());
         const row = document.querySelector(`tr[data-code="${f.get('code')}"]`);
         if (row) {
-          row.querySelector('.lat-input').value = lat.toFixed(6);
-          row.querySelector('.lon-input').value = lon.toFixed(6);
+          const latInput = row.querySelector('.lat-input');
+          const lonInput = row.querySelector('.lon-input');
+          if (latInput) latInput.value = lat.toFixed(6);
+          if (lonInput) lonInput.value = lon.toFixed(6);
         }
       });
       window.deptTranslate.setActive(false);
@@ -191,6 +237,7 @@ $detailsTable.append($tr);
     const code = $(this).data('code');
     $(this).siblings().removeClass('selected');
     $(this).addClass('selected');
+    if (!window.deptSource || !window.deptDragCollection || !window.deptTranslate) return;
     window.deptDragCollection.clear();
     const feat = window.deptSource.getFeatures().find(f => f.get('code') === code);
     if (feat) {
@@ -199,7 +246,7 @@ $detailsTable.append($tr);
     }
   });
 
-  // Exports
+  // ==== Exports ====
   window.getLabel                     = getLabel;
   window.getColor                     = getColor;
   window.bindDepartmentForm           = bindDepartmentForm;

@@ -51,27 +51,67 @@ CREATE TABLE `wachen` (
 /* ------------------------------------------------------------------ */
 /* 3. Fahrzeuge                                                        */
 /* ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------ */
+/* 3. Fahrzeuge                                                       */
+/* ------------------------------------------------------------------ */
 CREATE TABLE fahrzeuge (
-    id          INT AUTO_INCREMENT PRIMARY KEY,
-    wache_id    INT  NOT NULL,
-    rufname     VARCHAR(100) NOT NULL,
-    fahrzeugtyp ENUM(
-        'RTW','NAW','NEF','KTW','ITW','RTH','Rettungsbus',
-        'HLF','LF','DLK','TLF','ELW','ELW1','ELW2',
-        'MTW','GW','GW-G','GW-Mess','GW-W','GW-L',
-        'GW-San','GW-Höhenrettung','GW-Taucher','GW-Sonder',
-        'Dekon-P','WSW','WLF','WLF-K','KdoW','PKW','FwK','FlKfz'
-    ) NOT NULL,
-    status      ENUM('frei','besetzt','einsatzbereit','nicht einsatzbereit') DEFAULT 'frei',
-    fms_status  ENUM('1','2','3','4','5','6') DEFAULT '2',
-    sondersignal BOOLEAN DEFAULT FALSE,
-    dienstzeiten VARCHAR(255),
-    latitude    DOUBLE,
-    longitude   DOUBLE,
-    bild_datei  VARCHAR(255),
-    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (wache_id) REFERENCES wachen(id) ON DELETE CASCADE
+    id                 INT AUTO_INCREMENT PRIMARY KEY,
+    wache_id           INT NOT NULL,
+    rufname            VARCHAR(100) NOT NULL,
+
+    -- frei definierbarer Fahrzeugtyp (statt ENUM)
+    fahrzeugtyp        VARCHAR(100) NOT NULL,
+
+    -- Quelle/Herkunft der Information (z. B. BOS-Detail-/Suchseite)
+    source_note        VARCHAR(255) NULL,
+
+    -- First-Responder-Flag direkt in der Tabelle
+    is_first_responder BOOLEAN NOT NULL DEFAULT FALSE,
+
+    status             ENUM('frei','besetzt','einsatzbereit','nicht einsatzbereit') DEFAULT 'frei',
+    fms_status         ENUM('1','2','3','4','5','6') DEFAULT '2',
+    sondersignal       BOOLEAN DEFAULT FALSE,
+    dienstzeiten       VARCHAR(255),
+    latitude           DOUBLE,
+    longitude          DOUBLE,
+    bild_datei         VARCHAR(255),
+    created_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (wache_id) REFERENCES wachen(id) ON DELETE CASCADE,
+
+    -- sinnvolle Indizes
+    UNIQUE KEY uk_fahrzeuge_wache_rufname (wache_id, rufname),
+    KEY idx_fahrzeuge_wache (wache_id),
+    KEY idx_fahrzeuge_typ (fahrzeugtyp),
+    KEY idx_fahrzeuge_fr (is_first_responder)
 );
+
+-- Trigger erzwingen: Rettungsmittel dürfen NICHT First Responder sein
+DELIMITER //
+CREATE TRIGGER bi_fahrzeuge_no_fr_for_rd
+BEFORE INSERT ON fahrzeuge
+FOR EACH ROW
+BEGIN
+  IF NEW.fahrzeugtyp IN ('RTW','NAW','NEF','KTW','ITW','RTH','Rettungsbus')
+     AND NEW.is_first_responder = 1 THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Rettungsmittel dürfen nicht First Responder sein.';
+  END IF;
+END//
+DELIMITER ;
+
+DELIMITER //
+CREATE TRIGGER bu_fahrzeuge_no_fr_for_rd
+BEFORE UPDATE ON fahrzeuge
+FOR EACH ROW
+BEGIN
+  IF NEW.fahrzeugtyp IN ('RTW','NAW','NEF','KTW','ITW','RTH','Rettungsbus')
+     AND NEW.is_first_responder = 1 THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Rettungsmittel dürfen nicht First Responder sein.';
+  END IF;
+END//
+DELIMITER ;
 
 /* ------------------------------------------------------------------ */
 /* 4. Einsatzvorlagen                                                  */

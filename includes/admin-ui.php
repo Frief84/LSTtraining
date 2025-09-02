@@ -106,7 +106,7 @@ wp_localize_script('lst-zuordnung-inline', 'lstZuordnungAjax', [
     // --- 3) Assets only for ► Leitstellen ▸ Wachen -------------------------
     if ($hook === 'lsttraining_leitstellen_page_lsttraining_leitstellen_wachen') {
         wp_enqueue_script('lst-wachen', $root_url . 'js/wachen.js', // ← correct path, no “includes/”
-        ['jquery', 'lst-openlayers'], '1.0.0', true);
+        ['jquery', 'lst-openlayers'], '1.0.1', true);
         wp_localize_script('lst-wachen', 'lstWachenAjax', ['ajax_url' => admin_url('admin-ajax.php'), 'admin_url' => admin_url('admin.php'), ]);
     }
     // --- 4) Optional: further pages - add more branches here ---------------
@@ -196,7 +196,7 @@ add_action('admin_enqueue_scripts', function ($hook) {
     // ────────────────────────────────────────────────────────────────
     // Leitstellen & Wachen page=lsttraining_leitstellen_wachen
     if ($hook === 'lsttraining_leitstellen_page_lsttraining_leitstellen_wachen') {
-        wp_enqueue_script('lst-wachen', $root_url . 'js/wachen.js', ['jquery', 'lst-openlayers'], '1.0.0', true);
+        wp_enqueue_script('lst-wachen', $root_url . 'js/wachen.js', ['jquery', 'lst-openlayers'], '1.0.1', true);
         wp_localize_script('lst-wachen', 'lstWachenAjax', ['ajax_url' => admin_url('admin-ajax.php'), ]);
     }
     // ────────────────────────────────────────────────────────────────
@@ -210,6 +210,14 @@ add_action('admin_enqueue_scripts', function ($hook) {
         }
         $departments = json_decode(file_get_contents($json_path), true);
         wp_localize_script('lst-hospitals', 'lstHospitalsAjax', ['ajax_url' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('lsttraining_hospitals'), 'plugin_url' => plugin_dir_url(dirname(__FILE__)), 'departments' => $departments, ]);
+    }
+	
+	    if (
+        strpos($hook, '_page_lsttraining_fahrzeuge') !== false ||
+        $hook === 'lsttraining_leitstellen_page_lsttraining_leitstellen_fahrzeuge'
+    ) {
+        wp_enqueue_style(  'lst-admin-css', $root_url . 'css/admin-ui.css', [], '1.0.0' );
+        wp_enqueue_script( 'lst-fahrzeuge', $root_url . 'js/fahrzeuge.js', [ 'jquery' ], '1.0.0', true );
     }
 });
 /**
@@ -225,8 +233,16 @@ if (!function_exists('lsttraining_render_nebenstellen')) {
  * Render the Fahrzeuge page.
  */
 if (!function_exists('lsttraining_render_leitstellen_fahrzeuge')) {
-    function lsttraining_render_leitstellen_fahrzeuge() {
-        echo '<div class="wrap"><h1>' . esc_html__('Leitstellen – Fahrzeuge', 'lsttraining') . '</h1></div>';
+ function lsttraining_render_leitstellen_fahrzeuge() {
+        if ( ! current_user_can( 'read' ) ) {
+            wp_die( 'Keine Berechtigung.' );
+        }
+        $template = plugin_dir_path( __FILE__ ) . 'fahrzeuge.php';
+        if ( file_exists( $template ) ) {
+            include $template;
+        } else {
+            echo '<div class="notice notice-error"><p>Die Datei fahrzeuge.php wurde nicht gefunden.</p></div>';
+        }
     }
 }
 /**

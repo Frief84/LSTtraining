@@ -107,7 +107,8 @@ add_action( 'admin_menu', function () {
             'lsttraining_render_leitstellen_fahrzeuge'
         );
     }
-
+	
+	
     /* ------------------------------------------------------------------ */
     /*   4. Admin-exklusive Punkte                                        */
     /* ------------------------------------------------------------------ */
@@ -130,7 +131,10 @@ add_action( 'admin_menu', function () {
             'lsttraining_benutzer',
             'lsttraining_render_benutzer_page'
         );
+		
+		
     }
 
 
 } );
+

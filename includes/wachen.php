@@ -180,17 +180,24 @@ if (!$anyFilterSet) {
     echo '<p><em>Bitte zunächst einen Filter (Leitstelle, Nebenleitstelle oder Bundesland) wählen.</em></p>';
 } else {
     // 3) SQL aufbauen wie gehabt
-    $sql    = '
-      SELECT
-        w.id,
-        w.name,
-        w.typ,
-        w.latitude,
-        w.longitude
-      FROM wachen AS w
-    ';
-    $joins  = '';
-    $where  = [];
+$sql = '
+  SELECT
+    w.id,
+    w.name,
+    w.typ,
+    w.latitude,
+    w.longitude,
+    COALESCE(v.cnt, 0) AS fahrzeuge_count
+  FROM wachen AS w
+';
+$joins = '
+  LEFT JOIN (
+    SELECT wache_id, COUNT(*) AS cnt
+    FROM fahrzeuge
+    GROUP BY wache_id
+  ) v ON v.wache_id = w.id
+';
+$where = [];
     $params = [];
 
     // 3a) Bundesland
@@ -245,18 +252,28 @@ if (!$anyFilterSet) {
 </div>
 <!-- 5) Tabelle steht IMMER im DOM, Body wird je nach $wachen gefüllt -->
 <table class="widefat fixed" id="wachen-table">
+	 <colgroup>
+    <col style="width:60px">      <!-- ID -->
+    <col>                         <!-- Name (flex) -->
+    <col style="width:120px">     <!-- Typ -->
+    <col style="width:220px">     <!-- Koordinaten -->
+    <col style="width:100px">     <!-- Fahrzeuge -->
+    <col style="width:140px">     <!-- Aktionen -->
+  </colgroup>
   <thead>
     <tr>
-      <th width="50"  data-sort="id"   style="cursor:pointer;">ID</th>
-      <th            data-sort="name" style="cursor:pointer;">Name</th>
-      <th            data-sort="typ"  style="cursor:pointer;">Typ</th>
-      <th>Koordinaten</th>
-      <th width="120">Aktionen</th>
+<th width="50"  data-sort="id"   style="cursor:pointer;">ID</th>
+<th            data-sort="name" style="cursor:pointer;">Name</th>
+<th            data-sort="typ"  style="cursor:pointer;">Typ</th>
+<th width="100">Koordinaten</th>
+<th width="90" data-sort="fahrzeuge" style="cursor:pointer;">Fahrzeuge</th>
+
+<th width="120">Aktionen</th>
     </tr>
   </thead>
   <tbody id="wachen-tbody">
     <?php if (empty($wachen)) : ?>
-      <tr><td colspan="5"><em>Keine Wachen gefunden.</em></td></tr>
+      <tr><td colspan="6"><em>Keine Wachen gefunden.</em></td></tr>
     <?php else : ?>
       <?php foreach ($wachen as $w) : ?>
         <tr>
@@ -264,6 +281,20 @@ if (!$anyFilterSet) {
           <td><?php echo esc_html($w['name']); ?></td>
           <td><?php echo esc_html($w['typ']); ?></td>
           <td><?php echo esc_html($w['latitude'] . ', ' . $w['longitude']); ?></td>
+		<td class="col-fahrzeuge" style="text-align:center;">
+  <?php
+    $cnt = isset($w['fahrzeuge_count']) ? (int)$w['fahrzeuge_count'] : 0;
+
+    // Wenn du die Zahl klickbar zur Fahrzeugliste machen willst:
+    $url = add_query_arg(
+      ['page' => 'lsttraining_fahrzeuge', 'wache_id' => $w['id']],
+      admin_url('admin.php')
+    );
+  ?>
+  <a href="<?php echo esc_url($url); ?>" title="Fahrzeuge dieser Wache anzeigen">
+    <?php echo number_format_i18n($cnt); ?>
+  </a>
+</td>
           <td>
             <button class="button edit-wache" data-id="<?php echo esc_attr($w['id']); ?>">
               Bearbeiten
