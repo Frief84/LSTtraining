@@ -366,6 +366,31 @@ $where = [];
     </div>
   </th>
 </tr>
+<tr>
+  <th colspan="2">
+    <div class="row-2col">
+      <div class="col">
+        <label for="mw-leitstellen">Leitstellen</label>
+        <select id="mw-leitstellen" name="leitstellen[]" multiple size="8" style="min-width:320px;width:100%;">
+          <?php foreach ($all_ls as $ls): ?>
+            <option value="<?php echo (int)$ls['id']; ?>"><?php echo esc_html($ls['name']); ?></option>
+          <?php endforeach; ?>
+        </select>
+        <p class="description">Eine oder mehrere Leitstellen auswählen.</p>
+      </div>
+
+      <div class="col">
+        <label for="mw-nebenleitstellen">Nebenstellen</label>
+        <select id="mw-nebenleitstellen" name="nebenleitstellen[]" multiple size="8" style="min-width:320px;width:100%;">
+          <?php foreach ($all_nls as $nls): ?>
+            <option value="<?php echo (int)$nls['id']; ?>"><?php echo esc_html($nls['name']); ?></option>
+          <?php endforeach; ?>
+        </select>
+        <p class="description">Eine oder mehrere Nebenstellen auswählen.</p>
+      </div>
+    </div>
+  </th>
+</tr>
 
       <tr>
         <th><label for="w-pos">Position (lat, lon)</label></th>

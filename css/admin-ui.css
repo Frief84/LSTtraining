@@ -504,3 +504,6 @@ pointer-events: auto;
 }
 
 .widefat td.num { text-align: right; }
+
+.row-2col { display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; }
+.row-2col .col { flex:1 1 300px; min-width:280px; }
