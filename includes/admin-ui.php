@@ -89,28 +89,38 @@ wp_localize_script('lst-zuordnung-inline', 'lstZuordnungAjax', [
         ]);
     }
 
-    /* --- Leitstellen ▸ Wachen ------------------------------------------- */
     if ($hook === 'lsttraining_leitstellen_page_lsttraining_leitstellen_wachen') {
-        wp_enqueue_script(
-            'lst-wachen',
-            $root_url . 'js/wachen.js',
-            ['jquery', 'lst-openlayers'],
-            '1.0.0',
-            true
-        );
-        wp_localize_script('lst-wachen', 'lstWachenAjax', [
-            'ajax_url'  => admin_url('admin-ajax.php'),
-            'admin_url' => admin_url('admin.php'),
-        ]);
-    }
-    // --- 3) Assets only for ► Leitstellen ▸ Wachen -------------------------
-    if ($hook === 'lsttraining_leitstellen_page_lsttraining_leitstellen_wachen') {
-        wp_enqueue_script('lst-wachen', $root_url . 'js/wachen.js', // ← correct path, no “includes/”
-        ['jquery', 'lst-openlayers'], '1.0.1', true);
-        wp_localize_script('lst-wachen', 'lstWachenAjax', ['ajax_url' => admin_url('admin-ajax.php'), 'admin_url' => admin_url('admin.php'), ]);
-    }
-    // --- 4) Optional: further pages - add more branches here ---------------
-    
+
+    // 1) Select2 laden (CDN)
+    wp_enqueue_style(
+        'select2',
+        'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css',
+        [],
+        '4.1.0-rc.0'
+    );
+    wp_enqueue_script(
+        'select2',
+        'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js',
+        ['jquery'],
+        '4.1.0-rc.0',
+        true
+    );
+
+    // 2) Wachen-Script – mit Select2 als Dependency
+    wp_enqueue_script(
+        'lst-wachen',
+        $root_url . 'js/wachen.js',
+        ['jquery', 'lst-openlayers', 'select2'], // <- wichtig
+        '1.0.1',
+        true
+    );
+
+    wp_localize_script('lst-wachen', 'lstWachenAjax', [
+        'ajax_url'  => admin_url('admin-ajax.php'),
+        'admin_url' => admin_url('admin.php'),
+    ]);
+}
+        
 });
 /**
  * Render the Leitstellen page.
@@ -194,11 +204,7 @@ add_action('admin_enqueue_scripts', function ($hook) {
     wp_enqueue_style('lst-admin-css', $root_url . 'css/admin-ui.css', [], '1.0.0');
     wp_enqueue_script('lst-admin-ui', $root_url . 'js/admin-ui.js', ['jquery'], '1.0.2', true);
     // ────────────────────────────────────────────────────────────────
-    // Leitstellen & Wachen page=lsttraining_leitstellen_wachen
-    if ($hook === 'lsttraining_leitstellen_page_lsttraining_leitstellen_wachen') {
-        wp_enqueue_script('lst-wachen', $root_url . 'js/wachen.js', ['jquery', 'lst-openlayers'], '1.0.1', true);
-        wp_localize_script('lst-wachen', 'lstWachenAjax', ['ajax_url' => admin_url('admin-ajax.php'), ]);
-    }
+
     // ────────────────────────────────────────────────────────────────
     // Krankenhäuser (hook contains lsttraining_krankenhaeuser)
     if (strpos($hook, '_page_lsttraining_krankenhaeuser') !== false) {

@@ -567,37 +567,46 @@ add_action("wp_ajax_lsttraining_save_wache", function () {
 
   try {
     $pdo->beginTransaction();
+	  // 3) Basis-Daten updaten (mit Änderungsmetadaten)
+$updated_by_user_id = get_current_user_id();
+$now = current_time('mysql'); // oder current_time('mysql', 1) für UTC
 
-    // 3) Basis-Daten updaten (named params + korrektes NULL-Binding)
-    $stmt = $pdo->prepare(
-      'UPDATE wachen
-                SET name          = :name,
-                    typ           = :typ,
-                    latitude      = :lat,
-                    longitude     = :lon,
-                    arrival_pos   = :arr,
-                    departure_pos = :dep,
-                    land          = :land,
-                    bundesland    = :bundesland
-              WHERE id = :id',
-    );
+$stmt = $pdo->prepare(
+  'UPDATE wachen
+            SET name               = :name,
+                typ                = :typ,
+                latitude           = :lat,
+                longitude          = :lon,
+                arrival_pos        = :arr,
+                departure_pos      = :dep,
+                land               = :land,
+                bundesland         = :bundesland,
+                updated_by_user_id = :uby,
+                updated_at         = :uat
+      WHERE id = :id',
+);
 
-    $stmt->bindValue(":name", $name);
-    $stmt->bindValue(":typ", $typ);
-    $stmt->bindValue(":lat", $latitude);
-    $stmt->bindValue(":lon", $longitude);
-    $stmt->bindValue(":arr", $arrival);
-    $stmt->bindValue(":dep", $departure);
-    $stmt->bindValue(":land", $land);
+$stmt->bindValue(":name", $name);
+$stmt->bindValue(":typ", $typ);
+$stmt->bindValue(":lat", $latitude);
+$stmt->bindValue(":lon", $longitude);
+$stmt->bindValue(":arr", $arrival);
+$stmt->bindValue(":dep", $departure);
+$stmt->bindValue(":land", $land);
 
-    if (is_null($bundesland)) {
-      $stmt->bindValue(":bundesland", null, PDO::PARAM_NULL);
-    } else {
-      $stmt->bindValue(":bundesland", $bundesland, PDO::PARAM_STR);
-    }
-    $stmt->bindValue(":id", $id, PDO::PARAM_INT);
+if (is_null($bundesland)) {
+  $stmt->bindValue(":bundesland", null, PDO::PARAM_NULL);
+} else {
+  $stmt->bindValue(":bundesland", $bundesland, PDO::PARAM_STR);
+}
 
-    $ok = $stmt->execute();
+$stmt->bindValue(":uby", $updated_by_user_id, PDO::PARAM_INT);
+$stmt->bindValue(":uat", $now);
+$stmt->bindValue(":id", $id, PDO::PARAM_INT);
+
+$ok = $stmt->execute();
+
+
     if (!$ok) {
       throw new Exception(
         "Basis-Update fehlgeschlagen: " . implode(", ", $stmt->errorInfo()),
@@ -737,34 +746,44 @@ add_action("wp_ajax_lsttraining_create_wache", function () {
   try {
     $pdo->beginTransaction();
 
-    // 1) Neue Wache anlegen
-    $stmt = $pdo->prepare(
-      'INSERT INTO wachen
-                (name, typ, latitude, longitude, arrival_pos, departure_pos, land, bundesland)
-             VALUES
-                (:name, :typ, :lat, :lon, :arr, :dep, :land, :bundesland)',
-    );
-    $stmt->bindValue(":name", $name);
-    $stmt->bindValue(":typ", $typ);
-    $stmt->bindValue(":lat", $latitude);
-    $stmt->bindValue(":lon", $longitude);
-    $stmt->bindValue(":arr", $arrival);
-    $stmt->bindValue(":dep", $departure);
-    $stmt->bindValue(":land", $land);
+// 1) Neue Wache anlegen 
+$placed_by_user_id = get_current_user_id();
+$now = current_time('mysql'); // WP-Helfer für WP-Zeitzone
 
-    if (is_null($bundesland)) {
-      $stmt->bindValue(":bundesland", null, PDO::PARAM_NULL);
-    } else {
-      $stmt->bindValue(":bundesland", $bundesland, PDO::PARAM_STR);
-    }
+$stmt = $pdo->prepare(
+  'INSERT INTO wachen
+            (name, typ, latitude, longitude, arrival_pos, departure_pos, land, bundesland,
+             placed_by_user_id, updated_by_user_id, updated_at)
+         VALUES
+            (:name, :typ, :lat, :lon, :arr, :dep, :land, :bundesland, :pby, :uby, :uat)',
+);
+$stmt->bindValue(":name", $name);
+$stmt->bindValue(":typ", $typ);
+$stmt->bindValue(":lat", $latitude);
+$stmt->bindValue(":lon", $longitude);
+$stmt->bindValue(":arr", $arrival);
+$stmt->bindValue(":dep", $departure);
+$stmt->bindValue(":land", $land);
 
-    $ok = $stmt->execute();
-    if (!$ok) {
-      throw new Exception(
-        "Anlegen fehlgeschlagen: " . implode(", ", $stmt->errorInfo()),
-      );
-    }
-    $new_id = $pdo->lastInsertId();
+if (is_null($bundesland)) {
+  $stmt->bindValue(":bundesland", null, PDO::PARAM_NULL);
+} else {
+  $stmt->bindValue(":bundesland", $bundesland, PDO::PARAM_STR);
+}
+
+$stmt->bindValue(":pby", $placed_by_user_id, PDO::PARAM_INT);
+$stmt->bindValue(":uby", $placed_by_user_id, PDO::PARAM_INT); // initial: Ersteller == letzter Bearbeiter
+$stmt->bindValue(":uat", $now);
+
+$ok = $stmt->execute();
+if (!$ok) {
+  throw new Exception(
+    "Anlegen fehlgeschlagen: " . implode(", ", $stmt->errorInfo()),
+  );
+}
+$new_id = $pdo->lastInsertId();
+
+
 
     // 2) Pivot-Zuordnungen: Leitstellen
     if (!empty($ls_ids)) {
@@ -2212,3 +2231,91 @@ add_action("wp_ajax_lsttraining_toggle_wache_assignment", function () {
     wp_send_json_error("DB-Fehler", 500);
   }
 });
+
+// Wache aktualisieren (mit Änderungsmetadaten)
+add_action('wp_ajax_lsttraining_update_wache', function () {
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error(['message' => 'Nicht angemeldet'], 401);
+    }
+    if ( ! function_exists('lsttraining_user_can') || ! lsttraining_user_can('wachen') ) {
+        wp_send_json_error(['message' => 'Keine Berechtigung'], 403);
+    }
+
+    // wie überall: Verbindung über Helper holen
+    if ( ! function_exists('lsttraining_get_connection') ) {
+        require_once plugin_dir_path(__FILE__) . 'db.php';
+    }
+    $pdo = lsttraining_get_connection();
+    if ( ! $pdo instanceof PDO ) {
+        wp_send_json_error(['message' => 'DB-Verbindung fehlgeschlagen'], 500);
+    }
+
+    $id          = isset($_POST['id']) ? intval($_POST['id']) : 0;
+    $name        = isset($_POST['name']) ? sanitize_text_field($_POST['name']) : '';
+    $typ         = isset($_POST['typ']) ? sanitize_text_field($_POST['typ']) : '';
+    // Feldnamen angleichen an die übrigen Endpunkte: latitude/longitude
+    $latitude    = isset($_POST['latitude']) ? floatval($_POST['latitude']) : 0.0;
+    $longitude   = isset($_POST['longitude']) ? floatval($_POST['longitude']) : 0.0;
+    $arrival     = isset($_POST['arrival_pos']) ? sanitize_text_field($_POST['arrival_pos']) : null;
+    $departure   = isset($_POST['departure_pos']) ? sanitize_text_field($_POST['departure_pos']) : null;
+    $land        = isset($_POST['land']) ? sanitize_text_field($_POST['land']) : '';
+    $bundesland  = isset($_POST['bundesland']) && $_POST['bundesland'] !== '' ? sanitize_text_field($_POST['bundesland']) : null;
+
+    if ($id <= 0) {
+        wp_send_json_error(['message' => 'Ungültige ID'], 400);
+    }
+
+    $updated_by_user_id = get_current_user_id();
+    $now                = current_time('mysql'); // oder: current_time('mysql', 1) für UTC
+
+    try {
+        $stmt = $pdo->prepare(
+            'UPDATE wachen
+                SET name = :name,
+                    typ = :typ,
+                    latitude = :lat,
+                    longitude = :lon,
+                    arrival_pos = :arr,
+                    departure_pos = :dep,
+                    land = :land,
+                    bundesland = :bundesland,
+                    updated_by_user_id = :uby,
+                    updated_at = :uat
+              WHERE id = :id'
+        );
+
+        $stmt->bindValue(':name', $name);
+        $stmt->bindValue(':typ', $typ);
+        $stmt->bindValue(':lat', $latitude);
+        $stmt->bindValue(':lon', $longitude);
+        $stmt->bindValue(':arr', $arrival);
+        $stmt->bindValue(':dep', $departure);
+        $stmt->bindValue(':land', $land);
+
+        if (is_null($bundesland)) {
+            $stmt->bindValue(':bundesland', null, PDO::PARAM_NULL);
+        } else {
+            $stmt->bindValue(':bundesland', $bundesland, PDO::PARAM_STR);
+        }
+
+        $stmt->bindValue(':uby', $updated_by_user_id, PDO::PARAM_INT);
+        $stmt->bindValue(':uat', $now);
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+
+        $ok = $stmt->execute();
+        if (!$ok) {
+            throw new Exception('Update fehlgeschlagen: ' . implode(', ', $stmt->errorInfo()));
+        }
+
+        wp_send_json_success([
+            'id' => $id,
+            'updated_by_user_id' => $updated_by_user_id,
+            'updated_at' => $now,
+        ]);
+    } catch (Throwable $e) {
+        wp_send_json_error(['message' => $e->getMessage()], 500);
+    }
+});
+
+
+

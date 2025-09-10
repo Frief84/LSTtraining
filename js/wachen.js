@@ -83,6 +83,95 @@
             $sel.trigger('change');
         });
     }
+	
+	// Entfernt übliche Prefixe, damit "Hamburg" bei "Leitstelle Hamburg" gefunden wird.
+function stripPrefixes(s) {
+  return String(s || '').replace(
+    /^\s*(?:leitstelle|irls|feuerwehreinsatzzentrale|feuerwehr(-|\s)?einsatzzentrale|fez|lsz)\s+/i,
+    ''
+  );
+}
+
+// Kleinschreibung + Diakritika weg (ä->a), für robuste Suche
+function norm(s) {
+  return String(s || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '');
+}
+
+// Select2-Matcher: sucht in Original-Text, prefix-freiem Text
+// und optional in data-alt (falls du dort Städte/Kürzel mitgibst)
+function select2PrefixAwareMatcher(params, data) {
+  // Leere Suche -> alles zeigen
+  const term = norm(params && params.term ? params.term : '');
+  if (!term) return data;
+
+  // Items mit Gruppen/Children weiterreichen, damit Select2 selbst filtern kann
+  if (data.children && data.children.length) {
+    const matches = $.extend(true, {}, data);
+    matches.children = data.children.filter(c => select2PrefixAwareMatcher(params, c));
+    return matches.children.length ? matches : null;
+  }
+
+  const text = data.text || '';
+  const alt  = (data.element && data.element.getAttribute('data-alt')) || '';
+  const hay  = norm(text);
+  const hayStripped = norm(stripPrefixes(text));
+  const hayAlt = norm(alt);
+
+  if (hay.includes(term) || hayStripped.includes(term) || (alt && hayAlt.includes(term))) {
+    return data;
+  }
+  return null;
+}
+
+// Optional: Treffer, die nach Prefix-Strip **anfangs** matchen, nach oben sortieren
+// alphabetische Sortierung auf Basis des prefix-bereinigten Textes
+function select2PrefixAwareSorter(results) {
+  return results.sort((a, b) => {
+    const aS = norm(stripPrefixes(a.text));
+    const bS = norm(stripPrefixes(b.text));
+    return aS.localeCompare(bS, undefined, { sensitivity: 'base' });
+  });
+}
+
+	
+	// Prüft, ob Select2 verfügbar ist
+		function hasSelect2() {
+		  return !!(window.jQuery && jQuery.fn && jQuery.fn.select2);
+		}
+
+	// Initialisiert die Multi-Selects komfortabel (Select2, falls vorhanden)
+function enhanceMultiSelectsInModal() {
+  if (hasSelect2()) {
+    const $modal = jQuery('#wache-edit-modal');
+    const opts = {
+      width: '100%',
+      placeholder: 'Auswählen …',
+      matcher: select2PrefixAwareMatcher,
+      sorter: select2PrefixAwareSorter,
+      minimumResultsForSearch: 0,       // Suchfeld immer zeigen
+      closeOnSelect: false,             // Multi-Auswahl bequemer
+      dropdownParent: $modal            // Dropdown bleibt im Modal
+    };
+    jQuery('#mw-leitstellen').select2(opts);
+    jQuery('#mw-nebenleitstellen').select2(opts);
+  } else {
+    const addHint = (id, hint) => {
+      const el = document.getElementById(id);
+      if (!el || el.__hintAdded) return;
+      const lbl = el.closest('label') || el.previousElementSibling;
+      if (lbl && lbl.tagName === 'LABEL') {
+        lbl.insertAdjacentHTML('beforeend', ` <small style="opacity:.7;">(${hint})</small>`);
+      }
+      el.__hintAdded = true;
+    };
+    addHint('mw-leitstellen', 'Mehrfach: Strg/Umschalt + Klick');
+    addHint('mw-nebenleitstellen', 'Mehrfach: Strg/Umschalt + Klick');
+  }
+}
+
 
     /**
      * Öffnet das Bearbeiten-Modal (Update) mit bestehenden Stationsdaten.
@@ -147,6 +236,8 @@
         $modal.find('.wache-edit-content').html(html);
         $('#w-form-mode').val('update');
         $modal.removeClass('hidden');
+		
+		enhanceMultiSelectsInModal();
 
         // 5) Felder setzen
         $('#w-typ').val(typ);
@@ -246,6 +337,7 @@
         $modal.find('.wache-edit-content').html(html);
         $('#w-form-mode').val('create');
         $modal.removeClass('hidden');
+		enhanceMultiSelectsInModal();
 
         // 4) Felder setzen
         $('#w-typ').val('');
