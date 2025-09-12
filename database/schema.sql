@@ -28,7 +28,7 @@ CREATE TABLE `wachen` (
   `id`                   INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `name`                 VARCHAR(255) NOT NULL,
   `typ`                  VARCHAR(50)  NOT NULL DEFAULT '',
-  `land`                 VARCHAR(64)  NULL     DEFAULT 'Deutschland',   -- NEU
+  `land`                 VARCHAR(64)  NULL     DEFAULT 'Deutschland',
   `bundesland`           VARCHAR(50)  NULL,
   `latitude`             DOUBLE       NOT NULL,
   `longitude`            DOUBLE       NOT NULL,
@@ -38,19 +38,20 @@ CREATE TABLE `wachen` (
   `created_at`           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `exists_in_reality`    TINYINT(1)   NOT NULL DEFAULT 1,
   `placed_by_user_id`    BIGINT UNSIGNED NULL,
+  `updated_by_user_id`   BIGINT UNSIGNED NULL,     -- NEU
+  `updated_at`           DATETIME     NULL,         -- NEU
   `source_note`          VARCHAR(255) NULL,
   `verified_by`          BIGINT UNSIGNED NULL,
   `verified_at`          DATETIME     NULL,
   PRIMARY KEY (`id`),
   KEY `idx_wachen_exists`      (`exists_in_reality`),
   KEY `idx_wachen_user`        (`placed_by_user_id`),
+  KEY `idx_wachen_updated_by`  (`updated_by_user_id`),  -- NEU
+  KEY `idx_wachen_updated_at`  (`updated_at`),          -- NEU
   KEY `idx_wachen_bundesland`  (`bundesland`),
-  KEY `idx_wachen_land`        (`land`)                              -- NEU
+  KEY `idx_wachen_land`        (`land`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-/* ------------------------------------------------------------------ */
-/* 3. Fahrzeuge                                                        */
-/* ------------------------------------------------------------------ */
 /* ------------------------------------------------------------------ */
 /* 3. Fahrzeuge                                                       */
 /* ------------------------------------------------------------------ */
@@ -273,3 +274,22 @@ CREATE TABLE `wache_nebenleitstellen` (
   FOREIGN KEY (`wache_id`)           REFERENCES `wachen`(`id`)            ON DELETE CASCADE,
   FOREIGN KEY (`nebenleitstelle_id`) REFERENCES `nebenleitstellen`(`id`) ON DELETE CASCADE
 );
+
+
+-- Audit-Log für LST-Training
+CREATE TABLE IF NOT EXISTS `lst_activity_log` (
+  `id`            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `ts`            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `user_id`       BIGINT UNSIGNED NULL,
+  `entity_type`   VARCHAR(64) NOT NULL,               -- z. B. 'leitstelle','nebenstelle','hospital','wache','fahrzeug','permission'
+  `entity_id`     BIGINT UNSIGNED NULL,               -- betroffene ID, falls vorhanden
+  `action`        VARCHAR(16) NOT NULL,               -- 'create','update','delete','permission_change','login', ...
+  `ip`            VARBINARY(16) NULL,                 -- IPv4/IPv6 binär (optional)
+  `user_agent`    VARCHAR(255) NULL,
+  `meta_json`     TEXT NULL,                          -- Details als JSON (klein halten)
+  PRIMARY KEY (`id`),
+  KEY `idx_ts` (`ts`),
+  KEY `idx_user` (`user_id`),
+  KEY `idx_entity` (`entity_type`,`entity_id`),
+  KEY `idx_action` (`action`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

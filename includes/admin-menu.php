@@ -132,6 +132,15 @@ add_action( 'admin_menu', function () {
             'lsttraining_render_benutzer_page'
         );
 		
+   // Verlauf / Aktivität
+        add_submenu_page(
+            $parent_slug,
+            'Verlauf / Aktivität',
+            'Verlauf / Aktivität',
+            'manage_options',
+            'lsttraining_verlauf',
+            'lsttraining_render_verlauf_page'
+        );
 		
     }
 

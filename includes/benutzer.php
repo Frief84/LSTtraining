@@ -97,6 +97,18 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['lsttraining_nonce']
             }
             $pdo->commit();
             echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Zugriffsrechte wurden gespeichert.', 'lsttraining' ) . '</p></div>';
+			
+            // Log: Berechtigungen geändert (Sammel-Event)
+           lsttraining_log_activity([
+                'entity_type' => 'permission',
+                'action'      => 'permission_change',
+                'entity_id'   => null,
+                'meta'        => [
+                    'count_users' => count($all_user_ids),
+                    'page'        => 'benutzer.php'
+                ],
+            ]);
+			
         } catch ( PDOException $e ) {
             $pdo->rollBack();
             echo '<div class="notice notice-error"><p>' . esc_html__( 'Datenbank‐Fehler: ', 'lsttraining' ) . esc_html( $e->getMessage() ) . '</p></div>';
@@ -138,6 +150,7 @@ if ( ! empty( $users ) ) {
         <table class="widefat fixed striped">
             <thead>
                 <tr>
+					 <th style="width:80px; text-align:right;"><?php esc_html_e( 'ID', 'lsttraining' ); ?></th>
                     <th><?php esc_html_e( 'Benutzername', 'lsttraining' ); ?></th>
                     <th style="text-align:center;"><?php esc_html_e( 'Leitstellen', 'lsttraining' ); ?></th>
                     <th style="text-align:center;"><?php esc_html_e( 'Nebenstellen', 'lsttraining' ); ?></th>
@@ -150,7 +163,7 @@ if ( ! empty( $users ) ) {
             <tbody>
             <?php if ( empty( $users ) ) : ?>
                 <tr>
-                    <td colspan="7"><?php esc_html_e( 'Keine Benutzer gefunden.', 'lsttraining' ); ?></td>
+                    <td colspan="8"><?php esc_html_e( 'Keine Benutzer gefunden.', 'lsttraining' ); ?></td>
                 </tr>
             <?php else : ?>
                 <?php foreach ( $users as $user ) :
@@ -165,9 +178,12 @@ if ( ! empty( $users ) ) {
                     ];
                 ?>
                 <tr>
+					<td style="vertical-align: middle; text-align:right;">
+                       <?php echo esc_html( $uid ); ?>
+                        <input type="hidden" name="user_ids[]" value="<?php echo esc_attr( $uid ); ?>">
+                    </td>
                     <td style="vertical-align: middle;">
                         <?php echo esc_html( $user->user_login ); ?>
-                        <input type="hidden" name="user_ids[]" value="<?php echo esc_attr( $uid ); ?>">
                     </td>
                     <td style="text-align:center;">
                         <input type="checkbox" name="leitstellen_<?php echo esc_attr( $uid ); ?>" value="1" <?php checked( $perm['leitstellen'], 1 ); ?>>

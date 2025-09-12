@@ -29,6 +29,13 @@ if ( ! lsttraining_user_can( 'leitstellen', $leitstelle_id ) ) {
 if ( isset( $_GET['delete_id'] ) && $pdo ) {
     $pdo->prepare( 'DELETE FROM leitstellen WHERE id = ?' )
         ->execute( [ intval( $_GET['delete_id'] ) ] );
+	    // Log: Leitstelle gelöscht
+    lsttraining_log_activity([
+        'entity_type' => 'leitstelle',
+        'action'      => 'delete',
+        'entity_id'   => (int)$_GET['delete_id'],
+        'meta'        => ['page' => 'leitstellen_editor.php']
+    ]);
     add_settings_error( 'lsttraining_msg', 'deleted',
         'Leitstelle gelöscht.', 'updated' );
 }
@@ -57,6 +64,14 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST'
         floatval( $_POST['lst_update_lon'] ),
         wp_unslash( $_POST['geojson_edit'] ?? '' ),
     ] );
+	
+   $new_id = (int)$pdo->lastInsertId();
+    lsttraining_log_activity([
+        'entity_type' => 'leitstelle',
+        'action'      => 'create',
+        'entity_id'   => $new_id,
+        'meta'        => ['page' => 'leitstellen_editor.php']
+    ]);
 
     add_settings_error(
         'lsttraining_msg',
@@ -91,6 +106,13 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['lst_update_id'] ) &
         floatval( $_POST['lst_update_lon'] ),
         intval( $_POST['lst_update_id'] )
     ] );
+	
+   lsttraining_log_activity([
+        'entity_type' => 'leitstelle',
+        'action'      => 'update',
+        'entity_id'   => (int)$leitstelle_id,
+        'meta'        => ['page' => 'leitstellen_editor.php']
+    ]);
 
     /* GeoJSON (accept both field names) */
     $geojson = '';

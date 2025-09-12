@@ -290,5 +290,18 @@ if (!function_exists('lsttraining_render_benutzer_page')) {
     }
 }
 
+/**
+ * Render die Seite „Verlauf / Aktivität“
+ */
+if (!function_exists('lsttraining_render_verlauf_page')) {
+    function lsttraining_render_verlauf_page() {
+        $template = plugin_dir_path(__FILE__) . 'verlauf.php';
+        if (file_exists($template)) {
+            require_once $template;
+        } else {
+            echo '<div class="notice notice-error"><p>Die Datei verlauf.php wurde nicht gefunden.</p></div>';
+        }
+    }
+}
 
 
