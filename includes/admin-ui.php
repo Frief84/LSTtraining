@@ -218,13 +218,67 @@ add_action('admin_enqueue_scripts', function ($hook) {
         wp_localize_script('lst-hospitals', 'lstHospitalsAjax', ['ajax_url' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('lsttraining_hospitals'), 'plugin_url' => plugin_dir_url(dirname(__FILE__)), 'departments' => $departments, ]);
     }
 	
-	    if (
-        strpos($hook, '_page_lsttraining_fahrzeuge') !== false ||
-        $hook === 'lsttraining_leitstellen_page_lsttraining_leitstellen_fahrzeuge'
-    ) {
-        wp_enqueue_style(  'lst-admin-css', $root_url . 'css/admin-ui.css', [], '1.0.0' );
-        wp_enqueue_script( 'lst-fahrzeuge', $root_url . 'js/fahrzeuge.js', [ 'jquery' ], '1.0.0', true );
+if (
+    strpos($hook, '_page_lsttraining_fahrzeuge') !== false ||
+    $hook === 'lsttraining_leitstellen_page_lsttraining_leitstellen_fahrzeuge'
+) {
+    // Select2
+    wp_enqueue_style(
+        'select2',
+        'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css',
+        [],
+        '4.1.0-rc.0'
+    );
+    wp_enqueue_script(
+        'select2',
+        'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js',
+        ['jquery'],
+        '4.1.0-rc.0',
+        true
+    );
+
+    wp_enqueue_style('lst-admin-css', $root_url . 'css/admin-ui.css', [], '1.0.0');
+    wp_enqueue_script('lst-fahrzeuge', $root_url . 'js/fahrzeuge.js', ['jquery', 'select2'], '1.9.1', true);
+
+    // Bundesländer-JSON laden
+    $bundeslaender = [];
+    $json_path = LSTTRAINING_PATH . 'data/bundeslaender.json';
+    if (is_readable($json_path)) {
+        $tmp = json_decode(file_get_contents($json_path), true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($tmp)) {
+            $bundeslaender = $tmp;
+        }
     }
+
+    $fahrzeugtypen = [];
+	$ft_path = LSTTRAINING_PATH . 'data/fahrzeugtypen.json';
+	if (is_readable($ft_path)) {
+		$tmp = json_decode(file_get_contents($ft_path), true);
+		if (json_last_error() === JSON_ERROR_NONE && is_array($tmp)) {
+			$fahrzeugtypen = array_values(array_filter(array_map('strval', $tmp)));
+		} else {
+			error_log('lsttraining: fahrzeugtypen.json invalid JSON: ' . json_last_error_msg());
+		}
+	} else {
+		error_log('lsttraining: fahrzeugtypen.json not readable at ' . $ft_path);
+	}
+
+	// Optionales Mini-Fallback, damit das Select nicht leer ist, falls die JSON fehlt
+	if (empty($fahrzeugtypen)) {
+		$fahrzeugtypen = ['RTW','NEF','KTW','HLF 20','LF 20','DLK 23/12','GW-San','ELW 1','MTW'];
+		
+	}
+
+	wp_localize_script('lst-fahrzeuge', 'lstFahrzeugeAjax', [
+		'ajax_url'      => admin_url('admin-ajax.php'),
+		'nonce'         => wp_create_nonce('lst_fahrzeuge_nonce'),
+		'bundeslaender' => $bundeslaender,
+		'fahrzeugtypen' => $fahrzeugtypen,
+	]);
+}
+
+
+
 });
 /**
  * Render-Funktion für „Nebenstellen“

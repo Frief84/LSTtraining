@@ -6,6 +6,11 @@ require_once plugin_dir_path( __FILE__ ) . 'db.php';
 $pdo = lsttraining_get_connection();
 if ( ! $pdo ) { wp_die( 'Keine Datenbankverbindung.' ); }
 
+/* Darf der Nutzer Fahrzeuge bearbeiten? */
+$can_edit = function_exists('lsttraining_user_can')
+    ? (bool) lsttraining_user_can('fahrzeuge')
+    : current_user_can('manage_options');
+
 /* Request-Parameter */
 $s         = isset($_GET['s']) ? trim((string)$_GET['s']) : '';
 $orderby   = isset($_GET['orderby']) ? strtolower($_GET['orderby']) : 'wache';
@@ -30,7 +35,10 @@ if ($s !== '') {
 $where_sql = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
 
 /* Count */
-$sql_count = "SELECT COUNT(*) FROM fahrzeuge f JOIN wachen w ON w.id = f.wache_id $where_sql";
+$sql_count = "SELECT COUNT(*)
+              FROM fahrzeuge f
+              JOIN wachen w ON w.id = f.wache_id
+              $where_sql";
 $stmt = $pdo->prepare($sql_count);
 $stmt->execute($params);
 $total = (int) $stmt->fetchColumn();
@@ -61,9 +69,17 @@ function lst_sort_link($label, $key, $current_key, $current_order) {
     $arrow = ($current_key === $key) ? ($current_order === 'asc' ? ' ▲' : ' ▼') : '';
     return '<a href="'.$url.'" class="sort-link" data-key="'.esc_attr($key).'">'.esc_html($label.$arrow).'</a>';
 }
+
+$colspan = $can_edit ? 4 : 3;
 ?>
 <div class="wrap">
   <h1>Fahrzeuge</h1>
+
+  <?php if ($can_edit): ?>
+    <p>
+      <button id="fahrzeug-new" class="button button-primary">Neues Fahrzeug</button>
+    </p>
+  <?php endif; ?>
 
   <form method="get" id="fahrzeuge-filter" style="margin-bottom:16px;">
     <input type="hidden" name="page" value="lsttraining_fahrzeuge" />
@@ -88,16 +104,24 @@ function lst_sort_link($label, $key, $current_key, $current_order) {
         <th style="width:110px;"><?php echo lst_sort_link('ID', 'id', $orderby, $order); ?></th>
         <th style="min-width:240px;"><?php echo lst_sort_link('Rufname (Funkname)', 'rufname', $orderby, $order); ?></th>
         <th style="min-width:280px;"><?php echo lst_sort_link('Wache', 'wache', $orderby, $order); ?></th>
+        <?php if ($can_edit): ?>
+          <th style="width:140px;">Aktionen</th>
+        <?php endif; ?>
       </tr>
     </thead>
     <tbody>
       <?php if (empty($rows)): ?>
-        <tr><td colspan="3">Keine Datensätze.</td></tr>
+        <tr><td colspan="<?php echo (int)$colspan; ?>">Keine Datensätze.</td></tr>
       <?php else: foreach ($rows as $r): ?>
-        <tr>
+        <tr data-id="<?php echo (int)$r['id']; ?>">
           <td>#<?php echo (int)$r['id']; ?></td>
           <td><?php echo esc_html($r['rufname']); ?></td>
           <td><?php echo esc_html($r['wache_name']); ?></td>
+          <?php if ($can_edit): ?>
+            <td>
+              <button class="button btn-edit-fahrzeug" data-id="<?php echo (int)$r['id']; ?>">Bearbeiten</button>
+            </td>
+          <?php endif; ?>
         </tr>
       <?php endforeach; endif; ?>
     </tbody>
@@ -123,4 +147,3 @@ function lst_sort_link($label, $key, $current_key, $current_order) {
     </div>
   <?php endif; ?>
 </div>
-
