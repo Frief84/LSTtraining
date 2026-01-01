@@ -36,7 +36,7 @@ function lsttraining_get_user_permissions( $user_id = 0 ) {
         'can_edit_hospitals'     => 0,
         'can_edit_wachen'        => 0,
         'can_edit_fahrzeuge'     => 0,
-        'leistellen_ids'         => '',
+        'leitstellen_ids'         => '',
     ];
     return $cache[ $user_id ];
 }
@@ -68,9 +68,9 @@ function lsttraining_user_can( string $area, ?int $ls_id = null, ?int $user_id =
     }
 
     // 2. Falls Leitstellen-Scope erforderlich → IDs prüfen
-    if ( $ls_id && property_exists( $perm, 'leistellen_ids' ) ) {
+    if ( $ls_id && property_exists( $perm, 'leitstellen_ids' ) ) {
         $allowed = array_map( 'intval',
-            array_filter( explode( ',', $perm->leistellen_ids ) )
+            array_filter( explode( ',', $perm->leitstellen_ids ) )
         );
         return in_array( $ls_id, $allowed, true );
     }

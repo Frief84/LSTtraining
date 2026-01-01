@@ -372,5 +372,14 @@
       if (id > 0) openForEdit(id);
     });
   });
+	
+// Auto-submit bei Filteränderung (setzt auf Seite 1 zurück)
+var $filter = $('#fahrzeuge-filter');
+$filter.find('select[name="bundesland"], select[name="leitstelle_id"], select[name="neben_id"]').on('change', function () {
+  var $p = $filter.find('input[name="paged"]');
+  if (!$p.length) { $p = $('<input type="hidden" name="paged" value="1">').appendTo($filter); }
+  else { $p.val('1'); }
+  $filter.trigger('submit');
+});
 
 })(jQuery);

@@ -238,14 +238,18 @@ SET foreign_key_checks = 1;
 
 
 
--- Tabelle für LST-Benutzer-Berechtigungen (inkl. Nebenstellen)
+-- Tabelle für LST-Benutzer-Berechtigungen (inkl. Nebenstellen und Leitstellen-Scope)
 CREATE TABLE IF NOT EXISTS `wp_lst_user_permissions` (
   `user_id`               BIGINT(20) UNSIGNED NOT NULL,
-  `can_edit_leitstellen`  TINYINT(1)      NOT NULL DEFAULT 0,
-  `can_edit_nebenstellen` TINYINT(1)      NOT NULL DEFAULT 0,
-  `can_edit_hospitals`    TINYINT(1)      NOT NULL DEFAULT 0,
-  `can_edit_wachen`       TINYINT(1)      NOT NULL DEFAULT 0,
-  `can_edit_fahrzeuge`    TINYINT(1)      NOT NULL DEFAULT 0,
+  `can_edit_leitstellen`  TINYINT(1)          NOT NULL DEFAULT 0,
+  `can_edit_nebenstellen` TINYINT(1)          NOT NULL DEFAULT 0,
+  `can_edit_hospitals`    TINYINT(1)          NOT NULL DEFAULT 0,
+  `can_edit_wachen`       TINYINT(1)          NOT NULL DEFAULT 0,
+  `can_edit_fahrzeuge`    TINYINT(1)          NOT NULL DEFAULT 0,
+
+  -- Kommagetrennte Liste von Leitstellen‐IDs, die der Benutzer bearbeiten darf
+  `leitstellen_ids`       TEXT COLLATE utf8mb4_unicode_ci NOT NULL,
+
   PRIMARY KEY (`user_id`),
   CONSTRAINT `fk_lst_user_permissions_user`
     FOREIGN KEY (`user_id`)

@@ -40,7 +40,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['lsttraining_nonce']
                 can_edit_hospitals,
                 can_edit_wachen,
                 can_edit_fahrzeuge,
-                leistellen_ids
+                leitstellen_ids
             ) VALUES (?, ?, ?, ?, ?, ?, ?)
         " );
         $stmtUpdate = $pdo->prepare( "
@@ -50,7 +50,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['lsttraining_nonce']
                    can_edit_hospitals    = ?,
                    can_edit_wachen       = ?,
                    can_edit_fahrzeuge    = ?,
-                   leistellen_ids        = ?
+                   leitstellen_ids        = ?
              WHERE user_id = ?
         " );
 
@@ -63,11 +63,11 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['lsttraining_nonce']
                 $can_hospital     = isset( $_POST["hospitals_$user_id"] )    ? 1 : 0;
                 $can_wache        = isset( $_POST["wachen_$user_id"] )       ? 1 : 0;
                 $can_fahrzeug     = isset( $_POST["fahrzeuge_$user_id"] )    ? 1 : 0;
-                $leistellen_ids_raw = sanitize_text_field( $_POST["leistellen_ids_$user_id"] ?? '' );
-                $ids_array = array_filter( array_map( 'trim', explode( ',', $leistellen_ids_raw ) ), function( $v ) {
+                $leitstellen_ids_raw = sanitize_text_field( $_POST["leitstellen_ids_$user_id"] ?? '' );
+                $ids_array = array_filter( array_map( 'trim', explode( ',', $leitstellen_ids_raw ) ), function( $v ) {
                     return ( $v !== '' && ctype_digit( $v ) );
                 } );
-                $leistellen_ids = implode( ',', $ids_array );
+                $leitstellen_ids = implode( ',', $ids_array );
 
                 // Existenz prüfen
                 $stmtCheck->execute( [ $user_id ] );
@@ -80,7 +80,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['lsttraining_nonce']
                         $can_hospital,
                         $can_wache,
                         $can_fahrzeug,
-                        $leistellen_ids,
+                        $leitstellen_ids,
                         $user_id
                     ] );
                 } else {
@@ -91,7 +91,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['lsttraining_nonce']
                         $can_hospital,
                         $can_wache,
                         $can_fahrzeug,
-                        $leistellen_ids
+                        $leitstellen_ids
                     ] );
                 }
             }
@@ -135,7 +135,7 @@ if ( ! empty( $users ) ) {
                 'hospitals'      => (int) $r['can_edit_hospitals'],
                 'wachen'         => (int) $r['can_edit_wachen'],
                 'fahrzeuge'      => (int) $r['can_edit_fahrzeuge'],
-                'leistellen_ids' => $r['leistellen_ids'],
+                'leitstellen_ids' => $r['leitstellen_ids'],
             ];
         }
     }
@@ -174,7 +174,7 @@ if ( ! empty( $users ) ) {
                         'hospitals'      => 0,
                         'wachen'         => 0,
                         'fahrzeuge'      => 0,
-                        'leistellen_ids' => '',
+                        'leitstellen_ids' => '',
                     ];
                 ?>
                 <tr>
@@ -203,8 +203,8 @@ if ( ! empty( $users ) ) {
                     <td>
                         <input
                             type="text"
-                            name="leistellen_ids_<?php echo esc_attr( $uid ); ?>"
-                            value="<?php echo esc_attr( $perm['leistellen_ids'] ); ?>"
+                            name="leitstellen_ids_<?php echo esc_attr( $uid ); ?>"
+                            value="<?php echo esc_attr( $perm['leitstellen_ids'] ); ?>"
                             class="regular-text"
                             placeholder="<?php esc_attr_e( 'z. B. 3,5,12', 'lsttraining' ); ?>"
                             title="<?php esc_attr_e( 'Kommagetrennte Liste von Leitstellen‐IDs', 'lsttraining' ); ?>"

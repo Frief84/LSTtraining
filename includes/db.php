@@ -74,12 +74,12 @@ function lsttraining_current_user_leitstellen_ids(): array {
     $pdo = lsttraining_get_connection();
     if ( ! $pdo ) { return []; }
 
-    $csv = $pdo->prepare(
-        'SELECT leitstellen_ids FROM user_permissions WHERE user_id = ?'
-    )->execute( [ $uid ] )->fetchColumn();
+    $stmt = $pdo->prepare('SELECT leitstellen_ids FROM user_permissions WHERE user_id = ?');
+    $stmt->execute([ $uid ]);
+    $csv = $stmt->fetchColumn();
 
     return $csv
-        ? array_map( 'intval', array_filter( array_map( 'trim', explode( ',', $csv ) ) ) )
+        ? array_map('intval', array_filter(array_map('trim', explode(',', (string)$csv))))
         : [];
 }
 
