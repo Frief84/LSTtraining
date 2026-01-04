@@ -6,17 +6,25 @@
  * Author: Frief
  */
 
-defined('ABSPATH') or die('No script kiddies please!');
+defined('ABSPATH') or exit;
 
-require_once plugin_dir_path(__FILE__) . 'includes/permissions.php';
-require_once plugin_dir_path(__FILE__) . 'includes/ajax-handlers.php';
-require_once plugin_dir_path(__FILE__) . 'includes/settings.php';        // Optionen
-require_once plugin_dir_path(__FILE__) . 'includes/admin-menu.php';     // Menüstruktur
-require_once plugin_dir_path(__FILE__) . 'includes/admin-ui.php';       // Rendering-Logik
-require_once plugin_dir_path(__FILE__) . 'includes/schema_import.php';  // SQL/Tabellen
-require_once plugin_dir_path(__FILE__) . 'includes/map-override.php';   // Map-Hooks
-require_once plugin_dir_path(__FILE__) . 'includes/rest-api.php';
-if (!defined('LSTTRAINING_PLUGIN_FILE')) define('LSTTRAINING_PLUGIN_FILE', __FILE__);
-if (!defined('LSTTRAINING_PATH'))       define('LSTTRAINING_PATH', plugin_dir_path(LSTTRAINING_PLUGIN_FILE));
-if (!defined('LSTTRAINING_URL'))        define('LSTTRAINING_URL',  plugin_dir_url(LSTTRAINING_PLUGIN_FILE));
 
+if (!defined('LSTTRAINING_PLUGIN_FILE')) {
+    define('LSTTRAINING_PLUGIN_FILE', __FILE__);
+}
+if (!defined('LSTTRAINING_PATH')) {
+    define('LSTTRAINING_PATH', plugin_dir_path(LSTTRAINING_PLUGIN_FILE));
+}
+if (!defined('LSTTRAINING_URL')) {
+    define('LSTTRAINING_URL', plugin_dir_url(LSTTRAINING_PLUGIN_FILE));
+}
+
+require_once LSTTRAINING_PATH . 'includes/db.php';
+require_once LSTTRAINING_PATH . 'includes/permissions.php';
+require_once LSTTRAINING_PATH . 'includes/settings.php';
+require_once LSTTRAINING_PATH . 'includes/schema_import.php';
+require_once LSTTRAINING_PATH . 'includes/ajax-handlers.php';
+require_once LSTTRAINING_PATH . 'includes/rest-api.php';
+require_once LSTTRAINING_PATH . 'includes/admin-menu.php';
+require_once LSTTRAINING_PATH . 'includes/admin-ui.php';
+require_once LSTTRAINING_PATH . 'includes/map-override.php';

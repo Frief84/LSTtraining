@@ -326,6 +326,46 @@ $where = [];
       <tr>
         <th>ID</th><td><strong>{{id}}</strong></td>
       </tr>
+	  <tr>
+  <th>Fahrzeuge</th>
+  <td>
+    <div class="wache-fahrzeuge-compact" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+      <div>
+        Zugeordnet:
+        <strong><span id="wache-fahrzeuge-count">–</span></strong>
+      </div>
+
+      <button type="button" class="button" id="wache-fahrzeuge-toggle" aria-expanded="false">
+        Fahrzeuge bearbeiten
+      </button>
+
+      <span id="wache-fahrzeuge-status" class="description" style="margin:0;"></span>
+    </div>
+
+    <div id="wache-fahrzeuge-panel" class="hidden" style="margin-top:10px;">
+      <p style="margin:0 0 8px 0;">
+        <button type="button" class="button" id="wache-fahrzeug-add">Fahrzeug hinzufügen</button>
+      </p>
+
+      <table class="widefat striped" id="wache-fahrzeuge-table" style="max-width:900px;">
+        <thead>
+          <tr>
+            <th>Rufname</th>
+            <th>Typ</th>
+            <th>FMS</th>
+            <th>FR</th>
+            <th style="width:160px;">Aktion</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="5"><em>Noch nicht geladen.</em></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </td>
+</tr>
+
+
       <tr>
         <th><label for="w-name">Name</label></th>
         <td><input type="text" id="w-name" name="name" value="{{name}}" class="regular-text" required></td>
