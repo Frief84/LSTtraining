@@ -1,7 +1,7 @@
 <?php
 /**
  * includes/fahrzeuge.php
- * Fahrzeuge-Liste mit Filtern (Suche, Bundesland, Leitstelle, Nebenleitstelle)
+ * Fahrzeuge-Liste mit Filtern (Suche, Bundesland, Leitstelle, Nebenleitstelle, Wache)
  * und Aktionen (Bearbeiten / Neu). Filter wirken serverseitig.
  */
 
@@ -15,7 +15,6 @@ if ( ! $pdo ) { wp_die( 'Keine Datenbankverbindung.' ); }
 
 /* -----------------------------------------------------------
  * Helper: Tabellen-/Spalten-Existenz prüfen (robust)
- * – nur definieren, wenn nicht schon woanders vorhanden
  * ----------------------------------------------------------- */
 if ( ! function_exists('lst_col_exists') ) {
     function lst_col_exists(PDO $pdo, $table, $column) {
@@ -40,14 +39,17 @@ if ( ! function_exists('lst_tbl_exists') ) {
  * Request-Parameter
  * ----------------------------------------------------------- */
 $s        = isset($_GET['s']) ? trim((string)$_GET['s']) : '';
-$orderby  = isset($_GET['orderby']) ? strtolower($_GET['orderby']) : 'wache';
-$order    = isset($_GET['order']) ? strtolower($_GET['order']) : 'asc';
+$orderby  = isset($_GET['orderby']) ? strtolower((string)$_GET['orderby']) : 'wache';
+$order    = isset($_GET['order']) ? strtolower((string)$_GET['order']) : 'asc';
 $paged    = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
 $per_page = isset($_GET['per_page']) ? max(10, min(200, intval($_GET['per_page']))) : 50;
 
 $bundesland    = isset($_GET['bundesland']) ? trim((string)$_GET['bundesland']) : '';
 $leitstelle_id = (isset($_GET['leitstelle_id']) && $_GET['leitstelle_id'] !== '') ? max(0, intval($_GET['leitstelle_id'])) : 0;
 $neben_id      = (isset($_GET['neben_id'])      && $_GET['neben_id'] !== '')      ? max(0, intval($_GET['neben_id']))      : 0;
+
+// Wachen-Kontext (wichtig für "Fahrzeuge bearbeiten" aus Wachen-Modal)
+$wache_id = (isset($_GET['wache_id']) && $_GET['wache_id'] !== '') ? max(0, intval($_GET['wache_id'])) : 0;
 
 /* -----------------------------------------------------------
  * Spalten/Relationen erkennen
@@ -75,7 +77,7 @@ $bl_path = $plugin_base . 'data/bundeslaender.json';
 if ( is_readable($bl_path) ) {
     $tmp = json_decode(file_get_contents($bl_path), true);
     if (json_last_error() === JSON_ERROR_NONE && is_array($tmp)) {
-        $bundes_opts = $tmp; // [ "Deutschland" => [...], "Österreich" => [...] ]
+        $bundes_opts = $tmp;
     }
 }
 
@@ -86,9 +88,7 @@ try {
         $st = $pdo->query("SELECT id, name FROM leitstellen ORDER BY name");
         if ($st) { $leitstellen_opts = $st->fetchAll(PDO::FETCH_ASSOC); }
     }
-} catch (Throwable $e) {
-    // ignore
-}
+} catch (Throwable $e) {}
 
 // Nebenleitstellen
 $neben_opts = [];
@@ -97,8 +97,20 @@ try {
         $st = $pdo->query("SELECT id, name FROM nebenleitstellen ORDER BY name");
         if ($st) { $neben_opts = $st->fetchAll(PDO::FETCH_ASSOC); }
     }
-} catch (Throwable $e) {
-    // ignore
+} catch (Throwable $e) {}
+
+/* -----------------------------------------------------------
+ * Wachenname laden (Kontext-Headline)
+ * ----------------------------------------------------------- */
+$wache_name = '';
+if ($wache_id > 0) {
+    try {
+        $st = $pdo->prepare("SELECT name FROM wachen WHERE id = :wid LIMIT 1");
+        $st->execute([':wid' => $wache_id]);
+        $wache_name = (string) $st->fetchColumn();
+    } catch (Throwable $e) {
+        $wache_name = '';
+    }
 }
 
 /* -----------------------------------------------------------
@@ -119,8 +131,19 @@ $where  = [];
 $params = [];
 $joins  = [];
 
-$joined_wls = false; // Mapping wache↔leitstelle
-$joined_ls  = false; // Tabelle leitstellen
+$joined_wls = false;
+$joined_ls  = false;
+
+// Kontextfilter Wache (muss ganz oben rein, weil er die Ergebnismenge begrenzt)
+if ($wache_id > 0) {
+    $where[] = 'f.wache_id = :wid';
+    $params[':wid'] = $wache_id;
+
+    // Wenn im Wachen-Kontext, ist "wache" als sort default wenig sinnvoll
+    if (!isset($_GET['orderby']) || $_GET['orderby'] === '') {
+        $orderby_sql = 'f.rufname';
+    }
+}
 
 // Suche
 if ($s !== '') {
@@ -128,13 +151,16 @@ if ($s !== '') {
     $params[':q'] = '%' . $s . '%';
 }
 
-// Leitstelle (immer filtern, wenn ausgewählt und Weg vorhanden)
+// Leitstelle
 if ($leitstelle_id > 0) {
     if ($has_wachen_leitstelle) {
         $where[] = 'w.leitstelle_id = :lsid';
         $params[':lsid'] = $leitstelle_id;
     } elseif ($map_ls_tbl) {
-        if (!$joined_wls) { $joins[] = "JOIN {$map_ls_tbl} AS wls ON wls.wache_id = w.id"; $joined_wls = true; }
+        if (!$joined_wls) {
+            $joins[] = "JOIN {$map_ls_tbl} AS wls ON wls.wache_id = w.id";
+            $joined_wls = true;
+        }
         $where[] = 'wls.leitstelle_id = :lsid';
         $params[':lsid'] = $leitstelle_id;
     }
@@ -152,23 +178,31 @@ if ($neben_id > 0) {
     }
 }
 
-// Bundesland – bevorzugt wachen.bundesland, sonst via leitstellen.bundesland
+// Bundesland
 if ($bundesland !== '') {
     if ($has_wachen_bundesland) {
         $where[] = 'w.bundesland = :bl';
         $params[':bl'] = $bundesland;
     } elseif ($has_ls_bundesland) {
         if ($has_wachen_leitstelle) {
-            if (!$joined_ls) { $joins[] = "JOIN leitstellen AS ls ON ls.id = w.leitstelle_id"; $joined_ls = true; }
+            if (!$joined_ls) {
+                $joins[] = "JOIN leitstellen AS ls ON ls.id = w.leitstelle_id";
+                $joined_ls = true;
+            }
             $where[] = 'ls.bundesland = :bl';
             $params[':bl'] = $bundesland;
         } elseif ($map_ls_tbl) {
-            if (!$joined_wls) { $joins[] = "JOIN {$map_ls_tbl} AS wls ON wls.wache_id = w.id"; $joined_wls = true; }
-            if (!$joined_ls)  { $joins[] = "JOIN leitstellen AS ls ON ls.id = wls.leitstelle_id"; $joined_ls = true; }
+            if (!$joined_wls) {
+                $joins[] = "JOIN {$map_ls_tbl} AS wls ON wls.wache_id = w.id";
+                $joined_wls = true;
+            }
+            if (!$joined_ls) {
+                $joins[] = "JOIN leitstellen AS ls ON ls.id = wls.leitstelle_id";
+                $joined_ls = true;
+            }
             $where[] = 'ls.bundesland = :bl';
             $params[':bl'] = $bundesland;
         }
-        // sonst: keine zuverlässige Verbindung → kein Filter
     }
 }
 
@@ -216,11 +250,14 @@ $stmt->execute();
 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 /* -----------------------------------------------------------
- * Helper für Sort-Links
+ * Helper für Sort-Links (wache_id muss erhalten bleiben)
  * ----------------------------------------------------------- */
 function lst_sort_link($label, $key, $current_key, $current_order) {
     $order = ($current_key === $key && $current_order === 'asc') ? 'desc' : 'asc';
-    $qs = $_GET; $qs['orderby'] = $key; $qs['order'] = $order;
+    $qs = $_GET;
+    $qs['orderby'] = $key;
+    $qs['order'] = $order;
+
     $url = esc_url( add_query_arg($qs, admin_url('admin.php?page=lsttraining_fahrzeuge')) );
     $arrow = ($current_key === $key) ? ($current_order === 'asc' ? ' ▲' : ' ▼') : '';
     return '<a href="'.$url.'" class="sort-link" data-key="'.esc_attr($key).'">'.esc_html($label.$arrow).'</a>';
@@ -228,15 +265,31 @@ function lst_sort_link($label, $key, $current_key, $current_order) {
 
 ?>
 <div class="wrap">
-  <h1>Fahrzeuge</h1>
+
+  <h1>
+    Fahrzeuge
+    <?php if ($wache_id > 0): ?>
+      <span style="font-size:13px; font-weight:400; opacity:.8;">
+        — Wache #<?php echo (int)$wache_id; ?><?php echo $wache_name !== '' ? ' — ' . esc_html($wache_name) : ''; ?>
+      </span>
+    <?php endif; ?>
+  </h1>
+
+  <?php if ($wache_id > 0): ?>
+    <p style="margin:6px 0 14px 0;">
+      <a class="button" href="<?php echo esc_url( admin_url('admin.php?page=lsttraining_leitstellen_wachen') ); ?>">Zurück zu Wachen</a>
+    </p>
+  <?php endif; ?>
 
   <form method="get" id="fahrzeuge-filter" style="margin-bottom:16px;">
     <input type="hidden" name="page" value="lsttraining_fahrzeuge" />
+    <?php if ($wache_id > 0): ?>
+      <input type="hidden" name="wache_id" value="<?php echo (int)$wache_id; ?>" />
+    <?php endif; ?>
 
     <input type="search" name="s" value="<?php echo esc_attr($s); ?>"
            placeholder="Suche in Rufname / Wache" style="min-width:320px;" />
 
-    <!-- Bundesland -->
     <label style="margin-left:10px;">
       Bundesland:
       <select name="bundesland">
@@ -255,7 +308,6 @@ function lst_sort_link($label, $key, $current_key, $current_order) {
       </select>
     </label>
 
-    <!-- Leitstelle -->
     <label style="margin-left:10px;">
       Leitstelle:
       <select name="leitstelle_id" style="min-width:220px;">
@@ -268,7 +320,6 @@ function lst_sort_link($label, $key, $current_key, $current_order) {
       </select>
     </label>
 
-    <!-- Nebenleitstelle -->
     <label style="margin-left:10px;">
       Nebenleitstelle:
       <select name="neben_id" style="min-width:220px;">
@@ -288,10 +339,15 @@ function lst_sort_link($label, $key, $current_key, $current_order) {
     </label>
 
     <button class="button" style="margin-left:8px;">Filtern</button>
+
     <?php
       $hasFilter = ($s !== '' || $bundesland !== '' || $leitstelle_id > 0 || $neben_id > 0 || isset($_GET['per_page']));
-      if ($hasFilter): ?>
-      <a class="button" href="<?php echo esc_url( admin_url('admin.php?page=lsttraining_fahrzeuge') ); ?>" style="margin-left:6px;">Zurücksetzen</a>
+      if ($hasFilter):
+          $reset_qs = ['page' => 'lsttraining_fahrzeuge'];
+          if ($wache_id > 0) { $reset_qs['wache_id'] = $wache_id; }
+          $reset_url = add_query_arg($reset_qs, admin_url('admin.php'));
+    ?>
+      <a class="button" href="<?php echo esc_url($reset_url); ?>" style="margin-left:6px;">Zurücksetzen</a>
     <?php endif; ?>
   </form>
 
@@ -347,7 +403,9 @@ function lst_sort_link($label, $key, $current_key, $current_order) {
   </table>
 
   <?php if ( $max_pages > 1 ) :
-      $base_qs = $_GET; unset($base_qs['paged']);
+      $base_qs = $_GET;
+      unset($base_qs['paged']);
+
       $base_url = add_query_arg($base_qs, admin_url('admin.php?page=lsttraining_fahrzeuge'));
       $prev_url = ($paged > 1) ? add_query_arg('paged', $paged-1, $base_url) : '';
       $next_url = ($paged < $max_pages) ? add_query_arg('paged', $paged+1, $base_url) : '';

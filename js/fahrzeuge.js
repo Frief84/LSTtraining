@@ -1,5 +1,5 @@
 // js/fahrzeuge.js – Modal-Editor für Fahrzeuge
-// Version 1.9.1 (Feldgruppen fix, Select2 im Modal, Wache erst nach Bundesland aktiv)
+// Fix: AJAX get_fahrzeug liefert resp.data direkt (nicht resp.data.fahrzeug)
 
 (function ($) {
 
@@ -72,6 +72,10 @@
       '</div>';
   }
 
+  function hasSelect2() {
+    return !!($.fn && $.fn.select2);
+  }
+
   function initLandBundesland() {
     var data = (window.lstFahrzeugeAjax && lstFahrzeugeAjax.bundeslaender) ? lstFahrzeugeAjax.bundeslaender : {};
     var $land = $('#fz-land').empty();
@@ -89,12 +93,13 @@
       arr.forEach(function (name) {
         $bl.append($('<option/>', { value: name, text: name }));
       });
-      $bl.trigger('change.select2');
+      if (hasSelect2()) $bl.trigger('change.select2');
     }
 
-    $land.on('change', function(){
+    $land.off('change.fzland').on('change.fzland', function(){
       fillBL($land.val() || '');
-      $('#fz-wache').val(null).trigger('change').prop('disabled', true).trigger('change.select2');
+      $('#fz-wache').val(null).trigger('change').prop('disabled', true);
+      if (hasSelect2()) $('#fz-wache').trigger('change.select2');
     });
 
     fillBL('');
@@ -114,6 +119,11 @@
 
   function initWacheSelect2() {
     var $w = $('#fz-wache').prop('disabled', true);
+
+    if (!hasSelect2()) {
+      // Fallback: ohne Select2 bleibt das Select disabled, weil Suche serverseitig gedacht ist.
+      return;
+    }
 
     $w.select2({
       width: '100%',
@@ -152,7 +162,7 @@
     });
 
     // Bundesland steuert Aktivierung
-    $('#fz-bundesland').on('change', function () {
+    $('#fz-bundesland').off('change.fzbl').on('change.fzbl', function () {
       var enabled = !!$('#fz-bundesland').val();
       $w.val(null).trigger('change');
       $w.prop('disabled', !enabled).trigger('change.select2');
@@ -160,57 +170,55 @@
   }
 
   function ensureModal() {
-    if (!$('#fahrzeug-modal').length) {
-      $('body').append(modalTpl());
+    if ($('#fahrzeug-modal').length) return;
 
-      initLandBundesland();
-      initFahrzeugtyp();
-      initWacheSelect2();
+    $('body').append(modalTpl());
 
-      $('#fz-cancel').on('click', function (e) { e.preventDefault(); $('#fahrzeug-modal').hide(); });
-      $('#fz-save').on('click', onSave);
-      $('#fz-delete').on('click', onDelete);
+    initLandBundesland();
+    initFahrzeugtyp();
+    initWacheSelect2();
 
-      $('#fahrzeug-modal').on('click', function (ev) {
-        if (ev.target === this) { $('#fahrzeug-modal').hide(); }
+    $('#fz-cancel').on('click', function (e) { e.preventDefault(); $('#fahrzeug-modal').hide(); });
+    $('#fz-save').on('click', onSave);
+    $('#fz-delete').on('click', onDelete);
+
+    $('#fahrzeug-modal').on('click', function (ev) {
+      if (ev.target === this) { $('#fahrzeug-modal').hide(); }
+    });
+
+    $('#fz-bildupload').on('change', function () {
+      var f = this.files && this.files[0];
+      if (!f) return;
+
+      var fd = new FormData();
+      fd.append('action', 'lsttraining_upload_fahrzeug_bild');
+      fd.append('nonce', lstFahrzeugeAjax.nonce);
+      fd.append('file', f, f.name);
+
+      $.ajax({
+        url: lstFahrzeugeAjax.ajax_url,
+        method: 'POST',
+        data: fd,
+        processData: false,
+        contentType: false,
+        dataType: 'json'
+      })
+      .done(function (resp) {
+        if (resp && resp.success && resp.data && resp.data.url) {
+          $('#fz-bild').val(resp.data.url);
+          $('#fz-preview').attr('src', resp.data.url).css('display', 'block');
+        } else {
+          var msg = (resp && resp.data && resp.data.msg) ? resp.data.msg : 'Upload fehlgeschlagen.';
+          alert(msg);
+        }
+      })
+      .fail(function (xhr) {
+        var msg = (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.msg)
+          ? xhr.responseJSON.data.msg
+          : ('HTTP ' + (xhr.status || ''));
+        alert('Upload-Fehler: ' + msg);
       });
-
-      $('#fz-bildupload').on('change', function () {
-        var f = this.files && this.files[0];
-        if (!f) return;
-
-        var fd = new FormData();
-        fd.append('action', 'lsttraining_upload_fahrzeug_bild');
-        fd.append('nonce', lstFahrzeugeAjax.nonce);
-        fd.append('file', f, f.name);
-
-        $.ajax({
-          url: lstFahrzeugeAjax.ajax_url,
-          method: 'POST',
-          data: fd,
-          processData: false,
-          contentType: false,
-          dataType: 'json'
-        })
-          .done(function (resp) {
-            if (resp && resp.success && resp.data && resp.data.url) {
-              $('#fz-bild').val(resp.data.url);
-              $('#fz-preview').attr('src', resp.data.url).css('display', 'block');
-            } else {
-              var msg = (resp && resp.data && resp.data.msg) ? resp.data.msg : 'Upload fehlgeschlagen.';
-              alert(msg);
-            }
-          })
-          .fail(function (xhr) {
-            try {
-              var j = JSON.parse(xhr.responseText);
-              if (j && j.data && j.data.msg) { alert(j.data.msg); return; }
-            } catch (e) {}
-            var msg = (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.msg) ? xhr.responseJSON.data.msg : ('HTTP ' + xhr.status);
-            alert('Upload-Fehler: ' + msg);
-          });
-      });
-    }
+    });
   }
 
   function openForNew() {
@@ -228,9 +236,27 @@
     $('#fz-fr').prop('checked', false);
     $('#fz-land').val('').trigger('change');
     $('#fz-bundesland').val('').trigger('change');
-    $('#fz-wache').empty().val(null).trigger('change').prop('disabled', true).trigger('change.select2');
+
+    var $w = $('#fz-wache');
+    $w.empty().val(null).trigger('change').prop('disabled', true);
+    if (hasSelect2()) $w.trigger('change.select2');
+
     $('#fz-delete').hide();
     $('#fahrzeug-modal').show();
+  }
+
+  function resolveLandFromBundesland(bundeslandName) {
+    var map = (window.lstFahrzeugeAjax && lstFahrzeugeAjax.bundeslaender) ? lstFahrzeugeAjax.bundeslaender : {};
+    if (!bundeslandName) return '';
+    var found = '';
+    Object.keys(map).some(function (land) {
+      if (Array.isArray(map[land]) && map[land].indexOf(bundeslandName) !== -1) {
+        found = land;
+        return true;
+      }
+      return false;
+    });
+    return found;
   }
 
   function openForEdit(id) {
@@ -244,25 +270,28 @@
       method: 'GET',
       data: { action: 'lsttraining_get_fahrzeug', nonce: lstFahrzeugeAjax.nonce, id: id },
       dataType: 'json'
-    }).done(function (resp) {
-      if (!resp || !resp.success || !resp.data || !resp.data.fahrzeug) {
+    })
+    .done(function (resp) {
+      // FIX: Endpoint liefert {success:true, data:{...}} (oder alternativ data.fahrzeug)
+      var fz = null;
+      if (resp && resp.success) {
+        if (resp.data && resp.data.fahrzeug) fz = resp.data.fahrzeug;
+        else if (resp.data && typeof resp.data === 'object') fz = resp.data;
+      }
+      if (!fz || !fz.id) {
         alert('Fehler beim Laden.');
         return;
       }
-      var fz = resp.data.fahrzeug;
 
-      var map = lstFahrzeugeAjax.bundeslaender || {};
-      var wbl = fz.wache_bundesland || '';
-      var chosenLand = '';
-      if (wbl) {
-        Object.keys(map).some(function (land) {
-          if (Array.isArray(map[land]) && map[land].indexOf(wbl) !== -1) { chosenLand = land; return true; }
-          return false;
-        });
-      }
+      // Land/Bundesland: wenn du das im Endpoint nicht lieferst, bleiben die Felder leer
+      var wbl = fz.wache_bundesland || ''; // optional
+      var chosenLand = resolveLandFromBundesland(wbl);
+
       $('#fz-land').val(chosenLand).trigger('change');
-      if (chosenLand) { $('#fz-bundesland').val(wbl).trigger('change'); }
+      if (chosenLand && wbl) $('#fz-bundesland').val(wbl).trigger('change');
+      else $('#fz-bundesland').val('').trigger('change');
 
+      // Wache Select: wir setzen direkt die Option, damit Select2 nicht erst suchen muss
       var $w = $('#fz-wache');
       var wacheId = fz.wache_id || '';
       var wacheName = fz.wache_name || (wacheId ? ('#' + wacheId) : '');
@@ -270,53 +299,63 @@
       if (wacheId) {
         var opt = new Option(wacheName, String(wacheId), true, true);
         $w.append(opt).trigger('change');
-        $w.prop('disabled', false).trigger('change.select2');
+        $w.prop('disabled', false);
+        if (hasSelect2()) $w.trigger('change.select2');
       } else {
-        $w.val(null).trigger('change').prop('disabled', !$('#fz-bundesland').val()).trigger('change.select2');
+        $w.val(null).trigger('change').prop('disabled', !$('#fz-bundesland').val());
+        if (hasSelect2()) $w.trigger('change.select2');
       }
 
+      // Fahrzeugtyp: falls Typ nicht in der Liste ist, hinzufügen
       var $t = $('#fz-fahrzeugtyp');
       var typ = fz.fahrzeugtyp || '';
-      if (typ && !$t.find('option[value="' + typ.replace(/"/g,'&quot;') + '"]').length) {
+      if (typ && !$t.find('option[value="' + String(typ).replace(/"/g,'&quot;') + '"]').length) {
         $t.append($('<option/>', { value: typ, text: typ }));
       }
       $t.val(typ);
 
       $('#fz-rufname').val(fz.rufname || '');
       $('#fz-source').val(fz.source_note || '');
-      $('#fz-fms').val((fz.fms_status === '6') ? '6' : '2');
+      $('#fz-fms').val((String(fz.fms_status) === '6') ? '6' : '2');
       $('#fz-dienst').val(fz.dienstzeiten || '');
       $('#fz-bild').val(fz.bild_datei || '');
       $('#fz-fr').prop('checked', !!(+fz.is_first_responder));
 
       var url = fz.bild_datei || '';
-      if (url) { $('#fz-preview').attr('src', url).show(); } else { $('#fz-preview').hide().attr('src', ''); }
+      if (url) $('#fz-preview').attr('src', url).show();
+      else $('#fz-preview').hide().attr('src', '');
 
       $('#fahrzeug-modal').show();
-    }).fail(function (xhr) {
-      alert('Fehler beim Laden: ' + (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.msg ? xhr.responseJSON.data.msg : xhr.status));
+    })
+    .fail(function (xhr) {
+      var msg = (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.msg)
+        ? xhr.responseJSON.data.msg
+        : ('HTTP ' + (xhr.status || ''));
+      alert('Fehler beim Laden: ' + msg);
     });
   }
 
   function onSave(e) {
     e.preventDefault();
+
     var id = parseInt($('#fz-id').val(), 10) || 0;
+
     var data = {
       action: 'lsttraining_save_fahrzeug',
       nonce: lstFahrzeugeAjax.nonce,
       id: id,
       wache_id: parseInt($('#fz-wache').val(), 10) || 0,
-      rufname: $('#fz-rufname').val().trim(),
-      fahrzeugtyp: $('#fz-fahrzeugtyp').val(),
-      source_note: $('#fz-source').val().trim(),
-      fms_status: $('#fz-fms').val(),
-      dienstzeiten: $('#fz-dienst').val().trim(),
-      bild_datei: $('#fz-bild').val().trim(),
+      rufname: ($('#fz-rufname').val() || '').trim(),
+      fahrzeugtyp: $('#fz-fahrzeugtyp').val() || '',
+      source_note: ($('#fz-source').val() || '').trim(),
+      fms_status: $('#fz-fms').val() || '2',
+      dienstzeiten: ($('#fz-dienst').val() || '').trim(),
+      bild_datei: ($('#fz-bild').val() || '').trim(),
       is_first_responder: $('#fz-fr').is(':checked') ? 1 : 0
     };
 
-    if (!data.wache_id || !data.rufname || !data.fahrzeugtyp) {
-      alert('Land/Bundesland, Wache, Rufname und Fahrzeugtyp sind Pflichtfelder.');
+    if (!data.wache_id || !data.rufname) {
+      alert('Wache und Rufname sind Pflichtfelder.');
       return;
     }
 
@@ -325,19 +364,26 @@
       method: 'POST',
       data: data,
       dataType: 'json'
-    }).done(function (resp) {
+    })
+    .done(function (resp) {
       if (resp && resp.success) {
         location.reload();
       } else {
-        alert('Fehler beim Speichern.');
+        var msg = (resp && resp.data && resp.data.msg) ? resp.data.msg : 'Fehler beim Speichern.';
+        alert(msg);
       }
-    }).fail(function (xhr) {
-      alert('Fehler beim Speichern: ' + (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.msg ? xhr.responseJSON.data.msg : xhr.status));
+    })
+    .fail(function (xhr) {
+      var msg = (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.msg)
+        ? xhr.responseJSON.data.msg
+        : ('HTTP ' + (xhr.status || ''));
+      alert('Fehler beim Speichern: ' + msg);
     });
   }
 
   function onDelete(e) {
     e.preventDefault();
+
     var id = parseInt($('#fz-id').val(), 10) || 0;
     if (id <= 0) return;
     if (!confirm('Fahrzeug wirklich löschen?')) return;
@@ -347,14 +393,20 @@
       method: 'POST',
       data: { action: 'lsttraining_delete_fahrzeug', nonce: lstFahrzeugeAjax.nonce, id: id },
       dataType: 'json'
-    }).done(function (resp) {
+    })
+    .done(function (resp) {
       if (resp && resp.success) {
         location.reload();
       } else {
-        alert('Löschen fehlgeschlagen.');
+        var msg = (resp && resp.data && resp.data.msg) ? resp.data.msg : 'Löschen fehlgeschlagen.';
+        alert(msg);
       }
-    }).fail(function (xhr) {
-      alert('Fehler beim Löschen: ' + (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.msg ? xhr.responseJSON.data.msg : xhr.status));
+    })
+    .fail(function (xhr) {
+      var msg = (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.msg)
+        ? xhr.responseJSON.data.msg
+        : ('HTTP ' + (xhr.status || ''));
+      alert('Fehler beim Löschen: ' + msg);
     });
   }
 
@@ -363,23 +415,26 @@
       ev.preventDefault();
       openForNew();
     });
-    $('#fahrzeuge-table').on('click', '.btn-edit-fahrzeug', function () {
+
+    $('#fahrzeuge-table').on('click', '.btn-edit-fahrzeug', function (ev) {
+      ev.preventDefault();
       var id = parseInt($(this).data('id'), 10) || 0;
       if (id > 0) openForEdit(id);
     });
+
     $('#fahrzeuge-table tbody').on('dblclick', 'tr', function () {
       var id = parseInt($(this).attr('data-id'), 10) || 0;
       if (id > 0) openForEdit(id);
     });
+
+    // Auto-submit bei Filteränderung (setzt auf Seite 1 zurück)
+    var $filter = $('#fahrzeuge-filter');
+    $filter.find('select[name="bundesland"], select[name="leitstelle_id"], select[name="neben_id"]').on('change', function () {
+      var $p = $filter.find('input[name="paged"]');
+      if (!$p.length) $p = $('<input type="hidden" name="paged" value="1">').appendTo($filter);
+      else $p.val('1');
+      $filter.trigger('submit');
+    });
   });
-	
-// Auto-submit bei Filteränderung (setzt auf Seite 1 zurück)
-var $filter = $('#fahrzeuge-filter');
-$filter.find('select[name="bundesland"], select[name="leitstelle_id"], select[name="neben_id"]').on('change', function () {
-  var $p = $filter.find('input[name="paged"]');
-  if (!$p.length) { $p = $('<input type="hidden" name="paged" value="1">').appendTo($filter); }
-  else { $p.val('1'); }
-  $filter.trigger('submit');
-});
 
 })(jQuery);

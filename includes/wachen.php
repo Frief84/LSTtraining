@@ -335,9 +335,13 @@ $where = [];
         <strong><span id="wache-fahrzeuge-count">–</span></strong>
       </div>
 
-      <button type="button" class="button" id="wache-fahrzeuge-toggle" aria-expanded="false">
-        Fahrzeuge bearbeiten
-      </button>
+<button type="button"
+        class="button"
+        id="wache-fahrzeuge-toggle"
+        aria-expanded="false"
+        data-wid="{{id}}">
+  Fahrzeuge bearbeiten
+</button>
 
       <span id="wache-fahrzeuge-status" class="description" style="margin:0;"></span>
     </div>

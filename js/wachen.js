@@ -352,7 +352,31 @@
         search.__filterBound = true;
       }
     }
+// Öffnet die Fahrzeuge-Seite gefiltert auf die aktuelle Wache
+$('body').on('click', '#wache-fahrzeuge-toggle', function (e) {
+    e.preventDefault();
 
+    const wid = parseInt($(this).data('wid'), 10) || 0;
+    if (wid <= 0) {
+        alert('Wache-ID fehlt.');
+        return;
+    }
+
+    const base = (window.lstWachenAjax && window.lstWachenAjax.admin_url)
+        ? String(window.lstWachenAjax.admin_url)
+        : (window.ajaxurl ? String(window.ajaxurl).replace('admin-ajax.php', 'admin.php') : '');
+
+    if (!base) {
+        alert('admin_url fehlt (lstWachenAjax.admin_url).');
+        return;
+    }
+
+    const url = new URL(base, window.location.origin);
+    url.searchParams.set('page', 'lsttraining_fahrzeuge');
+    url.searchParams.set('wache_id', String(wid));
+
+    window.location.href = url.toString();
+});
     function renderTable(wachen) {
       const tbody = document.getElementById('wachen-tbody') || document.querySelector('#wachen-table tbody');
       if (!tbody) return;
