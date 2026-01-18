@@ -1,4 +1,6 @@
 <?php
+if (!defined('ABSPATH')) { exit; }
+
 function lsttraining_register_settings() {
     register_setting('lsttraining_options', 'lsttraining_map_page');
     register_setting('lsttraining_options', 'lsttraining_db_mode');
@@ -6,27 +8,36 @@ function lsttraining_register_settings() {
     register_setting('lsttraining_options', 'lsttraining_ext_user');
     register_setting('lsttraining_options', 'lsttraining_ext_pass');
     register_setting('lsttraining_options', 'lsttraining_ext_name');
-    register_setting('lsttraining_options', 'lsttraining_ors_key'); // NEU: ORS-API-Key
+    register_setting('lsttraining_options', 'lsttraining_ors_key');
+    register_setting('lsttraining_options', 'lsttraining_default_fahrzeug_image_id');
 }
 
 function lsttraining_settings_page() {
+    // Wichtig: Media Uploader (wp.media) laden
+    wp_enqueue_media();
+
     $map_page = get_option('lsttraining_map_page', '');
-    $db_mode = get_option('lsttraining_db_mode', 'wordpress');
-    $host = get_option('lsttraining_ext_host', '');
-    $user = get_option('lsttraining_ext_user', '');
-    $pass = get_option('lsttraining_ext_pass', '');
-    $name = get_option('lsttraining_ext_name', '');
-    $api_key = get_option('lsttraining_ors_key', '');
+    $db_mode  = get_option('lsttraining_db_mode', 'wordpress');
+    $host     = get_option('lsttraining_ext_host', '');
+    $user     = get_option('lsttraining_ext_user', '');
+    $pass     = get_option('lsttraining_ext_pass', '');
+    $name     = get_option('lsttraining_ext_name', '');
+    $api_key  = get_option('lsttraining_ors_key', '');
+
+    $default_fzg_img_id  = (int) get_option('lsttraining_default_fahrzeug_image_id', 0);
+    $default_fzg_img_url = $default_fzg_img_id ? wp_get_attachment_image_url($default_fzg_img_id, 'thumbnail') : '';
 
     $pages = get_pages();
     ?>
     <div class="wrap">
         <h1>LSTtraining Einstellungen</h1>
+
         <form method="post" action="options.php">
             <?php
                 settings_fields('lsttraining_options');
                 do_settings_sections('lsttraining_options');
             ?>
+
             <table class="form-table">
                 <tr>
                     <th scope="row">Kartenanzeige auf Seite</th>
@@ -42,6 +53,7 @@ function lsttraining_settings_page() {
                         <p class="description">Wähle eine bestehende WordPress-Seite, auf der die Karte erscheinen soll.</p>
                     </td>
                 </tr>
+
                 <tr>
                     <th scope="row">Datenbank-Modus</th>
                     <td>
@@ -51,6 +63,7 @@ function lsttraining_settings_page() {
                         </select>
                     </td>
                 </tr>
+
                 <tr class="external-db">
                     <th scope="row">Externer DB-Host</th>
                     <td><input type="text" name="lsttraining_ext_host" value="<?php echo esc_attr($host); ?>" /></td>
@@ -67,11 +80,39 @@ function lsttraining_settings_page() {
                     <th scope="row">Externer DB-Name</th>
                     <td><input type="text" name="lsttraining_ext_name" value="<?php echo esc_attr($name); ?>" /></td>
                 </tr>
+
                 <tr>
                     <th scope="row">OpenRouteService API-Key</th>
                     <td>
                         <input type="text" name="lsttraining_ors_key" value="<?php echo esc_attr($api_key); ?>" style="width: 400px;" />
-                        <p class="description">Trage hier deinen API-Key von <a href='https://openrouteservice.org/dev/#/signup' target='_blank'>openrouteservice.org</a> ein.</p>
+                        <p class="description">Trage hier deinen API-Key von <a href="https://openrouteservice.org/dev/#/signup" target="_blank" rel="noopener">openrouteservice.org</a> ein.</p>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row">Default-Fahrzeugbild</th>
+                    <td>
+                        <input type="hidden"
+                               id="lsttraining_default_fahrzeug_image_id"
+                               name="lsttraining_default_fahrzeug_image_id"
+                               value="<?php echo (int)$default_fzg_img_id; ?>" />
+
+                        <div id="lsttraining_default_fahrzeug_preview" style="margin-bottom:10px;">
+                            <?php if ($default_fzg_img_url): ?>
+                                <img src="<?php echo esc_url($default_fzg_img_url); ?>"
+                                     alt="Default-Fahrzeugbild Vorschau"
+                                     style="width:160px;height:auto;display:block;border:1px solid #ccd0d4;background:#fff;padding:6px;border-radius:6px;" />
+                            <?php else: ?>
+                                <div style="width:160px;border:1px dashed #ccd0d4;padding:12px;border-radius:6px;opacity:.8;">
+                                    Kein Bild gewählt
+                                </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <button type="button" class="button" id="lsttraining_default_fahrzeug_select">Bild auswählen</button>
+                        <button type="button" class="button" id="lsttraining_default_fahrzeug_remove" style="margin-left:6px;">Entfernen</button>
+
+                        <p class="description">Wird verwendet, wenn bei einem Fahrzeug kein eigenes Bild gesetzt ist.</p>
                     </td>
                 </tr>
             </table>
@@ -80,6 +121,7 @@ function lsttraining_settings_page() {
         </form>
 
         <hr />
+
         <h2>Tabellen initialisieren</h2>
         <form method="post">
             <input type="submit" name="lsttraining_install_schema" class="button button-secondary" value="Datenbankstruktur aus schema.sql installieren" />
@@ -87,15 +129,81 @@ function lsttraining_settings_page() {
     </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        function toggleDBFields() {
-            const mode = document.getElementById('lsttraining_db_mode').value;
-            document.querySelectorAll('.external-db').forEach(el => {
-                el.style.display = (mode === 'extern') ? 'table-row' : 'none';
-            });
-        }
-        document.getElementById('lsttraining_db_mode').addEventListener('change', toggleDBFields);
+    document.addEventListener('DOMContentLoaded', function () {
+      function toggleDBFields() {
+        const modeEl = document.getElementById('lsttraining_db_mode');
+        if (!modeEl) return;
+
+        const mode = modeEl.value;
+        document.querySelectorAll('.external-db').forEach(function (el) {
+          el.style.display = (mode === 'extern') ? 'table-row' : 'none';
+        });
+      }
+
+      const modeEl = document.getElementById('lsttraining_db_mode');
+      if (modeEl) {
+        modeEl.addEventListener('change', toggleDBFields);
         toggleDBFields();
+      }
+
+      const btnSelect = document.getElementById('lsttraining_default_fahrzeug_select');
+      const btnRemove = document.getElementById('lsttraining_default_fahrzeug_remove');
+      const inputId   = document.getElementById('lsttraining_default_fahrzeug_image_id');
+      const preview   = document.getElementById('lsttraining_default_fahrzeug_preview');
+
+      if (!btnSelect || !btnRemove || !inputId || !preview) return;
+
+      if (!window.wp || !wp.media) {
+        console.warn('wp.media nicht verfügbar. Prüfe, ob wp_enqueue_media() ausgeführt wird.');
+        return;
+      }
+
+      let frame = null;
+
+      btnSelect.addEventListener('click', function (e) {
+        e.preventDefault();
+
+        if (frame) {
+          frame.open();
+          return;
+        }
+
+        frame = wp.media({
+          title: 'Default-Fahrzeugbild auswählen',
+          button: { text: 'Verwenden' },
+          multiple: false
+        });
+
+        frame.on('select', function () {
+          const sel = frame.state().get('selection');
+          if (!sel) return;
+
+          const attachment = sel.first();
+          if (!attachment) return;
+
+          const json = attachment.toJSON();
+          if (!json || !json.id) return;
+
+          inputId.value = String(json.id);
+
+          const url = (json.sizes && json.sizes.thumbnail && json.sizes.thumbnail.url)
+            ? json.sizes.thumbnail.url
+            : json.url;
+
+          preview.innerHTML =
+            '<img src="' + url + '" alt="Default-Fahrzeugbild Vorschau" ' +
+            'style="width:160px;height:auto;display:block;border:1px solid #ccd0d4;background:#fff;padding:6px;border-radius:6px;" />';
+        });
+
+        frame.open();
+      });
+
+      btnRemove.addEventListener('click', function (e) {
+        e.preventDefault();
+        inputId.value = '0';
+        preview.innerHTML =
+          '<div style="width:160px;border:1px dashed #ccd0d4;padding:12px;border-radius:6px;opacity:.8;">Kein Bild gewählt</div>';
+      });
     });
     </script>
     <?php

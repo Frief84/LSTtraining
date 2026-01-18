@@ -114,6 +114,17 @@ if ($wache_id > 0) {
 }
 
 /* -----------------------------------------------------------
+ * Default Thumbnail (immer anzeigen)
+ * Pfad: plugin-root/img/fahrzeug/default.png
+ * ----------------------------------------------------------- */
+$default_id = (int) get_option('lsttraining_default_fahrzeug_image_id', 0);
+$default_thumb = $default_id ? wp_get_attachment_image_url($default_id, 'thumbnail') : '';
+
+if (!$default_thumb) {
+    $default_thumb = plugins_url('img/fahrzeug/default.png', dirname(__FILE__));
+}
+
+/* -----------------------------------------------------------
  * Sortierung
  * ----------------------------------------------------------- */
 $allowed_orderby = [
@@ -139,7 +150,6 @@ if ($wache_id > 0) {
     $where[] = 'f.wache_id = :wid';
     $params[':wid'] = $wache_id;
 
-    // Wenn im Wachen-Kontext, ist "wache" als sort default wenig sinnvoll
     if (!isset($_GET['orderby']) || $_GET['orderby'] === '') {
         $orderby_sql = 'f.rufname';
     }
@@ -226,13 +236,24 @@ $paged = min($paged, $max_pages);
 $offset = ($paged - 1) * $per_page;
 
 /* -----------------------------------------------------------
+ * Thumbnail-Spalte erkennen
+ * Erwartet entweder:
+ * - fahrzeuge.image_url (direkte URL)
+ * - fahrzeuge.image_id  (WP Attachment ID)
+ * ----------------------------------------------------------- */
+$has_fahrzeuge_image_url = lst_col_exists($pdo, 'fahrzeuge', 'image_url');
+$has_fahrzeuge_image_id  = lst_col_exists($pdo, 'fahrzeuge', 'image_id');
+
+/* -----------------------------------------------------------
  * Daten
  * ----------------------------------------------------------- */
 $sql = "SELECT
             f.id,
             f.rufname,
             f.fahrzeugtyp,
-            f.fms_status,
+            f.fms_status," .
+            ($has_fahrzeuge_image_url ? " f.image_url," : "") .
+            ($has_fahrzeuge_image_id  ? " f.image_id,"  : "") . "
             w.name AS wache_name" . ($has_wachen_bundesland ? ", w.bundesland" : "") . "
         FROM fahrzeuge f
         JOIN wachen w ON w.id = f.wache_id
@@ -248,6 +269,34 @@ $stmt->bindValue(':limit',  (int)$per_page, PDO::PARAM_INT);
 $stmt->bindValue(':offset', (int)$offset,   PDO::PARAM_INT);
 $stmt->execute();
 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+/* -----------------------------------------------------------
+ * Rows: Thumb URL ableiten
+ * - image_id -> wp_get_attachment_image_url(..., 'thumbnail')
+ * - image_url direkt nutzen
+ * - sonst Default
+ * ----------------------------------------------------------- */
+foreach ($rows as &$r) {
+    $thumb = '';
+
+    if ($has_fahrzeuge_image_id) {
+        $img_id = isset($r['image_id']) ? (int)$r['image_id'] : 0;
+        if ($img_id > 0) {
+            $u = wp_get_attachment_image_url($img_id, 'thumbnail');
+            if ($u) $thumb = $u;
+        }
+    }
+
+    if ($thumb === '' && $has_fahrzeuge_image_url) {
+        $u = isset($r['image_url']) ? trim((string)$r['image_url']) : '';
+        if ($u !== '') $thumb = $u;
+    }
+
+    if ($thumb === '') $thumb = $default_thumb;
+
+    $r['__thumb'] = $thumb;
+}
+unset($r);
 
 /* -----------------------------------------------------------
  * Helper für Sort-Links (wache_id muss erhalten bleiben)
@@ -269,15 +318,24 @@ function lst_sort_link($label, $key, $current_key, $current_order) {
   <h1>
     Fahrzeuge
     <?php if ($wache_id > 0): ?>
-      <span style="font-size:13px; font-weight:400; opacity:.8;">
-        — Wache #<?php echo (int)$wache_id; ?><?php echo $wache_name !== '' ? ' — ' . esc_html($wache_name) : ''; ?>
-      </span>
+      <?php
+        $back_url = admin_url('admin.php?page=lsttraining_leitstellen_wachen&open_wache_id=' . (int)$wache_id);
+        $label = 'Wache #' . (int)$wache_id;
+        if ($wache_name !== '') $label .= ' — ' . $wache_name;
+      ?>
+      <a href="<?php echo esc_url($back_url); ?>"
+         style="font-size:13px; font-weight:400; opacity:.85; text-decoration:none; border-bottom:1px dotted currentColor;">
+        — <?php echo esc_html($label); ?>
+      </a>
     <?php endif; ?>
   </h1>
 
   <?php if ($wache_id > 0): ?>
     <p style="margin:6px 0 14px 0;">
-      <a class="button" href="<?php echo esc_url( admin_url('admin.php?page=lsttraining_leitstellen_wachen') ); ?>">Zurück zu Wachen</a>
+      <a class="button" href="<?php echo esc_url( add_query_arg([
+        'page' => 'lsttraining_leitstellen_wachen',
+        'open_wache_id' => (int)$wache_id,
+      ], admin_url('admin.php')) ); ?>">Zurück zu Wachen</a>
     </p>
   <?php endif; ?>
 
@@ -354,53 +412,69 @@ function lst_sort_link($label, $key, $current_key, $current_order) {
   <p>
     <strong><?php echo number_format_i18n($total); ?></strong> Fahrzeuge gefunden.
     Seite <?php echo (int)$paged; ?> von <?php echo (int)$max_pages; ?>.
-    <?php
-    if ($bundesland !== '' && !$has_wachen_bundesland && !$has_ls_bundesland) {
-        echo '<br><em>Hinweis: Bundesland-Filter ohne Wirkung (keine geeignete Spalte gefunden).</em>';
-    }
-    if ($leitstelle_id > 0 && !$has_wachen_leitstelle && !$map_ls_tbl) {
-        echo '<br><em>Hinweis: Leitstellen-Filter ohne Wirkung (weder <code>wachen.leitstelle_id</code> noch Mapping-Tabelle vorhanden).</em>';
-    }
-    if ($neben_id > 0 && !$has_wachen_neben && !$map_neb_tbl) {
-        echo '<br><em>Hinweis: Nebenleitstellen-Filter ohne Wirkung (weder <code>wachen.nebenleitstelle_id</code> noch Mapping-Tabelle vorhanden).</em>';
-    }
-    ?>
   </p>
 
   <table class="widefat fixed striped" id="fahrzeuge-table">
-    <thead>
-      <tr>
-        <th style="width:110px;"><?php echo lst_sort_link('ID', 'id', $orderby, $order); ?></th>
-        <th style="min-width:240px;"><?php echo lst_sort_link('Rufname (Funkname)', 'rufname', $orderby, $order); ?></th>
-        <th style="min-width:220px;"><?php echo lst_sort_link('Wache', 'wache', $orderby, $order); ?></th>
-        <th style="min-width:180px;">Fahrzeugtyp</th>
-        <th style="min-width:120px;">FMS</th>
-        <?php if ($has_wachen_bundesland): ?>
+  <thead>
+    <tr>
+      <th style="width:110px;"><?php echo lst_sort_link('ID', 'id', $orderby, $order); ?></th>
+      <th style="min-width:240px;"><?php echo lst_sort_link('Rufname (Funkname)', 'rufname', $orderby, $order); ?></th>
+      <th style="min-width:220px;"><?php echo lst_sort_link('Wache', 'wache', $orderby, $order); ?></th>
+      <th style="min-width:180px;">Fahrzeugtyp</th>
+      <th style="min-width:120px;">FMS</th>
+      <th style="width:90px;">Bild</th>
+      <?php if ($has_wachen_bundesland): ?>
         <th style="min-width:180px;">Bundesland</th>
+      <?php endif; ?>
+      <th style="width:120px;">Aktion</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <?php
+      // ID, Rufname, Wache, Typ, FMS, Bild, Aktion
+      $colspan = 7;
+      if ($has_wachen_bundesland) $colspan += 1;
+    ?>
+
+    <?php if (empty($rows)): ?>
+      <tr><td colspan="<?php echo (int)$colspan; ?>">Keine Datensätze.</td></tr>
+    <?php else: foreach ($rows as $r): ?>
+
+      <?php
+        $alt = 'Fahrzeug ' . (string)($r['rufname'] ?? '');
+        if (!empty($r['fahrzeugtyp'])) $alt .= ', Typ ' . (string)$r['fahrzeugtyp'];
+        if (!empty($r['wache_name']))  $alt .= ', Wache ' . (string)$r['wache_name'];
+      ?>
+
+      <tr data-id="<?php echo (int)$r['id']; ?>">
+        <td>#<?php echo (int)$r['id']; ?></td>
+        <td><?php echo esc_html($r['rufname']); ?></td>
+        <td><?php echo esc_html($r['wache_name']); ?></td>
+        <td><?php echo esc_html($r['fahrzeugtyp']); ?></td>
+        <td><?php echo esc_html($r['fms_status']); ?></td>
+
+        <td style="text-align:center;">
+          <img
+            src="<?php echo esc_url($r['__thumb']); ?>"
+            alt="<?php echo esc_attr($alt); ?>"
+            class="lst-fahrzeug-thumb"
+            loading="lazy"
+          />
+        </td>
+
+        <?php if ($has_wachen_bundesland): ?>
+          <td><?php echo isset($r['bundesland']) ? esc_html($r['bundesland']) : ''; ?></td>
         <?php endif; ?>
-        <th style="width:120px;">Aktion</th>
+
+        <td>
+          <a href="#" class="button btn-edit-fahrzeug" data-id="<?php echo (int)$r['id']; ?>">Bearbeiten</a>
+        </td>
       </tr>
-    </thead>
-    <tbody>
-      <?php if (empty($rows)): ?>
-        <tr><td colspan="<?php echo $has_wachen_bundesland ? '7' : '6'; ?>">Keine Datensätze.</td></tr>
-      <?php else: foreach ($rows as $r): ?>
-        <tr data-id="<?php echo (int)$r['id']; ?>">
-          <td>#<?php echo (int)$r['id']; ?></td>
-          <td><?php echo esc_html($r['rufname']); ?></td>
-          <td><?php echo esc_html($r['wache_name']); ?></td>
-          <td><?php echo esc_html($r['fahrzeugtyp']); ?></td>
-          <td><?php echo esc_html($r['fms_status']); ?></td>
-          <?php if ($has_wachen_bundesland): ?>
-            <td><?php echo isset($r['bundesland']) ? esc_html($r['bundesland']) : ''; ?></td>
-          <?php endif; ?>
-          <td>
-            <a href="#" class="button btn-edit-fahrzeug" data-id="<?php echo (int)$r['id']; ?>">Bearbeiten</a>
-          </td>
-        </tr>
-      <?php endforeach; endif; ?>
-    </tbody>
-  </table>
+
+    <?php endforeach; endif; ?>
+  </tbody>
+</table>
 
   <?php if ( $max_pages > 1 ) :
       $base_qs = $_GET;

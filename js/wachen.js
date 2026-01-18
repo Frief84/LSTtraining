@@ -768,6 +768,8 @@ $('body').on('click', '#wache-fahrzeuge-toggle', function (e) {
       requestAnimationFrame(() => ensureWacheEditMap(lat, lon));
     }
 
+	window.openWacheModal = openWacheModal;
+
     function openNewWacheModal() {
       const lat = 51.0, lon = 9.0;
 
@@ -980,5 +982,33 @@ $('body').on('click', '#wache-fahrzeuge-toggle', function (e) {
       renderTable([]);
       if (mapOk) requestAnimationFrame(() => map && map.updateSize());
     }
+
+	// --------------------------------------------------------
+	// Auto-Open: ?open_wache_id=62
+	// --------------------------------------------------------
+	(function () {
+	  try {
+		const url = new URL(window.location.href);
+		const openId = parseInt(url.searchParams.get('open_wache_id'), 10);
+
+		if (!Number.isFinite(openId) || openId <= 0) return;
+
+		// Modal öffnen: wir laden echte Daten per AJAX und rufen dann openWacheModal(res.data)
+		$.get((window.lstWachenAjax && window.lstWachenAjax.ajax_url) || AJAX_URL, {
+		  action: 'lsttraining_get_wache',
+		  wache_id: openId
+		}).done(res => {
+		  if (!res || !res.success) return;
+		  openWacheModal(res.data);
+
+		  // Parameter entfernen, damit Reload nicht erneut öffnet
+		  url.searchParams.delete('open_wache_id');
+		  window.history.replaceState({}, document.title, url.toString());
+		});
+	  } catch (e) {
+		// bewusst still
+	  }
+	})();
+
   });
 })();

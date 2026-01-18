@@ -507,3 +507,12 @@ pointer-events: auto;
 
 .row-2col { display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; }
 .row-2col .col { flex:1 1 300px; min-width:280px; }
+
+.lst-fahrzeug-thumb {
+  width: 80px;
+  height: 50px;
+  object-fit: contain;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: #f2f2f2; /* falls PNG transparent ist */
+}
