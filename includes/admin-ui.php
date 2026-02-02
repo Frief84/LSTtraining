@@ -50,6 +50,14 @@ add_action('admin_enqueue_scripts', function ($hook) {
             true
         );
 
+        wp_enqueue_script(
+            'lst-leitstellen-pois',
+            $root_url . 'js/pois.js',
+            ['jquery', 'wp-util', 'lst-openlayers', 'lst-leitstellen-editor'],
+            '1.0.0',
+            true
+        );
+
         wp_localize_script('lst-leitstellen-editor', 'lstLeitstellenAjax', [
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce'    => wp_create_nonce('lsttraining_leitstellen'),

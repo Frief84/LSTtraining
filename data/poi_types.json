@@ -1,0 +1,443 @@
+{
+  "version": 1,
+  "types": [
+    {
+      "tag": "AH",
+      "color": "#E55050",
+      "description": "Altenheim.",
+      "icon": "default"
+    },
+    {
+      "tag": "AKIP",
+      "color": "#E55C50",
+      "description": "Außerklinische Intensivpflege: Zielorte für heimbeatmete Entlassungen.",
+      "icon": "default"
+    },
+    {
+      "tag": "AKIP1",
+      "color": "#E56850",
+      "description": "Außerklinische Intensivpflege: Fahrten für beatmete Patient:innen mit KTW.",
+      "icon": "default"
+    },
+    {
+      "tag": "AKIP2",
+      "color": "#E57550",
+      "description": "Außerklinische Intensivpflege: Fahrten für beatmete Patient:innen mit RTW.",
+      "icon": "default"
+    },
+    {
+      "tag": "AmbKH",
+      "color": "#E58150",
+      "description": "Ambulante Zentren, Ambulanzen, Spezialuntersuchungen; Ziel für Konsilfahrten.",
+      "icon": "default"
+    },
+    {
+      "tag": "Arena",
+      "color": "#E58D50",
+      "description": "Sportarena oder Stadion.",
+      "icon": "default"
+    },
+    {
+      "tag": "Bahnlinie",
+      "color": "#E59950",
+      "description": "Schienenbereich (Personenzug).",
+      "icon": "default"
+    },
+    {
+      "tag": "Bahnübergang",
+      "color": "#E5A650",
+      "description": "Direkter Bahnübergang.",
+      "icon": "default"
+    },
+    {
+      "tag": "Bank",
+      "color": "#E5B250",
+      "description": "Bankfiliale.",
+      "icon": "default"
+    },
+    {
+      "tag": "Bauernhof",
+      "color": "#E5BE50",
+      "description": "Bauernhof mit Feldern/Koppeln.",
+      "icon": "default"
+    },
+    {
+      "tag": "Bereitschaft",
+      "color": "#E5CA50",
+      "description": "Ortsverein einer HiOrg (DRK, MHD, JUH, ASB usw.).",
+      "icon": "default"
+    },
+    {
+      "tag": "BHF",
+      "color": "#E5D750",
+      "description": "Regionalverkehrsbahnhof (RE/IRE/RB).",
+      "icon": "default"
+    },
+    {
+      "tag": "Blut",
+      "color": "#DBE550",
+      "description": "Blutbank/Blutspendedienst (Abholung von Konserven).",
+      "icon": "default"
+    },
+    {
+      "tag": "Brücke",
+      "color": "#CFE550",
+      "description": "Straßenbrücke (z. B. über Fluss).",
+      "icon": "default"
+    },
+    {
+      "tag": "BW",
+      "color": "#E5E350",
+      "description": "Betreutes Wohnen.",
+      "icon": "default"
+    },
+    {
+      "tag": "Dialyse",
+      "color": "#C2E550",
+      "description": "Dialysezentrum.",
+      "icon": "default"
+    },
+    {
+      "tag": "Disko",
+      "color": "#B6E550",
+      "description": "Diskothek oder Tanzhaus.",
+      "icon": "default"
+    },
+    {
+      "tag": "Feuerwehr",
+      "color": "#AAE550",
+      "description": "Feuerwache.",
+      "icon": "default"
+    },
+    {
+      "tag": "FKH",
+      "color": "#9DE550",
+      "description": "Krankenhaus für Fernfahrten geeignet (Ziel).",
+      "icon": "default"
+    },
+    {
+      "tag": "Flughafen",
+      "color": "#85E550",
+      "description": "Größerer Verkehrsflughafen.",
+      "icon": "default"
+    },
+    {
+      "tag": "FlugKH",
+      "color": "#79E550",
+      "description": "Klinik/medizinisches Zentrum an einem Flughafen.",
+      "icon": "default"
+    },
+    {
+      "tag": "Flugplatz",
+      "color": "#6CE550",
+      "description": "Landeplatz für Kleinflugzeuge.",
+      "icon": "default"
+    },
+    {
+      "tag": "Flucht",
+      "color": "#91E550",
+      "description": "Flüchtlingsheim.",
+      "icon": "default"
+    },
+    {
+      "tag": "Freibad",
+      "color": "#60E550",
+      "description": "Geplantes/gechlortes Freibad.",
+      "icon": "default"
+    },
+    {
+      "tag": "Friedhof",
+      "color": "#54E550",
+      "description": "Begräbnisstätte.",
+      "icon": "default"
+    },
+    {
+      "tag": "Fußball",
+      "color": "#50E558",
+      "description": "Fußballplatz/Sportplatz.",
+      "icon": "default"
+    },
+    {
+      "tag": "FZPark",
+      "color": "#50E564",
+      "description": "Freizeitpark (keine zeitlich begrenzten Volksfeste/Rummel).",
+      "icon": "default"
+    },
+    {
+      "tag": "Gasthaus",
+      "color": "#50E571",
+      "description": "Gastgewerbebetrieb.",
+      "icon": "default"
+    },
+    {
+      "tag": "GKH",
+      "color": "#50E589",
+      "description": "Gefängniskrankenhaus (nicht JVA).",
+      "icon": "default"
+    },
+    {
+      "tag": "Grundschule",
+      "color": "#50E57D",
+      "description": "Grundschule/Primarstufe.",
+      "icon": "default"
+    },
+    {
+      "tag": "Hafen",
+      "color": "#50E595",
+      "description": "(Hoch-)See-/Hafenanlage; bei großen Häfen Abschnitt angeben.",
+      "icon": "default"
+    },
+    {
+      "tag": "HBF",
+      "color": "#50E5AE",
+      "description": "Fernverkehrsbahnhof (ICE/EC/IC).",
+      "icon": "default"
+    },
+    {
+      "tag": "Hallenbad",
+      "color": "#50E5A2",
+      "description": "Bad mit Dach (Hallenbad).",
+      "icon": "default"
+    },
+    {
+      "tag": "Herz",
+      "color": "#50E5BA",
+      "description": "Spezialklinik Kardiologie/Herzchirurgie (nicht normales KH).",
+      "icon": "default"
+    },
+    {
+      "tag": "IKH",
+      "color": "#50E5C6",
+      "description": "Start/Ziel für innerklinische Verlegungen; Startpunkt für Ambulanzfahrten.",
+      "icon": "default"
+    },
+    {
+      "tag": "Industrie",
+      "color": "#50E5D3",
+      "description": "Unternehmen/Firma/Industrieanlage.",
+      "icon": "default"
+    },
+    {
+      "tag": "Juhe",
+      "color": "#50E5DF",
+      "description": "Jugendherberge.",
+      "icon": "default"
+    },
+    {
+      "tag": "JVA",
+      "color": "#50DFE5",
+      "description": "Gefängnis (wenn rettungsdienstlich relevant).",
+      "icon": "default"
+    },
+    {
+      "tag": "Kaufhaus",
+      "color": "#50D3E5",
+      "description": "Größeres Einkaufszentrum/Kaufhaus.",
+      "icon": "default"
+    },
+    {
+      "tag": "KH",
+      "color": "#50C6E5",
+      "description": "Krankenhaus (alle).",
+      "icon": "default"
+    },
+    {
+      "tag": "KH1",
+      "color": "#50BAE5",
+      "description": "Krankenhaus: kleines Haus ohne Intensivstation.",
+      "icon": "default"
+    },
+    {
+      "tag": "KH2",
+      "color": "#50AEE5",
+      "description": "Krankenhaus: Regelversorgung mit Intensivstation.",
+      "icon": "default"
+    },
+    {
+      "tag": "KH3",
+      "color": "#50A2E5",
+      "description": "Krankenhaus: Schwerpunkt-/Maximalversorgung.",
+      "icon": "default"
+    },
+    {
+      "tag": "KiKa",
+      "color": "#5095E5",
+      "description": "Kindergarten.",
+      "icon": "default"
+    },
+    {
+      "tag": "KiKli",
+      "color": "#5089E5",
+      "description": "Kinderfachklinik.",
+      "icon": "default"
+    },
+    {
+      "tag": "Kirche",
+      "color": "#507DE5",
+      "description": "Kirche/Gebetshaus.",
+      "icon": "default"
+    },
+    {
+      "tag": "Kultur",
+      "color": "#5071E5",
+      "description": "Oper/Theater/Festspielhaus (keine Museen/Ausstellungen).",
+      "icon": "default"
+    },
+    {
+      "tag": "Küste",
+      "color": "#5064E5",
+      "description": "Strand/Küste.",
+      "icon": "default"
+    },
+    {
+      "tag": "Lst",
+      "color": "#5058E5",
+      "description": "Die simulierte Leitstelle.",
+      "icon": "default"
+    },
+    {
+      "tag": "Lunge",
+      "color": "#5450E5",
+      "description": "Spezialklinik Pneumologie/Thoraxchirurgie (nicht normales KH).",
+      "icon": "default"
+    },
+    {
+      "tag": "Notfallpraxis",
+      "color": "#6050E5",
+      "description": "Notfallpraxis (keine regulären Arztpraxen).",
+      "icon": "default"
+    },
+    {
+      "tag": "Ortho",
+      "color": "#6C50E5",
+      "description": "Orthopädische Klinik/Sportklinik (nicht normales KH).",
+      "icon": "default"
+    },
+    {
+      "tag": "Park",
+      "color": "#7950E5",
+      "description": "Park/Grünanlage.",
+      "icon": "default"
+    },
+    {
+      "tag": "Polizei",
+      "color": "#8550E5",
+      "description": "Polizeirevier/-station/-präsidium.",
+      "icon": "default"
+    },
+    {
+      "tag": "Psychiatrie",
+      "color": "#9150E5",
+      "description": "Reine psychiatrische Klinik.",
+      "icon": "default"
+    },
+    {
+      "tag": "Reha",
+      "color": "#9D50E5",
+      "description": "Reha-Zentrum.",
+      "icon": "default"
+    },
+    {
+      "tag": "Reiterhof",
+      "color": "#AA50E5",
+      "description": "Reiterhof.",
+      "icon": "default"
+    },
+    {
+      "tag": "RW",
+      "color": "#B650E5",
+      "description": "Rettungswache.",
+      "icon": "default"
+    },
+    {
+      "tag": "SBF",
+      "color": "#C250E5",
+      "description": "S-Bahnhof (S-Bahn-Halte).",
+      "icon": "default"
+    },
+    {
+      "tag": "Schleuse",
+      "color": "#CF50E5",
+      "description": "Flussschleuse.",
+      "icon": "default"
+    },
+    {
+      "tag": "Schloss",
+      "color": "#DB50E5",
+      "description": "Schloss/Burganlage (Besichtigungen).",
+      "icon": "default"
+    },
+    {
+      "tag": "Schule",
+      "color": "#E550E3",
+      "description": "Weiterführende Schule (keine Grundschule).",
+      "icon": "default"
+    },
+    {
+      "tag": "See",
+      "color": "#E550D7",
+      "description": "Frischwassersee.",
+      "icon": "default"
+    },
+    {
+      "tag": "Sporthalle",
+      "color": "#E550CA",
+      "description": "Multifunktionshalle/Sporthalle.",
+      "icon": "default"
+    },
+    {
+      "tag": "Strahlen",
+      "color": "#E550BE",
+      "description": "Strahlenambulanz/Strahlenklinik.",
+      "icon": "default"
+    },
+    {
+      "tag": "Tankstelle",
+      "color": "#E550B2",
+      "description": "Tankstelle (Fahrzeuge tanken hier).",
+      "icon": "default"
+    },
+    {
+      "tag": "Tropen",
+      "color": "#E550A6",
+      "description": "Tropeninstitut/Tropenmedizin.",
+      "icon": "default"
+    },
+    {
+      "tag": "Tunnel",
+      "color": "#E5508D",
+      "description": "Straßentunnel.",
+      "icon": "default"
+    },
+    {
+      "tag": "UBF",
+      "color": "#E55099",
+      "description": "Unterirdischer Bahnhalt (U-Bahn/unterirdische Tram; keine Regionalbahnhöfe).",
+      "icon": "default"
+    },
+    {
+      "tag": "UKH",
+      "color": "#E55081",
+      "description": "Universitätsklinikum.",
+      "icon": "default"
+    },
+    {
+      "tag": "Wald",
+      "color": "#E55075",
+      "description": "Waldgebiet.",
+      "icon": "default"
+    },
+    {
+      "tag": "Zelt",
+      "color": "#E55068",
+      "description": "Zeltplatz/Campingplatz.",
+      "icon": "default"
+    },
+    {
+      "tag": "Zoo",
+      "color": "#E5505C",
+      "description": "Zoo/Tierpark.",
+      "icon": "default"
+    }
+  ]
+}

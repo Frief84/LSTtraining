@@ -22,6 +22,31 @@ CREATE TABLE leitstellen (
 );
 
 /* ------------------------------------------------------------------ */
+/* 1.1 POIs pro Leitstelle                                            */
+/* ------------------------------------------------------------------ */
+CREATE TABLE leitstellen_pois (
+    id            INT AUTO_INCREMENT PRIMARY KEY,
+    leitstelle_id INT NOT NULL,
+
+    poi_type      VARCHAR(50)  NOT NULL,
+    name          VARCHAR(255) NULL,
+    comment       TEXT         NULL,
+    genus         ENUM('der','die','das') NOT NULL DEFAULT 'der',
+
+    latitude      DOUBLE NOT NULL,
+    longitude     DOUBLE NOT NULL,
+
+    created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at    DATETIME NULL,
+
+    KEY idx_ls_pois_ls (leitstelle_id),
+    KEY idx_ls_pois_type (poi_type),
+    KEY idx_ls_pois_latlon (latitude, longitude),
+    CONSTRAINT fk_ls_pois_leitstelle
+      FOREIGN KEY (leitstelle_id) REFERENCES leitstellen(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+/* ------------------------------------------------------------------ */
 /* 2. Wachen                                                           */
 /* ------------------------------------------------------------------ */
 CREATE TABLE `wachen` (

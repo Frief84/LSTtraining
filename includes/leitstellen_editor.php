@@ -273,6 +273,14 @@ lsttraining_einsatzgebiet_editor(
 >
    Krankenhäuser bearbeiten
 </button>
+
+<button
+   type="button"
+   class="button open-leitstelle-pois-editor"
+   style="margin-left:10px;"
+>
+   POIs bearbeiten
+</button>
 <?php
 $zuo_url = admin_url( 'admin.php?page=lsttraining_zuordnung_modal'
     . '&entity_type=leitstelle&entity_id=' . intval($leitstelle_id)
@@ -335,6 +343,153 @@ $zuo_url = admin_url( 'admin.php?page=lsttraining_zuordnung_modal'
     </form>
   </div>
 </script>
+
+
+<script type="text/html" id="tmpl-leitstellen-pois-editor">
+  <div class="leitstellen-pois-content">
+
+    <div class="lst-poi-mapwrap">
+      <div id="leitstellen-pois-map" style="height: 420px;"></div>
+
+      <!-- Liste links (overlay) -->
+      <div id="lst-poi-list" class="lst-poi-list-overlay">
+        <div class="lst-poi-list-head">
+          <strong>POIs</strong>
+          <button type="button" class="button button-small" id="lst-poi-close-list">×</button>
+        </div>
+        <div class="lst-poi-list-body">
+          <table class="widefat fixed striped" id="leitstellen-pois-table">
+            <thead>
+              <tr>
+                <th>Typ</th>
+                <th>Genus</th>
+                <th>Name</th>
+                <th>Kommentar</th>
+              </tr>
+            </thead>
+            <tbody>
+              <# _.each(data.pois || [], function(p){ #>
+                <tr class="poi-row" data-id="{{ p.id }}">
+                  <td>{{ p.poi_type }}</td>
+                  <td>{{ p.genus }}</td>
+                  <td>{{ p.name }}</td>
+                  <td>{{ p.comment }}</td>
+                </tr>
+              <# }); #>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Editor rechts (overlay) -->
+      <div id="lst-poi-editor" class="lst-poi-editor">
+        <div class="lst-poi-editor-head">
+          <strong>POI bearbeiten</strong>
+          <button type="button" class="button button-small" id="lst-poi-editor-close">×</button>
+        </div>
+
+        <form id="leitstellen-pois-form">
+          <input type="hidden" id="poi_id" value="" />
+
+          <p>
+            <label for="poi_type"><strong>POI-Art</strong></label><br />
+            <select id="poi_type">
+              <# _.each(data.poi_types || [], function(t){ #>
+                <option value="{{ t.tag }}">{{ t.tag }}</option>
+              <# }); #>
+            </select>
+            <div id="poi_type_desc" class="description" style="margin-top:6px;"></div>
+          </p>
+
+          <p>
+            <label for="poi_genus"><strong>Genus</strong></label><br />
+            <select id="poi_genus">
+              <option value="der">der</option>
+              <option value="die">die</option>
+              <option value="das">das</option>
+            </select>
+          </p>
+
+          <p>
+            <label for="poi_name"><strong>Bezeichnung</strong></label><br />
+            <input type="text" id="poi_name" />
+          </p>
+
+          <p>
+            <label for="poi_comment"><strong>Kommentar</strong></label><br />
+            <textarea id="poi_comment" rows="4"></textarea>
+          </p>
+
+          <div class="row-2col">
+            <div class="col">
+              <label for="poi_lat"><strong>Lat</strong></label>
+              <input type="text" id="poi_lat" />
+            </div>
+            <div class="col">
+              <label for="poi_lon"><strong>Lon</strong></label>
+              <input type="text" id="poi_lon" />
+            </div>
+          </div>
+
+          <div class="lst-poi-actions">
+            <button type="submit" class="button button-primary">Speichern</button>
+            <button type="button" class="button" id="leitstellen-pois-delete" disabled>Löschen</button>
+            <button type="button" class="button" id="leitstellen-pois-cancel">Schließen</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Import Panel (overlay, zentriert) -->
+      <div id="lst-poi-import-panel" class="lst-poi-import-panel hidden" role="dialog" aria-modal="true">
+        <div class="lst-poi-import-head">
+          <strong>POI-LSTSim Import</strong>
+          <button type="button" class="button button-small" id="lst-poi-import-close">×</button>
+        </div>
+
+        <p class="description" style="margin-top:8px;">
+          TSV/CSV einfügen: ID (optional), Koordinaten (lat,lon), Genus (M/F/N oder der/die/das), Name, Tags, Kommentar.
+          IDs werden ignoriert.
+        </p>
+
+        <textarea id="lst-poi-import-text" rows="6" style="width:100%;"></textarea>
+
+        <div class="lst-poi-import-actions">
+          <button type="button" class="button" id="lst-poi-import-parse">Vorschau</button>
+          <button type="button" class="button button-primary" id="lst-poi-import-run" disabled>Importieren</button>
+        </div>
+
+        <div id="lst-poi-import-preview" style="margin-top:10px;"></div>
+      </div>
+
+    </div>
+
+    <!-- Toolbar unten -->
+    <div class="lst-poi-toolbar">
+      <input type="text" id="leitstellen-pois-filter" placeholder="Filtern (Typ/Name/Kommentar)..." />
+
+      <button type="button" class="button" id="leitstellen-pois-new">Neu</button>
+      <button type="button" class="button" id="lst-poi-toggle-list">Liste</button>
+      <button type="button" class="button" id="lst-poi-open-editor">Editor</button>
+      <button type="button" class="button" id="lst-poi-import">POI-LSTSim Import</button>
+    </div>
+
+  </div>
+</script>
+
+
+
+
+<!-- POI-Modal-Container -->
+<div id="leitstellen-pois-modal" class="hidden">
+  <div class="modal-overlay"></div>
+  <div class="modal-wrapper">
+    <div class="modal-header">
+      <h2><?php esc_html_e('POIs für Leitstelle bearbeiten','lsttraining'); ?></h2>
+      <button class="modal-close">×</button>
+    </div>
+    <div class="modal-body"></div>
+  </div>
+</div>
 
 
 <!-- Modal-Container -->
