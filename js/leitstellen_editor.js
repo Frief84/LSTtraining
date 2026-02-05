@@ -348,19 +348,24 @@
     openLeitstelleHospitalsEditor(id);
   });
 
-document.addEventListener('DOMContentLoaded', function(){
-  // Wir lesen die ID primär aus #lst_update_id, optional aus ?ls_id
-  wireZuordnungButtonCommon({
+document.addEventListener('DOMContentLoaded', function () {
+  if (typeof window.wireZuordnungButtonCommon !== 'function') {
+    console.warn('[lsttraining] wireZuordnungButtonCommon fehlt');
+    return;
+  }
+
+  window.wireZuordnungButtonCommon({
     buttonId  : 'w_zuord_button_l',
     entityType: 'leitstelle',
-    getEntityId: function(){
+    getEntityId: function () {
       var v = (document.getElementById('lst_update_id') || {}).value || '';
       if (!v) v = new URLSearchParams(location.search).get('ls_id') || '';
       return v;
     },
-    watchIds: ['lst_update_id'] // bei Änderungen neu bewerten
+    watchIds: ['lst_update_id']
   });
 });
+
 
 document.addEventListener('DOMContentLoaded', function(){
   var btn = document.getElementById('w_zuord_button_l');

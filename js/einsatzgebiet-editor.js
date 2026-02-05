@@ -1,208 +1,206 @@
 window._openlayersMaps = window._openlayersMaps || {};
 
 window.initEinsatzgebietEditor = function (container) {
-    const mapId          = container.dataset.mapId;
-    const geojsonId      = container.dataset.geojsonId;
-    const leitstelleId   = container.dataset.leitstelleId;
-    const geojsonTextarea = document.getElementById(geojsonId);
+  if (!container) return;
 
-    // Falls Karte schon existiert → nur anzeigen
-    if (window._openlayersMaps?.[mapId]) {
-        requestAnimationFrame(() => {
-            container.style.display = "block";
-            window._openlayersMaps[mapId].updateSize();
-        });
-        return;
+  const mapId     = container.dataset.mapId;
+  const geojsonId = container.dataset.geojsonId;
+  const centerStr = container.dataset.center || '';
+
+  const geojsonTextarea = geojsonId ? document.getElementById(geojsonId) : null;
+
+  // Map target: optional fallback auf data-einsatzgebiet-map
+  let mapTarget = document.getElementById(mapId);
+  if (!mapTarget) {
+    const candidate = container.querySelector('[data-einsatzgebiet-map]');
+    if (candidate) {
+      candidate.id = mapId;
+      mapTarget = candidate;
+    }
+  }
+  if (!mapTarget) {
+    console.error('Map target not found:', mapId);
+    return;
+  }
+
+  // Popup sichtbar machen BEVOR OpenLayers arbeitet
+  container.style.display = 'block';
+
+  // Controls, die wir hier brauchen (Turf-Import läuft woanders)
+  const fileInput   = container.querySelector('#geojson-file');     // wichtig: Bindestrich
+  const manualInput = container.querySelector('#manual_geojson');
+
+  // ------------------------------------------------------------
+  // Hilfsfunktion: normalisieren + anwenden
+  // ------------------------------------------------------------
+  function normalizeToFeatureCollection(obj) {
+    if (!obj) return { type: 'FeatureCollection', features: [] };
+
+    if (obj.type === 'FeatureCollection' && Array.isArray(obj.features)) return obj;
+    if (obj.type === 'Feature') return { type: 'FeatureCollection', features: [obj] };
+
+    // reine Geometry
+    if (obj.type && (obj.coordinates || obj.geometries)) {
+      return {
+        type: 'FeatureCollection',
+        features: [{ type: 'Feature', properties: {}, geometry: obj }]
+      };
     }
 
-    const deleteButton   = container.querySelector('.btn-einsatzgebiet-delete');
-    const manualTextarea = container.querySelector('#manual_geojson');
-    const format         = new ol.format.GeoJSON();
-
-		const vectorSource   = new ol.source.Vector();
-    const vectorLayer    = new ol.layer.Vector({ source: vectorSource });
-	
-	window._egSources = window._egSources || {};
-	window._egSources[mapId] = vectorSource;
-	
-    // für Upload-/Vorschau-Script sichtbar machen:
-    window.vectorSource  = vectorSource;
-    window.vectorLayer   = vectorLayer;
-		
-	
-	window.vectorSource  = vectorSource;
-	window.vectorLayer   = vectorLayer;
-
-    // Initiale Kartenansicht
-    let center = [13.4, 52.5];
-    const centerAttr = container.dataset.center;
-    let centerCoords = ol.proj.fromLonLat(center);
-    if (centerAttr && centerAttr.includes(',')) {
-        const [lat, lon] = centerAttr.split(',').map(parseFloat);
-        if (!isNaN(lat) && !isNaN(lon)) {
-            center = [lon, lat];
-            centerCoords = ol.proj.fromLonLat(center);
-        }
+    // Array von Features
+    if (Array.isArray(obj)) {
+      return { type: 'FeatureCollection', features: obj };
     }
+
+    throw new Error('Unbekanntes GeoJSON-Format');
+  }
+
+  function applyGeoJSONToMap(fc) {
+    const map = window._openlayersMaps[mapId];
+    const format = container._egFormat;
+    const vectorSource = container._egVectorSource;
+
+    if (!map || !format || !vectorSource) {
+      console.error('Einsatzgebiet-Editor State fehlt (map/format/vectorSource).');
+      return;
+    }
+
+    vectorSource.clear();
+
+    let feats = [];
+    try {
+      feats = format.readFeatures(fc, { featureProjection: map.getView().getProjection() });
+    } catch (e) {
+      console.error(e);
+      return;
+    }
+
+    vectorSource.addFeatures(feats);
+
+    if (feats.length > 0) {
+      map.getView().fit(vectorSource.getExtent(), {
+        padding: [40, 40, 40, 40],
+        maxZoom: 14
+      });
+    }
+
+    requestAnimationFrame(() => map.updateSize());
+  }
+
+  // ------------------------------------------------------------
+  // Map erstellen ODER bestehenden State verwenden
+  // ------------------------------------------------------------
+  if (!window._openlayersMaps[mapId]) {
+    // Center bestimmen
+    let centerCoords = ol.proj.fromLonLat([13.072128, 52.400705]);
+    if (centerStr && centerStr.includes(',')) {
+      const parts = centerStr.split(',').map(v => parseFloat(v.trim()));
+      if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+        centerCoords = ol.proj.fromLonLat([parts[1], parts[0]]);
+      }
+    }
+
+    const format = new ol.format.GeoJSON();
+    const vectorSource = new ol.source.Vector();
+    const vectorLayer = new ol.layer.Vector({ source: vectorSource });
 
     const map = new ol.Map({
-        target: mapId,
-        layers: [
-            new ol.layer.Tile({ source: new ol.source.OSM() }),
-            vectorLayer
-        ],
-        view: new ol.View({
-            center: centerCoords,
-            zoom: 10
-        })
+      target: mapId,
+      layers: [
+        new ol.layer.Tile({ source: new ol.source.OSM() }),
+        vectorLayer
+      ],
+      view: new ol.View({ center: centerCoords, zoom: 10 })
     });
 
-    // Roter Marker
-    if (centerAttr && centerAttr.includes(',')) {
-        const [lat, lon] = centerAttr.split(',').map(parseFloat);
-        if (!isNaN(lat) && !isNaN(lon)) {
-            const markerCoords = ol.proj.fromLonLat([lon, lat]);
-            const redMarker    = new ol.Feature({ geometry: new ol.geom.Point(markerCoords) });
-            redMarker.setStyle(new ol.style.Style({
-                image: new ol.style.Circle({
-                    radius: 6,
-                    fill: new ol.style.Fill({ color: 'red' }),
-                    stroke: new ol.style.Stroke({ color: '#fff', width: 2 })
-                })
-            }));
-            map.addLayer(new ol.layer.Vector({
-                source: new ol.source.Vector({ features: [redMarker] })
-            }));
-        }
-    }
-
-    window._openlayersMaps = window._openlayersMaps || {};
     window._openlayersMaps[mapId] = map;
 
-    // Zeichnen & Modifizieren
-    map.addInteraction(new ol.interaction.Draw({ source: vectorSource, type: 'Polygon' }));
-    map.addInteraction(new ol.interaction.Modify({ source: vectorSource }));
+    // State am Container merken (damit reopen funktioniert)
+    container._egFormat = format;
+    container._egVectorSource = vectorSource;
 
-    function updateGeoJSON() {
-        const features = vectorSource.getFeatures();
-  	const geojson  = format.writeFeatures(features, {
-     dataProjection: 'EPSG:4326',
-     featureProjection: map.getView().getProjection()
- });
-        geojsonTextarea.value = geojson;
-        if (manualTextarea) {
-            manualTextarea.value = JSON.stringify(JSON.parse(geojson), null, 2);
-        }
+    requestAnimationFrame(() => map.updateSize());
+
+    // Bestehendes GeoJSON laden
+    if (geojsonTextarea && geojsonTextarea.value.trim() !== '') {
+      try {
+        const obj = JSON.parse(geojsonTextarea.value);
+        const fc = normalizeToFeatureCollection(obj);
+        applyGeoJSONToMap(fc);
+      } catch (e) {
+        console.error('Invalid GeoJSON:', e);
+      }
     }
 
-    map.on('drawend', updateGeoJSON);
-    map.on('modifyend', updateGeoJSON);
+    // Draw Interaction
+    const draw = new ol.interaction.Draw({ source: vectorSource, type: 'Polygon' });
+    map.addInteraction(draw);
 
-    // Vorhandenes GeoJSON laden (nur wenn nicht '[]')
-    const rawValue = geojsonTextarea?.value?.trim();
-    let parsed = null;
-    if (rawValue && rawValue !== '[]') {
-        try {
-            parsed = JSON.parse(rawValue);
-        } catch (err) {
-            console.warn('GeoJSON konnte nicht geparst werden, überspringe Laden:', err);
-        }
-    }
-    if (parsed) {
-        if (Array.isArray(parsed)) {
-            parsed = { type: 'FeatureCollection', features: parsed };
-        } else if (parsed.type === 'Feature') {
-            parsed = { type: 'FeatureCollection', features: [parsed] };
-        }
-    }
-	if (parsed?.type === 'FeatureCollection' && parsed.features.length) {
-     if (parsed.crs) delete parsed.crs;
-     const feats = format.readFeatures(parsed, {
-         dataProjection: 'EPSG:4326',
-         featureProjection: map.getView().getProjection()
-     });
-     vectorSource.clear();
-     vectorSource.addFeatures(feats);
+    draw.on('drawend', () => {
+      // Features -> FeatureCollection (als JSON-String)
+      const fcText = format.writeFeatures(
+        vectorSource.getFeatures(),
+        { featureProjection: map.getView().getProjection() }
+      );
 
-        if (deleteButton) deleteButton.style.display = 'inline-block';
-        requestAnimationFrame(() => {
-            const ext = vectorSource.getExtent();
-            if (!ol.extent.isEmpty(ext)) {
-                map.getView().fit(ext, { padding: [50,50,50,50], duration: 200, maxZoom: 8 });
-            }
-        });
-    } else {
-        console.info('Kein vorhandenes Einsatzgebiet geladen.');
-    }
+      if (geojsonTextarea) geojsonTextarea.value = fcText;
 
-    // Kontextmenü zum Reduzieren
-    map.getViewport().addEventListener('contextmenu', e => {
-        e.preventDefault();
-        const feats = vectorSource.getFeatures();
-        if (!feats.length) return;
-        const coords = feats[0].getGeometry().getCoordinates()[0];
-        if (coords.length <= 4) {
-            vectorSource.clear();
-            if (deleteButton) deleteButton.style.display = 'none';
-        } else {
-            coords.splice(-2, 1);
-            feats[0].getGeometry().setCoordinates([coords]);
-        }
-        updateGeoJSON();
+      // UI bereinigen: manual/file nur als Inputquellen
+      if (manualInput) manualInput.value = '';
+      if (fileInput) fileInput.value = '';
     });
 
-    // Save-Button: Skip AJAX when creating new Nebenstelle (id = 0)
-    container.querySelector('.btn-einsatzgebiet-save')?.addEventListener('click', () => {
-        updateGeoJSON();
-        const rawGeoJson = geojsonTextarea.value;
-		 // Hidden-Feld im Haupt-Modal ist jetzt aktuell; Karte gleich mitziehen:
-	if (typeof window.updateNebenstellenMapFromGeo === 'function') {
-	   window.updateNebenstellenMapFromGeo(rawGeoJson);
-	 }
-        if (container.dataset.context === 'neben' && container.dataset.leitstelleId === '0') {
-            // Create-Modus: nur schließen
-            container.style.display = 'none';
-            return;
-        }
-        // Edit-Modus: original AJAX speichern
-        const context = container.dataset.context === 'neben' ? 'neben' : 'leitstelle';
-        const action  = (context === 'neben')
-            ? 'lsttraining_save_neben_einsatzgebiet'
-            : 'lsttraining_save_einsatzgebiet';
-        const body = new URLSearchParams({
-            action,
-            geojson: rawGeoJson,
-            [context === 'neben' ? 'neben_id' : 'leitstelle_id']: leitstelleId
-        });
-        fetch(ajaxurl, { method: 'POST', body })
-            .then(r => r.json())
-            .then(res => {
-                if (!res.success) {
-                    alert('Fehler: ' + res.data);
-                    return;
-                }
-                container.style.display = 'none';
-                alert('Einsatzgebiet gespeichert');
-                if (typeof window.updateNebenstellenMapFromGeo === 'function') {
-      window.updateNebenstellenMapFromGeo(rawGeoJson);
-    }
-            });
-    });
-
-    // Delete & Close
-    deleteButton?.addEventListener('click', () => {
+    // Delete Button
+    const deleteBtn = container.querySelector('.btn-einsatzgebiet-delete');
+    if (deleteBtn && !deleteBtn._bound) {
+      deleteBtn._bound = true;
+      deleteBtn.onclick = function () {
+        if (!confirm('Einsatzgebiet wirklich löschen?')) return;
         vectorSource.clear();
-        updateGeoJSON();
-        deleteButton.style.display = 'none';
-    });
-    container.querySelector('.btn-einsatzgebiet-close')?.addEventListener('click', () => {
-        container.style.display = 'none';
-    });
+        if (geojsonTextarea) geojsonTextarea.value = '';
+        if (manualInput) manualInput.value = '';
+        if (fileInput) fileInput.value = '';
+      };
+    }
+  } else {
+    // Map existiert schon -> resize
+    requestAnimationFrame(() => window._openlayersMaps[mapId].updateSize());
 
-    // Editor anzeigen
-    container.style.display = 'block';
+    // Falls State fehlt, nachziehen
+    if (!container._egFormat) container._egFormat = new ol.format.GeoJSON();
+
+    if (!container._egVectorSource) {
+      const map = window._openlayersMaps[mapId];
+      let vLayer = null;
+      map.getLayers().forEach((layer) => {
+        if (!vLayer && layer instanceof ol.layer.Vector) vLayer = layer;
+      });
+      if (vLayer) container._egVectorSource = vLayer.getSource();
+    }
+
+    // Wenn sich das Hidden-Feld zwischenzeitlich geändert hat (z.B. Turf-Process),
+    // optional neu laden und anzeigen:
+    if (geojsonTextarea && geojsonTextarea.value.trim() !== '') {
+      try {
+        const obj = JSON.parse(geojsonTextarea.value);
+        const fc = normalizeToFeatureCollection(obj);
+        applyGeoJSONToMap(fc);
+      } catch (e) {
+        // nicht abbrechen, nur loggen
+        console.error('Invalid GeoJSON:', e);
+      }
+    }
+  }
+
+  // Close Button (immer binden)
+  const closeBtn = container.querySelector('.btn-einsatzgebiet-close');
+  if (closeBtn && !closeBtn._bound) {
+    closeBtn._bound = true;
+    closeBtn.onclick = function () {
+      container.style.display = 'none';
+    };
+  }
 };
-
 
 window.openEinsatzgebietPopup = function() {
     const container = document.querySelector('.einsatzgebiet-popup');
@@ -224,3 +222,116 @@ window.openEinsatzgebietPopup = function() {
         requestAnimationFrame(() => map.updateSize());
     }
 };
+	
+	document.addEventListener('click', async (ev) => {
+  const btn = ev.target.closest('#btn-geojson-import');
+  if (!btn) return;
+
+  const popup = btn.closest('.einsatzgebiet-popup');
+  if (!popup) {
+    console.error('#btn-geojson-import: kein .einsatzgebiet-popup gefunden');
+    return;
+  }
+
+  const fileInput  = popup.querySelector('#geojson_file');
+  const manualArea = popup.querySelector('#manual_geojson');
+
+  const hasFile   = !!(fileInput && fileInput.files && fileInput.files.length > 0);
+  const manualTxt = (manualArea && manualArea.value || '').trim();
+  const hasManual = manualTxt !== '';
+
+  if (hasFile && hasManual) {
+    alert('Bitte nutze entweder eine Datei ODER das Textfeld (nicht beides).');
+    return;
+  }
+  if (!hasFile && !hasManual) {
+    alert('Bitte wähle eine GeoJSON-Datei aus oder füge GeoJSON in das Textfeld ein.');
+    return;
+  }
+
+  let geojsonText = '';
+
+  if (hasFile) {
+    const file = fileInput.files[0];
+    geojsonText = await file.text();
+  } else {
+    geojsonText = manualTxt;
+  }
+
+  // JSON prüfen + normalisieren (FeatureCollection)
+  let obj;
+  try {
+    obj = JSON.parse(geojsonText);
+  } catch (e) {
+    alert('Ungültiges JSON. Bitte prüfe die GeoJSON-Struktur.');
+    return;
+  }
+
+  // akzeptiere: FeatureCollection, Feature, Geometry oder Array<Feature>
+  if (Array.isArray(obj)) {
+    obj = { type: 'FeatureCollection', features: obj };
+  } else if (obj && obj.type === 'Feature') {
+    obj = { type: 'FeatureCollection', features: [obj] };
+  } else if (obj && (obj.type === 'Polygon' || obj.type === 'MultiPolygon' || obj.type === 'GeometryCollection')) {
+    obj = { type: 'FeatureCollection', features: [{ type: 'Feature', properties: {}, geometry: obj }] };
+  }
+
+  if (!obj || obj.type !== 'FeatureCollection' || !Array.isArray(obj.features)) {
+    alert('GeoJSON muss eine FeatureCollection (oder Feature/Polygon) sein.');
+    return;
+  }
+
+  // in hidden field schreiben (dein System nutzt geojson_edit)
+  const hidden = document.getElementById('geojson_edit');
+  if (!hidden) {
+    console.error('Hidden field #geojson_edit nicht gefunden');
+    return;
+  }
+  hidden.value = JSON.stringify(obj);
+
+  // Karte updaten
+  const mapId = popup.dataset.mapId;
+  window._openlayersMaps = window._openlayersMaps || {};
+  const map = window._openlayersMaps[mapId];
+
+  if (!map) {
+    console.warn('Keine Map gefunden für mapId:', mapId, '→ initEinsatzgebietEditor() muss vorher laufen');
+    return;
+  }
+
+  // Vector-Layer finden oder anlegen (wir nehmen den ersten Vector-Layer nach OSM)
+  let vectorLayer = null;
+  map.getLayers().forEach((layer) => {
+    if (!vectorLayer && layer instanceof ol.layer.Vector) vectorLayer = layer;
+  });
+
+  if (!vectorLayer) {
+    vectorLayer = new ol.layer.Vector({ source: new ol.source.Vector() });
+    map.addLayer(vectorLayer);
+  }
+
+  const source = vectorLayer.getSource();
+  source.clear();
+
+  const fmt = new ol.format.GeoJSON();
+  let feats = [];
+  try {
+    feats = fmt.readFeatures(obj, { featureProjection: map.getView().getProjection() });
+  } catch (e) {
+    alert('GeoJSON konnte nicht in Features umgewandelt werden.');
+    return;
+  }
+  source.addFeatures(feats);
+
+  if (feats.length > 0) {
+    map.getView().fit(source.getExtent(), { padding: [40, 40, 40, 40], maxZoom: 14 });
+  }
+
+  // UI bereinigen: nur die genutzte Quelle behalten
+  if (hasFile && manualArea) manualArea.value = '';
+  if (hasManual && fileInput) fileInput.value = '';
+
+  alert('Einsatzgebiet importiert.');
+
+
+});

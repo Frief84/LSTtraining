@@ -15,6 +15,51 @@ window.mapEdit            = null;
 window.dragInteractionNeu = null;
 window.dragInteractionEdit = null;
 
+window.wireZuordnungButtonCommon = function (opts) {
+  var btn = document.getElementById(opts.buttonId);
+  if (!btn) return;
+
+  if (btn._zuoBound) return;
+  btn._zuoBound = true;
+
+  function getValidId() {
+    var raw = (opts.getEntityId() || '').trim();
+    return (/^\d+$/).test(raw) && raw !== '0' ? raw : null;
+  }
+
+  function syncState() {
+    var id = getValidId();
+    if (id) {
+      btn.disabled = false;
+      btn.removeAttribute('title');
+    } else {
+      btn.disabled = true;
+      btn.title = 'Bitte zuerst speichern';
+    }
+  }
+
+  function onClick(e) {
+    e.preventDefault();
+    var id = getValidId();
+    if (!id) return;
+    openZuordnungPopup({ entityType: opts.entityType, entityId: id });
+  }
+
+  syncState();
+  btn.addEventListener('click', onClick);
+
+  (opts.watchIds || []).forEach(function(inputId){
+    var el = document.getElementById(inputId);
+    if (el && !el._zuoObs) {
+      el._zuoObs = true;
+      el.addEventListener('input',  syncState);
+      el.addEventListener('change', syncState);
+    }
+  });
+};
+
+
+
 /* ---------------------------------------------------------- */
 /* Helper: create a map with a draggable marker                */
 /* ---------------------------------------------------------- */
@@ -148,10 +193,11 @@ window.editLeitstelle = function (id, name, ort, bl, land, lat, lon) {
   if (createFrm) createFrm.style.display = 'none';
   editFrm.style.display = 'block';
 
-  /* fill text inputs */
+   /* fill text inputs */
+  const values = { id, name, ort, bl, land, lat, lon };
   ['id','name','ort','bl','land','lat','lon'].forEach((k) => {
     const el = document.getElementById(`lst_update_${k}`);
-    if (el) el.value = eval(k);
+    if (el) el.value = values[k];
   });
 
   /* clear polygon field */
@@ -160,7 +206,7 @@ window.editLeitstelle = function (id, name, ort, bl, land, lat, lon) {
   /* configure polygon-editor button */
   const egBtn = editFrm.querySelector('.open-einsatzgebiet-editor');
   if (egBtn) {
-    egBtn.dataset.mapId        = `einsatzgebiet_${id}`;   // unique container ID
+    egBtn.dataset.mapId        = `einsatzgebiet_${id}`;
     egBtn.dataset.leitstelleId = id;
     egBtn.dataset.center       = `${lat},${lon}`;
     egBtn.dataset.context      = 'leitstelle';
@@ -173,12 +219,12 @@ window.editLeitstelle = function (id, name, ort, bl, land, lat, lon) {
     .then((r) => r.json())
     .then((res) => {
       let poly = res.success && res.data
-	  ? res.data
-	  : { type: 'FeatureCollection', features: [] };
+        ? res.data
+        : { type: 'FeatureCollection', features: [] };
 
-	if (Array.isArray(poly)) {
-	  poly = { type: 'FeatureCollection', features: poly };
-	}
+      if (Array.isArray(poly)) {
+        poly = { type: 'FeatureCollection', features: poly };
+      }
 
       document.getElementById('geojson_edit').value = JSON.stringify(poly);
 
@@ -192,6 +238,7 @@ window.editLeitstelle = function (id, name, ort, bl, land, lat, lon) {
         JSON.stringify(poly)
       );
     });
+
 };
 
 /* ---------------------------------------------------------- */
@@ -311,50 +358,46 @@ function resetEditMaps() {
   if (poly) poly.value = '';
 }
 
-// === Gemeinsamer Inline-Popup-Opener (kein IFrame) ==========================
-function wireZuordnungButtonCommon(opts) {
-  var btn   = document.getElementById(opts.buttonId);
+document.addEventListener('click', (ev) => {
+  const btn = ev.target.closest('.open-einsatzgebiet-editor');
   if (!btn) return;
+  if ((btn.dataset.context || '') !== 'leitstelle') return;
 
-  // doppelte Bindung verhindern
-  if (btn._zuoBound) return;
-  btn._zuoBound = true;
+  const editFrm = document.getElementById('edit-leitstelle-formular');
+  const popup = editFrm ? editFrm.querySelector('.einsatzgebiet-popup')
+                        : document.querySelector('.einsatzgebiet-popup');
+  if (!popup) { alert('Einsatzgebiet-Editor nicht gefunden.'); return; }
 
-  function getValidId() {
-    var raw = (opts.getEntityId() || '').trim();
-    return (/^\d+$/).test(raw) && raw !== '0' ? raw : null;
+  const mapDiv = popup.querySelector('[data-einsatzgebiet-map]');
+  if (!mapDiv) { console.error('Map-DIV mit data-einsatzgebiet-map fehlt.'); return; }
+
+  const newMapId = btn.dataset.mapId;               // z.B. einsatzgebiet_1
+  const oldMapId = popup.dataset.mapId || mapDiv.id;
+
+  window._openlayersMaps = window._openlayersMaps || {};
+  if (oldMapId && window._openlayersMaps[oldMapId]) {
+    try { window._openlayersMaps[oldMapId].setTarget(null); } catch (e) {}
+    delete window._openlayersMaps[oldMapId];
   }
 
-  function syncState() {
-    var id = getValidId();
-    if (id) {
-      btn.disabled = false;
-      btn.removeAttribute('title');
-    } else {
-      btn.disabled = true;
-      btn.title = 'Bitte zuerst speichern';
-    }
+  popup.dataset.mapId        = newMapId;
+  popup.dataset.leitstelleId = btn.dataset.leitstelleId;
+  popup.dataset.center       = btn.dataset.center;
+  popup.dataset.context      = 'leitstelle';
+
+  mapDiv.id = newMapId;
+
+  popup.style.display = 'block';
+ const overlay = document.getElementById('popup-overlay');
+  if (overlay) overlay.style.display = 'block';
+
+  popup.style.display = 'block';
+	
+  if (typeof window.initEinsatzgebietEditor === 'function') {
+    window.initEinsatzgebietEditor(popup);
+  } else {
+    console.error('initEinsatzgebietEditor() fehlt. Script js/einsatzgebiet-editor.js nicht geladen?');
   }
+});
 
-  function onClick(e) {
-    e.preventDefault();
-    var id = getValidId();
-    if (!id) return;
-    openZuordnungPopup({ entityType: opts.entityType, entityId: id });
-  }
-
-  // initial und bei ID-Änderungen reagieren
-  syncState();
-  btn.addEventListener('click', onClick);
-
-  // wenn die ID aus einem Hidden-Feld kommt, hier die Quellen verdrahten:
-  (opts.watchIds || []).forEach(function(inputId){
-    var el = document.getElementById(inputId);
-    if (el && !el._zuoObs) {
-      el._zuoObs = true;
-      el.addEventListener('input',  syncState);
-      el.addEventListener('change', syncState);
-    }
-  });
-}
 

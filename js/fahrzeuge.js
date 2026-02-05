@@ -284,8 +284,8 @@
       }
 
       // Land/Bundesland: wenn du das im Endpoint nicht lieferst, bleiben die Felder leer
-      var wbl = fz.wache_bundesland || ''; // optional
-      var chosenLand = resolveLandFromBundesland(wbl);
+      var wbl = fz.wache_bundesland || '';
+		var chosenLand = fz.wache_land || resolveLandFromBundesland(wbl);
 
       $('#fz-land').val(chosenLand).trigger('change');
       if (chosenLand && wbl) $('#fz-bundesland').val(wbl).trigger('change');

@@ -336,7 +336,7 @@ function lst_sort_link($label, $key, $current_key, $current_order) {
         'page' => 'lsttraining_leitstellen_wachen',
         'open_wache_id' => (int)$wache_id,
       ], admin_url('admin.php')) ); ?>">Zurück zu Wachen</a>
-    </p>
+    </p> 
   <?php endif; ?>
 
   <form method="get" id="fahrzeuge-filter" style="margin-bottom:16px;">
@@ -408,7 +408,7 @@ function lst_sort_link($label, $key, $current_key, $current_order) {
       <a class="button" href="<?php echo esc_url($reset_url); ?>" style="margin-left:6px;">Zurücksetzen</a>
     <?php endif; ?>
   </form>
-
+<a href="#" class="button button-primary" id="fahrzeug-new">Neues Fahrzeug</a>
   <p>
     <strong><?php echo number_format_i18n($total); ?></strong> Fahrzeuge gefunden.
     Seite <?php echo (int)$paged; ?> von <?php echo (int)$max_pages; ?>.
@@ -499,6 +499,5 @@ function lst_sort_link($label, $key, $current_key, $current_order) {
   <?php endif; ?>
 
   <p style="margin-top:14px">
-    <a href="#" class="button button-primary" id="fahrzeug-new">Neues Fahrzeug</a>
   </p>
 </div>

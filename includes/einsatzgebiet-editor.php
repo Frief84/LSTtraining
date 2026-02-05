@@ -1,86 +1,93 @@
 <?php
 // einsatzgebiet-editor.php
 
-function lsttraining_einsatzgebiet_editor($mapId = 'polygon_map', $inputId = 'einsatzgebiet_geojson', $geojson = '', $leitstelle_id = 0, $context = 'leitstelle', $center = '') {
+function lsttraining_einsatzgebiet_editor(
+    $mapId = 'polygon_map',
+    $inputId = 'einsatzgebiet_geojson',
+    $geojson = '',
+    $leitstelle_id = 0,
+    $context = 'leitstelle',
+    $center = ''
+) {
+    static $popup_rendered = false;
+
     $dataContext = ($context === 'neben') ? 'neben' : 'leitstelle';
 
-    echo '<div id="popup_' . esc_attr($mapId) . '" class="einsatzgebiet-popup" style="
-        display: none;
-        position: fixed;
-        top: 40%;
-        left: 50%;
-        transform: translate(-50%, -40%);
-        z-index: 9999;
-        background: #fff;
-        border: 1px solid #ccc;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        padding: 20px;
-        width: 650px;
-        max-width: 95%;
-        height: 800px;
-        overflow: auto;
-    "
-    data-map-id="' . esc_attr($mapId) . '"
-    data-geojson-id="' . esc_attr($inputId) . '"
-    data-leitstelle-id="' . intval($leitstelle_id) . '"
-    data-context="' . esc_attr($dataContext) . '"
-    data-center="' . esc_attr($center) . '"
-    data-geojson="' . esc_attr($geojson) . '"
+    // Das Hidden-Feld muss pro Formular existieren (das bleibt wie bisher)
+    echo '<textarea id="' . esc_attr($inputId) . '" class="einsatzgebiet-geojson-hidden" style="display:none;">' . esc_textarea($geojson) . '</textarea>';
+
+    // Popup wirklich nur einmal im DOM rendern
+    if ($popup_rendered) {
+        return;
+    }
+    $popup_rendered = true;
+
+    echo '<div id="lst-eg-popup" class="einsatzgebiet-popup"
+        data-map-id="' . esc_attr($mapId) . '"
+        data-geojson-id="' . esc_attr($inputId) . '"
+        data-leitstelle-id="' . intval($leitstelle_id) . '"
+        data-context="' . esc_attr($dataContext) . '"
+        data-center="' . esc_attr($center) . '"
+        data-geojson="' . esc_attr($geojson) . '"
+        style="display:none;"
     >';
 
-    echo '<h3>Einsatzgebiet bearbeiten</h3>';
+    echo '<div class="einsatzgebiet-popup__header">';
+    echo '<h3 class="einsatzgebiet-popup__title">Einsatzgebiet bearbeiten</h3>';
+    echo '<button type="button" class="button btn-einsatzgebiet-close">Schließen</button>';
+    echo '</div>';
 
-    echo '<div style="background:#eef3f9; border:1px solid #cce; padding:10px; margin-bottom:15px;">
+    echo '<div class="einsatzgebiet-hinweise">
         <strong>Hinweise zur Bearbeitung:</strong>
-        <ul style="margin-top:5px;">
+        <ul>
             <li><strong>Linksklick</strong> in der Karte fügt einen Punkt zum Polygon hinzu.</li>
             <li><strong>Rechtsklick</strong> entfernt den letzten Punkt oder löscht das Polygon.</li>
-            <li>Ein bestehendes GeoJSON kann unten eingefügt und übernommen werden.</li>
-            <li>Für externe Bearbeitung kannst du das Tool 
-                <a href="https://opendatalab.de/projects/geojson-utilities/" target="_blank">GeoJSON Utilities</a> nutzen.
+            <li>Import: Bitte entweder Datei wählen oder das Textfeld nutzen (nicht beides).</li>
+            <li>Für externe Bearbeitung kannst du das Tool
+                <a href="https://opendatalab.de/projects/geojson-utilities/" target="_blank" rel="noopener noreferrer">GeoJSON Utilities</a>
+                nutzen.
             </li>
         </ul>
     </div>';
 
-    echo '<div id="' . esc_attr($mapId) . '" data-einsatzgebiet-map
-          style="height:300px;border:1px solid #ccc;margin-bottom:10px;"></div>';
-    echo '<textarea id="' . esc_attr($inputId) . '" style="display:none">' . esc_textarea($geojson) . '</textarea>';
-   
-echo '<div style="margin-top:15px;">
-  <label><strong>GeoJSON hochladen:</strong></label><br>
-  <input type="file" id="geojson-file"
-         accept=".geojson,application/geo+json,application/json"
-         class="regular-text">
-  <button type="button"
-          id="geojson-process"
-          class="button button-secondary"
-          disabled>
-      GeoJSON übernehmen &amp; Vorschau
-  </button>
-</div>';
+    echo '<div class="einsatzgebiet-popup__body">';
 
-      
+    echo '<div class="einsatzgebiet-map-wrap">
+        <div data-einsatzgebiet-map class="einsatzgebiet-map" id="' . esc_attr($mapId) . '"></div>
+    </div>';
 
-echo '<div style="margin-top:15px;">
-        <label><strong>GeoJSON manuell einfügen:</strong></label><br>
-        <textarea id="manual_geojson" style="width:100%;height:100px;"></textarea><br>
-        <button type="button" class="button" id="btn-geojson-import">
-            GeoJSON übernehmen
-        </button>
-      </div>
-      <p>
-        <button type="button" class="button button-primary btn-einsatzgebiet-save">
-            Speichern
-        </button>
-        <button type="button" class="button btn-einsatzgebiet-close">
-            Schließen
-        </button>
-        <button type="button" class="button btn-einsatzgebiet-delete" style="display:none">
-            Einsatzgebiet löschen
-        </button>
-      </p>';
+    echo '<div class="einsatzgebiet-import">
+        <label class="einsatzgebiet-label"><strong>GeoJSON importieren (Datei ODER Textfeld):</strong></label>
 
+        <div class="einsatzgebiet-import__file">
+            <label><strong>GeoJSON-Datei</strong></label><br>
+            <input type="file"
+                data-eg-file
+                accept=".geojson,application/geo+json,application/json"
+                class="regular-text">
+        </div>
 
-    echo '<textarea name="coords" id="coords" hidden></textarea><br>
-<textarea id="geojson" name="geojson" hidden></textarea></div>';
+        <div class="einsatzgebiet-import__manual">
+            <label><strong>Oder GeoJSON einfügen</strong></label><br>
+            <textarea data-eg-manual class="einsatzgebiet-manual" rows="7" placeholder="GeoJSON hier einfügen ..."></textarea>
+        </div>
+
+        <div class="einsatzgebiet-import__actions">
+            <button type="button" data-eg-process class="button button-primary" disabled>
+                GeoJSON verarbeiten (Turf) &amp; übernehmen
+            </button>
+            <p class="description">
+                Hinweis: Speichern im Popup schreibt direkt in die DB.
+            </p>
+        </div>
+    </div>';
+
+    echo '<div class="einsatzgebiet-actions">
+        <button type="button" class="button button-primary btn-einsatzgebiet-save">Speichern</button>
+        <button type="button" class="button btn-einsatzgebiet-close">Schließen</button>
+        <button type="button" class="button btn-einsatzgebiet-delete">Einsatzgebiet löschen</button>
+    </div>';
+
+    echo '</div>'; // body
+    echo '</div>'; // popup
 }
