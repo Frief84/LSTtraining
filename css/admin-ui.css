@@ -944,6 +944,13 @@ pointer-events: auto;
   margin-top: 10px;
 }
 
+.lsttraining-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
 /* Responsive */
 @media (max-width: 960px) {
   .einsatzgebiet-popup {

@@ -366,6 +366,34 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 });
 
+document.addEventListener('click', function (e) {
+  const btn = e.target.closest('#w_zuord_button_l');
+  if (!btn) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+
+  const idEl = document.getElementById('lst_update_id');
+  const id = parseInt(idEl?.value || '0', 10);
+  if (!(id > 0)) return;
+
+  if (typeof window.openZuordnungPopup === 'function') {
+    window.openZuordnungPopup({
+      entityType: 'leitstelle',
+      entityId: id
+    });
+  }
+});
+
+function syncZuordnungButton() {
+  const idEl = document.getElementById('lst_update_id');
+  const btn  = document.getElementById('w_zuord_button_l');
+  if (!btn || !idEl) return;
+
+  const id = parseInt(idEl.value || '0', 10);
+  btn.disabled = !(id > 0);
+  btn.title = id > 0 ? '' : 'Bitte zuerst speichern';
+}
 
 document.addEventListener('DOMContentLoaded', function(){
   var btn = document.getElementById('w_zuord_button_l');
