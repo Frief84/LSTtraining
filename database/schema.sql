@@ -273,16 +273,8 @@ CREATE TABLE IF NOT EXISTS `lst_activity_log` (
 
 -- -------------------------------------------------------------------
 -- 6) Einsatzsystem (NEU)
---    einsaetze ist bei euch leer -> wird ersetzt.
 -- -------------------------------------------------------------------
 
-DROP TABLE IF EXISTS `einsatz_followups`;
-DROP TABLE IF EXISTS `einsatz_excluded_leitstellen`;
-DROP TABLE IF EXISTS `einsatz_rules`;
-DROP TABLE IF EXISTS `instanz_einsatz_events`;
-DROP TABLE IF EXISTS `instanz_einsaetze`;
-DROP TABLE IF EXISTS `leitstellen_osm_layers`;
-DROP TABLE IF EXISTS `einsaetze`;
 
 CREATE TABLE `einsaetze` (
   `id` INT NOT NULL AUTO_INCREMENT,
@@ -482,20 +474,76 @@ CREATE TABLE `instanz_einsatz_events` (
 -- OSM / Landschaft / Gebäude / Autobahn-Linien Cache je Leitstelle
 CREATE TABLE `leitstellen_osm_layers` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `leitstelle_id` INT NOT NULL,
   `layer_key` VARCHAR(64) NOT NULL,
-  `source` VARCHAR(64) NULL DEFAULT 'overpass',
-  `geojson` LONGTEXT NOT NULL,
+  `source` VARCHAR(64) NULL DEFAULT 'offline_tiles',
+  `source_version` VARCHAR(32) NULL DEFAULT NULL,
+
+  `tile_z` SMALLINT NULL DEFAULT NULL,
+  `tile_x` INT NULL DEFAULT NULL,
+  `tile_y` INT NULL DEFAULT NULL,
+
+  `sha1` CHAR(40) NULL DEFAULT NULL,
+  `feature_count` INT NULL DEFAULT NULL,
+  `bytes_gz` INT NULL DEFAULT NULL,
+  `file_relpath` VARCHAR(255) NULL DEFAULT NULL,
+
+  `last_checked_at` DATETIME NULL DEFAULT NULL,
+  `last_changed_at` DATETIME NULL DEFAULT NULL,
+  `last_check_source` VARCHAR(64) NULL DEFAULT NULL,
+  `check_status` VARCHAR(32) NULL DEFAULT NULL,
+  `check_message` TEXT NULL,
+  `etag_or_signature` VARCHAR(128) NULL DEFAULT NULL,
+  `is_dirty` TINYINT(1) NOT NULL DEFAULT 0,
 
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_ls_layer` (`leitstelle_id`,`layer_key`),
-  KEY `idx_ls_layer_key` (`layer_key`),
 
-  CONSTRAINT `fk_lol_leitstelle`
-    FOREIGN KEY (`leitstelle_id`) REFERENCES `leitstellen`(`id`) ON DELETE CASCADE
+  UNIQUE KEY `uk_manifest_tile` (`source_version`,`layer_key`,`tile_z`,`tile_x`,`tile_y`),
+  KEY `idx_manifest_lookup` (`source_version`,`layer_key`,`tile_z`,`tile_x`,`tile_y`),
+  KEY `idx_layer_version` (`layer_key`,`source_version`),
+  KEY `idx_last_checked_at` (`last_checked_at`),
+  KEY `idx_last_changed_at` (`last_changed_at`),
+  KEY `idx_check_status` (`check_status`),
+  KEY `idx_dirty` (`is_dirty`)
+
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-SET foreign_key_checks = 1;
+
+CREATE TABLE `leitstelle_tile_scope` (
+  `leitstelle_id` INT NOT NULL,
+  `layer_key` VARCHAR(64) NOT NULL,
+  `tile_z` SMALLINT NOT NULL,
+  `tile_x` INT NOT NULL,
+  `tile_y` INT NOT NULL,
+
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (`leitstelle_id`,`layer_key`,`tile_z`,`tile_x`,`tile_y`),
+  KEY `idx_scope_leitstelle` (`leitstelle_id`),
+  KEY `idx_scope_tile` (`layer_key`,`tile_z`,`tile_x`,`tile_y`),
+
+  CONSTRAINT `fk_ltscope_leitstelle`
+    FOREIGN KEY (`leitstelle_id`) REFERENCES `leitstellen`(`id`) ON DELETE CASCADE
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+CREATE TABLE `leitstelle_osm_update_lock` (
+  `leitstelle_id` INT NOT NULL,
+  `layer_key` VARCHAR(64) NOT NULL,
+  `lock_token` VARCHAR(64) NOT NULL,
+  `locked_by` VARCHAR(128) NULL DEFAULT NULL,
+  `lock_until` DATETIME NOT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (`leitstelle_id`,`layer_key`),
+  KEY `idx_lock_until` (`lock_until`),
+
+  CONSTRAINT `fk_loul_leitstelle`
+    FOREIGN KEY (`leitstelle_id`) REFERENCES `leitstellen`(`id`) ON DELETE CASCADE
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
