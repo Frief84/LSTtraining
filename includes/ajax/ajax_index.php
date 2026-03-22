@@ -12,3 +12,6 @@ require_once plugin_dir_path(__FILE__) . 'ajax_pois.php';
 require_once plugin_dir_path(__FILE__) . 'ajax_users.php';
 require_once plugin_dir_path(__FILE__) . 'ajax_leitstellen.php';
 require_once plugin_dir_path(__FILE__) . 'ajax_fahrzeuge.php';
+
+// NEU: OSM-Layer Cache je Leitstelle
+require_once plugin_dir_path(__FILE__) . 'ajax_osm_layers.php';

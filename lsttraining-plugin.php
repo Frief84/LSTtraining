@@ -8,6 +8,18 @@
 
 defined('ABSPATH') or exit;
 
+// LSTtraining: Fatal-Catcher für AJAX, damit "kritischer Fehler" im Log erklärbar wird
+register_shutdown_function(function () {
+    if (!defined('DOING_AJAX') || !DOING_AJAX) return;
+
+    $e = error_get_last();
+    if (!$e) return;
+
+    $fatalTypes = [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR];
+    if (!in_array($e['type'], $fatalTypes, true)) return;
+
+    error_log('[LSTtraining][FATAL][AJAX] ' . $e['message'] . ' in ' . $e['file'] . ':' . $e['line']);
+});
 
 if (!defined('LSTTRAINING_PLUGIN_FILE')) {
     define('LSTTRAINING_PLUGIN_FILE', __FILE__);

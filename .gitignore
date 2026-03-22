@@ -1,3 +1,5 @@
+aa_db_tools/
+img/
 *.log
 node_modules/
 .env

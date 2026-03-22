@@ -6,7 +6,6 @@
  */
 if (!defined('ABSPATH')) { exit; }
 
-
 add_action('admin_enqueue_scripts', function ($hook) {
 
     // admin-ui.php liegt in /includes/
@@ -16,7 +15,6 @@ add_action('admin_enqueue_scripts', function ($hook) {
     // Robust: Root-URL/Path immer aus Plugin-Root-Datei ableiten
     $root_url  = plugin_dir_url($plugin_file);   // .../wp-content/plugins/lsttraining-plugin/
     $root_path = plugin_dir_path($plugin_file);  // .../wp-content/plugins/lsttraining-plugin/
-	
 
     // Gate robuster machen: entweder Hook oder ?page enthält lsttraining
     $page = isset($_GET['page']) ? sanitize_text_field(wp_unslash($_GET['page'])) : '';
@@ -43,12 +41,12 @@ add_action('admin_enqueue_scripts', function ($hook) {
     if ($page === 'lsttraining_leitstellen' || $hook === 'toplevel_page_lsttraining_leitstellen') {
 
         wp_enqueue_script(
-  'lst-leitstellen-editor',
-  $root_url . 'js/leitstellen_editor.js',
-  ['jquery', 'wp-util', 'lst-openlayers', 'lst-admin-ui'],
-  '1.0.0',
-  true
-);
+            'lst-leitstellen-editor',
+            $root_url . 'js/leitstellen_editor.js',
+            ['jquery', 'wp-util', 'lst-openlayers', 'lst-admin-ui'],
+            '1.0.0',
+            true
+        );
 
         wp_enqueue_script(
             'lst-leitstellen-pois',
@@ -57,37 +55,39 @@ add_action('admin_enqueue_scripts', function ($hook) {
             '1.0.0',
             true
         );
-		
-		// Einsatzgebiet-Editor (Popup) – benötigt für „Einsatzgebiet bearbeiten“
-		wp_enqueue_script(
-		  'lsttraining-einsatzgebiet-editor',
-		  $root_url . 'js/einsatzgebiet-editor.js',
-		  ['jquery', 'lst-openlayers'],
-		  '1.0.0',
-		  true
-		);
-		
-		// Turf (für simplify + union)
-		wp_enqueue_script(
-		  'lsttraining-turf',
-		  $root_url . 'js/turf.min.js',
-		  [],
-		  '6.5.0',
-		  true
-		);
 
-		// Turf-Upload-Logik (dein einsatzgebiet_upload.js)
-		wp_enqueue_script(
-		  'lsttraining-einsatzgebiet-upload',
-		  $root_url . 'js/einsatzgebiet_upload.js',
-		  ['lsttraining-turf', 'lst-openlayers', 'lsttraining-einsatzgebiet-editor'],
-		  '1.0.0',
-		  true
-		);
+        // Einsatzgebiet-Editor (Popup) – benötigt für „Einsatzgebiet bearbeiten“
+        wp_enqueue_script(
+            'lsttraining-einsatzgebiet-editor',
+            $root_url . 'js/einsatzgebiet-editor.js',
+            ['jquery', 'lst-openlayers'],
+            '1.0.0',
+            true
+        );
+
+        // Turf (für simplify + union)
+        wp_enqueue_script(
+            'lsttraining-turf',
+            $root_url . 'js/turf.min.js',
+            [],
+            '6.5.0',
+            true
+        );
+
+        // Turf-Upload-Logik
+        wp_enqueue_script(
+            'lsttraining-einsatzgebiet-upload',
+            $root_url . 'js/einsatzgebiet_upload.js',
+            ['lsttraining-turf', 'lst-openlayers', 'lsttraining-einsatzgebiet-editor'],
+            '1.0.0',
+            true
+        );
 
         wp_localize_script('lst-leitstellen-editor', 'lstLeitstellenAjax', [
-            'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce'    => wp_create_nonce('lsttraining_leitstellen'),
+            'ajax_url'  => admin_url('admin-ajax.php'),
+            'nonce'     => wp_create_nonce('lsttraining_leitstellen'),
+            // falls du OSM-AJAX nutzt:
+            'osm_nonce' => wp_create_nonce('lsttraining_osm_layers'),
         ]);
 
         wp_enqueue_script(
@@ -281,9 +281,7 @@ if (!function_exists('lsttraining_render_benutzer_page')) {
         if (file_exists($template)) {
             include $template;
         } else {
-            echo '<div class="notice notice-error"><p>';
-            esc_html_e('Die Datei benutzer.php wurde nicht gefunden.', 'lsttraining');
-            echo '</p></div>';
+            echo '<div class="notice notice-error"><p>Die Datei benutzer.php wurde nicht gefunden.</p></div>';
         }
     }
 }

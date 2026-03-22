@@ -226,17 +226,23 @@ window.editLeitstelle = function (id, name, ort, bl, land, lat, lon) {
         poly = { type: 'FeatureCollection', features: poly };
       }
 
-      document.getElementById('geojson_edit').value = JSON.stringify(poly);
+    document.getElementById('geojson_edit').value = JSON.stringify(poly);
 
-      window.initMapWithMarker(
-        'map_edit',
-        'lst_update_lat',
-        'lst_update_lon',
-        [parseFloat(lon), parseFloat(lat)],
-        'mapEdit',
-        'dragInteractionEdit',
-        JSON.stringify(poly)
-      );
+	if (typeof window.syncWachenZuordButton === 'function') {
+	  window.syncWachenZuordButton();
+	} else if (typeof window.updateWachenZuordButtonState === 'function') {
+	  window.updateWachenZuordButtonState();
+	}
+
+	window.initMapWithMarker(
+	  'map_edit',
+	  'lst_update_lat',
+	  'lst_update_lon',
+	  [parseFloat(lon), parseFloat(lat)],
+	  'mapEdit',
+	  'dragInteractionEdit',
+	  JSON.stringify(poly)
+	);
     });
 
 };
@@ -324,6 +330,12 @@ function openLeitstellePopupForCreate() {
 
   const popup = document.getElementById('edit-leitstelle-formular');
   if (popup)  popup.style.display = 'block';
+
+	if (typeof window.syncWachenZuordButton === 'function') {
+	  window.syncWachenZuordButton();
+	} else if (typeof window.updateWachenZuordButtonState === 'function') {
+	  window.updateWachenZuordButtonState();
+	}
 }
 
 /* register click handler after DOM is ready */
@@ -354,8 +366,14 @@ function resetEditMaps() {
     mapEdit.getView().setCenter(ol.proj.fromLonLat([9.0, 51.0]));
     mapEdit.getLayers().item(1).getSource().clear();
   }
-  const poly = document.getElementById('geojson_edit');
-  if (poly) poly.value = '';
+	  const poly = document.getElementById('geojson_edit');
+	if (poly) poly.value = '';
+
+	if (typeof window.syncWachenZuordButton === 'function') {
+	  window.syncWachenZuordButton();
+	} else if (typeof window.updateWachenZuordButtonState === 'function') {
+	  window.updateWachenZuordButtonState();
+}
 }
 
 document.addEventListener('click', (ev) => {

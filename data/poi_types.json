@@ -1,5 +1,9 @@
 {
   "version": 1,
+  "source": {
+    "wiki": "https://wiki.lstsim.de/Point_of_Interest",
+    "akip_note": "https://forum.lstsim.de/thread/5162-karte-f%C3%BCr-die-poi-auswertung/?pageNo=8"
+  },
   "types": [
     {
       "tag": "AH",
@@ -74,6 +78,12 @@
       "icon": "default"
     },
     {
+      "tag": "BW",
+      "color": "#E5E350",
+      "description": "Betreutes Wohnen.",
+      "icon": "default"
+    },
+    {
       "tag": "Blut",
       "color": "#DBE550",
       "description": "Blutbank/Blutspendedienst (Abholung von Konserven).",
@@ -83,12 +93,6 @@
       "tag": "Brücke",
       "color": "#CFE550",
       "description": "Straßenbrücke (z. B. über Fluss).",
-      "icon": "default"
-    },
-    {
-      "tag": "BW",
-      "color": "#E5E350",
-      "description": "Betreutes Wohnen.",
       "icon": "default"
     },
     {
@@ -116,6 +120,12 @@
       "icon": "default"
     },
     {
+      "tag": "Flucht",
+      "color": "#91E550",
+      "description": "Flüchtlingsheim.",
+      "icon": "default"
+    },
+    {
       "tag": "Flughafen",
       "color": "#85E550",
       "description": "Größerer Verkehrsflughafen.",
@@ -131,12 +141,6 @@
       "tag": "Flugplatz",
       "color": "#6CE550",
       "description": "Landeplatz für Kleinflugzeuge.",
-      "icon": "default"
-    },
-    {
-      "tag": "Flucht",
-      "color": "#91E550",
-      "description": "Flüchtlingsheim.",
       "icon": "default"
     },
     {
@@ -170,15 +174,15 @@
       "icon": "default"
     },
     {
-      "tag": "GKH",
-      "color": "#50E589",
-      "description": "Gefängniskrankenhaus (nicht JVA).",
-      "icon": "default"
-    },
-    {
       "tag": "Grundschule",
       "color": "#50E57D",
       "description": "Grundschule/Primarstufe.",
+      "icon": "default"
+    },
+    {
+      "tag": "GKH",
+      "color": "#50E589",
+      "description": "Gefängniskrankenhaus (nicht JVA).",
       "icon": "default"
     },
     {
@@ -188,15 +192,15 @@
       "icon": "default"
     },
     {
-      "tag": "HBF",
-      "color": "#50E5AE",
-      "description": "Fernverkehrsbahnhof (ICE/EC/IC).",
-      "icon": "default"
-    },
-    {
       "tag": "Hallenbad",
       "color": "#50E5A2",
       "description": "Bad mit Dach (Hallenbad).",
+      "icon": "default"
+    },
+    {
+      "tag": "HBF",
+      "color": "#50E5AE",
+      "description": "Fernverkehrsbahnhof (ICE/EC/IC).",
       "icon": "default"
     },
     {
@@ -404,15 +408,15 @@
       "icon": "default"
     },
     {
-      "tag": "Tunnel",
-      "color": "#E5508D",
-      "description": "Straßentunnel.",
-      "icon": "default"
-    },
-    {
       "tag": "UBF",
       "color": "#E55099",
       "description": "Unterirdischer Bahnhalt (U-Bahn/unterirdische Tram; keine Regionalbahnhöfe).",
+      "icon": "default"
+    },
+    {
+      "tag": "Tunnel",
+      "color": "#E5508D",
+      "description": "Straßentunnel.",
       "icon": "default"
     },
     {
