@@ -1,8 +1,18 @@
 (function($, window, document, ol){
   'use strict';
 
-  function toLonLat3857(lon, lat){
+  var lstPoiLastView = null;
+
+  function to3857(lon, lat){
     return ol.proj.fromLonLat([Number(lon), Number(lat)]);
+  }
+
+  function from3857(coord){
+    var ll = ol.proj.toLonLat(coord);
+    return {
+      lon: ll[0],
+      lat: ll[1]
+    };
   }
 
   function readNumber(v){
@@ -11,75 +21,88 @@
     return Number.isFinite(n) ? n : null;
   }
 
-  function buildMarkerStyle(colorHex, isSelected){
-    var fillColor = (typeof colorHex === 'string' && /^#[0-9a-fA-F]{6}$/.test(colorHex)) ? colorHex : '#888888';
-    return new ol.style.Style({
-      image: new ol.style.Circle({
-        radius: isSelected ? 8 : 6,
-        fill: new ol.style.Fill({ color: fillColor }),
-        stroke: new ol.style.Stroke({ color: '#ffffff', width: isSelected ? 3 : 2 })
-      })
-    });
-  }
-
-  function normalizePoiTypes(poiTypes){
-    var out = [];
-    (poiTypes || []).forEach(function(t){
-      if (typeof t === 'string') {
-        out.push({ tag: t, color: '#888888', description: '' });
-        return;
-      }
-      if (t && typeof t === 'object') {
-        out.push({
-          tag: String(t.tag || ''),
-          color: String(t.color || '#888888'),
-          description: String(t.description || '')
-        });
-      }
-    });
-    var seen = {};
-    out = out.filter(function(x){
-      if (!x.tag) return false;
-      if (seen[x.tag]) return false;
-      seen[x.tag] = true;
-      return true;
-    });
-    out.sort(function(a,b){
-      return String(a.tag).localeCompare(String(b.tag), undefined, { numeric: true, sensitivity: 'base' });
-    });
-    return out;
-  }
-
-  function genusNormalize(v){
-    if (!v) return 'der';
-    var s = String(v).trim().toLowerCase();
-    if (s === 'f' || s === 'w' || s === 'die') return 'die';
-    if (s === 'm' || s === 'der') return 'der';
-    if (s === 'n' || s === 'das') return 'das';
-    // fallback
-    return 'der';
-  }
-
-  function parseCoord(str){
-    // erwartet "lat,lon" oder "lat lon"
-    if (!str) return null;
-    var s = String(str).trim();
-    var parts = s.split(/[,\s]+/).filter(Boolean);
-    if (parts.length < 2) return null;
-    var lat = Number(parts[0]);
-    var lon = Number(parts[1]);
-    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
-    return { lat: lat, lon: lon };
-  }
-
   function escapeHtml(s){
     return $('<div>').text(String(s || '')).html();
   }
 
-  // opts: { viewState: { center:[x,y], zoom:number, rotation?:number } }
-  function openLeitstellePoisEditor(leitstelleId, opts){
-    opts = opts || {};
-    var passedViewState = opts.viewState || null;
+  function genusNormalize(v){
+    var s = String(v || 'der').trim().toLowerCase();
+    if (s === 'die' || s === 'f' || s === 'w') return 'die';
+    if (s === 'das' || s === 'n') return 'das';
+    return 'der';
+  }
+
+  function parseCoord(str){
+    if (!str) return null;
+
+    var parts = String(str).trim().split(/[,\s]+/).filter(Boolean);
+    if (parts.length < 2) return null;
+
+    var lat = Number(parts[0]);
+    var lon = Number(parts[1]);
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+
+    return { lat: lat, lon: lon };
+  }
+
+  function normalizePoiTypes(poiTypes){
+    var out = [];
+
+    (poiTypes || []).forEach(function(t){
+      if (!t || !t.tag) return;
+
+      out.push({
+        tag: String(t.tag),
+        color: String(t.color || '#888888'),
+        description: String(t.description || '')
+      });
+    });
+
+    return out;
+  }
+
+  function markerStyle(color, selected){
+    return new ol.style.Style({
+      image: new ol.style.Circle({
+        radius: selected ? 8 : 6,
+        fill: new ol.style.Fill({
+          color: color || '#888888'
+        }),
+        stroke: new ol.style.Stroke({
+          color: selected ? '#111111' : '#ffffff',
+          width: selected ? 3 : 2
+        })
+      })
+    });
+  }
+
+  function popupPixelPosition(map, coordinate, $popup){
+    var px = map.getPixelFromCoordinate(coordinate);
+    if (!px) return null;
+
+    var mapEl = map.getTargetElement();
+    var mapRect = mapEl.getBoundingClientRect();
+    var popupWidth = $popup.outerWidth() || 380;
+    var popupHeight = $popup.outerHeight() || 260;
+
+    var left = px[0] + 16;
+    var top = px[1] - 10;
+
+    if (left + popupWidth > mapRect.width - 12) {
+      left = px[0] - popupWidth - 16;
+    }
+    if (left < 12) left = 12;
+
+    if (top + popupHeight > mapRect.height - 12) {
+      top = mapRect.height - popupHeight - 12;
+    }
+    if (top < 12) top = 12;
+
+    return { left: left, top: top };
+  }
+
+  function openLeitstellePoisEditor(leitstelleId){
     $.getJSON(window.lstLeitstellenAjax.ajax_url, {
       action: 'get_leitstelle_pois',
       leitstelle_id: leitstelleId,
@@ -87,431 +110,386 @@
     })
     .done(function(resp){
       if (!resp || !resp.success) {
-        var msg = resp && resp.data && resp.data.message ? resp.data.message : (resp && resp.data ? resp.data : 'Unbekannter Fehler');
-        alert('Fehler beim Laden: ' + msg);
+        alert('Fehler beim Laden der POIs.');
         return;
       }
 
-      var data = resp.data;
+      var data = resp.data || {};
+      var poiTypes = normalizePoiTypes(data.poi_types || []);
+      var poiTypeMap = {};
+
+      poiTypes.forEach(function(t){
+        poiTypeMap[t.tag] = t;
+      });
+
       var tpl = wp.template('leitstellen-pois-editor');
       var $modal = $('#leitstellen-pois-modal');
 
       $modal.find('.modal-body').html(tpl({
-        leitstelle_id: data.leitstelle_id,
-        leitstelle_lat: data.leitstelle_lat,
-        leitstelle_lon: data.leitstelle_lon,
-        poi_types: data.poi_types || [],
+        poi_types: poiTypes,
         pois: data.pois || []
       }));
 
-      // Elemente nach neuem Template/CSS
-      var $listOverlay = $modal.find('#lst-poi-list');
-      var $editorOverlay = $modal.find('#lst-poi-editor');
-      var $table = $modal.find('#leitstellen-pois-table');
-      var $filter = $modal.find('#leitstellen-pois-filter');
+      $modal.removeClass('hidden');
 
-      var $btnToggleList = $modal.find('#lst-poi-toggle-list');
-      var $btnCloseList = $modal.find('#lst-poi-close-list');
-      var $btnOpenEditor = $modal.find('#lst-poi-open-editor');
-      var $btnEditorClose = $modal.find('#lst-poi-editor-close');
+      var $mapEl = $modal.find('#leitstellen-pois-map');
+      var $legend = $modal.find('#lst-poi-legend-overlay');
+      var $editPopup = $modal.find('#lst-poi-edit-popup');
+      var $createPopup = $modal.find('#lst-poi-create-popup');
+      var $importModal = $modal.find('#lst-poi-import-modal');
 
-      var $btnNew = $modal.find('#leitstellen-pois-new');
-      var $btnDelete = $modal.find('#leitstellen-pois-delete');
-      var $btnCancel = $modal.find('#leitstellen-pois-cancel');
+      var $editId = $modal.find('#lst-poi-edit-id');
+      var $editType = $modal.find('#lst-poi-edit-type');
+      var $editTypeDesc = $modal.find('#lst-poi-edit-type-desc');
+      var $editName = $modal.find('#lst-poi-edit-name');
+      var $editComment = $modal.find('#lst-poi-edit-comment');
+      var $editGenus = $modal.find('#lst-poi-edit-genus');
+      var $editLat = $modal.find('#lst-poi-edit-lat');
+      var $editLon = $modal.find('#lst-poi-edit-lon');
+      var $editForm = $modal.find('#lst-poi-edit-form');
 
-      // Import UI
-      var $importPanel = $modal.find('#lst-poi-import-panel');
-      var $btnImport = $modal.find('#lst-poi-import');
-      var $btnImportParse = $modal.find('#lst-poi-import-parse');
-      var $btnImportRun = $modal.find('#lst-poi-import-run');
-      var $btnImportClose = $modal.find('#lst-poi-import-close');
+      var $createType = $modal.find('#lst-poi-create-type');
+      var $createTypeDesc = $modal.find('#lst-poi-create-type-desc');
+      var $createName = $modal.find('#lst-poi-create-name');
+      var $createComment = $modal.find('#lst-poi-create-comment');
+      var $createGenus = $modal.find('#lst-poi-create-genus');
+      var $createLat = $modal.find('#lst-poi-create-lat');
+      var $createLon = $modal.find('#lst-poi-create-lon');
+      var $createForm = $modal.find('#lst-poi-create-form');
+
       var $importText = $modal.find('#lst-poi-import-text');
       var $importPreview = $modal.find('#lst-poi-import-preview');
+      var $importRun = $modal.find('#lst-poi-import-run');
 
-      var $form = $modal.find('#leitstellen-pois-form');
-      var $id = $modal.find('#poi_id');
-      var $type = $modal.find('#poi_type');
-      var $typeDesc = $modal.find('#poi_type_desc');
-      var $name = $modal.find('#poi_name');
-      var $comment = $modal.find('#poi_comment');
-      var $genus = $modal.find('#poi_genus');
-      var $lat = $modal.find('#poi_lat');
-      var $lon = $modal.find('#poi_lon');
+      var importRows = [];
+      var selectedPoiId = null;
+      var editPreviewFeature = null;
 
-      var selectedId = null;
-
-      var poiTypes = normalizePoiTypes(data.poi_types || []);
-      var typeMeta = {};
-      poiTypes.forEach(function(t){
-        typeMeta[t.tag] = { color: t.color, description: t.description };
-      });
-
-      function updateTypeDescription(){
-        var tag = $type.val();
-        var meta = typeMeta[tag] || {};
-        var html = '';
-        if (meta.color) {
-          html += '<span class="lst-poi-color-dot" style="background:' + meta.color + ';"></span>';
-        }
-        if (meta.description) {
-          html += escapeHtml(meta.description);
-        }
-        $typeDesc.html(html);
+      function storeCurrentView(){
+        if (!map) return;
+        lstPoiLastView = {
+          center: map.getView().getCenter(),
+          zoom: map.getView().getZoom()
+        };
       }
 
-      function openList(open){
-        if (open) $listOverlay.addClass('is-open');
-        else $listOverlay.removeClass('is-open');
-      }
+      function renderLegend(){
+        var html = '<div class="lst-poi-legend-list">';
 
-      function openEditor(open){
-        if (open) $editorOverlay.addClass('is-open');
-        else $editorOverlay.removeClass('is-open');
-      }
-      // Backward-compat alias
-      function setEditorOpen(open){
-        openEditor(!!open);
-      }
-
-
-      function highlightRow(idStr){
-        $table.find('tbody tr').removeClass('is-selected');
-        if (idStr) {
-          $table.find('tbody tr.poi-row[data-id="' + idStr + '"]').addClass('is-selected');
-        }
-      }
-
-      function applyFilter(term){
-        term = (term || '').toLowerCase();
-        $table.find('tbody tr.poi-row').each(function(){
-          var $tr = $(this);
-          var txt = $tr.text().toLowerCase();
-          $tr.toggle(txt.indexOf(term) !== -1);
+        poiTypes.forEach(function(t){
+          html += '<div class="lst-poi-legend-item">';
+          html +=   '<span class="lst-poi-legend-swatch" style="background:' + escapeHtml(t.color) + ';"></span>';
+          html +=   '<div>';
+          html +=     '<div class="lst-poi-legend-tag">' + escapeHtml(t.tag) + '</div>';
+          html +=     '<div class="lst-poi-legend-desc">' + escapeHtml(t.description) + '</div>';
+          html +=   '</div>';
+          html += '</div>';
         });
+
+        html += '</div>';
+        $legend.html(html);
       }
 
-      $filter.off('input').on('input', function(){
-        applyFilter(this.value);
-      });
+      function hideAllPopups(){
+        $editPopup.addClass('hidden');
+        $createPopup.addClass('hidden');
+      }
 
-      function setForm(p){
-        if (!p) {
-          selectedId = null;
-          $id.val('');
-          $name.val('');
-          $comment.val('');
-          $genus.val('der');
-          $btnDelete.prop('disabled', true);
-          updateTypeDescription();
+      function updateTypeDesc($select, $target){
+        var type = String($select.val() || '');
+        var meta = poiTypeMap[type];
+
+        if (!meta) {
+          $target.text('');
           return;
         }
-        selectedId = String(p.id);
-        $id.val(p.id);
-        if (p.poi_type) $type.val(p.poi_type);
-        updateTypeDescription();
-        $genus.val(genusNormalize(p.genus || 'der'));
-        $name.val(p.name || '');
-        $comment.val(p.comment || '');
-        $lat.val(p.latitude);
-        $lon.val(p.longitude);
-        $btnDelete.prop('disabled', false);
+
+        $target.html(
+          '<span style="display:inline-block;width:10px;height:10px;border-radius:999px;background:' +
+          escapeHtml(meta.color) +
+          ';margin-right:6px;"></span><strong>' +
+          escapeHtml(meta.tag) +
+          '</strong> ' +
+          escapeHtml(meta.description || '')
+        );
       }
 
-      $type.off('change').on('change', function(){
-        updateTypeDescription();
-        renderFeatures();
+      function findPoiById(id){
+        return (data.pois || []).find(function(p){
+          return String(p.id) === String(id);
+        }) || null;
+      }
+
+      function getPoiColor(type){
+        var meta = poiTypeMap[String(type || '')];
+        return meta ? meta.color : '#888888';
+      }
+
+      var poiSource = new ol.source.Vector();
+      var poiLayer = new ol.layer.Vector({
+        source: poiSource
       });
 
-      // Map
-      var mapTarget = $modal.find('#leitstellen-pois-map')[0];
-      var poiSource = new ol.source.Vector();
-      var poiLayer = new ol.layer.Vector({ source: poiSource });
-
-      // Einsatzgebiet (nur Umriss, blau)
       var einsatzgebietSource = new ol.source.Vector();
       var einsatzgebietLayer = new ol.layer.Vector({
         source: einsatzgebietSource,
         style: new ol.style.Style({
-          stroke: new ol.style.Stroke({ color: '#007cba', width: 3 })
+          stroke: new ol.style.Stroke({
+            color: '#007cba',
+            width: 3
+          })
         })
       });
 
-      var base = new ol.layer.Tile({ source: new ol.source.OSM() });
-      // Initial view
-      var viewCenter;
-      var viewZoom = 11;
-      var viewRotation = 0;
-      if (passedViewState && Array.isArray(passedViewState.center) && passedViewState.center.length === 2) {
-        viewCenter = passedViewState.center;
-        if (typeof passedViewState.zoom === 'number') viewZoom = passedViewState.zoom;
-        if (typeof passedViewState.rotation === 'number') viewRotation = passedViewState.rotation;
-      } else if (data.leitstelle_lon !== null && data.leitstelle_lat !== null) {
-        viewCenter = toLonLat3857(data.leitstelle_lon, data.leitstelle_lat);
-      } else if ((data.pois || []).length) {
-        viewCenter = toLonLat3857(data.pois[0].longitude, data.pois[0].latitude);
-      } else {
-        viewCenter = toLonLat3857(9.0, 51.0);
+      var baseLayer = new ol.layer.Tile({
+        source: new ol.source.OSM()
+      });
+
+      var initialCenter = to3857(
+        data.leitstelle_lon || 9.0,
+        data.leitstelle_lat || 51.0
+      );
+
+      var view = new ol.View({
+        center: initialCenter,
+        zoom: 11
+      });
+
+      if (lstPoiLastView && lstPoiLastView.center) {
+        view.setCenter(lstPoiLastView.center);
+        view.setZoom(lstPoiLastView.zoom || 11);
       }
 
       var map = new ol.Map({
-        target: mapTarget,
-        layers: [base, einsatzgebietLayer, poiLayer],
-        view: new ol.View({ center: viewCenter, zoom: viewZoom, rotation: viewRotation })
+        target: $mapEl[0],
+        layers: [baseLayer, einsatzgebietLayer, poiLayer],
+        view: view
       });
 
-      function getCurrentViewState(){
-        var v = map.getView();
-        var c = v.getCenter();
-        return {
-          center: (c && c.slice) ? c.slice() : c,
-          zoom: v.getZoom(),
-          rotation: v.getRotation()
-        };
-      }
-
-      // Einsatzgebiet zeichnen (GeoJSON aus leitstellen.geojson)
-      (function(){
-        var gj = (data && data.einsatzgebiet_geojson) ? String(data.einsatzgebiet_geojson).trim() : '';
-        if (!gj) return;
+      if (data.einsatzgebiet_geojson) {
         try {
           var fmt = new ol.format.GeoJSON();
-          var feats = fmt.readFeatures(gj, { dataProjection: 'EPSG:4326', featureProjection: 'EPSG:3857' });
-          if (feats && feats.length) {
-            einsatzgebietSource.clear();
-            einsatzgebietSource.addFeatures(feats);
+          var features = fmt.readFeatures(data.einsatzgebiet_geojson, {
+            dataProjection: 'EPSG:4326',
+            featureProjection: 'EPSG:3857'
+          });
 
-            // Wenn keine POIs vorhanden sind, auf Einsatzgebiet zoomen.
-            // Falls wir einen View-State mitgegeben haben (z.B. nach Save/Delete),
-            // bleibt der Ausschnitt unverändert.
-            if (!passedViewState && !(data.pois || []).length) {
-              var ext = einsatzgebietSource.getExtent();
-              if (ext && ext[0] !== Infinity) {
-                map.getView().fit(ext, { padding: [40, 40, 40, 40], maxZoom: 14, duration: 150 });
-              }
+          if (features.length) {
+            einsatzgebietSource.addFeatures(features);
+
+            if (!lstPoiLastView) {
+              map.getView().fit(einsatzgebietSource.getExtent(), {
+                padding: [40, 40, 40, 40],
+                maxZoom: 13,
+                duration: 150
+              });
             }
           }
-        } catch(e) {
-          // ignore parse errors, keep POI editor usable
+        } catch (e) {
         }
-      })();
+      }
 
-
-      function renderFeatures(){
+      function renderPois(){
         poiSource.clear();
+
         (data.pois || []).forEach(function(p){
-          var meta = typeMeta[p.poi_type] || {};
-          var f = new ol.Feature({
-            geometry: new ol.geom.Point(toLonLat3857(p.longitude, p.latitude)),
-            poi_id: String(p.id)
+          var feat = new ol.Feature({
+            geometry: new ol.geom.Point(to3857(p.longitude, p.latitude)),
+            poi_id: String(p.id),
+            is_edit_preview: false
           });
-          f.setStyle(buildMarkerStyle(meta.color, selectedId && String(p.id) === selectedId));
-          poiSource.addFeature(f);
+
+          feat.setStyle(
+            markerStyle(getPoiColor(p.poi_type), String(p.id) === String(selectedPoiId))
+          );
+
+          poiSource.addFeature(feat);
+        });
+
+        if (editPreviewFeature) {
+          poiSource.addFeature(editPreviewFeature);
+        }
+      }
+
+      function refreshPoiStyles(){
+        poiSource.getFeatures().forEach(function(feat){
+          if (feat.get('is_edit_preview')) return;
+
+          var poiId = feat.get('poi_id');
+          var poi = findPoiById(poiId);
+          if (!poi) return;
+
+          feat.setStyle(
+            markerStyle(getPoiColor(poi.poi_type), String(poi.id) === String(selectedPoiId))
+          );
+        });
+
+        if (editPreviewFeature) {
+          editPreviewFeature.setStyle(
+            markerStyle(getPoiColor($editType.val()), true)
+          );
+        }
+      }
+
+      function forceMapResize(){
+        requestAnimationFrame(function(){
+          requestAnimationFrame(function(){
+            map.updateSize();
+            map.renderSync();
+          });
         });
       }
 
-      function selectById(idStr){
-        var p = (data.pois || []).find(function(x){ return String(x.id) === String(idStr); });
-        if (!p) return;
-        setForm(p);
-        setEditorOpen(true);
-        highlightRow(String(p.id));
-        renderFeatures();
-        openEditor(true);
-        map.getView().animate({ center: toLonLat3857(p.longitude, p.latitude), duration: 150 });
+      function removeEditPreviewFeature(){
+        if (editPreviewFeature && poiSource.hasFeature(editPreviewFeature)) {
+          poiSource.removeFeature(editPreviewFeature);
+        }
+        editPreviewFeature = null;
       }
 
-      renderFeatures();
-      updateTypeDescription();
+      function ensureEditPreviewFeature(){
+        var id = String($editId.val() || '');
+        var lat = readNumber($editLat.val());
+        var lon = readNumber($editLon.val());
 
-      // Klick Tabelle
-      $table.on('click', 'tbody tr.poi-row', function(){
-        selectById($(this).data('id'));
-      });
+        if (!id || lat === null || lon === null) return null;
 
-      // Klick Marker
-      var select = new ol.interaction.Select({ layers: [poiLayer], hitTolerance: 6 });
-      map.addInteraction(select);
-      select.on('select', function(evt){
-        var feat = (evt.selected || [])[0];
-        if (feat) selectById(feat.get('poi_id'));
-        select.getFeatures().clear();
-      });
+        var coord = to3857(lon, lat);
 
-      // Map-Klick: Koordinaten setzen
-      map.on('singleclick', function(e){
-        var ll = ol.proj.toLonLat(e.coordinate);
-        $lon.val(ll[0].toFixed(6));
-        $lat.val(ll[1].toFixed(6));
-        // wenn Editor offen und "neu", bleibt das sinnvoll
-      });
+        if (!editPreviewFeature) {
+          editPreviewFeature = new ol.Feature({
+            geometry: new ol.geom.Point(coord),
+            poi_id: id,
+            is_edit_preview: true
+          });
+          editPreviewFeature.setStyle(markerStyle(getPoiColor($editType.val()), true));
+          poiSource.addFeature(editPreviewFeature);
+        } else {
+          editPreviewFeature.set('poi_id', id);
+          editPreviewFeature.getGeometry().setCoordinates(coord);
+          editPreviewFeature.setStyle(markerStyle(getPoiColor($editType.val()), true));
 
-      // Buttons: Liste / Editor
-      $btnToggleList.off('click').on('click', function(){
-        $listOverlay.toggleClass('is-open');
-      });
-      $btnCloseList.off('click').on('click', function(){
-        openList(false);
-      });
+          if (!poiSource.hasFeature(editPreviewFeature)) {
+            poiSource.addFeature(editPreviewFeature);
+          }
+        }
 
-      $btnOpenEditor.off('click').on('click', function(){
-        openEditor(true);
-      });
-      $btnEditorClose.off('click').on('click', function(){
-        openEditor(false);
-      });
+        return editPreviewFeature;
+      }
 
-      // Neu
-      $btnNew.off('click').on('click', function(){
-        setEditorOpen(true);
-        setForm(null);
-        highlightRow(null);
-        selectedId = null;
-        renderFeatures();
+      function updateEditPreviewMarker(centerMap){
+        var id = String($editId.val() || '');
+        var lat = readNumber($editLat.val());
+        var lon = readNumber($editLon.val());
 
-        openEditor(true);
-
-        var ll = ol.proj.toLonLat(map.getView().getCenter());
-        $lon.val(ll[0].toFixed(6));
-        $lat.val(ll[1].toFixed(6));
-      });
-
-      // Speichern
-      $form.off('submit').on('submit', function(e){
-        e.preventDefault();
-
-        var payload = {
-          nonce: window.lstLeitstellenAjax.nonce,
-          leitstelle_id: leitstelleId,
-          id: $id.val(),
-          poi_type: $type.val(),
-          name: $name.val(),
-          comment: $comment.val(),
-          genus: $genus.val(),
-          latitude: readNumber($lat.val()),
-          longitude: readNumber($lon.val())
-        };
-
-        if (!payload.poi_type || payload.latitude === null || payload.longitude === null) {
-          alert('Typ und Koordinaten sind Pflicht.');
+        if (!id || lat === null || lon === null) {
+          removeEditPreviewFeature();
+          renderPois();
           return;
         }
 
-        var isUpdate = payload.id && String(payload.id) !== '';
-        payload.action = isUpdate ? 'update_leitstelle_poi' : 'create_leitstelle_poi';
+        selectedPoiId = id;
 
-        $.ajax({
-          url: window.lstLeitstellenAjax.ajax_url,
-          method: 'POST',
-          dataType: 'json',
-          data: payload
-        })
-        .done(function(r){
-          if (!r || !r.success) {
-            var msg = r && r.data && r.data.message ? r.data.message : (r && r.data ? r.data : 'Unbekannter Fehler');
-            alert('Fehler beim Speichern: ' + msg);
-            return;
+        var coord = to3857(lon, lat);
+
+        ensureEditPreviewFeature();
+
+        poiSource.getFeatures().forEach(function(feat){
+          if (feat.get('is_edit_preview')) return;
+
+          if (String(feat.get('poi_id')) === id) {
+            feat.getGeometry().setCoordinates(coord);
+            feat.setStyle(markerStyle(getPoiColor($editType.val()), true));
           }
-          openLeitstellePoisEditor(leitstelleId, { viewState: getCurrentViewState() });
-        })
-        .fail(function(_, status){
-          alert('AJAX-Fehler: ' + status);
         });
-      });
 
-      // Löschen
-      $btnDelete.off('click').on('click', function(){
-        var idv = $id.val();
-        if (!idv) return;
-        if (!window.confirm('POI wirklich löschen?')) return;
+        refreshPoiStyles();
 
-        $.ajax({
-          url: window.lstLeitstellenAjax.ajax_url,
-          method: 'POST',
-          dataType: 'json',
-          data: { action: 'delete_leitstelle_poi', nonce: window.lstLeitstellenAjax.nonce, leitstelle_id: leitstelleId, id: idv }
-        })
-        .done(function(r){
-          if (!r || !r.success) {
-            var msg = r && r.data && r.data.message ? r.data.message : (r && r.data ? r.data : 'Unbekannter Fehler');
-            alert('Fehler beim Löschen: ' + msg);
-            return;
-          }
-          openLeitstellePoisEditor(leitstelleId, { viewState: getCurrentViewState() });
-        })
-        .fail(function(_, status){
-          alert('AJAX-Fehler: ' + status);
-        });
-      });
-
-      // Modal schließen
-      function closeModal(){
-        $modal.addClass('hidden');
-      }
-      $btnCancel.off('click').on('click', closeModal);
-      $modal.find('.modal-close').off('click').on('click', closeModal);
-      $modal.find('.modal-overlay').off('click').on('click', closeModal);
-
-      // Standard: Liste offen, Editor zu
-      openList(true);
-      openEditor(false);
-
-      // -----------------------------
-      // Import: Paste -> Preview -> Import
-      // -----------------------------
-      var importRows = [];
-
-      function renderImportPreview(rows){
-        if (!rows.length) {
-          $importPreview.html('<p class="description">Keine gültigen Zeilen erkannt.</p>');
-          $btnImportRun.prop('disabled', true);
-          return;
+        if (centerMap !== false) {
+          map.getView().animate({
+            center: coord,
+            duration: 150
+          });
         }
-
-        var html = '';
-        html += '<table class="widefat fixed striped">';
-        html += '<thead><tr>';
-        html += '<th style="width:70px;">Typ</th>';
-        html += '<th style="width:70px;">Genus</th>';
-        html += '<th>Name</th>';
-        html += '<th style="width:160px;">Koordinaten</th>';
-        html += '<th>Kommentar</th>';
-        html += '<th style="width:80px;">Aktion</th>';
-        html += '</tr></thead><tbody>';
-
-        rows.forEach(function(r, idx){
-          html += '<tr data-idx="' + idx + '">';
-          html += '<td><input type="text" class="imp-type" value="' + escapeHtml(r.poi_type) + '" style="width:100%;"></td>';
-          html += '<td><select class="imp-genus" style="width:100%;">'
-               + '<option value="der"' + (r.genus==='der'?' selected':'') + '>der</option>'
-               + '<option value="die"' + (r.genus==='die'?' selected':'') + '>die</option>'
-               + '<option value="das"' + (r.genus==='das'?' selected':'') + '>das</option>'
-               + '</select></td>';
-          html += '<td><input type="text" class="imp-name" value="' + escapeHtml(r.name) + '" style="width:100%;"></td>';
-          html += '<td>'
-               + '<input type="number" step="0.000001" class="imp-lat" value="' + escapeHtml(r.latitude) + '" style="width:49%;"> '
-               + '<input type="number" step="0.000001" class="imp-lon" value="' + escapeHtml(r.longitude) + '" style="width:49%;">'
-               + '</td>';
-          html += '<td><input type="text" class="imp-comment" value="' + escapeHtml(r.comment||'') + '" style="width:100%;"></td>';
-          html += '<td><button type="button" class="button imp-del">Entfernen</button></td>';
-          html += '</tr>';
-        });
-
-        html += '</tbody></table>';
-        $importPreview.html(html);
-        $btnImportRun.prop('disabled', false);
       }
 
-      function parseImportText(raw){
-        var lines = String(raw || '').split(/\r?\n/).map(function(l){ return l.trim(); }).filter(Boolean);
+      function positionPopupAtCoordinate($popup, coordinate){
+        var pos = popupPixelPosition(map, coordinate, $popup);
+        if (!pos) return;
+
+        $popup.css({
+          left: pos.left + 'px',
+          top: pos.top + 'px'
+        });
+      }
+
+      function syncEditLatLonFromCoordinate(coordinate, centerMap){
+        var ll = from3857(coordinate);
+
+        $editLat.val(ll.lat.toFixed(6));
+        $editLon.val(ll.lon.toFixed(6));
+
+        updateEditPreviewMarker(centerMap);
+        positionPopupAtCoordinate($editPopup, coordinate);
+      }
+
+      function showEditPopup(poi, coordinate){
+        hideAllPopups();
+
+        selectedPoiId = String(poi.id || '');
+
+        $editId.val(poi.id || '');
+        $editType.val(poi.poi_type || '');
+        $editName.val(poi.name || '');
+        $editComment.val(poi.comment || '');
+        $editGenus.val(genusNormalize(poi.genus || 'der'));
+        $editLat.val(poi.latitude);
+        $editLon.val(poi.longitude);
+
+        updateTypeDesc($editType, $editTypeDesc);
+
+        $editPopup.removeClass('hidden');
+        positionPopupAtCoordinate($editPopup, coordinate);
+
+        updateEditPreviewMarker(false);
+
+        translate.setActive(true);
+      }
+
+      function showCreatePopup(coordinate){
+        hideAllPopups();
+
+        selectedPoiId = null;
+        removeEditPreviewFeature();
+        refreshPoiStyles();
+        translate.setActive(false);
+
+        var lonLat = ol.proj.toLonLat(coordinate);
+
+        $createType.val('');
+        $createName.val('');
+        $createComment.val('');
+        $createGenus.val('der');
+        $createLat.val(lonLat[1].toFixed(6));
+        $createLon.val(lonLat[0].toFixed(6));
+        $createTypeDesc.text('');
+
+        $createPopup.removeClass('hidden');
+        positionPopupAtCoordinate($createPopup, coordinate);
+      }
+
+      function parseImportRows(raw){
+        var lines = String(raw || '')
+          .split(/\r?\n/)
+          .map(function(l){ return l.trim(); })
+          .filter(Boolean);
+
         var rows = [];
 
         lines.forEach(function(line){
-          // Tabs oder viele Spaces
           var cols = line.split(/\t+/);
           if (cols.length < 3) cols = line.split(/\s{2,}/);
 
-          // Erwartung: [ID?] [Koordinaten] [Genus] [Name] [Tags?] [Kommentar?]
-          // ID optional: wenn erste Spalte nur Zahl und zweite wie coords aussieht, dann skip ID
           var c0 = cols[0] || '';
           var c1 = cols[1] || '';
           var hasId = /^\d+$/.test(c0) && parseCoord(c1);
@@ -520,15 +498,12 @@
           var coord = parseCoord(cols[idx] || '');
           if (!coord) return;
 
-          var genus = genusNormalize(cols[idx+1] || '');
-          var name = String(cols[idx+2] || '').trim();
+          var genus = genusNormalize(cols[idx + 1] || '');
+          var name = String(cols[idx + 2] || '').trim();
           if (!name) return;
 
-          var tags = String(cols[idx+3] || '').trim();      // optional
-          var comment = String(cols[idx+4] || '').trim();   // optional
-
-          // Heuristik: poi_type aus Tags-Spalte (wenn vorhanden), sonst leer -> Nutzer muss füllen
-          // Du kannst hier auch Default setzen, z.B. "Sonstiges"
+          var tags = String(cols[idx + 3] || '').trim();
+          var comment = String(cols[idx + 4] || '').trim();
           var poi_type = tags ? tags.split(',')[0].trim() : '';
 
           rows.push({
@@ -544,69 +519,271 @@
         return rows;
       }
 
-      $btnImport.off('click').on('click', function(){
-        $importPanel.removeClass('hidden');
-        $importPreview.empty();
-        $btnImportRun.prop('disabled', true);
-      });
-
-      $btnImportClose.off('click').on('click', function(){
-        $importPanel.addClass('hidden');
-      });
-
-      $btnImportParse.off('click').on('click', function(){
-        importRows = parseImportText($importText.val());
-        renderImportPreview(importRows);
-      });
-
-      // Preview: Entfernen + Live-Edit in importRows spiegeln
-      $importPreview.off('click').on('click', '.imp-del', function(){
-        var $tr = $(this).closest('tr');
-        var idx = Number($tr.data('idx'));
-        if (!Number.isFinite(idx)) return;
-        importRows.splice(idx, 1);
-        renderImportPreview(importRows);
-      });
-
-      function syncImportRowsFromDom(){
-        var rows = [];
-        $importPreview.find('tbody tr').each(function(){
-          var $tr = $(this);
-          rows.push({
-            poi_type: String($tr.find('.imp-type').val() || '').trim(),
-            genus: String($tr.find('.imp-genus').val() || 'der'),
-            name: String($tr.find('.imp-name').val() || '').trim(),
-            latitude: readNumber($tr.find('.imp-lat').val()),
-            longitude: readNumber($tr.find('.imp-lon').val()),
-            comment: String($tr.find('.imp-comment').val() || '').trim()
-          });
-        });
-        importRows = rows;
-      }
-
-      $btnImportRun.off('click').on('click', function(){
-        syncImportRowsFromDom();
-
-        // Minimalvalidierung
-        var invalid = importRows.filter(function(r){
-          return !r.name || !r.poi_type || r.latitude===null || r.longitude===null;
-        });
-        if (invalid.length) {
-          alert('Im Preview fehlen bei mindestens einer Zeile Typ/Name/Koordinaten.');
+      function renderImportPreview(rows){
+        if (!rows.length) {
+          $importPreview.html('<p class="description">Keine gültigen Zeilen erkannt.</p>');
+          $importRun.prop('disabled', true);
           return;
         }
 
-        // Sequenziell anlegen über create_leitstelle_poi (IDs werden ignoriert)
-        var i = 0;
-        $btnImportRun.prop('disabled', true).text('Import läuft…');
+        var html = '<table class="widefat fixed striped">';
+        html += '<thead><tr>';
+        html += '<th>Typ</th><th>Genus</th><th>Name</th><th>Koordinaten</th><th>Kommentar</th>';
+        html += '</tr></thead><tbody>';
 
-        function next(){
-          if (i >= importRows.length) {
-            openLeitstellePoisEditor(leitstelleId, { viewState: getCurrentViewState() });
+        rows.forEach(function(r){
+          html += '<tr>';
+          html += '<td>' + escapeHtml(r.poi_type) + '</td>';
+          html += '<td>' + escapeHtml(r.genus) + '</td>';
+          html += '<td>' + escapeHtml(r.name) + '</td>';
+          html += '<td>' + escapeHtml(String(r.latitude) + ', ' + String(r.longitude)) + '</td>';
+          html += '<td>' + escapeHtml(r.comment || '') + '</td>';
+          html += '</tr>';
+        });
+
+        html += '</tbody></table>';
+
+        $importPreview.html(html);
+        $importRun.prop('disabled', false);
+      }
+
+      var translate = new ol.interaction.Translate({
+        layers: [poiLayer],
+        hitTolerance: 10
+      });
+
+      translate.setActive(false);
+      map.addInteraction(translate);
+
+      translate.on('translatestart', function(evt){
+        var feat = evt.features.item(0);
+        if (!feat) return;
+
+        if (!feat.get('is_edit_preview')) {
+          evt.features.clear();
+        }
+      });
+
+      translate.on('translateend', function(evt){
+        var feat = evt.features.item(0);
+        if (!feat) return;
+        if (!feat.get('is_edit_preview')) return;
+
+        var coord = feat.getGeometry().getCoordinates();
+        syncEditLatLonFromCoordinate(coord, false);
+      });
+
+      renderLegend();
+      renderPois();
+      forceMapResize();
+
+      if (window.ResizeObserver) {
+        var ro = new ResizeObserver(function(){
+          forceMapResize();
+        });
+        ro.observe($mapEl[0]);
+      }
+
+      map.on('singleclick', function(evt){
+        var hit = false;
+
+        map.forEachFeatureAtPixel(evt.pixel, function(feature){
+          if (feature.get('is_edit_preview')) {
+            var previewPoi = findPoiById(feature.get('poi_id'));
+            if (previewPoi) {
+              hit = true;
+              showEditPopup(previewPoi, evt.coordinate);
+              return true;
+            }
+            return false;
+          }
+
+          hit = true;
+          var poi = findPoiById(feature.get('poi_id'));
+          if (poi) {
+            showEditPopup(poi, evt.coordinate);
+          }
+          return true;
+        });
+
+        if (!hit) {
+          showCreatePopup(evt.coordinate);
+        }
+      });
+
+      $modal.find('#lst-poi-close, .modal-close, .modal-overlay').off('click').on('click', function(){
+        removeEditPreviewFeature();
+        selectedPoiId = null;
+        translate.setActive(false);
+        $modal.addClass('hidden');
+      });
+
+      $modal.find('#lst-poi-toggle-legend').off('click').on('click', function(){
+        $legend.toggleClass('hidden');
+      });
+
+      $modal.find('#lst-poi-edit-popup-close').off('click').on('click', function(){
+        removeEditPreviewFeature();
+        selectedPoiId = null;
+        refreshPoiStyles();
+        translate.setActive(false);
+        $editPopup.addClass('hidden');
+      });
+
+      $modal.find('#lst-poi-create-popup-close').off('click').on('click', function(){
+        $createPopup.addClass('hidden');
+      });
+
+      $editType.off('change.poi').on('change.poi', function(){
+        updateTypeDesc($editType, $editTypeDesc);
+        updateEditPreviewMarker(false);
+      });
+
+      $createType.off('change.poi').on('change.poi', function(){
+        updateTypeDesc($createType, $createTypeDesc);
+      });
+
+      $editLat.off('input.poi change.poi').on('input.poi change.poi', function(){
+        updateEditPreviewMarker(true);
+      });
+
+      $editLon.off('input.poi change.poi').on('input.poi change.poi', function(){
+        updateEditPreviewMarker(true);
+      });
+
+      $editForm.off('submit').on('submit', function(e){
+        e.preventDefault();
+
+        storeCurrentView();
+
+        $.ajax({
+          url: window.lstLeitstellenAjax.ajax_url,
+          method: 'POST',
+          dataType: 'json',
+          data: {
+            action: 'update_leitstelle_poi',
+            nonce: window.lstLeitstellenAjax.nonce,
+            leitstelle_id: leitstelleId,
+            id: $editId.val(),
+            poi_type: $editType.val(),
+            name: $editName.val(),
+            comment: $editComment.val(),
+            genus: genusNormalize($editGenus.val()),
+            latitude: readNumber($editLat.val()),
+            longitude: readNumber($editLon.val())
+          }
+        })
+        .done(function(r){
+          if (!r || !r.success) {
+            alert('Speichern fehlgeschlagen.');
+            return;
+
+          }
+
+          openLeitstellePoisEditor(leitstelleId);
+        })
+        .fail(function(){
+          alert('AJAX-Fehler beim Speichern.');
+        });
+      });
+
+      $modal.find('#lst-poi-delete-btn').off('click').on('click', function(){
+        var id = $editId.val();
+        if (!id) return;
+
+        if (!window.confirm('Diesen Marker wirklich löschen?')) {
+          return;
+        }
+
+        storeCurrentView();
+
+        $.ajax({
+          url: window.lstLeitstellenAjax.ajax_url,
+          method: 'POST',
+          dataType: 'json',
+          data: {
+            action: 'delete_leitstelle_poi',
+            nonce: window.lstLeitstellenAjax.nonce,
+            leitstelle_id: leitstelleId,
+            id: id
+          }
+        })
+        .done(function(r){
+          if (!r || !r.success) {
+            alert('Löschen fehlgeschlagen.');
             return;
           }
 
-          var r = importRows[i++];
+          openLeitstellePoisEditor(leitstelleId);
+        })
+        .fail(function(){
+          alert('AJAX-Fehler beim Löschen.');
+        });
+      });
+
+      $createForm.off('submit').on('submit', function(e){
+        e.preventDefault();
+
+        storeCurrentView();
+
+        $.ajax({
+          url: window.lstLeitstellenAjax.ajax_url,
+          method: 'POST',
+          dataType: 'json',
+          data: {
+            action: 'create_leitstelle_poi',
+            nonce: window.lstLeitstellenAjax.nonce,
+            leitstelle_id: leitstelleId,
+            poi_type: $createType.val(),
+            name: $createName.val(),
+            comment: $createComment.val(),
+            genus: genusNormalize($createGenus.val()),
+            latitude: readNumber($createLat.val()),
+            longitude: readNumber($createLon.val())
+          }
+        })
+        .done(function(r){
+          if (!r || !r.success) {
+            alert('Anlegen fehlgeschlagen.');
+            return;
+          }
+
+          openLeitstellePoisEditor(leitstelleId);
+        })
+        .fail(function(){
+          alert('AJAX-Fehler beim Anlegen.');
+        });
+      });
+
+      $modal.find('#lst-poi-import-open').off('click').on('click', function(){
+        $importModal.removeClass('hidden');
+      });
+
+      $modal.find('#lst-poi-import-close').off('click').on('click', function(){
+        $importModal.addClass('hidden');
+      });
+
+      $modal.find('#lst-poi-import-parse').off('click').on('click', function(){
+        importRows = parseImportRows($importText.val());
+        renderImportPreview(importRows);
+      });
+
+      $importRun.off('click').on('click', function(){
+        if (!importRows.length) return;
+
+        storeCurrentView();
+
+        var i = 0;
+        $importRun.prop('disabled', true).text('Import läuft...');
+
+        function next(){
+          if (i >= importRows.length) {
+            openLeitstellePoisEditor(leitstelleId);
+            return;
+          }
+
+          var row = importRows[i++];
+
           $.ajax({
             url: window.lstLeitstellenAjax.ajax_url,
             method: 'POST',
@@ -615,50 +792,46 @@
               action: 'create_leitstelle_poi',
               nonce: window.lstLeitstellenAjax.nonce,
               leitstelle_id: leitstelleId,
-              poi_type: r.poi_type,
-              genus: r.genus,
-              name: r.name,
-              comment: r.comment,
-              latitude: r.latitude,
-              longitude: r.longitude
+              poi_type: row.poi_type,
+              name: row.name,
+              comment: row.comment,
+              genus: row.genus,
+              latitude: row.latitude,
+              longitude: row.longitude
             }
           })
-          .done(function(res){
-            if (!res || !res.success) {
-              var msg = res && res.data && res.data.message ? res.data.message : (res && res.data ? res.data : 'Unbekannter Fehler');
-              alert('Import abgebrochen bei Zeile ' + i + ': ' + msg);
-              $btnImportRun.prop('disabled', false).text('Importieren');
+          .done(function(r){
+            if (!r || !r.success) {
+              alert('Import abgebrochen.');
+              $importRun.prop('disabled', false).text('Importieren');
               return;
             }
             next();
           })
-          .fail(function(_, status){
-            alert('AJAX-Fehler beim Import: ' + status);
-            $btnImportRun.prop('disabled', false).text('Importieren');
+          .fail(function(){
+            alert('AJAX-Fehler beim Import.');
+            $importRun.prop('disabled', false).text('Importieren');
           });
         }
 
         next();
       });
-
-      // Show modal
-      $modal.removeClass('hidden');
-      // Standard: Editor offen, Liste zu
-      try { setEditorOpen(true); setListOpen(false); hideImportPanel(); } catch(e) {}
     })
-    .fail(function(_, status){
-      alert('AJAX-Fehler: ' + status);
+    .fail(function(){
+      alert('AJAX-Fehler beim Laden.');
     });
   }
 
-  // Button in Leitstellen-Edit-Form
+
   $(document).on('click', '.open-leitstelle-pois-editor', function(e){
     e.preventDefault();
+
     var id = $('#lst_update_id').val();
     if (!id || String(id) === '0') {
       alert('Bitte zuerst speichern.');
       return;
     }
+
     openLeitstellePoisEditor(id);
   });
 

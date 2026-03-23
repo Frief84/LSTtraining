@@ -396,154 +396,151 @@ $zuo_url = admin_url( 'admin.php?page=lsttraining_zuordnung_modal'
 </div>
 
 <script type="text/html" id="tmpl-leitstellen-pois-editor">
-  <div class="leitstellen-pois-editor-wrap">
-    <p class="description">
-      POIs dieser Leitstelle verwalten. Klick in die Karte setzt Koordinaten für den Editor.
-    </p>
+  <div class="lst-poi-fullscreen">
+    <div class="lst-poi-map-shell">
+      <div id="leitstellen-pois-map"></div>
 
-    <p>
-      <label for="leitstellen-pois-filter"><strong>POIs filtern</strong></label><br>
-      <input
-        type="text"
-        id="leitstellen-pois-filter"
-        placeholder="Nach Name, Typ oder ID filtern …"
-        style="width:100%;"
-        autocomplete="off"
-      >
-    </p>
-
-    <div id="leitstellen-pois-map" style="width:100%; height:400px; margin-bottom:15px;"></div>
-
-    <div
-      id="lst-poi-list"
-      style="max-height:260px; overflow:auto; border:1px solid #ddd; padding:10px; margin-bottom:15px;"
-    >
-      <div class="lst-poi-list-head" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-        <strong>Vorhandene POIs</strong>
-        <button type="button" class="button" id="lst-poi-close-list">Schließen</button>
+      <div class="lst-poi-overlay-top-right">
+        <button type="button" class="button" id="lst-poi-toggle-legend">Legende</button>
+        <button type="button" class="button" id="lst-poi-close">Schließen</button>
       </div>
 
-      <div class="lst-poi-list-body">
-        <table class="widefat striped" id="leitstellen-pois-table">
-          <thead>
-            <tr>
-              <th style="width:70px;">ID</th>
-              <th style="width:140px;">Typ</th>
-              <th>Name</th>
-              <th style="width:100px;">Genus</th>
-              <th style="width:170px;">Koordinaten</th>
-            </tr>
-          </thead>
-          <tbody>
-            <# _.each(data.pois || [], function(p){ #>
-              <tr
-                class="poi-row"
-                data-id="{{ p.id }}"
-                data-name="{{ (p.name || '').toLowerCase() }}"
-                data-type="{{ (p.poi_type || '').toLowerCase() }}"
-              >
-                <td>{{ p.id }}</td>
-                <td>{{ p.poi_type || '' }}</td>
-                <td>{{ p.name || '' }}</td>
-                <td>{{ p.genus || 'der' }}</td>
-                <td>{{ p.latitude || '' }}, {{ p.longitude || '' }}</td>
-              </tr>
-            <# }); #>
-          </tbody>
-        </table>
-      </div>
-    </div>
+      <div id="lst-poi-legend-overlay" class="lst-poi-legend-overlay hidden"></div>
 
-    <div id="lst-poi-editor" style="border:1px solid #ddd; padding:15px; margin-bottom:15px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-        <div>
-          <strong>POI bearbeiten</strong><br>
-          <span class="description">Neu anlegen oder bestehenden POI ändern.</span>
+      <div id="lst-poi-edit-popup" class="lst-poi-popup hidden">
+        <div class="lst-poi-popup-head">
+          <strong>POI bearbeiten</strong>
+          <button type="button" class="button-link" id="lst-poi-edit-popup-close">×</button>
         </div>
-        <button type="button" class="button" id="lst-poi-editor-close">Schließen</button>
+        <div class="lst-poi-popup-body">
+          <form id="lst-poi-edit-form">
+            <input type="hidden" id="lst-poi-edit-id" value="">
+
+            <div class="lst-poi-field">
+              <label for="lst-poi-edit-type">Typ</label>
+              <select id="lst-poi-edit-type" required>
+                <option value="">Bitte wählen ...</option>
+                <# _.each(data.poi_types || [], function(t){ #>
+                  <option value="{{ t.tag }}">{{ t.tag }}</option>
+                <# }); #>
+              </select>
+              <p id="lst-poi-edit-type-desc" class="description"></p>
+            </div>
+
+            <div class="lst-poi-field">
+              <label for="lst-poi-edit-name">Name</label>
+              <input type="text" id="lst-poi-edit-name" value="">
+            </div>
+
+            <div class="lst-poi-field">
+              <label for="lst-poi-edit-comment">Kommentar</label>
+              <textarea id="lst-poi-edit-comment" rows="3"></textarea>
+            </div>
+
+            <div class="lst-poi-field">
+              <label for="lst-poi-edit-genus">Genus</label>
+              <select id="lst-poi-edit-genus">
+                <option value="der">der</option>
+                <option value="die">die</option>
+                <option value="das">das</option>
+              </select>
+            </div>
+
+            <div class="lst-poi-coords">
+              <div class="lst-poi-field">
+                <label for="lst-poi-edit-lat">Breitengrad</label>
+                <input type="number" step="0.000001" id="lst-poi-edit-lat" required>
+              </div>
+              <div class="lst-poi-field">
+                <label for="lst-poi-edit-lon">Längengrad</label>
+                <input type="number" step="0.000001" id="lst-poi-edit-lon" required>
+              </div>
+            </div>
+
+            <div class="lst-poi-popup-actions">
+              <button type="submit" class="button button-primary">Speichern</button>
+              <button type="button" class="button button-secondary" id="lst-poi-delete-btn">Löschen</button>
+            </div>
+          </form>
+        </div>
       </div>
 
-      <form id="leitstellen-pois-form">
-        <input type="hidden" id="poi_id" value="">
+      <div id="lst-poi-create-popup" class="lst-poi-popup hidden">
+        <div class="lst-poi-popup-head">
+          <strong>Neuen POI anlegen</strong>
+          <button type="button" class="button-link" id="lst-poi-create-popup-close">×</button>
+        </div>
+        <div class="lst-poi-popup-body">
+          <form id="lst-poi-create-form">
+            <div class="lst-poi-field">
+              <label for="lst-poi-create-type">Typ</label>
+              <select id="lst-poi-create-type" required>
+                <option value="">Bitte wählen ...</option>
+                <# _.each(data.poi_types || [], function(t){ #>
+                  <option value="{{ t.tag }}">{{ t.tag }}</option>
+                <# }); #>
+              </select>
+              <p id="lst-poi-create-type-desc" class="description"></p>
+            </div>
 
-        <p>
-          <label for="poi_type"><strong>Typ</strong></label><br>
-          <select id="poi_type" style="width:100%;" required>
-            <option value="">Bitte wählen …</option>
-            <# _.each(data.poi_types || [], function(t){ #>
-              <option value="{{ t.tag || t.value || t.slug || t.id }}">
-                {{ t.label || t.name || t.tag || t.value || t.slug || t.id }}
-              </option>
-            <# }); #>
-          </select>
-        </p>
+            <div class="lst-poi-field">
+              <label for="lst-poi-create-name">Name</label>
+              <input type="text" id="lst-poi-create-name" value="">
+            </div>
 
-        <p id="poi_type_desc" class="description"></p>
+            <div class="lst-poi-field">
+              <label for="lst-poi-create-comment">Kommentar</label>
+              <textarea id="lst-poi-create-comment" rows="3"></textarea>
+            </div>
 
-        <p>
-          <label for="poi_name"><strong>Name</strong></label><br>
-          <input type="text" id="poi_name" style="width:100%;" value="">
-        </p>
+            <div class="lst-poi-field">
+              <label for="lst-poi-create-genus">Genus</label>
+              <select id="lst-poi-create-genus">
+                <option value="der">der</option>
+                <option value="die">die</option>
+                <option value="das">das</option>
+              </select>
+            </div>
 
-        <p>
-          <label for="poi_comment"><strong>Kommentar</strong></label><br>
-          <textarea id="poi_comment" rows="4" style="width:100%;"></textarea>
-        </p>
+            <div class="lst-poi-coords">
+              <div class="lst-poi-field">
+                <label for="lst-poi-create-lat">Breitengrad</label>
+                <input type="number" step="0.000001" id="lst-poi-create-lat" required>
+              </div>
+              <div class="lst-poi-field">
+                <label for="lst-poi-create-lon">Längengrad</label>
+                <input type="number" step="0.000001" id="lst-poi-create-lon" required>
+              </div>
+            </div>
 
-        <p>
-          <label for="poi_genus"><strong>Genus</strong></label><br>
-          <select id="poi_genus" style="width:100%;">
-            <option value="der">der</option>
-            <option value="die">die</option>
-            <option value="das">das</option>
-          </select>
-        </p>
+            <div class="lst-poi-popup-actions">
+              <button type="submit" class="button button-primary">Anlegen</button>
+            </div>
+          </form>
+        </div>
+      </div>
 
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <p style="flex:1 1 200px;">
-            <label for="poi_lat"><strong>Breitengrad</strong></label><br>
-            <input type="number" step="0.000001" id="poi_lat" style="width:100%;" required>
-          </p>
+      <div class="lst-poi-overlay-bottom-right">
+        <button type="button" class="button button-primary" id="lst-poi-import-open">Import</button>
+      </div>
+    </div>
 
-          <p style="flex:1 1 200px;">
-            <label for="poi_lon"><strong>Längengrad</strong></label><br>
-            <input type="number" step="0.000001" id="poi_lon" style="width:100%;" required>
-          </p>
+    <div id="lst-poi-import-modal" class="lst-poi-import-modal hidden">
+      <div class="lst-poi-import-card">
+        <div class="lst-poi-import-head">
+          <strong>POIs importieren</strong>
+          <button type="button" class="button" id="lst-poi-import-close">Schließen</button>
         </div>
 
-        <p>
-          <button type="submit" class="button button-primary">Speichern</button>
-          <button type="button" class="button" id="leitstellen-pois-delete" disabled>Löschen</button>
-          <button type="button" class="button" id="leitstellen-pois-cancel">Abbrechen</button>
-        </p>
-      </form>
-    </div>
+        <textarea id="lst-poi-import-text" rows="10"></textarea>
 
-    <div id="lst-poi-import-panel" class="hidden" style="border:1px solid #ddd; padding:15px; margin-bottom:15px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-        <strong>POIs importieren</strong>
-        <button type="button" class="button" id="lst-poi-import-close">Schließen</button>
+        <div class="lst-poi-import-actions">
+          <button type="button" class="button" id="lst-poi-import-parse">Vorschau erzeugen</button>
+          <button type="button" class="button button-primary" id="lst-poi-import-run" disabled>Importieren</button>
+        </div>
+
+        <div id="lst-poi-import-preview"></div>
       </div>
-
-      <p class="description">
-        Mehrere POIs zeilenweise einfügen und vor dem Import prüfen.
-      </p>
-
-      <textarea id="lst-poi-import-text" rows="10" style="width:100%;"></textarea>
-
-      <p style="margin-top:10px;">
-        <button type="button" class="button" id="lst-poi-import-parse">Vorschau erzeugen</button>
-        <button type="button" class="button button-primary" id="lst-poi-import-run" disabled>Importieren</button>
-      </p>
-
-      <div id="lst-poi-import-preview" style="margin-top:12px;"></div>
     </div>
-
-    <p style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-      <button type="button" class="button" id="lst-poi-toggle-list">Liste</button>
-      <button type="button" class="button" id="lst-poi-open-editor">Editor</button>
-      <button type="button" class="button" id="leitstellen-pois-new">Neu</button>
-      <button type="button" class="button" id="lst-poi-import">Import</button>
-    </p>
   </div>
 </script>
