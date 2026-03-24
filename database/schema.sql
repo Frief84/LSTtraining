@@ -1,9 +1,8 @@
 /* ------------------------------------------------------------------
  * LST Training – Gesamt-Schema (extern, neutrale Tabellennamen)
- * + Einsatzsystem (Vorlagen + Regeln + Instanz-Einsätze + OSM Layer Cache)
+ * + Einsatzsystem (Vorlagen + Regeln + Instanz-Einsätze + OSM Tile System)
  *
- *
- * Stand: 2026-02-05
+ * Stand: 2026-03-24
  * ------------------------------------------------------------------ */
 
 SET NAMES utf8mb4;
@@ -34,10 +33,10 @@ CREATE TABLE IF NOT EXISTS `leitstellen_pois` (
   `id`            INT NOT NULL AUTO_INCREMENT,
   `leitstelle_id` INT NOT NULL,
 
-  `poi_type`      VARCHAR(50)  COLLATE utf8mb4_general_ci NOT NULL,
-  `name`          VARCHAR(255) COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
-  `comment`       TEXT         COLLATE utf8mb4_general_ci NULL,
-  `genus`         ENUM('der','die','das') NOT NULL DEFAULT 'der',
+  `poi_type`      VARCHAR(50)  COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name`          VARCHAR(255) COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+  `comment`       TEXT         COLLATE utf8mb4_unicode_ci NULL,
+  `genus`         ENUM('der','die','das') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'der',
 
   `latitude`      DOUBLE NOT NULL,
   `longitude`     DOUBLE NOT NULL,
@@ -52,7 +51,7 @@ CREATE TABLE IF NOT EXISTS `leitstellen_pois` (
 
   CONSTRAINT `fk_ls_pois_leitstelle`
     FOREIGN KEY (`leitstelle_id`) REFERENCES `leitstellen`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `nebenleitstellen` (
   `id`                INT NOT NULL AUTO_INCREMENT,
@@ -272,11 +271,10 @@ CREATE TABLE IF NOT EXISTS `lst_activity_log` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -------------------------------------------------------------------
--- 6) Einsatzsystem (NEU)
+-- 6) Einsatzsystem
 -- -------------------------------------------------------------------
 
-
-CREATE TABLE `einsaetze` (
+CREATE TABLE IF NOT EXISTS `einsaetze` (
   `id` INT NOT NULL AUTO_INCREMENT,
 
   `title` VARCHAR(255) NULL,
@@ -286,41 +284,31 @@ CREATE TABLE `einsaetze` (
 
   `enabled` TINYINT(1) NOT NULL DEFAULT 1,
 
-  -- Bedingungen / Filter (keine finale Wahrscheinlichkeit)
-  `wetter_mask_json` TEXT NULL,         -- z.B. ["klar","regnerisch"] oder NULL=beliebig
-  `uhrzeit_fenster`  VARCHAR(32) NULL,  -- frei: "tag","nacht","rush",...
+  `wetter_mask_json` TEXT NULL,
+  `uhrzeit_fenster`  VARCHAR(32) NULL,
 
-  -- Ort-Scope
   `scope_type` ENUM('anywhere','landscape','poi_type','fixed_point') NOT NULL DEFAULT 'anywhere',
 
-  -- Einschränkungen
-  `landscape_tags_json` TEXT NULL,      -- z.B. ["residential","forest","industrial","park"]
-  `poi_type` VARCHAR(50) NULL,          -- match zu leitstellen_pois.poi_type
+  `landscape_tags_json` TEXT NULL,
+  `poi_type` VARCHAR(50) NULL,
 
-  -- Fixpunkt (nur wenn scope_type=fixed_point)
   `fixed_latitude`  DOUBLE NULL,
   `fixed_longitude` DOUBLE NULL,
-  `fixed_radius_m`  INT NULL,           -- optional
+  `fixed_radius_m`  INT NULL,
 
-  -- Wer / Wo / Was (strukturierte Bausteine)
   `caller_who`   TEXT NOT NULL,
   `caller_where` TEXT NOT NULL,
   `caller_what`  TEXT NOT NULL,
 
-  -- optional: gerenderter Text
   `anrufertext`  TEXT NULL,
-
-  -- Startlage
   `lagemeldung`  TEXT NOT NULL,
 
-  -- optionale Meta-Felder
   `patientenzahl` INT NULL DEFAULT 0,
   `patient_anforderung` VARCHAR(255) NULL,
   `notarzt_benoetigt` TINYINT(1) NULL DEFAULT 0,
   `feuerwehr_benoetigt` TINYINT(1) NULL DEFAULT 0,
   `poi_tag` VARCHAR(50) NULL,
 
-  -- Auswahl-Engine Basisgewicht
   `weight_base` INT NOT NULL DEFAULT 100,
 
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -333,9 +321,8 @@ CREATE TABLE `einsaetze` (
   KEY `idx_einsaetze_poi_type` (`poi_type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- pro Einsatz können Leitstellen ausgeschlossen werden
-CREATE TABLE `einsatz_excluded_leitstellen` (
-  `einsatz_id`   INT NOT NULL,
+CREATE TABLE IF NOT EXISTS `einsatz_excluded_leitstellen` (
+  `einsatz_id`    INT NOT NULL,
   `leitstelle_id` INT NOT NULL,
 
   PRIMARY KEY (`einsatz_id`,`leitstelle_id`),
@@ -347,8 +334,7 @@ CREATE TABLE `einsatz_excluded_leitstellen` (
     FOREIGN KEY (`leitstelle_id`) REFERENCES `leitstellen`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Folgekommunikation pro Vorlage
-CREATE TABLE `einsatz_followups` (
+CREATE TABLE IF NOT EXISTS `einsatz_followups` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `einsatz_id` INT NOT NULL,
 
@@ -368,8 +354,7 @@ CREATE TABLE `einsatz_followups` (
     FOREIGN KEY (`einsatz_id`) REFERENCES `einsaetze`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Regelbasierte Generatoren (Definitionen, keine konkreten Einsätze)
-CREATE TABLE `einsatz_rules` (
+CREATE TABLE IF NOT EXISTS `einsatz_rules` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(255) NOT NULL,
 
@@ -392,7 +377,6 @@ CREATE TABLE `einsatz_rules` (
   `spawn_radius_min_m` INT NULL,
   `spawn_radius_max_m` INT NULL,
 
-  -- Templates als JSON (Wer/Wo/Was + Platzhalter)
   `caller_template_json` TEXT NOT NULL,
   `followups_template_json` TEXT NULL,
 
@@ -408,8 +392,7 @@ CREATE TABLE `einsatz_rules` (
   KEY `idx_rules_poi_type` (`poi_type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Konkrete Einsätze pro Spielinstanz
-CREATE TABLE `instanz_einsaetze` (
+CREATE TABLE IF NOT EXISTS `instanz_einsaetze` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 
   `instanz_id` INT NOT NULL,
@@ -451,8 +434,7 @@ CREATE TABLE `instanz_einsaetze` (
     FOREIGN KEY (`leitstelle_id`) REFERENCES `leitstellen`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Ereignisse/Kommunikation zu einem konkreten Instanz-Einsatz
-CREATE TABLE `instanz_einsatz_events` (
+CREATE TABLE IF NOT EXISTS `instanz_einsatz_events` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `instanz_einsatz_id` BIGINT UNSIGNED NOT NULL,
 
@@ -471,49 +453,50 @@ CREATE TABLE `instanz_einsatz_events` (
     FOREIGN KEY (`instanz_einsatz_id`) REFERENCES `instanz_einsaetze`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- OSM / Landschaft / Gebäude / Autobahn-Linien Cache je Leitstelle
-CREATE TABLE `leitstellen_osm_layers` (
+-- -------------------------------------------------------------------
+-- 7) OSM TILE SYSTEM
+-- -------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `leitstellen_osm_layers` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `layer_key` VARCHAR(64) NOT NULL,
-  `source` VARCHAR(64) NULL DEFAULT 'offline_tiles',
-  `source_version` VARCHAR(32) NULL DEFAULT NULL,
+  `layer_key` VARCHAR(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `source` VARCHAR(64) COLLATE utf8mb4_unicode_ci DEFAULT 'offline_tiles',
+  `source_version` VARCHAR(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
 
-  `tile_z` SMALLINT NULL DEFAULT NULL,
-  `tile_x` INT NULL DEFAULT NULL,
-  `tile_y` INT NULL DEFAULT NULL,
+  `tile_z` SMALLINT DEFAULT NULL,
+  `tile_x` INT DEFAULT NULL,
+  `tile_y` INT DEFAULT NULL,
 
-  `sha1` CHAR(40) NULL DEFAULT NULL,
-  `feature_count` INT NULL DEFAULT NULL,
-  `bytes_gz` INT NULL DEFAULT NULL,
-  `file_relpath` VARCHAR(255) NULL DEFAULT NULL,
+  `sha1` CHAR(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `feature_count` INT DEFAULT NULL,
+  `bytes_gz` INT DEFAULT NULL,
+  `file_relpath` VARCHAR(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
 
-  `last_checked_at` DATETIME NULL DEFAULT NULL,
-  `last_changed_at` DATETIME NULL DEFAULT NULL,
-  `last_check_source` VARCHAR(64) NULL DEFAULT NULL,
-  `check_status` VARCHAR(32) NULL DEFAULT NULL,
-  `check_message` TEXT NULL,
-  `etag_or_signature` VARCHAR(128) NULL DEFAULT NULL,
+  `last_checked_at` DATETIME DEFAULT NULL,
+  `last_changed_at` DATETIME DEFAULT NULL,
+  `last_check_source` VARCHAR(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `check_status` VARCHAR(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `check_message` TEXT COLLATE utf8mb4_unicode_ci,
+  `etag_or_signature` VARCHAR(128) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `is_dirty` TINYINT(1) NOT NULL DEFAULT 0,
 
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   PRIMARY KEY (`id`),
-
   UNIQUE KEY `uk_manifest_tile` (`source_version`,`layer_key`,`tile_z`,`tile_x`,`tile_y`),
+  KEY `idx_tile_xyz` (`tile_z`,`tile_x`,`tile_y`),
   KEY `idx_manifest_lookup` (`source_version`,`layer_key`,`tile_z`,`tile_x`,`tile_y`),
   KEY `idx_layer_version` (`layer_key`,`source_version`),
   KEY `idx_last_checked_at` (`last_checked_at`),
   KEY `idx_last_changed_at` (`last_changed_at`),
   KEY `idx_check_status` (`check_status`),
   KEY `idx_dirty` (`is_dirty`)
-
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
-CREATE TABLE `leitstelle_tile_scope` (
+CREATE TABLE IF NOT EXISTS `leitstelle_tile_scope` (
   `leitstelle_id` INT NOT NULL,
-  `layer_key` VARCHAR(64) NOT NULL,
+  `layer_key` VARCHAR(64) COLLATE utf8mb4_unicode_ci NOT NULL,
   `tile_z` SMALLINT NOT NULL,
   `tile_x` INT NOT NULL,
   `tile_y` INT NOT NULL,
@@ -530,12 +513,11 @@ CREATE TABLE `leitstelle_tile_scope` (
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
-CREATE TABLE `leitstelle_osm_update_lock` (
+CREATE TABLE IF NOT EXISTS `leitstelle_osm_update_lock` (
   `leitstelle_id` INT NOT NULL,
-  `layer_key` VARCHAR(64) NOT NULL,
-  `lock_token` VARCHAR(64) NOT NULL,
-  `locked_by` VARCHAR(128) NULL DEFAULT NULL,
+  `layer_key` VARCHAR(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `lock_token` VARCHAR(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `locked_by` VARCHAR(128) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `lock_until` DATETIME NOT NULL,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -547,3 +529,5 @@ CREATE TABLE `leitstelle_osm_update_lock` (
     FOREIGN KEY (`leitstelle_id`) REFERENCES `leitstellen`(`id`) ON DELETE CASCADE
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+SET foreign_key_checks = 1;
