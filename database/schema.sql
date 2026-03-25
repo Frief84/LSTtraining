@@ -456,7 +456,6 @@ CREATE TABLE IF NOT EXISTS `instanz_einsatz_events` (
 -- -------------------------------------------------------------------
 -- 7) OSM TILE SYSTEM
 -- -------------------------------------------------------------------
-
 CREATE TABLE IF NOT EXISTS `leitstellen_osm_layers` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `layer_key` VARCHAR(64) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -484,15 +483,15 @@ CREATE TABLE IF NOT EXISTS `leitstellen_osm_layers` (
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_manifest_tile` (`source_version`,`layer_key`,`tile_z`,`tile_x`,`tile_y`),
+  UNIQUE KEY `uk_tile` (`layer_key`,`tile_z`,`tile_x`,`tile_y`),
   KEY `idx_tile_xyz` (`tile_z`,`tile_x`,`tile_y`),
-  KEY `idx_manifest_lookup` (`source_version`,`layer_key`,`tile_z`,`tile_x`,`tile_y`),
   KEY `idx_layer_version` (`layer_key`,`source_version`),
   KEY `idx_last_checked_at` (`last_checked_at`),
   KEY `idx_last_changed_at` (`last_changed_at`),
   KEY `idx_check_status` (`check_status`),
   KEY `idx_dirty` (`is_dirty`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 
 CREATE TABLE IF NOT EXISTS `leitstelle_tile_scope` (
   `leitstelle_id` INT NOT NULL,

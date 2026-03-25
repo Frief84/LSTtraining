@@ -408,3 +408,178 @@ if (!function_exists('lst_polygon_area_m2')) {
         return abs($area2) / 2.0;
     }
 }
+
+
+if (!function_exists('lsttraining_geojson_bbox')) {
+    function lsttraining_geojson_bbox(string $geojson): array {
+        $decoded = json_decode($geojson, true);
+        if (!is_array($decoded)) {
+            return ['west' => 0.0, 'south' => 0.0, 'east' => 0.0, 'north' => 0.0];
+        }
+
+        $mp = lst_geo_to_multipolygon($decoded);
+        if (function_exists('lst_normalize_mpoly_to_wgs84')) {
+            $mp = lst_normalize_mpoly_to_wgs84($mp);
+        }
+        $bbox = lst_mpoly_bbox($mp);
+
+        return [
+            'west' => (float)$bbox[0],
+            'south' => (float)$bbox[1],
+            'east' => (float)$bbox[2],
+            'north' => (float)$bbox[3],
+        ];
+    }
+}
+
+if (!function_exists('lsttraining_tile_bbox')) {
+    function lsttraining_tile_bbox(int $z, int $x, int $y): array {
+        $n = pow(2, $z);
+
+        $west = ($x / $n) * 360.0 - 180.0;
+        $east = (($x + 1) / $n) * 360.0 - 180.0;
+
+        $northRad = atan(sinh(M_PI * (1 - 2 * $y / $n)));
+        $southRad = atan(sinh(M_PI * (1 - 2 * ($y + 1) / $n)));
+
+        return [
+            'west' => $west,
+            'south' => rad2deg($southRad),
+            'east' => $east,
+            'north' => rad2deg($northRad),
+        ];
+    }
+}
+
+if (!function_exists('lsttraining_lonlat_to_tile')) {
+    function lsttraining_lonlat_to_tile(float $lon, float $lat, int $z): array {
+        $lat = max(-85.05112878, min(85.05112878, $lat));
+        $n = pow(2, $z);
+
+        $x = (int)floor(($lon + 180.0) / 360.0 * $n);
+        $latRad = deg2rad($lat);
+        $y = (int)floor((1.0 - log(tan($latRad) + 1.0 / cos($latRad)) / M_PI) / 2.0 * $n);
+
+        return [
+            'z' => $z,
+            'x' => max(0, min((int)$n - 1, $x)),
+            'y' => max(0, min((int)$n - 1, $y)),
+        ];
+    }
+}
+
+if (!function_exists('lsttraining_tiles_from_geojson')) {
+    function lsttraining_tiles_from_geojson(string $geojson, int $z, string $layerKey = ''): array {
+        $decoded = json_decode($geojson, true);
+        if (!is_array($decoded)) {
+            return [];
+        }
+
+        $mp = lst_geo_to_multipolygon($decoded);
+        if (function_exists('lst_normalize_mpoly_to_wgs84')) {
+            $mp = lst_normalize_mpoly_to_wgs84($mp);
+        }
+        if (!$mp) {
+            return [];
+        }
+
+        $bbox = lst_mpoly_bbox($mp);
+        $min = lsttraining_lonlat_to_tile((float)$bbox[0], (float)$bbox[3], $z);
+        $max = lsttraining_lonlat_to_tile((float)$bbox[2], (float)$bbox[1], $z);
+
+        $tiles = [];
+        for ($x = min($min['x'], $max['x']); $x <= max($min['x'], $max['x']); $x++) {
+            for ($y = min($min['y'], $max['y']); $y <= max($min['y'], $max['y']); $y++) {
+                $tileBbox = lsttraining_tile_bbox($z, $x, $y);
+                if (!lsttraining_tile_intersects_mpoly($tileBbox, $mp)) {
+                    continue;
+                }
+                $tiles[] = ['z' => $z, 'x' => $x, 'y' => $y];
+            }
+        }
+
+        return $tiles;
+    }
+}
+
+if (!function_exists('lsttraining_tile_intersects_mpoly')) {
+    function lsttraining_tile_intersects_mpoly(array $tileBbox, array $mp): bool {
+        $corners = [
+            [$tileBbox['west'], $tileBbox['south']],
+            [$tileBbox['west'], $tileBbox['north']],
+            [$tileBbox['east'], $tileBbox['south']],
+            [$tileBbox['east'], $tileBbox['north']],
+            [(($tileBbox['west'] + $tileBbox['east']) / 2.0), (($tileBbox['south'] + $tileBbox['north']) / 2.0)],
+        ];
+
+        foreach ($corners as $pt) {
+            if (lst_point_in_mpoly($pt, $mp)) {
+                return true;
+            }
+        }
+
+        foreach ($mp as $ring) {
+            $ringCount = count($ring);
+            foreach ($ring as $pt) {
+                if (!is_array($pt) || count($pt) < 2) {
+                    continue;
+                }
+                if ($pt[0] >= $tileBbox['west'] && $pt[0] <= $tileBbox['east'] && $pt[1] >= $tileBbox['south'] && $pt[1] <= $tileBbox['north']) {
+                    return true;
+                }
+            }
+
+            for ($i = 0; $i < $ringCount - 1; $i++) {
+                $p1 = $ring[$i];
+                $p2 = $ring[$i + 1];
+                if (!is_array($p1) || !is_array($p2) || count($p1) < 2 || count($p2) < 2) {
+                    continue;
+                }
+
+                $tileEdges = [
+                    [[$tileBbox['west'], $tileBbox['south']], [$tileBbox['east'], $tileBbox['south']]],
+                    [[$tileBbox['east'], $tileBbox['south']], [$tileBbox['east'], $tileBbox['north']]],
+                    [[$tileBbox['east'], $tileBbox['north']], [$tileBbox['west'], $tileBbox['north']]],
+                    [[$tileBbox['west'], $tileBbox['north']], [$tileBbox['west'], $tileBbox['south']]],
+                ];
+
+                foreach ($tileEdges as [$e1, $e2]) {
+                    if (lsttraining_segments_intersect($p1, $p2, $e1, $e2)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+}
+if (!function_exists('lsttraining_segments_intersect')) {
+    function lsttraining_segments_intersect(array $a1, array $a2, array $b1, array $b2): bool {
+        $orient = static function(array $p, array $q, array $r): float {
+            return (($q[0] - $p[0]) * ($r[1] - $p[1])) - (($q[1] - $p[1]) * ($r[0] - $p[0]));
+        };
+
+        $onSeg = static function(array $p, array $q, array $r): bool {
+            return $q[0] >= min($p[0], $r[0]) && $q[0] <= max($p[0], $r[0]) &&
+                   $q[1] >= min($p[1], $r[1]) && $q[1] <= max($p[1], $r[1]);
+        };
+
+        $o1 = $orient($a1, $a2, $b1);
+        $o2 = $orient($a1, $a2, $b2);
+        $o3 = $orient($b1, $b2, $a1);
+        $o4 = $orient($b1, $b2, $a2);
+
+        if ((($o1 > 0 && $o2 < 0) || ($o1 < 0 && $o2 > 0)) &&
+            (($o3 > 0 && $o4 < 0) || ($o3 < 0 && $o4 > 0))) {
+            return true;
+        }
+
+        if ($o1 == 0.0 && $onSeg($a1, $b1, $a2)) return true;
+        if ($o2 == 0.0 && $onSeg($a1, $b2, $a2)) return true;
+        if ($o3 == 0.0 && $onSeg($b1, $a1, $b2)) return true;
+        if ($o4 == 0.0 && $onSeg($b1, $a2, $b2)) return true;
+
+        return false;
+    }
+}
