@@ -21,4 +21,4 @@ dwsync.xml
 /database/*
 
 # but keep schema.sql under version control
-!/database/schema.sql
+!/database/schema.sqllanduse/ 
