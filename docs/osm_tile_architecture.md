@@ -1,294 +1,227 @@
-OSM Tile System – Architektur & Nutzung
-1. Grundprinzip
+OSM Tile Verarbeitungssystem – Ablauf & Logik
+1. Systemziel
 
-Das System basiert auf einer einzigen globalen Karte, die in Tiles zerlegt ist.
+Das System verwaltet OSM-Daten tile-basiert, um:
 
-Jede Tile existiert genau einmal
+Daten global einmal zu speichern
+Updates inkrementell durchzuführen
+nur relevante Daten pro Leitstelle zu verarbeiten
 
-Tiles sind nicht leitstellenspezifisch
+Es existiert kein leitstellenspezifischer Datenbestand, sondern nur:
 
-Leitstellen definieren nur räumliche Ausschnitte dieser globalen Tiles
+globaler Tile-Speicher
+leitstellenspezifische Referenzen darauf
+2. Zentrale Datenstrukturen
+2.1 Globales Tile-Manifest (leitstellen_osm_layers)
 
-Das System vermeidet bewusst:
+Primäre Datenquelle für alle Tiles.
 
-doppelte Speicherung von Geodaten
+Ein Datensatz entspricht genau:
 
-leitstellenspezifische Kopien von OSM-Daten
+(layer_key, z, x, y)
 
-vollständige Re-Downloads ganzer Layer
+Gespeichert werden:
 
-Stattdessen wird mit:
+Dateipfad (file_relpath)
+Hash (sha1)
+Feature-Menge (feature_count)
+Status (check_status)
+Dirty-Flag (is_dirty)
+Zeitstempel (last_checked_at, last_changed_at)
 
-globalem Tile-Manifest
+Diese Tabelle definiert den aktuellen Zustand jeder Tile global.
 
-selektiver Aktualisierung
+2.2 Leitstellen-Scope (leitstelle_tile_scope)
 
-räumlicher Zuordnung
+Mapping:
 
-gearbeitet.
+leitstelle_id → Menge von Tiles
 
-2. Tabelle: leitstellen_osm_layers
-Rolle
+Inhalt:
 
-Diese Tabelle ist die globale Wahrheit aller Tiles.
-
-Ein Datensatz entspricht:
-
-genau einer Tile eines Layers an einer festen Position (z/x/y)
-
-Inhalt
-
-Jede Tile enthält:
-
-Identität:
-
-layer_key
-
-tile_z, tile_x, tile_y
-
-Datenzustand:
-
-sha1 → Hash des aktuellen Inhalts
-
-file_relpath → Pfad zur Tile-Datei (GeoJSONL.gz)
-
-feature_count, bytes_gz
-
-Herkunft:
-
-source (z. B. offline_tiles, overpass)
-
-source_version → initialer Importstand
-
-Update-Metadaten:
-
-last_checked_at → wann zuletzt geprüft
-
-last_changed_at → wann tatsächlich geändert
-
-check_status → unchanged, changed, error, seeded
-
-check_message → Diagnose / Fehlertext
-
-etag_or_signature → externer Vergleichswert
-
-is_dirty → Flag für erneute Prüfung
-
-Bedeutung
-
-Diese Tabelle beantwortet global:
-
-existiert diese Tile?
-
-wo liegt ihre Datei?
-
-wie sieht ihr aktueller Stand aus?
-
-wann wurde sie zuletzt geprüft oder geändert?
-
-Wichtig:
-Diese Tabelle ist nicht leitstellenspezifisch.
-
-3. Tabelle: leitstelle_tile_scope
-Rolle
-
-Diese Tabelle definiert:
-
-welche globalen Tiles im Einsatzgebiet einer Leitstelle liegen
-
-Ein Datensatz bedeutet:
-
-Leitstelle X nutzt Tile Y
-
-Inhalt
-
-leitstelle_id
-
-layer_key
-
-tile_z, tile_x, tile_y
-
-Eigenschaften
-
+keine Geodaten
 keine Hashes
+nur Tile-Koordinaten
 
-keine Versionen
+Zweck:
 
-keine Zustände
+Filter auf globales Manifest
+keine geometrische Berechnung im Laufbetrieb
+2.3 Locking (leitstelle_osm_update_lock)
 
-Nur räumliche Zuordnung.
+Verhindert parallele Verarbeitung:
 
-Zweck
+(leittestelle_id, layer_key) → exklusiver Lock
+3. Verarbeitungspipeline
 
-Diese Tabelle wird genutzt, um:
+Der gesamte Ablauf ist ein deterministischer State-Machine-Prozess:
 
-schnell relevante Tiles für eine Leitstelle zu finden
+idle → scan → download → idle
+4. Schritt 1: Scope-Aufbau
 
-teure Geometrie-Berechnungen zu vermeiden
+Input:
 
-4. Tabelle: leitstelle_osm_update_lock
-Rolle
+leitstelle.geojson
+Ziel-Zoom (z. B. z13)
 
-Verhindert parallele Updates.
+Ablauf:
 
-Ein Datensatz bedeutet:
+GeoJSON → Tile-Koordinaten
+Speicherung in leitstelle_tile_scope
+Sicherstellen, dass jede Tile im Manifest existiert (Seed)
 
-Für diese Leitstelle und diesen Layer läuft aktuell ein Update
+Ergebnis:
 
-Inhalt
+Scope = Menge relevanter Tiles
+5. Schritt 2: Scan-Phase (Änderungserkennung)
 
-leitstelle_id
+Ziel:
 
-layer_key
+Nicht alle Tiles laden, sondern nur veränderte identifizieren.
 
-lock_token
+5.1 Hierarchischer Scan
 
-lock_until
+Start auf niedrigerem Zoom-Level (z. B. z10–z11):
 
-Verhalten
+Tiles werden zu größeren Bereichen aggregiert (Supertiles)
+Für jeden Bereich:
+Overpass: out count + changed:"timestamp"
+5.2 Entscheidungslogik
+if count == 0:
+    → keine Änderung → ignorieren
+else:
+    if zoom < target:
+        → weiter aufsplitten (Kinder-Tiles)
+    else:
+        → Tile als dirty markieren
+5.3 Ergebnis
+Nur betroffene z13-Tiles werden markiert:
+is_dirty = 1
+Gesamtanzahl:
+dirty_total
+6. Schritt 3: Download-Phase
 
-vor Update: Lock setzen
+Verarbeitet ausschließlich:
 
-nach Update: Lock entfernen oder auslaufen lassen
-
-5. Tile-Dateien (Dateisystem)
-
-Tiles liegen als Dateien vor, z. B.:
-
-data/landuse_tiles_out/z{Z}/{layer_key}/{X}/{Y}.geojsonl.gz
+SELECT * FROM manifest WHERE is_dirty = 1 AND im Scope
+6.1 Pro Tile
+Overpass Full Query (Geometrie)
+Response → Feature-Transformation
+Speicherung:
+data/osm_tiles/z{z}/{layer}/{x}/{y}.geojsonl.gz
 
 Format:
 
-GeoJSON Text Sequences (eine Feature pro Zeile)
-
+GeoJSONL (1 Feature pro Zeile)
 gzip-komprimiert
-
-Diese Dateien sind die eigentlichen Geodaten.
-Die Datenbank enthält nur Metadaten und Referenzen.
-
-6. Datenfluss
-Initialer Zustand
-
-Tiles werden offline erzeugt (z. B. DACH-Dump)
-
-in leitstellen_osm_layers eingetragen
-
-alle Tiles haben denselben source_version
-
-check_status = 'seeded'
-
-Laufender Betrieb
-
-Der Button „OSM Cache“ führt folgenden Ablauf aus:
-
-1. Leitstelle bestimmen
-
-leitstelle_id laden
-
-GeoJSON-Gebiet der Leitstelle auslesen
-
-2. Relevante Tiles bestimmen
-
-über leitstelle_tile_scope
-
-nur diese Tiles werden betrachtet
-
-3. Lock setzen
-
-Eintrag in leitstelle_osm_update_lock
-
-4. Tiles prüfen
-
-Für jede relevante Tile:
-
-Overpass-Request für genau diese Tile
-
-neuen Inhalt erzeugen
-
-Hash berechnen (sha1)
-
-5. Vergleich
-
-neuer Hash vs. vorhandener sha1
-
-6. Entscheidung
-
-Wenn unverändert:
-
-last_checked_at aktualisieren
-
+6.2 Vergleich (entscheidender Schritt)
+new_sha1 = hash(file)
+old_sha1 = manifest.sha1
+Fall A: unverändert
 check_status = 'unchanged'
-
-Wenn geändert:
-
-Tile-Datei überschreiben
-
-sha1 aktualisieren
-
-feature_count, bytes_gz aktualisieren
-
-last_checked_at setzen
-
-last_changed_at setzen
-
+is_dirty = 0
+last_checked_at = now
+Fall B: geändert
+sha1 = new_sha1
+feature_count aktualisieren
+bytes_gz aktualisieren
+last_changed_at = now
 check_status = 'changed'
+is_dirty = 0
+Fall C: Fehler
+check_status = 'error'
+check_message setzen
+7. Fortschritt & State
 
-7. Lock freigeben
-7. Wichtige Designentscheidungen
-1. Tiles sind global
+Der Zustand wird persistiert:
 
-keine Duplikate
+leitstelle_layer_sync_state
 
-keine leitstellenspezifischen Kopien
+Wichtige Felder:
 
-2. Leitstellen sind Filter
+phase → scan / download / idle
+dirty_total
+dirty_done
+scan_cursor_json (Queue)
+scan_since (Zeitstempel)
 
-bestimmen nur den relevanten Ausschnitt
+Dadurch ist der Prozess:
 
-verändern keine Tile-Daten
+unterbrechbar
+fortsetzbar
+parallel sicher
+8. Laufzeitsteuerung
 
-3. Updates sind selektiv
+Jeder Request ist bewusst begrenzt:
 
-nur betroffene Tiles werden geprüft
+max. Laufzeit ~18 Sekunden
+Budget:
+Scan: X Nodes
+Download: X Tiles
 
-kein vollständiger Reload
+Wenn Limit erreicht:
 
-4. Datenbank speichert keine Geometrie
+→ State speichern
+→ später fortsetzen
+9. Laden der Tiles (Runtime)
 
-nur Metadaten
+Zur Nutzung (Rendering, Simulation):
 
-Geodaten liegen im Dateisystem
+Scope laden
+Tiles im Manifest finden
+Datei laden:
+file_relpath → .geojsonl.gz
+Features streamen / dekodieren
 
-5. Hash-basierter Vergleich
+Wichtig:
 
-Änderungen werden über sha1 erkannt
+kein Overpass im Runtime-Pfad
+nur lokale Dateien
+10. Designprinzipien
+10.1 Globaler Datenbestand
 
-keine aufwendigen Feature-Diffs nötig
+Keine Duplikate
+Keine leitstellenspezifischen Kopien
 
-8. Was dieses System NICHT tut
+10.2 Selektive Updates
 
-keine vollständigen Layer-Downloads pro Leitstelle
+Nur Tiles mit Änderungen werden geladen
 
-keine Speicherung von GeoJSON in der Datenbank
+10.3 Hash-basierter Vergleich
 
-kein leitstellenspezifischer Tile-Zustand
+Keine Feature-Diffs notwendig
 
-keine Mehrfachhaltung identischer Daten
+10.4 Dateisystem statt DB für Geometrie
 
-9. Ergebnis
+DB enthält nur Metadaten
 
-Das System ermöglicht:
+10.5 Deterministische Verarbeitung
 
-performante Kartenabfragen
+Jeder Schritt ist reproduzierbar:
 
-inkrementelle Updates
+Input → Scan → Dirty → Download → Hash → Update
+11. Ergebnisverhalten
 
-geringe Datenlast
+Das System garantiert:
 
-parallele Nutzung durch mehrere Leitstellen
-
-bei gleichzeitig klarer Trennung zwischen:
-
-globalem Datenbestand
-
-räumlicher Nutzung
+minimale Overpass-Last
+inkrementelle Aktualisierung
+konsistente Tile-Zustände
+parallele Nutzbarkeit mehrerer Leitstellen
+12. Kurzform als Ablaufdiagramm
+Start
+ ↓
+Scope bestimmen
+ ↓
+SCAN:
+  Hierarchisch prüfen (count)
+  → dirty Tiles markieren
+ ↓
+DOWNLOAD:
+  Nur dirty Tiles laden
+  → speichern
+  → Hash vergleichen
+ ↓
+Manifest aktualisieren
+ ↓
+Fertig

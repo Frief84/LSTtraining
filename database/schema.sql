@@ -530,3 +530,46 @@ CREATE TABLE IF NOT EXISTS `leitstelle_osm_update_lock` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET foreign_key_checks = 1;
+
+
+CREATE TABLE IF NOT EXISTS `leitstelle_layer_sync_state` (
+  `leitstelle_id` INT NOT NULL,
+  `layer_key` VARCHAR(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+
+  -- aktuelle Phase des Syncs
+  `phase` ENUM('idle','scan','download') NOT NULL DEFAULT 'idle',
+
+  -- Zeitfenster für Änderungsprüfung
+  `scan_since` DATETIME DEFAULT NULL,
+  `scan_osm_base` DATETIME DEFAULT NULL,
+
+  -- Scan-Konfiguration / Fortschritt
+  `scan_start_z` SMALLINT DEFAULT NULL,
+  `scan_cursor_json` LONGTEXT COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+
+  -- Fortschritt Download-Phase
+  `dirty_total` INT NOT NULL DEFAULT 0,
+  `dirty_done` INT NOT NULL DEFAULT 0,
+
+  -- letzter erfolgreicher Lauf
+  `last_success_at` DATETIME DEFAULT NULL,
+  `last_success_osm_base` DATETIME DEFAULT NULL,
+
+  -- Fehlerdiagnose
+  `last_error` TEXT COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+
+  -- Standard-Timestamps
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (`leitstelle_id`, `layer_key`),
+  KEY `idx_phase` (`phase`),
+  KEY `idx_last_success` (`last_success_at`),
+
+  CONSTRAINT `fk_llss_leitstelle`
+    FOREIGN KEY (`leitstelle_id`)
+    REFERENCES `leitstellen`(`id`)
+    ON DELETE CASCADE
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_unicode_ci;

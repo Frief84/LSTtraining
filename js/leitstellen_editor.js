@@ -55,21 +55,32 @@
     }
     window.initLeitstellenEditor = initLeitstellenEditor;
 
-
     function openLeitstellePopupForCreate() {
         const heading = document.querySelector('#edit-leitstelle-formular h2');
         if (heading) heading.textContent = 'Leitstelle erstellen';
-        ['lst_update_id', 'lst_update_name', 'lst_update_ort', 'lst_update_bl', 'lst_update_land', 'lst_update_lat', 'lst_update_lon']
-        .forEach(id => {
+
+        [
+            'lst_update_id',
+            'lst_update_name',
+            'lst_update_ort',
+            'lst_update_bl',
+            'lst_update_land',
+            'lst_update_lat',
+            'lst_update_lon'
+        ].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.value = '';
         });
+
         const mode = document.getElementById('lst_form_mode');
         if (mode) mode.value = 'create';
+
         if (typeof resetEditMaps === 'function') resetEditMaps();
         if (typeof ensureEditMap === 'function') ensureEditMap();
+
         const overlay = document.getElementById('popup-overlay');
         if (overlay) overlay.style.display = 'block';
+
         const popup = document.getElementById('edit-leitstelle-formular');
         if (popup) popup.style.display = 'block';
     }
@@ -101,617 +112,739 @@
 })(window, document, ol);
 
 function updateWachenZuordButtonState() {
-  var $btn = jQuery('#w_zuord_button_l');
+    var $btn = jQuery('#w_zuord_button_l');
 
-  var geojson = jQuery('#edit-leitstelle-formular')
-    .find('[name="geojson_edit"]')
-    .first()
-    .val();
+    var geojson = jQuery('#edit-leitstelle-formular')
+        .find('[name="geojson_edit"]')
+        .first()
+        .val();
 
-  var hasGeo = false;
+    var hasGeo = false;
 
-  if (geojson) {
-    try {
-      var parsed = JSON.parse(geojson);
+    if (geojson) {
+        try {
+            var parsed = JSON.parse(geojson);
 
-      // wirklich sinnvoll prüfen
-      hasGeo =
-        parsed &&
-        parsed.features &&
-        parsed.features.length > 0;
+            hasGeo =
+                parsed &&
+                parsed.features &&
+                parsed.features.length > 0;
 
-    } catch (e) {
-      hasGeo = false;
+        } catch (e) {
+            hasGeo = false;
+        }
     }
-  }
 
-  if (hasGeo) {
-    $btn.prop('disabled', false);
-    $btn.attr('title', 'Zuordnung der Wachen bearbeiten');
-  } else {
-    $btn.prop('disabled', true);
-    $btn.attr('title', 'Bitte zuerst ein Einsatzgebiet anlegen');
-  }
+    if (hasGeo) {
+        $btn.prop('disabled', false);
+        $btn.attr('title', 'Zuordnung der Wachen bearbeiten');
+    } else {
+        $btn.prop('disabled', true);
+        $btn.attr('title', 'Bitte zuerst ein Einsatzgebiet anlegen');
+    }
 }
 
-(function($){
-  window.openLeitstelleHospitalsEditor = openLeitstelleHospitalsEditor;
+(function($) {
 
-  function openLeitstelleHospitalsEditor(id) {
-    console.log('[leitstellen_editor] Button geklickt, ID=', id);
+    window.openLeitstelleHospitalsEditor = openLeitstelleHospitalsEditor;
 
-    $.getJSON(window.lstLeitstellenAjax.ajax_url, {
-      action: 'get_leitstelle_hospitals',
-      leitstelle_id: id
-    })
-    .done(function(json) {
-      if (!json.success) {
-        return alert('Fehler beim Laden: ' + json.data);
-      }
+    function openLeitstelleHospitalsEditor(id) {
+        console.log('[leitstellen_editor] Button geklickt, ID=', id);
 
-      const data   = json.data;
-      const tpl    = wp.template('leitstellen-hospitals-editor');
-      const $modal = $('#leitstellen-hospitals-modal');
-
-      $modal.find('.modal-body').html(tpl({
-        leitstelle_id:  data.leitstelle_id,
-        hospitals:      data.hospitals,
-        selected_ids:   data.existing || [],
-        geojson:        data.geojson,
-        leitstelle_lat: data.leitstelle_lat,
-        leitstelle_lon: data.leitstelle_lon
-      }));
-
-      const hasExisting = Array.isArray(data.existing) && data.existing.length > 0;
-      const existingArr = (data.existing || []).map(function(n){ return String(n); });
-
-      data.hospitals.forEach(function(h) {
-        const sid = String(h.id);
-        if (hasExisting && existingArr.includes(sid)) {
-          $modal.find('.hos-toggle[value="' + sid + '"]').prop('checked', true);
-        }
-      });
-
-      $modal.find('#leitstellen-hospitals-filter')
-        .off('input')
-        .on('input', function() {
-          const term = String(this.value || '').toLowerCase();
-
-          $modal.find('#leitstellen-hospitals-selector .hospital-row, #leitstellen-hospitals-selector label').each(function() {
-            const $row = $(this);
-            const txt  = $row.text().toLowerCase();
-            const idv  = String($row.find('input').val() || '');
-            $row.toggle(txt.includes(term) || idv.includes(term));
-          });
-        });
-
-      const mapDiv = $modal.find('#leitstellen-hospitals-map')[0];
-      const format = new ol.format.GeoJSON();
-
-      let geojsonObj;
-      try {
-        geojsonObj = typeof data.geojson === 'string' ? JSON.parse(data.geojson) : data.geojson;
-      } catch (e) {
-        return alert('Ungültiges Einsatzgebiet');
-      }
-
-      const polyFeats = format.readFeatures(geojsonObj, {
-        dataProjection: 'EPSG:4326',
-        featureProjection: 'EPSG:3857'
-      });
-
-      const vectorSource = new ol.source.Vector({
-        features: polyFeats
-      });
-
-      const vectorLayer = new ol.layer.Vector({
-        source: vectorSource,
-        style: new ol.style.Style({
-          stroke: new ol.style.Stroke({
-            color: '#0074D9',
-            width: 2
-          }),
-          fill: new ol.style.Fill({
-            color: 'rgba(0,116,217,0.1)'
-          })
+        $.getJSON(window.lstLeitstellenAjax.ajax_url, {
+            action: 'get_leitstelle_hospitals',
+            leitstelle_id: id
         })
-      });
-
-      const tooltipEl = document.createElement('div');
-      tooltipEl.className = 'hospital-tooltip';
-      document.body.appendChild(tooltipEl);
-
-      const tooltipOverlay = new ol.Overlay({
-        element: tooltipEl,
-        offset: [10, -10],
-        positioning: 'bottom-center'
-      });
-
-      const hospSource = new ol.source.Vector();
-
-      data.hospitals.forEach(function(h) {
-        const coord = ol.proj.fromLonLat([h.longitude, h.latitude]);
-
-        const feat = new ol.Feature({
-          geometry: new ol.geom.Point(coord),
-          id: String(h.id),
-          name: h.name
-        });
-
-        const inPoly = vectorSource.getFeatures().some(function(pf) {
-          return pf.getGeometry().intersectsCoordinate(coord);
-        });
-
-        const isActive = hasExisting ? existingArr.includes(String(h.id)) : inPoly;
-
-        feat.setStyle(new ol.style.Style({
-          image: new ol.style.Circle({
-            radius: 7,
-            fill: new ol.style.Fill({
-              color: isActive ? 'red' : 'lightblue'
-            }),
-            stroke: new ol.style.Stroke({
-              color: '#fff',
-              width: 2
-            })
-          })
-        }));
-
-        hospSource.addFeature(feat);
-
-        if (!hasExisting && inPoly) {
-          $modal.find('.hos-toggle[value="' + h.id + '"]').prop('checked', true);
-        }
-      });
-
-      const hospLayer = new ol.layer.Vector({
-        source: hospSource
-      });
-
-      const map = new ol.Map({
-        target: mapDiv,
-        layers: [
-          new ol.layer.Tile({
-            source: new ol.source.OSM()
-          }),
-          vectorLayer,
-          hospLayer
-        ],
-        overlays: [tooltipOverlay],
-        view: new ol.View({
-          center: ol.proj.fromLonLat([data.leitstelle_lon, data.leitstelle_lat]),
-          zoom: 10
-        })
-      });
-
-      map.on('pointermove', function(e) {
-        const f = map.forEachFeatureAtPixel(e.pixel, function(feat) { return feat; });
-        if (f && f.get('name')) {
-          tooltipEl.innerHTML = f.get('name');
-          tooltipOverlay.setPosition(e.coordinate);
-          tooltipEl.style.display = '';
-        } else {
-          tooltipEl.style.display = 'none';
-        }
-      });
-
-      const selectHosp = new ol.interaction.Select({
-        layers: [hospLayer],
-        hitTolerance: 6,
-        style: null,
-        condition: ol.events.condition.singleClick
-      });
-
-      const dragPan = map.getInteractions().getArray().find(function(i) {
-        return i instanceof ol.interaction.DragPan;
-      });
-
-      selectHosp.on('select', function() {
-        if (dragPan) dragPan.setActive(false);
-        setTimeout(function() {
-          if (dragPan) dragPan.setActive(true);
-        }, 0);
-      });
-
-      map.addInteraction(selectHosp);
-
-      selectHosp.on('select', function(evt) {
-        evt.selected.forEach(function(feat) {
-          const hid  = feat.get('id');
-          const $chk = $modal.find('.hos-toggle[value="' + hid + '"]');
-          const now  = !$chk.prop('checked');
-
-          $chk.prop('checked', now);
-
-          feat.setStyle(new ol.style.Style({
-            image: new ol.style.Circle({
-              radius: 7,
-              fill: new ol.style.Fill({
-                color: now ? 'red' : 'lightblue'
-              }),
-              stroke: new ol.style.Stroke({
-                color: '#fff',
-                width: 2
-              })
-            })
-          }));
-        });
-
-        selectHosp.getFeatures().clear();
-      });
-
-      $modal.find('#leitstellen-hospitals-cancel, .modal-close, .modal-overlay')
-        .off('click')
-        .on('click', function() {
-          $modal.addClass('hidden');
-        });
-
-      $modal.find('#leitstellen-hospitals-form')
-        .off('submit')
-        .on('submit', function(e) {
-          e.preventDefault();
-
-          const selected = $modal.find('.hos-toggle:checked')
-            .map(function(_, el) { return el.value; })
-            .get();
-
-          $.ajax({
-            url: window.lstLeitstellenAjax.ajax_url,
-            method: 'POST',
-            dataType: 'json',
-            data: {
-              action: 'save_leitstelle_hospitals',
-              leitstelle_id: id,
-              hospitals: JSON.stringify(selected)
-            },
-            success: function(resp) {
-              if (!resp.success) {
-                return alert('Fehler beim Speichern: ' + resp.data);
-              }
-              alert('Gespeichert');
-              $modal.addClass('hidden');
-            },
-            error: function(jq, status, err) {
-              console.error('Save-Error:', status, err);
-              alert('Fehler beim Speichern: ' + status);
+        .done(function(json) {
+            if (!json.success) {
+                return alert('Fehler beim Laden: ' + json.data);
             }
-          });
+
+            const data = json.data;
+            const tpl = wp.template('leitstellen-hospitals-editor');
+            const $modal = $('#leitstellen-hospitals-modal');
+
+            $modal.find('.modal-body').html(tpl({
+                leitstelle_id: data.leitstelle_id,
+                hospitals: data.hospitals,
+                selected_ids: data.existing || [],
+                geojson: data.geojson,
+                leitstelle_lat: data.leitstelle_lat,
+                leitstelle_lon: data.leitstelle_lon
+            }));
+
+            const hasExisting = Array.isArray(data.existing) && data.existing.length > 0;
+            const existingArr = (data.existing || []).map(function(n) { return String(n); });
+
+            data.hospitals.forEach(function(h) {
+                const sid = String(h.id);
+                if (hasExisting && existingArr.includes(sid)) {
+                    $modal.find('.hos-toggle[value="' + sid + '"]').prop('checked', true);
+                }
+            });
+
+            $modal.find('#leitstellen-hospitals-filter')
+                .off('input')
+                .on('input', function() {
+                    const term = String(this.value || '').toLowerCase();
+
+                    $modal.find('#leitstellen-hospitals-selector .hospital-row, #leitstellen-hospitals-selector label').each(function() {
+                        const $row = $(this);
+                        const txt = $row.text().toLowerCase();
+                        const idv = String($row.find('input').val() || '');
+                        $row.toggle(txt.includes(term) || idv.includes(term));
+                    });
+                });
+
+            const mapDiv = $modal.find('#leitstellen-hospitals-map')[0];
+            const format = new ol.format.GeoJSON();
+
+            let geojsonObj;
+            try {
+                geojsonObj = typeof data.geojson === 'string' ? JSON.parse(data.geojson) : data.geojson;
+            } catch (e) {
+                return alert('Ungültiges Einsatzgebiet');
+            }
+
+            const polyFeats = format.readFeatures(geojsonObj, {
+                dataProjection: 'EPSG:4326',
+                featureProjection: 'EPSG:3857'
+            });
+
+            const vectorSource = new ol.source.Vector({
+                features: polyFeats
+            });
+
+            const vectorLayer = new ol.layer.Vector({
+                source: vectorSource,
+                style: new ol.style.Style({
+                    stroke: new ol.style.Stroke({
+                        color: '#0074D9',
+                        width: 2
+                    }),
+                    fill: new ol.style.Fill({
+                        color: 'rgba(0,116,217,0.1)'
+                    })
+                })
+            });
+
+            const tooltipEl = document.createElement('div');
+            tooltipEl.className = 'hospital-tooltip';
+            document.body.appendChild(tooltipEl);
+
+            const tooltipOverlay = new ol.Overlay({
+                element: tooltipEl,
+                offset: [10, -10],
+                positioning: 'bottom-center'
+            });
+
+            const hospSource = new ol.source.Vector();
+
+            data.hospitals.forEach(function(h) {
+                const coord = ol.proj.fromLonLat([h.longitude, h.latitude]);
+
+                const feat = new ol.Feature({
+                    geometry: new ol.geom.Point(coord),
+                    id: String(h.id),
+                    name: h.name
+                });
+
+                const inPoly = vectorSource.getFeatures().some(function(pf) {
+                    return pf.getGeometry().intersectsCoordinate(coord);
+                });
+
+                const isActive = hasExisting ? existingArr.includes(String(h.id)) : inPoly;
+
+                feat.setStyle(new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: 7,
+                        fill: new ol.style.Fill({
+                            color: isActive ? 'red' : 'lightblue'
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: '#fff',
+                            width: 2
+                        })
+                    })
+                }));
+
+                hospSource.addFeature(feat);
+
+                if (!hasExisting && inPoly) {
+                    $modal.find('.hos-toggle[value="' + h.id + '"]').prop('checked', true);
+                }
+            });
+
+            const hospLayer = new ol.layer.Vector({
+                source: hospSource
+            });
+
+            const map = new ol.Map({
+                target: mapDiv,
+                layers: [
+                    new ol.layer.Tile({
+                        source: new ol.source.OSM()
+                    }),
+                    vectorLayer,
+                    hospLayer
+                ],
+                overlays: [tooltipOverlay],
+                view: new ol.View({
+                    center: ol.proj.fromLonLat([data.leitstelle_lon, data.leitstelle_lat]),
+                    zoom: 10
+                })
+            });
+
+            map.on('pointermove', function(e) {
+                const f = map.forEachFeatureAtPixel(e.pixel, function(feat) { return feat; });
+                if (f && f.get('name')) {
+                    tooltipEl.innerHTML = f.get('name');
+                    tooltipOverlay.setPosition(e.coordinate);
+                    tooltipEl.style.display = '';
+                } else {
+                    tooltipEl.style.display = 'none';
+                }
+            });
+
+            const selectHosp = new ol.interaction.Select({
+                layers: [hospLayer],
+                hitTolerance: 6,
+                style: null,
+                condition: ol.events.condition.singleClick
+            });
+
+            const dragPan = map.getInteractions().getArray().find(function(i) {
+                return i instanceof ol.interaction.DragPan;
+            });
+
+            selectHosp.on('select', function() {
+                if (dragPan) dragPan.setActive(false);
+                setTimeout(function() {
+                    if (dragPan) dragPan.setActive(true);
+                }, 0);
+            });
+
+            map.addInteraction(selectHosp);
+
+            selectHosp.on('select', function(evt) {
+                evt.selected.forEach(function(feat) {
+                    const hid = feat.get('id');
+                    const $chk = $modal.find('.hos-toggle[value="' + hid + '"]');
+                    const now = !$chk.prop('checked');
+
+                    $chk.prop('checked', now);
+
+                    feat.setStyle(new ol.style.Style({
+                        image: new ol.style.Circle({
+                            radius: 7,
+                            fill: new ol.style.Fill({
+                                color: now ? 'red' : 'lightblue'
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color: '#fff',
+                                width: 2
+                            })
+                        })
+                    }));
+                });
+
+                selectHosp.getFeatures().clear();
+            });
+
+            $modal.find('#leitstellen-hospitals-cancel, .modal-close, .modal-overlay')
+                .off('click')
+                .on('click', function() {
+                    $modal.addClass('hidden');
+                });
+
+            $modal.find('#leitstellen-hospitals-form')
+                .off('submit')
+                .on('submit', function(e) {
+                    e.preventDefault();
+
+                    const selected = $modal.find('.hos-toggle:checked')
+                        .map(function(_, el) { return el.value; })
+                        .get();
+
+                    $.ajax({
+                        url: window.lstLeitstellenAjax.ajax_url,
+                        method: 'POST',
+                        dataType: 'json',
+                        data: {
+                            action: 'save_leitstelle_hospitals',
+                            leitstelle_id: id,
+                            hospitals: JSON.stringify(selected)
+                        },
+                        success: function(resp) {
+                            if (!resp.success) {
+                                return alert('Fehler beim Speichern: ' + resp.data);
+                            }
+                            alert('Gespeichert');
+                            $modal.addClass('hidden');
+                        },
+                        error: function(jq, status, err) {
+                            console.error('Save-Error:', status, err);
+                            alert('Fehler beim Speichern: ' + status);
+                        }
+                    });
+                });
+
+            $modal.removeClass('hidden');
+        })
+        .fail(function(_, status, err) {
+            console.error('[leitstellen_editor] AJAX-Fehler', status, err);
+            alert('AJAX-Fehler: ' + status);
         });
+    }
 
-      $modal.removeClass('hidden');
-    })
-    .fail(function(_, status, err) {
-      console.error('[leitstellen_editor] AJAX-Fehler', status, err);
-      alert('AJAX-Fehler: ' + status);
+    $(document).on('click', '.open-leitstelle-hospitals-editor', function(e) {
+        e.preventDefault();
+
+        var id = $('#edit-leitstelle-formular').find('input[name="lst_update_id"]').first().val();
+        if (!id) {
+            id = $('#edit-leitstelle-formular').find('#lst_update_id').first().val();
+        }
+
+        if (!id || String(id) === '0') {
+            alert('Bitte zuerst speichern.');
+            return;
+        }
+
+        openLeitstelleHospitalsEditor(id);
     });
-  }
 
-  $(document).on('click', '.open-leitstelle-hospitals-editor', function(e){
-    e.preventDefault();
-
-    var id = $('#edit-leitstelle-formular').find('input[name="lst_update_id"]').first().val();
-    if (!id) {
-      id = $('#edit-leitstelle-formular').find('#lst_update_id').first().val();
-    }
-
-    if (!id || String(id) === '0') {
-      alert('Bitte zuerst speichern.');
-      return;
-    }
-
-    openLeitstelleHospitalsEditor(id);
-  });
-
-  console.log('[leitstellen_editor.js] Hospitals ready');
+    console.log('[leitstellen_editor.js] Hospitals ready');
 })(jQuery);
 
 
 // ---------------------------------------------------------------------------
-// OSM Layer Refresh (Leitstelle)  ✅ sequenziell + Progress (fix: 0% Bug)
+// OSM Layer Refresh (Leitstelle) sequenziell + Progress
+// angepasst für scan/download + retry_after_ms vor success=false
 // ---------------------------------------------------------------------------
-(function($){
+(function($) {
+    var osmQueueRunning = false;
 
-  function getCurrentLeitstelleId() {
-    var $f = $('#edit-leitstelle-formular');
-    var v = $f.find('input[name="lst_update_id"]').first().val();
-    if (!v) v = $f.find('#lst_update_id').first().val();
-    v = parseInt(v, 10);
-    return isNaN(v) ? 0 : v;
-  }
-
-  function findOsmButton() {
-    // robust, weil Button-IDs bei dir in der Historie wechselten
-    var ids = ['#btn-osm-refresh', '#lst-osm-refresh-all', '#lst-osm-refresh', '#osm-refresh'];
-    for (var i = 0; i < ids.length; i++) {
-      var $b = $(ids[i]);
-      if ($b.length) return $b;
-    }
-    return $();
-  }
-
-  function setOsmBusy(isBusy) {
-    var $btn = findOsmButton();
-    var $sp  = $('#lst-osm-refresh-spinner');
-    if ($btn.length) $btn.prop('disabled', !!isBusy);
-    if ($sp.length) $sp.css('visibility', isBusy ? 'visible' : 'hidden');
-  }
-
-  function setOsmStatus(html, type) {
-    var $box = $('#lst-osm-refresh-status');
-    if (!$box.length) return;
-
-    $box.removeClass('notice-success notice-error notice-warning notice-info');
-    if (type === 'success') $box.addClass('notice-success');
-    else if (type === 'error') $box.addClass('notice-error');
-    else if (type === 'warning') $box.addClass('notice-warning');
-    else $box.addClass('notice-info');
-
-    $box.html(html);
-    $box.show();
-  }
-
-  function ensureOsmProgressUi() {
-    var $wrap = $('#lst-osm-progress-wrap');
-    if ($wrap.length) return $wrap;
-
-    var $btn = findOsmButton();
-    if (!$btn.length) return $();
-
-    $wrap = $(
-      '<span id="lst-osm-progress-wrap" style="display:inline-flex;align-items:center;gap:8px;margin-left:10px;vertical-align:middle;">' +
-        '<progress id="lst-osm-progress" value="0" max="100" style="width:200px;"></progress>' +
-        '<span id="lst-osm-progress-text">0.0%</span>' +
-        '<span id="lst-osm-progress-layer" style="opacity:.75;"></span>' +
-      '</span>'
-    );
-
-    $btn.after($wrap);
-    return $wrap;
-  }
-
-  function layerLabel(layerKey) {
-    var labels = {
-      'roads_lines': 'Straßen und befahrbare Wege',
-      'landuse_residential': 'Wohngebiete',
-      'landuse_industrial': 'Industrie',
-      'landuse_commercial': 'Gewerbe',
-      'landuse_retail': 'Einzelhandel',
-      'landuse_allotments': 'Kleingärten',
-      'landuse_farmland': 'Ackerland',
-      'landuse_animal_keeping': 'Tierhaltung',
-      'landuse_forest': 'Wald',
-      'landuse_logging': 'Forstwirtschaft',
-      'landuse_meadow': 'Wiese',
-      'landuse_railway': 'Bahnanlagen',
-      'landuse_cemetery': 'Friedhof',
-      'landuse_landfill': 'Deponie',
-      'landuse_quarry': 'Tagebau/Steinbruch',
-      'landuse_recreation_ground': 'Erholungsgebiet',
-      'landuse_religious': 'Religiöse Fläche'
-    };
-    return labels[layerKey] ? labels[layerKey] : String(layerKey || '');
-  }
-
-  function updateProgress(overallFloat, layerKey, layerPct) {
-    ensureOsmProgressUi();
-
-    var overallClamped = Math.max(0, Math.min(100, Number(overallFloat || 0)));
-    var overallBar = Math.floor(overallClamped); // Progress-Tag kann nur integer gut
-    var overallText = overallClamped.toFixed(1) + '%';
-
-    var layerInfo = '';
-    if (layerKey) {
-      var lp = (typeof layerPct === 'number') ? layerPct : null;
-      if (lp !== null) layerInfo = layerLabel(layerKey) + ' (' + String(lp) + '%)';
-      else layerInfo = layerLabel(layerKey);
+    function getCurrentLeitstelleId() {
+        var $f = $('#edit-leitstelle-formular');
+        var v = $f.find('input[name="lst_update_id"]').first().val();
+        if (!v) v = $f.find('#lst_update_id').first().val();
+        v = parseInt(v, 10);
+        return isNaN(v) ? 0 : v;
     }
 
-    $('#lst-osm-progress').val(overallBar);
-    $('#lst-osm-progress-text').text(overallText);
-    $('#lst-osm-progress-layer').text(layerInfo);
-  }
+    function findOsmButton() {
+        var ids = ['#btn-osm-refresh', '#lst-osm-refresh-all', '#lst-osm-refresh', '#osm-refresh'];
+        for (var i = 0; i < ids.length; i++) {
+            var $b = $(ids[i]);
+            if ($b.length) return $b;
+        }
+        return $();
+    }
 
-  function getOsmNonce() {
-    return (window.lstLeitstellenAjax && window.lstLeitstellenAjax.osm_nonce)
-      ? window.lstLeitstellenAjax.osm_nonce
-      : (window.lstLeitstellenAjax ? window.lstLeitstellenAjax.nonce : '');
-  }
+    function setOsmBusy(isBusy) {
+        var $btn = findOsmButton();
+        var $sp = $('#lst-osm-refresh-spinner');
+        if ($btn.length) $btn.prop('disabled', !!isBusy);
+        if ($sp.length) $sp.css('visibility', isBusy ? 'visible' : 'hidden');
+    }
 
-  function getAjaxUrl() {
-    return (window.lstLeitstellenAjax ? window.lstLeitstellenAjax.ajax_url : ajaxurl);
-  }
+    function setOsmStatus(html, type) {
+        var $box = $('#lst-osm-refresh-status');
+        if (!$box.length) return;
 
-  function makeRunToken() {
-    return 'rt_' + String(Date.now()) + '_' + String(Math.random()).slice(2);
-  }
+        $box.removeClass('notice-success notice-error notice-warning notice-info');
+        if (type === 'success') $box.addClass('notice-success');
+        else if (type === 'error') $box.addClass('notice-error');
+        else if (type === 'warning') $box.addClass('notice-warning');
+        else $box.addClass('notice-info');
 
-  function postLayerStep(lsId, layerKey, nonce, runToken, cursor, chunk, reset, force) {
+        $box.html(html);
+        $box.show();
+    }
+
+    function ensureOsmProgressUi() {
+        var $wrap = $('#lst-osm-progress-wrap');
+        if ($wrap.length) return $wrap;
+
+        var $btn = findOsmButton();
+        if (!$btn.length) return $();
+
+        $wrap = $(
+            '<span id="lst-osm-progress-wrap" style="display:inline-flex;align-items:center;gap:8px;margin-left:10px;vertical-align:middle;">' +
+                '<progress id="lst-osm-progress" value="0" max="100" style="width:200px;"></progress>' +
+                '<span id="lst-osm-progress-text">0.0%</span>' +
+                '<span id="lst-osm-progress-layer" style="opacity:.75;"></span>' +
+            '</span>'
+        );
+
+        $btn.after($wrap);
+        return $wrap;
+    }
+
+    function layerLabel(layerKey) {
+        var labels = {
+            'roads_lines': 'Straßen und befahrbare Wege',
+            'landuse_residential': 'Wohngebiete',
+            'landuse_industrial': 'Industrie',
+            'landuse_commercial': 'Gewerbe',
+            'landuse_retail': 'Einzelhandel',
+            'landuse_allotments': 'Kleingärten',
+            'landuse_farmland': 'Ackerland',
+            'landuse_animal_keeping': 'Tierhaltung',
+            'landuse_forest': 'Wald',
+            'landuse_logging': 'Forstwirtschaft',
+            'landuse_meadow': 'Wiese',
+            'landuse_railway': 'Bahnanlagen',
+            'landuse_cemetery': 'Friedhof',
+            'landuse_landfill': 'Deponie',
+            'landuse_quarry': 'Tagebau/Steinbruch',
+            'landuse_recreation_ground': 'Erholungsgebiet',
+            'landuse_religious': 'Religiöse Fläche'
+        };
+        return labels[layerKey] ? labels[layerKey] : String(layerKey || '');
+    }
+
+    function updateProgress(overallFloat, layerKey, layerPct, phase, dirtyDone, dirtyTotal) {
+        ensureOsmProgressUi();
+
+        var overallClamped = Math.max(0, Math.min(100, Number(overallFloat || 0)));
+        var overallBar = Math.floor(overallClamped);
+        var overallText = overallClamped.toFixed(1) + '%';
+
+        var layerInfo = '';
+        if (layerKey) {
+            var lp = (typeof layerPct === 'number') ? layerPct : null;
+            var phaseText = '';
+
+            if (phase === 'scan') {
+                phaseText = 'Scan';
+            } else if (phase === 'download') {
+                phaseText = 'Download';
+            } else if (phase) {
+                phaseText = String(phase);
+            }
+
+            layerInfo = layerLabel(layerKey);
+
+            if (phaseText) {
+                layerInfo += ' – ' + phaseText;
+            }
+
+            if (phase === 'download' && typeof dirtyDone === 'number' && typeof dirtyTotal === 'number' && dirtyTotal > 0) {
+                layerInfo += ' (' + dirtyDone + '/' + dirtyTotal + ')';
+            } else if (lp !== null) {
+                layerInfo += ' (' + String(lp) + '%)';
+            }
+        }
+
+        $('#lst-osm-progress').val(overallBar);
+        $('#lst-osm-progress-text').text(overallText);
+        $('#lst-osm-progress-layer').text(layerInfo);
+    }
+
+    function getOsmNonce() {
+        return (window.lstLeitstellenAjax && window.lstLeitstellenAjax.osm_nonce)
+            ? window.lstLeitstellenAjax.osm_nonce
+            : (window.lstLeitstellenAjax ? window.lstLeitstellenAjax.nonce : '');
+    }
+
+    function getAjaxUrl() {
+        return (window.lstLeitstellenAjax ? window.lstLeitstellenAjax.ajax_url : ajaxurl);
+    }
+
+    function makeRunToken() {
+        return 'rt_' + String(Date.now()) + '_' + String(Math.random()).slice(2);
+    }
+
+function postLayerStep(lsId, layerKey, nonce, runToken, cursor, chunk, reset, force) {
     return $.ajax({
-      url: getAjaxUrl(),
-      method: 'POST',
-      dataType: 'json',
-      data: {
-        action: 'lsttraining_osm_refresh_layer_step',
-        leitstelle_id: lsId,
-        layer: layerKey,
-        nonce: nonce,
-        run_token: runToken,
-        cursor: cursor,
-        chunk: chunk,
-        reset: reset ? '1' : '0',
-        force: force ? '1' : '0'
-      }
-    });
-  }
-
-  function sleepMs(ms){
-    return new Promise(function(resolve){ setTimeout(resolve, ms); });
-  }
-
-  function renderResult(lsId, results) {
-    var parts = [];
-    parts.push('<strong>OSM Cache aktualisiert</strong><br>');
-    parts.push('Leitstelle: ' + (lsId || ''));
-
-    var keys = Object.keys(results || {});
-    if (keys.length) {
-      parts.push('<ul style="margin:6px 0 0 18px;">');
-      keys.forEach(function(k){
-        var r = results[k];
-        var msg = '';
-        if (r && r.ok) {
-          msg = layerLabel(k) + ': ' + (r.feature_count || 0) + ' Features';
-          if (r.unchanged) msg += ' (unverändert)';
-        } else {
-          msg = layerLabel(k) + ': Fehler' + (r && r.message ? ' – ' + r.message : '');
+        url: getAjaxUrl(),
+        method: 'POST',
+        dataType: 'json',
+        data: {
+            action: 'lsttraining_osm_refresh_layer_step',
+            leitstelle_id: lsId,
+            layer: layerKey,
+            nonce: nonce,
+            run_token: runToken,
+            cursor: cursor,
+            chunk: chunk,
+            scan_budget: (layerKey === 'roads_lines' ? 3 : 5),
+            reset: reset ? '1' : '0',
+            force: force ? '1' : '0'
         }
-        parts.push('<li>' + msg + '</li>');
-      });
-      parts.push('</ul>');
-    }
-    setOsmStatus(parts.join(''), 'success');
-  }
+    });
+}
 
-  function chunkForLayer(layerKey) {
-    return (layerKey === 'roads_lines') ? 1 : 2;
-  }
-
-  $(document).on('click', '#btn-osm-refresh, #lst-osm-refresh-all, #lst-osm-refresh, #osm-refresh', function(e){
-    e.preventDefault();
-
-    var lsId = getCurrentLeitstelleId();
-    if (!lsId) {
-      setOsmStatus('Bitte zuerst die Leitstelle speichern, damit eine ID existiert.', 'error');
-      return;
+    function sleepMs(ms) {
+        return new Promise(function(resolve) {
+            setTimeout(resolve, ms);
+        });
     }
 
-    var nonce = getOsmNonce();
-    if (!nonce) {
-      setOsmStatus('Nonce fehlt.', 'error');
-      return;
+    function renderResult(lsId, results) {
+        var parts = [];
+        parts.push('<strong>OSM Cache aktualisiert</strong><br>');
+        parts.push('Leitstelle: ' + (lsId || ''));
+
+        var keys = Object.keys(results || {});
+        if (keys.length) {
+            parts.push('<ul style="margin:6px 0 0 18px;">');
+            keys.forEach(function(k) {
+                var r = results[k];
+                var msg = '';
+
+                if (r && r.ok) {
+                    msg = layerLabel(k) + ': ' + (r.feature_count || 0) + ' Features';
+
+                    if (typeof r.dirty_total === 'number') {
+                        msg += ', ' + r.dirty_total + ' geänderte Tiles';
+                    }
+
+                    if (r.unchanged) {
+                        msg += ' (unverändert)';
+                    }
+                } else {
+                    msg = layerLabel(k) + ': Fehler' + (r && r.message ? ' – ' + r.message : '');
+                }
+
+                parts.push('<li>' + msg + '</li>');
+            });
+            parts.push('</ul>');
+        }
+
+        setOsmStatus(parts.join(''), 'success');
     }
 
-    var layersQueue = [
-      'roads_lines',
-      'landuse_residential',
-      'landuse_industrial',
-      'landuse_commercial',
-      'landuse_retail',
-      'landuse_allotments',
-      'landuse_farmland',
-      'landuse_animal_keeping',
-      'landuse_forest',
-      'landuse_logging',
-      'landuse_meadow',
-      'landuse_railway',
-      'landuse_cemetery',
-      'landuse_landfill',
-      'landuse_quarry',
-      'landuse_recreation_ground',
-      'landuse_religious'
-    ];
+    function chunkForLayer(layerKey) {
+        return (layerKey === 'roads_lines') ? 1 : 2;
+    }
 
-    setOsmBusy(true);
-    ensureOsmProgressUi();
-    updateProgress(0, '', null);
-    setOsmStatus('OSM-Daten werden geladen und gespeichert …', 'warning');
+    function pauseAfterStepMs(layerKey, phase) {
+    if (phase === 'scan') {
+        return (layerKey === 'roads_lines') ? 2500 : 1500;
+    }
+    return (layerKey === 'roads_lines') ? 3000 : 2000;
+	}
 
-    var total = layersQueue.length;
-    var doneLayers = 0;
-    var combined = {};
+    function abortRun(message, type) {
+        osmQueueRunning = false;
+        setOsmBusy(false);
+        if (message) {
+            setOsmStatus(message, type || 'error');
+        }
+    }
 
-    (async function runQueue(){
-      for (var i = 0; i < layersQueue.length; i++) {
-        var layerKey = layersQueue[i];
+    $(document).on('click', '#btn-osm-refresh, #lst-osm-refresh-all, #lst-osm-refresh, #osm-refresh', function(e) {
+        e.preventDefault();
 
-        var cursor = 0;
-        var first = true;
-        var layerDone = false;
-        var lastFeatureCount = 0;
-
-        // pro Layer ein RunToken, damit State sauber ist
-        var rt = makeRunToken();
-
-        while (!layerDone) {
-
-          // sofort Layerprogress anzeigen, damit nicht "0%" wirkt
-          updateProgress((doneLayers / total) * 100, layerKey, 0);
-
-          try {
-            var resp = await postLayerStep(
-              lsId,
-              layerKey,
-              nonce,
-              rt,
-              cursor,
-              chunkForLayer(layerKey),
-              first,
-              false
-            );
-
-            if (!resp || !resp.success || !resp.data) {
-              var msg = (resp && resp.data && resp.data.message) ? resp.data.message : 'Unbekannter Fehler.';
-              setOsmStatus('Fehler bei <code>' + layerLabel(layerKey) + '</code>: ' + msg, 'error');
-              return;
-            }
-
-            if (resp.data && typeof resp.data.retry_after_ms === 'number' && resp.data.retry_after_ms > 0) {
-              var waitMs = Math.min(180000, Math.max(1000, resp.data.retry_after_ms));
-              setOsmStatus('Overpass Limit bei <code>' + layerLabel(layerKey) + '</code> – retry in ' + Math.round(waitMs/1000) + 's', 'warning');
-              await sleepMs(waitMs);
-              first = false;
-              continue;
-            }
-
-            var layerProgress = (typeof resp.data.progress === 'number') ? resp.data.progress : 0;
-
-            // FIX: Gesamtfortschritt in Dezimal, nicht auf 0 wegrunden
-            var overall = ((doneLayers + (layerProgress / 100)) / total) * 100;
-            updateProgress(overall, layerKey, layerProgress);
-
-            cursor = (typeof resp.data.cursor === 'number') ? resp.data.cursor : cursor;
-            lastFeatureCount = (typeof resp.data.feature_count === 'number') ? resp.data.feature_count : lastFeatureCount;
-            layerDone = !!resp.data.done;
-
-            if (layerDone) {
-              combined[layerKey] = {
-                ok: true,
-                feature_count: lastFeatureCount,
-                unchanged: !!(resp.data.final && resp.data.final.unchanged),
-                used_cache: !!(resp.data.final && resp.data.final.used_cache)
-              };
-            }
-
-          } catch (xhr) {
-            var body = (xhr && xhr.responseText) ? String(xhr.responseText) : '';
-            var shortBody = body ? body.slice(0, 600) : '';
-
-            var msg2 = 'Request fehlgeschlagen.';
-            if (xhr && xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) {
-              msg2 = xhr.responseJSON.data.message;
-            } else if (shortBody) {
-              msg2 = shortBody;
-            }
-
-            setOsmStatus('Fehler bei <code>' + layerLabel(layerKey) + '</code>: ' + msg2, 'error');
+        if (osmQueueRunning) {
+            setOsmStatus('OSM-Aktualisierung läuft bereits.', 'warning');
             return;
-          }
+        }
+        osmQueueRunning = true;
 
-          first = false;
-
-          await sleepMs(layerKey === 'roads_lines' ? 420 : 520);
+        var lsId = getCurrentLeitstelleId();
+        if (!lsId) {
+            abortRun('Bitte zuerst die Leitstelle speichern, damit eine ID existiert.', 'error');
+            return;
         }
 
-        doneLayers += 1;
-      }
+        var nonce = getOsmNonce();
+        if (!nonce) {
+            abortRun('Nonce fehlt.', 'error');
+            return;
+        }
 
-      updateProgress(100, '', null);
-      renderResult(lsId, combined);
+        var layersQueue = [
+            'roads_lines',
+            'landuse_residential',
+            'landuse_industrial',
+            'landuse_commercial',
+            'landuse_retail',
+            'landuse_allotments',
+            'landuse_farmland',
+            'landuse_animal_keeping',
+            'landuse_forest',
+            'landuse_logging',
+            'landuse_meadow',
+            'landuse_railway',
+            'landuse_cemetery',
+            'landuse_landfill',
+            'landuse_quarry',
+            'landuse_recreation_ground',
+            'landuse_religious'
+        ];
 
-    })().finally(function(){
-      setOsmBusy(false);
+        setOsmBusy(true);
+        ensureOsmProgressUi();
+        updateProgress(0, '', null, '', null, null);
+        setOsmStatus('OSM-Daten werden geladen und gespeichert …', 'warning');
+
+        var total = layersQueue.length;
+        var doneLayers = 0;
+        var combined = {};
+
+        (async function runQueue() {
+            for (var i = 0; i < layersQueue.length; i++) {
+                var layerKey = layersQueue[i];
+
+                var cursor = 0;
+                var first = true;
+                var layerDone = false;
+                var lastFeatureCount = 0;
+                var lastDirtyTotal = 0;
+                var lastPhase = 'scan';
+                var rt = makeRunToken();
+
+                while (!layerDone) {
+                    updateProgress((doneLayers / total) * 100, layerKey, 0, lastPhase, null, null);
+
+                    try {
+                        var resp = await postLayerStep(
+                            lsId,
+                            layerKey,
+                            nonce,
+                            rt,
+                            cursor,
+                            chunkForLayer(layerKey),
+                            first,
+                            false
+                        );
+
+                        if (!resp || typeof resp !== 'object') {
+                            abortRun('Fehler bei <code>' + layerLabel(layerKey) + '</code>: Leere oder ungültige Antwort.', 'error');
+                            return;
+                        }
+
+                        if (resp.data && typeof resp.data.retry_after_ms === 'number' && resp.data.retry_after_ms > 0) {
+						var waitMs = Math.min(180000, Math.max(1000, resp.data.retry_after_ms));
+						var msg = resp.data.message ? String(resp.data.message) : 'Warte vor dem nächsten Schritt …';
+
+						setOsmStatus(
+							msg + ' Retry in ' + Math.round(waitMs / 1000) + 's',
+							'warning'
+						);
+
+						await sleepMs(waitMs);
+						first = false;
+						continue;
+					}
+
+                        if (!resp.success || !resp.data) {
+                            var hardMsg = (resp && resp.data && resp.data.message) ? resp.data.message : 'Unbekannter Fehler.';
+                            abortRun('Fehler bei <code>' + layerLabel(layerKey) + '</code>: ' + hardMsg, 'error');
+                            return;
+                        }
+
+                        if (resp.data && resp.data.success === false) {
+                            var msgSoft = resp.data.message || 'Layer wird bereits aktualisiert.';
+
+                            if (msgSoft.indexOf('bereits aktualisiert') !== -1) {
+                                setOsmStatus(
+                                    'Layer <code>' + layerLabel(layerKey) + '</code> läuft bereits – warte kurz …',
+                                    'warning'
+                                );
+                                await sleepMs(1200);
+                                first = false;
+                                continue;
+                            }
+
+                            abortRun('Fehler bei <code>' + layerLabel(layerKey) + '</code>: ' + msgSoft, 'error');
+                            return;
+                        }
+
+                        lastPhase = resp.data.phase || lastPhase;
+
+                        var layerProgress = 0;
+                        if (typeof resp.data.progress === 'number') {
+                            layerProgress = resp.data.progress;
+                        } else if (
+                            lastPhase === 'download' &&
+                            typeof resp.data.dirty_done === 'number' &&
+                            typeof resp.data.dirty_total === 'number' &&
+                            resp.data.dirty_total > 0
+                        ) {
+                            layerProgress = (resp.data.dirty_done / resp.data.dirty_total) * 100;
+                        }
+
+                        var overall = ((doneLayers + (layerProgress / 100)) / total) * 100;
+
+                        updateProgress(
+                            overall,
+                            layerKey,
+                            layerProgress,
+                            lastPhase,
+
+                            resp.data.dirty_done,
+                            resp.data.dirty_total
+                        );
+
+                        if (typeof resp.data.cursor === 'number') {
+                            cursor = resp.data.cursor;
+                        }
+
+                        if (typeof resp.data.feature_count === 'number') {
+                            lastFeatureCount = resp.data.feature_count;
+                        }
+
+                        if (typeof resp.data.dirty_total === 'number') {
+                            lastDirtyTotal = resp.data.dirty_total;
+                        }
+
+                        if (resp.data.message) {
+                            setOsmStatus(resp.data.message, 'info');
+                        } else if (lastPhase === 'scan') {
+                            setOsmStatus('Prüfe Änderungen für <code>' + layerLabel(layerKey) + '</code> …', 'info');
+                        } else if (lastPhase === 'download') {
+                            setOsmStatus('Lade geänderte Tiles für <code>' + layerLabel(layerKey) + '</code> …', 'info');
+                        }
+
+                        layerDone = !!resp.data.done;
+
+                        if (layerDone) {
+                            combined[layerKey] = {
+                                ok: true,
+                                feature_count: lastFeatureCount,
+                                dirty_total: lastDirtyTotal,
+                                unchanged: !!(resp.data.final && resp.data.final.unchanged),
+                                used_cache: !!(resp.data.final && resp.data.final.used_cache)
+                            };
+                        }
+
+                    } catch (xhr) {
+						console.error('[OSM AJAX ERROR]', xhr);
+						console.error('[OSM AJAX STATUS]', xhr && xhr.status, xhr && xhr.statusText);
+						console.error('[OSM AJAX RESPONSE]', xhr && xhr.responseText);
+                        var body = (xhr && xhr.responseText) ? String(xhr.responseText) : '';
+                        var shortBody = body ? body.slice(0, 600) : '';
+
+                        var msg2 = 'Request fehlgeschlagen.';
+                        if (xhr && xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) {
+                            msg2 = xhr.responseJSON.data.message;
+                        } else if (shortBody) {
+                            msg2 = shortBody;
+                        }
+
+                        abortRun('Fehler bei <code>' + layerLabel(layerKey) + '</code>: ' + msg2, 'error');
+                        return;
+                    }
+
+                    first = false;
+                    await sleepMs(pauseAfterStepMs(layerKey, lastPhase));
+                }
+
+                doneLayers += 1;
+            }
+
+            updateProgress(100, '', null, '', null, null);
+            renderResult(lsId, combined);
+
+        })().finally(function() {
+            osmQueueRunning = false;
+            setOsmBusy(false);
+        });
     });
-  });
 
 })(jQuery);
 
@@ -719,121 +852,121 @@ function updateWachenZuordButtonState() {
 // ---------------------------------------------------------------------------
 // Zuordnung-Button (Leitstelle) nur aktiv, wenn ID + Einsatzgebiet vorhanden
 // ---------------------------------------------------------------------------
-(function(){
-  function getLeitstellenIdFromEditForm() {
-    var frm = document.getElementById('edit-leitstelle-formular');
-    if (!frm) return '';
+(function() {
+    function getLeitstellenIdFromEditForm() {
+        var frm = document.getElementById('edit-leitstelle-formular');
+        if (!frm) return '';
 
-    var el = frm.querySelector('input[name="lst_update_id"]');
-    if (!el) el = frm.querySelector('#lst_update_id');
+        var el = frm.querySelector('input[name="lst_update_id"]');
+        if (!el) el = frm.querySelector('#lst_update_id');
 
-    return el ? String(el.value || '').trim() : '';
-  }
-
-  function getLeitstellenGeoJsonFromEditForm() {
-    var frm = document.getElementById('edit-leitstelle-formular');
-    if (!frm) return '';
-
-    var el = frm.querySelector('[name="geojson_edit"], [name="geojson_einsatzgebiet_edit"], #geojson_edit');
-    return el ? String(el.value || '').trim() : '';
-  }
-
-  function hasValidGeoJson() {
-    var raw = getLeitstellenGeoJsonFromEditForm();
-    if (!raw) return false;
-
-    try {
-      var parsed = JSON.parse(raw);
-
-      if (!parsed) return false;
-
-      if (parsed.type === 'FeatureCollection') {
-        return Array.isArray(parsed.features) && parsed.features.length > 0;
-      }
-
-      if (parsed.type === 'Feature') {
-        return !!parsed.geometry;
-      }
-
-      return !!parsed.type;
-    } catch (e) {
-      return false;
+        return el ? String(el.value || '').trim() : '';
     }
-  }
 
-  function syncWachenZuordButton() {
-    var btn = document.getElementById('w_zuord_button_l');
-    if (!btn) return;
+    function getLeitstellenGeoJsonFromEditForm() {
+        var frm = document.getElementById('edit-leitstelle-formular');
+        if (!frm) return '';
 
-    var id = getLeitstellenIdFromEditForm();
-    var hasId = (/^\d+$/).test(id) && id !== '0';
-    var hasGeo = hasValidGeoJson();
-
-    if (hasId && hasGeo) {
-      btn.disabled = false;
-      btn.title = 'Zuordnung der Wachen bearbeiten';
-    } else {
-      btn.disabled = true;
-      btn.title = hasId
-        ? 'Bitte zuerst ein Einsatzgebiet anlegen'
-        : 'Bitte zuerst speichern';
+        var el = frm.querySelector('[name="geojson_edit"], [name="geojson_einsatzgebiet_edit"], #geojson_edit');
+        return el ? String(el.value || '').trim() : '';
     }
-  }
 
-  document.addEventListener('DOMContentLoaded', function(){
-    var btn = document.getElementById('w_zuord_button_l');
-    if (!btn) return;
+    function hasValidGeoJson() {
+        var raw = getLeitstellenGeoJsonFromEditForm();
+        if (!raw) return false;
 
-    btn.addEventListener('click', function(e){
-      var id = getLeitstellenIdFromEditForm();
-      var hasId = (/^\d+$/).test(id) && id !== '0';
-      var hasGeo = hasValidGeoJson();
+        try {
+            var parsed = JSON.parse(raw);
 
-      if (!(hasId && hasGeo)) {
-        e.preventDefault();
-        syncWachenZuordButton();
-        return;
-      }
+            if (!parsed) return false;
 
-      if (typeof openZuordnungPopup === 'function') {
-        e.preventDefault();
-        openZuordnungPopup({
-          entityType: 'leitstelle',
-          entityId: id
+            if (parsed.type === 'FeatureCollection') {
+                return Array.isArray(parsed.features) && parsed.features.length > 0;
+            }
+
+            if (parsed.type === 'Feature') {
+                return !!parsed.geometry;
+            }
+
+            return !!parsed.type;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function syncWachenZuordButton() {
+        var btn = document.getElementById('w_zuord_button_l');
+        if (!btn) return;
+
+        var id = getLeitstellenIdFromEditForm();
+        var hasId = (/^\d+$/).test(id) && id !== '0';
+        var hasGeo = hasValidGeoJson();
+
+        if (hasId && hasGeo) {
+            btn.disabled = false;
+            btn.title = 'Zuordnung der Wachen bearbeiten';
+        } else {
+            btn.disabled = true;
+            btn.title = hasId
+                ? 'Bitte zuerst ein Einsatzgebiet anlegen'
+                : 'Bitte zuerst speichern';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var btn = document.getElementById('w_zuord_button_l');
+        if (!btn) return;
+
+        btn.addEventListener('click', function(e) {
+            var id = getLeitstellenIdFromEditForm();
+            var hasId = (/^\d+$/).test(id) && id !== '0';
+            var hasGeo = hasValidGeoJson();
+
+            if (!(hasId && hasGeo)) {
+                e.preventDefault();
+                syncWachenZuordButton();
+                return;
+            }
+
+            if (typeof openZuordnungPopup === 'function') {
+                e.preventDefault();
+                openZuordnungPopup({
+                    entityType: 'leitstelle',
+                    entityId: id
+                });
+            }
         });
-      }
-    });
 
-    syncWachenZuordButton();
-
-    document.addEventListener('input', function(e){
-      if (
-        e.target &&
-        (
-          e.target.name === 'lst_update_id' ||
-          e.target.name === 'geojson_edit' ||
-          e.target.name === 'geojson_einsatzgebiet_edit' ||
-          e.target.id === 'geojson_edit'
-        )
-      ) {
         syncWachenZuordButton();
-      }
-    });
 
-    document.addEventListener('change', function(e){
-      if (
-        e.target &&
-        (
-          e.target.name === 'lst_update_id' ||
-          e.target.name === 'geojson_edit' ||
-          e.target.name === 'geojson_einsatzgebiet_edit' ||
-          e.target.id === 'geojson_edit'
-        )
-      ) {
-        syncWachenZuordButton();
-      }
-    });
+        document.addEventListener('input', function(e) {
+            if (
+                e.target &&
+                (
+                    e.target.name === 'lst_update_id' ||
+                    e.target.name === 'geojson_edit' ||
+                    e.target.name === 'geojson_einsatzgebiet_edit' ||
+                    e.target.id === 'geojson_edit'
+                )
+            ) {
+                syncWachenZuordButton();
+            }
+        });
 
-    window.syncWachenZuordButton = syncWachenZuordButton;
-  });
+        document.addEventListener('change', function(e) {
+            if (
+                e.target &&
+                (
+                    e.target.name === 'lst_update_id' ||
+                    e.target.name === 'geojson_edit' ||
+                    e.target.name === 'geojson_einsatzgebiet_edit' ||
+                    e.target.id === 'geojson_edit'
+                )
+            ) {
+                syncWachenZuordButton();
+            }
+        });
+
+        window.syncWachenZuordButton = syncWachenZuordButton;
+    });
 })();
