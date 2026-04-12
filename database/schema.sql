@@ -274,41 +274,56 @@ CREATE TABLE IF NOT EXISTS `lst_activity_log` (
 -- 6) Einsatzsystem
 -- -------------------------------------------------------------------
 
+-- Einsatzdefinitionen für den Einsatzeditor.
+-- Diese Tabelle beschreibt nur mögliche Einsätze fachlich.
+-- Sie enthält keine Spawnwahrscheinlichkeiten oder Simulationslogik.
+-- Zeitfenster, Jahreszeiten und Wetterbedingungen werden bewusst
+-- in eigene Kindtabellen ausgelagert.
+
 CREATE TABLE IF NOT EXISTS `einsaetze` (
   `id` INT NOT NULL AUTO_INCREMENT,
 
   `title` VARCHAR(255) NULL,
+  `description` TEXT NULL,
 
   `einsatzart` ENUM('RD','FW') NOT NULL,
   `einsatztyp` VARCHAR(100) NOT NULL,
 
   `enabled` TINYINT(1) NOT NULL DEFAULT 1,
 
-  `wetter_mask_json` TEXT NULL,
-  `uhrzeit_fenster`  VARCHAR(32) NULL,
-
+  -- Ort-Scope: beschreibt nur, wo ein Einsatz grundsätzlich entstehen darf
   `scope_type` ENUM('anywhere','landscape','poi_type','fixed_point') NOT NULL DEFAULT 'anywhere',
 
+  -- Einschränkungen
   `landscape_tags_json` TEXT NULL,
   `poi_type` VARCHAR(50) NULL,
 
-  `fixed_latitude`  DOUBLE NULL,
+  -- Fixpunkt (nur wenn scope_type='fixed_point')
+  `fixed_latitude` DOUBLE NULL,
   `fixed_longitude` DOUBLE NULL,
-  `fixed_radius_m`  INT NULL,
+  `fixed_radius_m` INT NULL,
 
-  `caller_who`   TEXT NOT NULL,
+  -- Basis-Anrufdaten
+  `caller_who` TEXT NOT NULL,
   `caller_where` TEXT NOT NULL,
-  `caller_what`  TEXT NOT NULL,
+  `caller_what` TEXT NOT NULL,
 
-  `anrufertext`  TEXT NULL,
-  `lagemeldung`  TEXT NOT NULL,
+  -- optional: fertiger Text / Template
+  `anrufertext` TEXT NULL,
+  `caller_template_text` TEXT NULL,
 
+  -- Startlage
+  `lagemeldung` TEXT NOT NULL,
+
+  -- optionale Meta-Felder
   `patientenzahl` INT NULL DEFAULT 0,
   `patient_anforderung` VARCHAR(255) NULL,
   `notarzt_benoetigt` TINYINT(1) NULL DEFAULT 0,
   `feuerwehr_benoetigt` TINYINT(1) NULL DEFAULT 0,
   `poi_tag` VARCHAR(50) NULL,
+  `tags_json` TEXT NULL,
 
+  -- bleibt vorerst im Schema, auch wenn das eher simseitig ist
   `weight_base` INT NOT NULL DEFAULT 100,
 
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -321,8 +336,55 @@ CREATE TABLE IF NOT EXISTS `einsaetze` (
   KEY `idx_einsaetze_poi_type` (`poi_type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `einsatz_excluded_leitstellen` (
-  `einsatz_id`    INT NOT NULL,
+-- Jahreszeiten pro Einsatz.
+-- Keine Zeile = ganzjährig zulässig.
+CREATE TABLE `einsatz_seasons` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `einsatz_id` INT NOT NULL,
+
+  `season` ENUM('spring','summer','autumn','winter') NOT NULL,
+
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_es_einsatz_season` (`einsatz_id`,`season`),
+  KEY `idx_es_season` (`season`),
+
+  CONSTRAINT `fk_es_einsatz`
+    FOREIGN KEY (`einsatz_id`) REFERENCES `einsaetze`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Wetterbedingungen pro Einsatz.
+-- Keine Zeile = bei jedem Wetter zulässig.
+CREATE TABLE `einsatz_weather_conditions` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `einsatz_id` INT NOT NULL,
+
+  `weather_type` ENUM(
+    'clear',
+    'cloudy',
+    'rain',
+    'snow',
+    'storm',
+    'windy',
+    'fog',
+    'cold',
+    'hot'
+  ) NOT NULL,
+
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_ewc_einsatz_weather` (`einsatz_id`,`weather_type`),
+  KEY `idx_ewc_weather` (`weather_type`),
+
+  CONSTRAINT `fk_ewc_einsatz`
+    FOREIGN KEY (`einsatz_id`) REFERENCES `einsaetze`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- pro Einsatz können Leitstellen ausgeschlossen werden
+CREATE TABLE `einsatz_excluded_leitstellen` (
+  `einsatz_id` INT NOT NULL,
   `leitstelle_id` INT NOT NULL,
 
   PRIMARY KEY (`einsatz_id`,`leitstelle_id`),
@@ -334,7 +396,8 @@ CREATE TABLE IF NOT EXISTS `einsatz_excluded_leitstellen` (
     FOREIGN KEY (`leitstelle_id`) REFERENCES `leitstellen`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `einsatz_followups` (
+-- Folgekommunikation pro Vorlage
+CREATE TABLE `einsatz_followups` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `einsatz_id` INT NOT NULL,
 
@@ -354,32 +417,79 @@ CREATE TABLE IF NOT EXISTS `einsatz_followups` (
     FOREIGN KEY (`einsatz_id`) REFERENCES `einsaetze`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `einsatz_caller_parts` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `einsatz_id` INT NOT NULL,
+
+  `part_key` ENUM('greeting','person','location','problem','extra') NOT NULL,
+  `text` TEXT NOT NULL,
+  `sort_order` INT NOT NULL DEFAULT 0,
+  `enabled` TINYINT(1) NOT NULL DEFAULT 1,
+
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (`id`),
+  KEY `idx_ecp_einsatz` (`einsatz_id`),
+  KEY `idx_ecp_part` (`part_key`),
+  KEY `idx_ecp_enabled` (`enabled`),
+
+  CONSTRAINT `fk_ecp_einsatz`
+    FOREIGN KEY (`einsatz_id`) REFERENCES `einsaetze`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+CREATE TABLE IF NOT EXISTS `einsatz_rule_caller_parts` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `einsatz_rule_id` INT NOT NULL,
+
+  `part_key` ENUM('greeting','person','location','problem','extra') NOT NULL,
+  `text` TEXT NOT NULL,
+  `sort_order` INT NOT NULL DEFAULT 0,
+  `enabled` TINYINT(1) NOT NULL DEFAULT 1,
+
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (`id`),
+  KEY `idx_ercp_rule` (`einsatz_rule_id`),
+  KEY `idx_ercp_part` (`part_key`),
+  KEY `idx_ercp_enabled` (`enabled`),
+
+  CONSTRAINT `fk_ercp_rule`
+    FOREIGN KEY (`einsatz_rule_id`) REFERENCES `einsatz_rules`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Regelbasierte Generatoren (Definitionen, keine konkreten Einsätze).
+-- Diese Tabelle bleibt vorerst separat und kann später ebenfalls
+-- auf Zeit/Saison/Wetter-Kindtabelle umgestellt werden.
 CREATE TABLE IF NOT EXISTS `einsatz_rules` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(255) NOT NULL,
+  `description` TEXT NULL,
 
   `enabled` TINYINT(1) NOT NULL DEFAULT 1,
 
   `einsatzart` ENUM('RD','FW') NOT NULL,
   `einsatztyp` VARCHAR(100) NOT NULL,
 
-  `wetter_mask_json` TEXT NULL,
-  `uhrzeit_fenster`  VARCHAR(32) NULL,
-
   `scope_type` ENUM('anywhere','landscape','poi_type','fixed_point') NOT NULL DEFAULT 'anywhere',
+
   `landscape_tags_json` TEXT NULL,
   `poi_type` VARCHAR(50) NULL,
 
-  `fixed_latitude`  DOUBLE NULL,
+  `fixed_latitude` DOUBLE NULL,
   `fixed_longitude` DOUBLE NULL,
-  `fixed_radius_m`  INT NULL,
+  `fixed_radius_m` INT NULL,
 
   `spawn_radius_min_m` INT NULL,
   `spawn_radius_max_m` INT NULL,
 
   `caller_template_json` TEXT NOT NULL,
+  `caller_template_text` TEXT NULL,
   `followups_template_json` TEXT NULL,
 
+  `tags_json` TEXT NULL,
   `weight_base` INT NOT NULL DEFAULT 100,
 
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -392,7 +502,8 @@ CREATE TABLE IF NOT EXISTS `einsatz_rules` (
   KEY `idx_rules_poi_type` (`poi_type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `instanz_einsaetze` (
+-- Konkrete Einsätze pro Spielinstanz
+CREATE TABLE `instanz_einsaetze` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 
   `instanz_id` INT NOT NULL,
@@ -434,7 +545,8 @@ CREATE TABLE IF NOT EXISTS `instanz_einsaetze` (
     FOREIGN KEY (`leitstelle_id`) REFERENCES `leitstellen`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `instanz_einsatz_events` (
+-- Ereignisse/Kommunikation zu einem konkreten Instanz-Einsatz
+CREATE TABLE `instanz_einsatz_events` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `instanz_einsatz_id` BIGINT UNSIGNED NOT NULL,
 
@@ -573,3 +685,175 @@ CREATE TABLE IF NOT EXISTS `leitstelle_layer_sync_state` (
 ) ENGINE=InnoDB
 DEFAULT CHARSET=utf8mb4
 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `einsatz_time_windows` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `einsatz_id` INT NOT NULL,
+  `day_type` ENUM(
+    'any',
+    'weekday',
+    'weekend',
+    'monday',
+    'tuesday',
+    'wednesday',
+    'thursday',
+    'friday',
+    'saturday',
+    'sunday'
+  ) NOT NULL DEFAULT 'any',
+  `start_time` TIME NOT NULL,
+  `end_time` TIME NOT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (`id`),
+  KEY `idx_etw_einsatz` (`einsatz_id`),
+  KEY `idx_etw_day_type` (`day_type`),
+
+  CONSTRAINT `fk_etw_einsatz`
+    FOREIGN KEY (`einsatz_id`) REFERENCES `einsaetze`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `anrufer_profile` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(255) NOT NULL,
+  `category` VARCHAR(50) NOT NULL,
+  `tone` VARCHAR(50) NOT NULL DEFAULT 'neutral',
+  `uses_name` TINYINT(1) NOT NULL DEFAULT 1,
+  `uses_address` TINYINT(1) NOT NULL DEFAULT 1,
+  `uses_poi_name` TINYINT(1) NOT NULL DEFAULT 0,
+  `uses_company_name` TINYINT(1) NOT NULL DEFAULT 0,
+  `emotion_level` TINYINT NOT NULL DEFAULT 1,
+  `enabled` TINYINT(1) NOT NULL DEFAULT 1,
+  `sort_order` INT NOT NULL DEFAULT 0,
+  `notes` TEXT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_ap_enabled` (`enabled`),
+  KEY `idx_ap_category` (`category`),
+  KEY `idx_ap_tone` (`tone`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `anrufer_profile_parts` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `profile_id` INT NOT NULL,
+  `part_key` ENUM(
+    'greeting',
+    'self_intro',
+    'location_intro',
+    'problem_intro',
+    'urgency',
+    'closing',
+    'callback_request'
+  ) NOT NULL,
+  `text` TEXT NOT NULL,
+  `sort_order` INT NOT NULL DEFAULT 0,
+  `enabled` TINYINT(1) NOT NULL DEFAULT 1,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_app_profile` (`profile_id`),
+  KEY `idx_app_part` (`part_key`),
+  KEY `idx_app_enabled` (`enabled`),
+  CONSTRAINT `fk_app_profile`
+    FOREIGN KEY (`profile_id`) REFERENCES `anrufer_profile`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `anrufer_name_pool` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `gender_key` ENUM('male','female','neutral') NOT NULL,
+  `first_name` VARCHAR(100) NOT NULL,
+  `last_name` VARCHAR(100) NOT NULL,
+  `enabled` TINYINT(1) NOT NULL DEFAULT 1,
+  `sort_order` INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `idx_anp_gender` (`gender_key`),
+  KEY `idx_anp_enabled` (`enabled`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO anrufer_name_pool (gender_key, first_name, last_name, enabled, sort_order) VALUES
+
+-- FEMALE
+('female','Anna','Müller',1,10),
+('female','Laura','Schmidt',1,20),
+('female','Sophie','Schneider',1,30),
+('female','Lea','Fischer',1,40),
+('female','Marie','Weber',1,50),
+('female','Lena','Meyer',1,60),
+('female','Julia','Wagner',1,70),
+('female','Sarah','Becker',1,80),
+('female','Nina','Hoffmann',1,90),
+('female','Lisa','Schäfer',1,100),
+('female','Katharina','Koch',1,110),
+('female','Clara','Bauer',1,120),
+('female','Johanna','Richter',1,130),
+('female','Paula','Klein',1,140),
+('female','Hannah','Wolf',1,150),
+('female','Theresa','Schröder',1,160),
+('female','Franziska','Neumann',1,170),
+('female','Vanessa','Schwarz',1,180),
+('female','Melanie','Zimmermann',1,190),
+('female','Sabine','Braun',1,200),
+
+-- MALE
+('male','Max','Müller',1,210),
+('male','Leon','Schmidt',1,220),
+('male','Paul','Schneider',1,230),
+('male','Lukas','Fischer',1,240),
+('male','Finn','Weber',1,250),
+('male','Jonas','Meyer',1,260),
+('male','Tim','Wagner',1,270),
+('male','Jan','Becker',1,280),
+('male','Tom','Hoffmann',1,290),
+('male','David','Schäfer',1,300),
+('male','Felix','Koch',1,310),
+('male','Moritz','Bauer',1,320),
+('male','Daniel','Richter',1,330),
+('male','Philipp','Klein',1,340),
+('male','Sebastian','Wolf',1,350),
+('male','Tobias','Schröder',1,360),
+('male','Andreas','Neumann',1,370),
+('male','Stefan','Schwarz',1,380),
+('male','Michael','Zimmermann',1,390),
+('male','Thomas','Braun',1,400),
+
+-- NEUTRAL / UNISEX
+('neutral','Alex','Müller',1,410),
+('neutral','Kim','Schmidt',1,420),
+('neutral','Sascha','Schneider',1,430),
+('neutral','Robin','Fischer',1,440),
+('neutral','Chris','Weber',1,450),
+('neutral','Sam','Meyer',1,460),
+('neutral','Nico','Wagner',1,470),
+('neutral','Toni','Becker',1,480),
+('neutral','Jule','Hoffmann',1,490),
+('neutral','Mika','Schäfer',1,500);
+
+CREATE TABLE IF NOT EXISTS `einsatz_anrufer_profiles` (
+  `einsatz_id` INT NOT NULL,
+  `profile_id` INT NOT NULL,
+  `weight` INT NOT NULL DEFAULT 100,
+  PRIMARY KEY (`einsatz_id`, `profile_id`),
+  KEY `idx_eap_profile` (`profile_id`),
+  CONSTRAINT `fk_eap_einsatz`
+    FOREIGN KEY (`einsatz_id`) REFERENCES `einsaetze`(`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_eap_profile`
+    FOREIGN KEY (`profile_id`) REFERENCES `anrufer_profile`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `einsatz_lagebausteine` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `einsatz_id` INT NOT NULL,
+  `part_key` ENUM('problem','observation','context','urgency_hint','extra') NOT NULL,
+  `text` TEXT NOT NULL,
+  `sort_order` INT NOT NULL DEFAULT 0,
+  `enabled` TINYINT(1) NOT NULL DEFAULT 1,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_elb_einsatz` (`einsatz_id`),
+  KEY `idx_elb_part` (`part_key`),
+  CONSTRAINT `fk_elb_einsatz`
+    FOREIGN KEY (`einsatz_id`) REFERENCES `einsaetze`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+

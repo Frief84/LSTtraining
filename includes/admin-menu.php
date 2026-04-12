@@ -16,12 +16,13 @@ add_action( 'admin_menu', function () {
 
     // Statt der alten Helper-Funktion nutzen wir jetzt lsttraining_user_can()
     $can = [
-        'leitstellen'  => lsttraining_user_can( 'leitstellen'  ),
-        'nebenstellen' => lsttraining_user_can( 'nebenstellen' ),
-        'hospitals'    => lsttraining_user_can( 'hospitals'    ),
-        'wachen'       => lsttraining_user_can( 'wachen'       ),
-        'fahrzeuge'    => lsttraining_user_can( 'fahrzeuge'    ),
-    ];
+    'leitstellen'  => lsttraining_user_can( 'leitstellen'  ),
+    'nebenstellen' => lsttraining_user_can( 'nebenstellen' ),
+    'hospitals'    => lsttraining_user_can( 'hospitals'    ),
+    'wachen'       => lsttraining_user_can( 'wachen'       ),
+    'fahrzeuge'    => lsttraining_user_can( 'fahrzeuge'    ),
+    'einsaetze'    => lsttraining_user_can( 'einsaetze'    ),
+];
 
     // Hat der Benutzer weder Admin-Rechte noch irgendeine Ressource?
     if ( ! $is_admin && ! in_array( true, $can, true ) ) {
@@ -108,6 +109,29 @@ add_action( 'admin_menu', function () {
         );
     }
 	
+	// 3.6 Einsätze
+	if ( $can['leitstellen'] ) {
+		add_submenu_page(
+			$parent_slug,
+			'Einsätze',
+			'Einsätze',
+			'read',
+			'lsttraining_einsaetze',
+			'lsttraining_render_einsaetze'
+		);
+	}
+	
+// 3.6 Anruferprofile
+if ( $can['leitstellen'] ) {
+    add_submenu_page(
+        $parent_slug,
+        'Anruferprofile',
+        'Anruferprofile',
+        'read',
+        'lsttraining_anruferprofile',
+        'lsttraining_render_anruferprofile'
+    );
+}
 	
     /* ------------------------------------------------------------------ */
     /*   4. Admin-exklusive Punkte                                        */

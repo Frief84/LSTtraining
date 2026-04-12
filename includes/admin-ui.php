@@ -233,10 +233,44 @@ add_action('admin_enqueue_scripts', function ($hook) {
             'fahrzeugtypen' => $fahrzeugtypen,
         ]);
     }
+	
+	if ($page === 'lsttraining_einsaetze' || strpos((string)$hook, 'lsttraining_einsaetze') !== false) {
+		wp_enqueue_script(
+			'lst-einsaetze',
+			$root_url . 'js/einsaetze.js',
+			['jquery', 'underscore', 'wp-util', 'lst-openlayers', 'lst-admin-ui'],
+			'1.0.1',
+			true
+		);
+
+		wp_localize_script('lst-einsaetze', 'lstEinsaetzeAjax', [
+			'ajax_url' => admin_url('admin-ajax.php'),
+			'nonce'    => wp_create_nonce('lsttraining_leitstellen'),
+		]);
+	}	
+		if ($page === 'lsttraining_anruferprofile' || strpos((string)$hook, 'lsttraining_anruferprofile') !== false) {
+		wp_enqueue_script(
+			'lst-anruferprofile',
+			$root_url . 'js/anruferprofile.js',
+			['jquery', 'underscore', 'wp-util', 'lst-admin-ui'],
+			'1.0.0',
+			true
+		);
+
+		wp_localize_script('lst-anruferprofile', 'lstAnruferprofileAjax', [
+			'ajax_url' => admin_url('admin-ajax.php'),
+			'nonce'    => wp_create_nonce('lsttraining_leitstellen'),
+		]);
+	}
 });
 
 /* ---------------- Render-Callbacks (Templates liegen in /includes) ---------------- */
 
+if (!function_exists('lsttraining_render_anruferprofile')) {
+    function lsttraining_render_anruferprofile() {
+        require_once plugin_dir_path(__FILE__) . 'anruferprofile.php';
+    }
+}
 if (!function_exists('lsttraining_render_leitstellen')) {
     function lsttraining_render_leitstellen() {
         require_once plugin_dir_path(__FILE__) . 'leitstellen_editor.php';
@@ -248,6 +282,12 @@ if (!function_exists('lsttraining_render_nebenstellen')) {
         require_once plugin_dir_path(__FILE__) . 'nebenstellen_editor.php';
     }
 }
+
+if (!function_exists('lsttraining_render_einsaetze')) {
+        function lsttraining_render_einsaetze() {
+            require_once plugin_dir_path(__FILE__) . 'einsaetze.php';
+        }
+    }
 
 if (!function_exists('lsttraining_render_leitstellen_fahrzeuge')) {
     function lsttraining_render_leitstellen_fahrzeuge() {
