@@ -41,12 +41,15 @@ $all_nls = $pdo->query(
 <div class="wrap">
   <h1>Wachen verwalten</h1>
 
- <form method="get" style="display: flex; gap: 20px; margin-bottom: 20px;">
+ <form method="get" class="wachen-filter-form">
   <input type="hidden" name="page" value="lsttraining_leitstellen_wachen">
+  <p class="wachen-filter-intro">
+    Wählen Sie eine Filterart: Leitstelle, Nebenleitstelle oder Region. Für die Region wählen Sie zuerst das Land und danach das Bundesland.
+  </p>
 
   <!-- Leitstellen-Box -->
-  <div class="filter-box" style="flex:1; border:1px solid #ddd; padding:10px; border-radius:4px;">
-    <h2 style="margin-top:0;">Leitstelle</h2>
+  <div class="filter-box">
+    <h2>Leitstelle</h2>
     <p>
       <label for="ls_search">Suche Leitstelle:</label><br>
       <input type="text" id="ls_search" placeholder="Filter..." style="width:100%; box-sizing:border-box;">
@@ -66,8 +69,8 @@ $all_nls = $pdo->query(
   </div>
 
   <!-- Nebenleitstellen-Box -->
-  <div class="filter-box" style="flex:1; border:1px solid #ddd; padding:10px; border-radius:4px;">
-    <h2 style="margin-top:0;">Nebenleitstelle</h2>
+  <div class="filter-box">
+    <h2>Nebenleitstelle</h2>
     <p>
       <label for="nls_search">Suche Nebenleitstelle:</label><br>
       <input type="text" id="nls_search" placeholder="Filter..." style="width:100%; box-sizing:border-box;">
@@ -113,40 +116,54 @@ $bundeslaender = $bundeslaender_by_land[$selectedLand] ?? [];
 
 // JSON für data-map sicher encodieren (Umlaute erhalten, Quotes escapen)
 $data_map_json = wp_json_encode($bundeslaender_by_land, JSON_UNESCAPED_UNICODE | JSON_HEX_APOS | JSON_HEX_QUOT);
+$region_filter_disabled = (bool) ($filter_leitstelle || $filter_nebenleitstelle);
 ?>
-<div class="filter-box" style="flex:1; border:1px solid #ddd; padding:10px; border-radius:4px;">
-  <h2 style="margin-top:0;">Land</h2>
-  <p>
-    <label for="land">Land auswählen:</label><br>
-    <select id="land" name="land" style="width:100%; box-sizing:border-box;">
-      <?php foreach ($laender as $land): ?>
-        <option value="<?php echo esc_attr($land); ?>" <?php selected($selectedLand, $land); ?>>
-          <?php echo esc_html($land); ?>
-        </option>
-      <?php endforeach; ?>
-    </select>
-  </p>
-</div>
-
-<div class="filter-box" style="flex:1; border:1px solid #ddd; padding:10px; border-radius:4px;">
-  <h2 style="margin-top:0;">Bundesland</h2>
-  <p>
-    <label for="bundesland">Bundesland auswählen:</label><br>
-    <select
-      id="bundesland"
-      name="bundesland"
-      style="width:100%; box-sizing:border-box;"
-      data-map='<?php echo esc_attr($data_map_json); ?>'
-    >
-      <option value="">— Bitte wählen —</option>
-      <option value="__none__" <?php selected($selectedBundesland, '__none__'); ?>>Ohne Bundesland</option>
-      <?php foreach ($bundeslaender as $bl): ?>
-        <option value="<?php echo esc_attr($bl); ?>" <?php selected($selectedBundesland, $bl); ?>>
-          <?php echo esc_html($bl); ?>
-        </option>
-      <?php endforeach; ?>
-    </select>
-    <small class="description">„Ohne Bundesland“ findet Einträge mit NULL oder leerem Feld.</small>
+<div id="region-filter" class="filter-box filter-box--region<?php echo $region_filter_disabled ? ' is-disabled' : ''; ?>">
+  <div class="region-filter-heading">
+    <h2>Region</h2>
+    <span class="region-filter-badge">2 Schritte</span>
+  </div>
+  <p class="region-filter-hint">Das Land legt fest, welche Bundesländer im zweiten Schritt zur Auswahl stehen.</p>
+  <div class="region-filter-steps">
+    <p class="region-filter-step">
+      <span class="region-filter-step-label">Schritt 1</span>
+      <label for="land">Land auswählen</label>
+      <select id="land" name="land">
+        <?php foreach ($laender as $land): ?>
+          <option value="<?php echo esc_attr($land); ?>" <?php selected($selectedLand, $land); ?>>
+            <?php echo esc_html($land); ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
+    </p>
+    <p class="region-filter-step">
+      <span class="region-filter-step-label">Schritt 2</span>
+      <label for="bundesland">Bundesland auswählen</label>
+      <select
+        id="bundesland"
+        name="bundesland"
+        data-map='<?php echo esc_attr($data_map_json); ?>'
+        aria-describedby="region-filter-status"
+      >
+        <option value="">— Bundesland wählen —</option>
+        <option value="__none__" <?php selected($selectedBundesland, '__none__'); ?>>Ohne Bundesland</option>
+        <?php foreach ($bundeslaender as $bl): ?>
+          <option value="<?php echo esc_attr($bl); ?>" <?php selected($selectedBundesland, $bl); ?>>
+            <?php echo esc_html($bl); ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
+      <small class="description">„Ohne Bundesland“ findet Einträge im gewählten Land mit NULL oder leerem Feld.</small>
+    </p>
+  </div>
+  <p id="region-filter-status" class="region-filter-status" aria-live="polite">
+    <?php if ($region_filter_disabled) : ?>
+      Regionsfilter pausiert: Es ist bereits eine Leitstelle oder Nebenleitstelle aktiv.
+    <?php elseif ($selectedBundesland !== '') : ?>
+      Regionsfilter aktiv.
+    <?php else : ?>
+      Nächster Schritt: Bundesland für <?php echo esc_html($selectedLand); ?> auswählen.
+    <?php endif; ?>
   </p>
 </div>
 </form>
@@ -202,6 +219,9 @@ $where = [];
 
     // 3a) Bundesland
     if ($selectedBundesland !== '') {
+        $where[]  = 'w.land = ?';
+        $params[] = $selectedLand;
+
         if ($selectedBundesland === '__none__') {
             $where[] = '(w.bundesland IS NULL OR w.bundesland = \'\')';
         } else {

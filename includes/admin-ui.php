@@ -15,6 +15,10 @@ add_action('admin_enqueue_scripts', function ($hook) {
     // Robust: Root-URL/Path immer aus Plugin-Root-Datei ableiten
     $root_url  = plugin_dir_url($plugin_file);   // .../wp-content/plugins/lsttraining-plugin/
     $root_path = plugin_dir_path($plugin_file);  // .../wp-content/plugins/lsttraining-plugin/
+    $asset_version = static function (string $relative) use ($root_path): string {
+        $path = $root_path . ltrim($relative, '/\\');
+        return is_readable($path) ? (string) filemtime($path) : '1.0.0';
+    };
 
     // Gate robuster machen: entweder Hook oder ?page enthält lsttraining
     $page = isset($_GET['page']) ? sanitize_text_field(wp_unslash($_GET['page'])) : '';
@@ -32,19 +36,20 @@ add_action('admin_enqueue_scripts', function ($hook) {
     wp_enqueue_script('lst-openlayers', $root_url . 'openlayers/ol.js', [], null, true);
 
     // Admin UI
-    wp_enqueue_style('lst-admin-css', $root_url . 'css/admin-ui.css', [], '1.0.0');
+    wp_enqueue_style('lst-admin-css', $root_url . 'css/admin-ui.css', [], $asset_version('css/admin-ui.css'));
     wp_enqueue_script('lst-admin-ui', $root_url . 'js/admin-ui.js', ['jquery'], '1.0.2', true);
 
     // ───────────────────────────────────────────
     // Leitstellen (Top-Level)
     // ───────────────────────────────────────────
     if ($page === 'lsttraining_leitstellen' || $hook === 'toplevel_page_lsttraining_leitstellen') {
+        wp_enqueue_media();
 
         wp_enqueue_script(
             'lst-leitstellen-editor',
             $root_url . 'js/leitstellen_editor.js',
             ['jquery', 'wp-util', 'lst-openlayers', 'lst-admin-ui'],
-            '1.0.0',
+            $asset_version('js/leitstellen_editor.js'),
             true
         );
 
@@ -88,6 +93,13 @@ add_action('admin_enqueue_scripts', function ($hook) {
             'nonce'     => wp_create_nonce('lsttraining_leitstellen'),
             // falls du OSM-AJAX nutzt:
             'osm_nonce' => wp_create_nonce('lsttraining_osm_layers'),
+            'signal_sprite_urls' => [
+                'beacon' => $root_url . 'img/signal/beacon.png',
+                'strobe' => $root_url . 'img/signal/strobe.png',
+                'bar' => $root_url . 'img/signal/lightbar.png',
+                'glow' => $root_url . 'img/signal/glow.png',
+                'editor_point' => $root_url . 'img/signal/editor-point.png',
+            ],
         ]);
 
         wp_enqueue_script(
@@ -166,7 +178,7 @@ add_action('admin_enqueue_scripts', function ($hook) {
             'lst-wachen',
             $root_url . 'js/wachen.js',
             ['jquery', 'lst-openlayers', 'select2'],
-            '1.0.2',
+            $asset_version('js/wachen.js'),
             true
         );
 
@@ -231,21 +243,41 @@ add_action('admin_enqueue_scripts', function ($hook) {
             'nonce'         => wp_create_nonce('lst_fahrzeuge_nonce'),
             'bundeslaender' => $bundeslaender,
             'fahrzeugtypen' => $fahrzeugtypen,
+            'signal_sprite_urls' => [
+                'beacon' => $root_url . 'img/signal/beacon.png',
+                'strobe' => $root_url . 'img/signal/strobe.png',
+                'bar' => $root_url . 'img/signal/lightbar.png',
+                'glow' => $root_url . 'img/signal/glow.png',
+                'editor_point' => $root_url . 'img/signal/editor-point.png',
+            ],
         ]);
     }
 	
 	if ($page === 'lsttraining_einsaetze' || strpos((string)$hook, 'lsttraining_einsaetze') !== false) {
+        $einsatz_fahrzeugtypen = [];
+        $einsatz_ft_path = $root_path . 'data/fahrzeugtypen.json';
+        if (is_readable($einsatz_ft_path)) {
+            $tmp = json_decode(file_get_contents($einsatz_ft_path), true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($tmp)) {
+                $einsatz_fahrzeugtypen = array_values(array_filter(array_map('strval', $tmp)));
+            }
+        }
+        if (empty($einsatz_fahrzeugtypen)) {
+            $einsatz_fahrzeugtypen = ['RTW','NEF','KTW','HLF 20','LF 20','DLK 23/12','GW-San','ELW 1','MTW'];
+        }
+
 		wp_enqueue_script(
 			'lst-einsaetze',
 			$root_url . 'js/einsaetze.js',
 			['jquery', 'underscore', 'wp-util', 'lst-openlayers', 'lst-admin-ui'],
-			'1.0.1',
+			$asset_version('js/einsaetze.js'),
 			true
 		);
 
 		wp_localize_script('lst-einsaetze', 'lstEinsaetzeAjax', [
-			'ajax_url' => admin_url('admin-ajax.php'),
-			'nonce'    => wp_create_nonce('lsttraining_leitstellen'),
+			'ajax_url'      => admin_url('admin-ajax.php'),
+			'nonce'         => wp_create_nonce('lsttraining_leitstellen'),
+            'fahrzeugtypen' => $einsatz_fahrzeugtypen,
 		]);
 	}	
 		if ($page === 'lsttraining_anruferprofile' || strpos((string)$hook, 'lsttraining_anruferprofile') !== false) {
@@ -253,7 +285,7 @@ add_action('admin_enqueue_scripts', function ($hook) {
 			'lst-anruferprofile',
 			$root_url . 'js/anruferprofile.js',
 			['jquery', 'underscore', 'wp-util', 'lst-admin-ui'],
-			'1.0.0',
+			'1.0.1',
 			true
 		);
 

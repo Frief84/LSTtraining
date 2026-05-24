@@ -125,7 +125,7 @@ CREATE TABLE IF NOT EXISTS `wache_nebenleitstellen` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- -------------------------------------------------------------------
--- 3) Fahrzeuge + Live/Instanz-Status
+-- 3) Fahrzeuge + instanzbezogene Fahrzeug-Baseline/Deltas
 -- -------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS `fahrzeuge` (
@@ -160,6 +160,10 @@ CREATE TABLE IF NOT EXISTS `spielinstanzen` (
   `name`          VARCHAR(255) COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   `erstellt_am`   TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
   `ist_aktiv`     TINYINT(1) NULL DEFAULT 1,
+  `settings_json` TEXT COLLATE utf8mb4_general_ci NULL,
+  `started_at`    DATETIME NULL DEFAULT NULL,
+  `sim_state`     ENUM('created','running','paused','ended')
+                  COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'created',
   `created_at`    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   PRIMARY KEY (`id`),
@@ -212,6 +216,35 @@ CREATE TABLE IF NOT EXISTS `fahrzeug_status` (
     FOREIGN KEY (`fahrzeug_id`) REFERENCES `fahrzeuge`(`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_fahrzeug_status_wache`
     FOREIGN KEY (`wache_id`) REFERENCES `wachen`(`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Unveraenderliche Fahrzeug-Baseline je Spielinstanz: fahrzeug_status
+-- Aktuelle spielinterne Abweichungen zu dieser Baseline
+CREATE TABLE IF NOT EXISTS `instanz_fahrzeug_status` (
+  `id`                    INT NOT NULL AUTO_INCREMENT,
+  `instanz_id`            INT NOT NULL,
+  `fahrzeug_status_id`    INT NOT NULL,
+  `latitude`              DOUBLE NULL DEFAULT NULL,
+  `longitude`             DOUBLE NULL DEFAULT NULL,
+  `ziel_latitude`         DOUBLE NULL DEFAULT NULL,
+  `ziel_longitude`        DOUBLE NULL DEFAULT NULL,
+  `status`                ENUM('frei','besetzt','einsatzbereit','nicht einsatzbereit')
+                           COLLATE utf8mb4_general_ci NULL DEFAULT 'frei',
+  `fms_status`            ENUM('1','2','3','4','5','6')
+                           COLLATE utf8mb4_general_ci NULL DEFAULT '2',
+  `sondersignal`          TINYINT(1) NULL DEFAULT 0,
+  `bemerkung`             TEXT COLLATE utf8mb4_general_ci NULL,
+  `letzte_aktualisierung` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_ifs_instance_baseline` (`instanz_id`, `fahrzeug_status_id`),
+  KEY `idx_ifs_instanz` (`instanz_id`),
+  KEY `idx_ifs_baseline` (`fahrzeug_status_id`),
+
+  CONSTRAINT `fk_ifs_instanz`
+    FOREIGN KEY (`instanz_id`) REFERENCES `spielinstanzen`(`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_ifs_baseline`
+    FOREIGN KEY (`fahrzeug_status_id`) REFERENCES `fahrzeug_status`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- -------------------------------------------------------------------
@@ -401,6 +434,8 @@ CREATE TABLE `einsatz_followups` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `einsatz_id` INT NOT NULL,
 
+  `label` VARCHAR(255) NULL,
+
   `step_no` INT NOT NULL,
   `kind` ENUM('dispatcher_question','caller_answer','update','unit_report') NOT NULL DEFAULT 'update',
   `text` TEXT NOT NULL,
@@ -409,6 +444,12 @@ CREATE TABLE `einsatz_followups` (
   `max_after_sec` INT NULL,
   `condition_json` TEXT NULL,
 
+  `probability_percent` TINYINT UNSIGNED NOT NULL DEFAULT 100,
+  `speaker_type` ENUM('caller','fire_unit','ems_unit','police','dispatch','system') NOT NULL DEFAULT 'system',
+  `trigger_mode` ENUM('random','on_unit_arrival','on_missing_resources','on_dispatcher_question','manual') NOT NULL DEFAULT 'random',
+  `required_resources_json` TEXT NULL,
+  `effect_json` TEXT NULL,
+
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_followups_einsatz_step` (`einsatz_id`,`step_no`),
   KEY `idx_followups_einsatz` (`einsatz_id`),
@@ -416,28 +457,6 @@ CREATE TABLE `einsatz_followups` (
   CONSTRAINT `fk_followups_einsatz`
     FOREIGN KEY (`einsatz_id`) REFERENCES `einsaetze`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `einsatz_caller_parts` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `einsatz_id` INT NOT NULL,
-
-  `part_key` ENUM('greeting','person','location','problem','extra') NOT NULL,
-  `text` TEXT NOT NULL,
-  `sort_order` INT NOT NULL DEFAULT 0,
-  `enabled` TINYINT(1) NOT NULL DEFAULT 1,
-
-  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
-
-  PRIMARY KEY (`id`),
-  KEY `idx_ecp_einsatz` (`einsatz_id`),
-  KEY `idx_ecp_part` (`part_key`),
-  KEY `idx_ecp_enabled` (`enabled`),
-
-  CONSTRAINT `fk_ecp_einsatz`
-    FOREIGN KEY (`einsatz_id`) REFERENCES `einsaetze`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 
 CREATE TABLE IF NOT EXISTS `einsatz_rule_caller_parts` (
   `id` INT NOT NULL AUTO_INCREMENT,

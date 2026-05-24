@@ -40,6 +40,7 @@ function lsttraining_get_wachen() {
     $ls  = isset($_REQUEST['ls_id']) ? (int)$_REQUEST['ls_id'] : 0;
     $nls = isset($_REQUEST['nls_id']) ? (int)$_REQUEST['nls_id'] : 0;
     $bl  = isset($_REQUEST['bundesland']) ? sanitize_text_field($_REQUEST['bundesland']) : '';
+    $land = isset($_REQUEST['land']) ? sanitize_text_field($_REQUEST['land']) : '';
 
     if ($bl !== '') {
         $ls = 0; $nls = 0;
@@ -79,6 +80,11 @@ function lsttraining_get_wachen() {
     $params = [];
 
     if ($bl !== '') {
+        if ($land !== '') {
+            $where[] = 'w.land = :land';
+            $params[':land'] = $land;
+        }
+
         if ($bl === '__none__') {
             $where[] = "(w.bundesland IS NULL OR w.bundesland = '')";
         } else {
@@ -934,4 +940,3 @@ add_action('wp_ajax_lsttraining_update_wache', function () {
         wp_send_json_error(['message' => $e->getMessage()], 500);
     }
 });
-

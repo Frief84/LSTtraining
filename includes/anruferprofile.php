@@ -180,15 +180,15 @@ if (!defined('ABSPATH')) { exit; }
 
        <div class="lst-tab-panel" data-tab-panel="parts" style="display:none;">
     <# var partMap = data.parts || {}; #>
-    <# var partDefs = [
-        { key: 'greeting', label: 'Begrüßung' },
-        { key: 'self_intro', label: 'Selbstvorstellung' },
-        { key: 'location_intro', label: 'Orts-/Adressnennung' },
-        { key: 'problem_intro', label: 'Problem-Einleitung' },
-        { key: 'urgency', label: 'Dringlichkeit' },
-        { key: 'closing', label: 'Abschluss' },
-        { key: 'callback_request', label: 'Rückrufbitte' }
-    ]; #>
+	<# var partDefs = [
+		{ key: 'greeting', label: 'Begrüßung' },
+		{ key: 'self_intro', label: 'Selbstvorstellung' },
+		{ key: 'location_intro', label: 'Orts-/Adressnennung' },
+		{ key: 'problem_intro', label: 'Überleitung zur Meldung' },
+		{ key: 'urgency', label: 'Dringlichkeit / Verhalten' },
+		{ key: 'closing', label: 'Abschluss' },
+		{ key: 'callback_request', label: 'Rückruf / erreichbar bleiben' }
+	]; #>
 
     <div class="lst-box lst-placeholder-help">
         <h3>Verfügbare Platzhalter</h3>
@@ -248,9 +248,26 @@ if (!defined('ABSPATH')) { exit; }
                     <td>Gemeldete Lage</td>
                     <td>hier ist eine Person gestürzt und hat starke Schmerzen</td>
                 </tr>
+                <tr>
+                    <td><code>{observation}</code></td>
+                    <td>Beobachtung aus der Einsatzvorlage</td>
+                    <td>Rauch ist sichtbar</td>
+                </tr>
+                <tr>
+                    <td><code>{extra}</code></td>
+                    <td>Zusatzinfo aus der Einsatzvorlage</td>
+                    <td>Der Zugang ist über den Hinterhof</td>
+                </tr>
+                <tr>
+                    <td><code>{location}</code></td>
+                    <td>Gesprochene Ortsangabe</td>
+                    <td>Musterstraße 12, Musterstadt</td>
+                </tr>
             </tbody>
         </table>
-
+<p class="description">
+    Hinweis: Der eigentliche Einsatzgrund wie z. B. <code>meine Katze sitzt auf einem Baum fest</code> wird nicht hier gepflegt, sondern im Einsatzeditor.
+</p>
         <p class="description">
             Beispiel: <code>Guten Tag, hier ist {formal_name} aus {poi_name}. {problem}.</code>
         </p>
@@ -351,6 +368,14 @@ if (!defined('ABSPATH')) { exit; }
     <div class="lst-field lst-grid-span-2">
         <label for="lst-ap-preview-problem"><strong>Beispiellage</strong></label>
         <input type="text" id="lst-ap-preview-problem" class="regular-text" value="hier ist eine Person gestürzt und hat starke Schmerzen">
+    </div>
+    <div class="lst-field lst-grid-span-2">
+        <label for="lst-ap-preview-observation"><strong>Beispielbeobachtung</strong></label>
+        <input type="text" id="lst-ap-preview-observation" class="regular-text" value="Rauch ist sichtbar">
+    </div>
+    <div class="lst-field lst-grid-span-2">
+        <label for="lst-ap-preview-extra"><strong>Beispiel-Zusatzinfo</strong></label>
+        <input type="text" id="lst-ap-preview-extra" class="regular-text" value="Der Zugang ist über den Hinterhof">
     </div>
 </div>
             <ol id="lst-ap-preview-list" class="lst-preview-list"></ol>

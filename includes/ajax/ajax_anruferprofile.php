@@ -4,6 +4,10 @@ if (!defined('ABSPATH')) { exit(); }
 require_once __DIR__ . '/ajax_common.php';
 require_once dirname(__DIR__) . '/anrufer_names.php';
 
+function lsttraining_ap_part_keys(): array {
+    return ['greeting', 'self_intro', 'location_intro', 'problem_intro', 'urgency', 'closing', 'callback_request'];
+}
+
 function lsttraining_ap_fetch_one(PDO $pdo, int $id): array {
     $stmt = $pdo->prepare('SELECT * FROM anrufer_profile WHERE id = ?');
     $stmt->execute([$id]);
@@ -17,15 +21,7 @@ function lsttraining_ap_fetch_one(PDO $pdo, int $id): array {
     $partsStmt->execute([$id]);
     $rows = $partsStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
-    $grouped = [
-        'greeting' => [],
-        'self_intro' => [],
-        'location_intro' => [],
-        'problem_intro' => [],
-        'urgency' => [],
-        'closing' => [],
-        'callback_request' => [],
-    ];
+    $grouped = array_fill_keys(lsttraining_ap_part_keys(), []);
 
     foreach ($rows as $row) {
         $key = (string) ($row['part_key'] ?? '');
@@ -58,6 +54,8 @@ add_action('wp_ajax_lst_preview_anruferprofile', function () {
 
     $parts = isset($_POST['parts']) ? json_decode(wp_unslash($_POST['parts']), true) : [];
     $problem = isset($_POST['problem']) ? sanitize_text_field(wp_unslash($_POST['problem'])) : 'hier ist eine Person gestürzt und hat starke Schmerzen';
+    $observation = isset($_POST['observation']) ? sanitize_text_field(wp_unslash($_POST['observation'])) : 'Rauch ist sichtbar';
+    $extra = isset($_POST['extra']) ? sanitize_text_field(wp_unslash($_POST['extra'])) : 'Der Zugang ist über den Hinterhof';
     $address = isset($_POST['address_full']) ? sanitize_text_field(wp_unslash($_POST['address_full'])) : 'Musterstraße 12';
     $poiName = isset($_POST['poi_name']) ? sanitize_text_field(wp_unslash($_POST['poi_name'])) : 'Seniorenheim Sonnenhof';
     $companyName = isset($_POST['company_name']) ? sanitize_text_field(wp_unslash($_POST['company_name'])) : 'Firma Beispiel GmbH';
@@ -69,69 +67,7 @@ add_action('wp_ajax_lst_preview_anruferprofile', function () {
 
     $examples = [];
 
-    for ($i = 0; $i < 3; $i++) {
-        $tokens = lsttraining_build_anrufer_tokens($pdo, $genderKey ?: null, [
-            'address_full' => $address,
-            'poi_name' => $poiName,
-            'company_name' => $companyName,
-            'problem' => $problem,
-        ]);
-
-        $fragments = [];
-
-        foreach (['greeting', 'self_intro', 'location_intro', 'problem_intro', 'urgency', 'closing', 'callback_request'] as $partKey) {
-            $rows = isset($parts[$partKey]) && is_array($parts[$partKey]) ? $parts[$partKey] : [];
-            $enabledRows = array_values(array_filter($rows, function ($row) {
-                return isset($row['enabled']) ? (int)$row['enabled'] === 1 : true;
-            }));
-
-            $source = !empty($enabledRows) ? $enabledRows : $rows;
-            if (empty($source)) {
-                continue;
-            }
-
-            $row = $source[array_rand($source)];
-            $text = trim((string)($row['text'] ?? ''));
-            if ($text !== '') {
-                $fragments[] = lsttraining_fill_anrufer_placeholders($text, $tokens);
-            }
-        }
-
-        $examples[] = trim(preg_replace('/\s+/', ' ', implode(' ', $fragments)));
-    }
-
-    wp_send_json_success([
-        'examples' => $examples,
-    ]);
-});
-
-add_action('wp_ajax_lst_preview_anruferprofile', function () {
-    lsttraining_ajax_guard([
-        'area' => 'leitstellen',
-        'nonce_action' => 'lsttraining_leitstellen',
-        'nonce_field' => 'nonce',
-        'method' => 'POST',
-    ]);
-
-    $pdo = lsttraining_get_connection();
-    if (!$pdo) {
-        wp_send_json_error(['message' => 'DB-Verbindung fehlgeschlagen.'], 500);
-    }
-
-    $parts = isset($_POST['parts']) ? json_decode(wp_unslash($_POST['parts']), true) : [];
-    $problem = isset($_POST['problem']) ? sanitize_text_field(wp_unslash($_POST['problem'])) : 'hier ist eine Person gestürzt und hat starke Schmerzen';
-    $address = isset($_POST['address_full']) ? sanitize_text_field(wp_unslash($_POST['address_full'])) : 'Musterstraße 12';
-    $poiName = isset($_POST['poi_name']) ? sanitize_text_field(wp_unslash($_POST['poi_name'])) : 'Seniorenheim Sonnenhof';
-    $companyName = isset($_POST['company_name']) ? sanitize_text_field(wp_unslash($_POST['company_name'])) : 'Firma Beispiel GmbH';
-    $genderKey = isset($_POST['gender_key']) ? sanitize_text_field(wp_unslash($_POST['gender_key'])) : null;
-
-    if (!is_array($parts)) {
-        $parts = [];
-    }
-
-    $examples = [];
-
-    foreach (['greeting', 'self_intro', 'location_intro', 'problem_intro', 'urgency', 'closing', 'callback_request'] as $partKey) {
+    foreach (lsttraining_ap_part_keys() as $partKey) {
         if (!isset($parts[$partKey]) || !is_array($parts[$partKey])) {
             $parts[$partKey] = [];
         }
@@ -143,11 +79,14 @@ add_action('wp_ajax_lst_preview_anruferprofile', function () {
             'poi_name' => $poiName,
             'company_name' => $companyName,
             'problem' => $problem,
+            'observation' => $observation,
+            'extra' => $extra,
+            'location' => $address,
         ]);
 
         $fragments = [];
 
-        foreach (['greeting', 'self_intro', 'location_intro', 'problem_intro', 'urgency', 'closing', 'callback_request'] as $partKey) {
+        foreach (lsttraining_ap_part_keys() as $partKey) {
             $rows = $parts[$partKey];
 
             $enabledRows = array_values(array_filter($rows, function ($row) {
@@ -279,7 +218,7 @@ add_action('wp_ajax_lst_save_anruferprofile', function () {
         $parts = [];
     }
 
-    $allowedPartKeys = ['greeting','self_intro','location_intro','problem_intro','urgency','closing','callback_request'];
+    $allowedPartKeys = lsttraining_ap_part_keys();
 
     try {
         $pdo->beginTransaction();

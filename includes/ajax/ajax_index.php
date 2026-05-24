@@ -15,3 +15,5 @@ require_once plugin_dir_path(__FILE__) . 'ajax_fahrzeuge.php';
 require_once plugin_dir_path(__FILE__) . 'ajax_osm_layers.php';
 require_once plugin_dir_path(__FILE__) . 'ajax_einsaetze.php';
 require_once plugin_dir_path(__FILE__) . 'ajax_anruferprofile.php';
+require_once plugin_dir_path(__FILE__) . 'ajax_frontend.php';
+require_once plugin_dir_path(__FILE__) . 'ajax_simulation.php';

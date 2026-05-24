@@ -38,7 +38,7 @@ if ( ! function_exists('lst_tbl_exists') ) {
 /* -----------------------------------------------------------
  * Request-Parameter
  * ----------------------------------------------------------- */
-$s        = isset($_GET['s']) ? trim((string)$_GET['s']) : '';
+$s        = isset($_GET['s']) ? trim(sanitize_text_field(wp_unslash((string) $_GET['s']))) : '';
 $orderby  = isset($_GET['orderby']) ? strtolower((string)$_GET['orderby']) : 'wache';
 $order    = isset($_GET['order']) ? strtolower((string)$_GET['order']) : 'asc';
 $paged    = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
@@ -157,8 +157,10 @@ if ($wache_id > 0) {
 
 // Suche
 if ($s !== '') {
-    $where[] = '(f.rufname LIKE :q OR w.name LIKE :q)';
-    $params[':q'] = '%' . $s . '%';
+    // Der Standort einer Wache wird in diesem Schema über ihren Namen geführt.
+    $where[] = '(f.rufname LIKE :q_rufname OR w.name LIKE :q_wache)';
+    $params[':q_rufname'] = '%' . $s . '%';
+    $params[':q_wache'] = '%' . $s . '%';
 }
 
 // Leitstelle
@@ -345,8 +347,11 @@ function lst_sort_link($label, $key, $current_key, $current_order) {
       <input type="hidden" name="wache_id" value="<?php echo (int)$wache_id; ?>" />
     <?php endif; ?>
 
-    <input type="search" name="s" value="<?php echo esc_attr($s); ?>"
-           placeholder="Suche in Rufname / Wache" style="min-width:320px;" />
+    <label for="fahrzeuge-search" class="screen-reader-text">Rufname oder Standort der Wache suchen</label>
+    <input type="search" id="fahrzeuge-search" name="s" value="<?php echo esc_attr($s); ?>"
+           placeholder="Rufname oder Wachenort suchen" style="min-width:320px;"
+           aria-describedby="fahrzeuge-search-hint" />
+    <span id="fahrzeuge-search-hint" class="description">Sucht im Rufnamen und im Namen der Wache.</span>
 
     <label style="margin-left:10px;">
       Bundesland:
@@ -411,6 +416,9 @@ function lst_sort_link($label, $key, $current_key, $current_order) {
 <a href="#" class="button button-primary" id="fahrzeug-new">Neues Fahrzeug</a>
   <p>
     <strong><?php echo number_format_i18n($total); ?></strong> Fahrzeuge gefunden.
+    <?php if ($s !== ''): ?>
+      Suche nach <strong>„<?php echo esc_html($s); ?>“</strong> in Rufname oder Wachenort.
+    <?php endif; ?>
     Seite <?php echo (int)$paged; ?> von <?php echo (int)$max_pages; ?>.
   </p>
 

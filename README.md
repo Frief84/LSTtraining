@@ -41,9 +41,35 @@ Das Schema in `database/schema.sql` definiert acht Tabellen:
 1. **leitstellen**: Dispositionszentren mit Polygon-GeoJSON und Metadaten  
 2. **wachen**: Feuerwachen/Rettungswachen mit Name, Koordinaten, Typ und optionalem Bild  
 3. **fahrzeuge**: Zuweisung zu Wachen, Typ (ENUM), letzte bekannte Position  
-4. **fahrzeug_status**: Live-Status und Positions-Tracking von Fahrzeugen  
-5. **spielinstanzen**, **instanz_wachen**, **instanz_user**: Multi-User-Instanzen für Trainingsszenarien  
-6. **einsatzvorlagen**: Vorlagen für wiederkehrende Übungen  
+4. **fahrzeug_status**: unveränderliche Fahrzeug-Baseline pro Spielinstanz
+5. **instanz_fahrzeug_status**: laufende Abweichungen der Fahrzeuge von ihrer Baseline
+6. **spielinstanzen**, **instanz_wachen**, **instanz_user**: Multi-User-Instanzen für Trainingsszenarien
+7. **einsatzvorlagen**: Vorlagen für wiederkehrende Übungen
+
+## Simulationsdaten: DB-Basis, Bootstrap, Snapshot
+
+Die Datenbank bleibt die Wahrheit für Stammdaten und gespeicherte Simulationsänderungen. Der Browser bekommt diese Daten zweistufig:
+
+* **Bootstrap (`lsttraining_sim_get_bootstrap`)**: wird beim Öffnen einer Instanz einmal geladen und enthält stabile Basisdaten wie Instanz, Leitstelle, Wachen, Fahrzeug-Stammdaten, Ressourcenklasse, Fahrzeugbild und Anzeigepräferenzen. Wachenkoordinaten liegen nur hier; laufende Ziele und Routen liegen nicht im Bootstrap.
+* **Live-Snapshot (`lsttraining_sim_get_snapshot`)**: wird regelmäßig aktualisiert und enthält nur dynamische Simulationsdaten: offene Einsätze, aktive Fahrzeugpositionen, Fahrzeugstatus-Deltas, Assignments, FMS-/Anrufer-Logs und berechnete Einsatzstatus.
+* **`fahrzeug_status`** ist die unveränderliche instanzbezogene Fahrzeug-Baseline: Beim Start einer Simulation werden Status, FMS, Sondersignal und Startposition aus den Fahrzeug-Stammdaten kopiert.
+* **`instanz_fahrzeug_status`** enthält nur spielinterne Abweichungen einer Instanz von dieser Baseline. Eine Delta-Zeile hält den vollständigen aktuellen Fahrzeugzustand und wird entfernt, sobald Position, Ziel, Status, FMS und Sondersignal wieder der Baseline entsprechen.
+* Fahrzeuge ohne Delta-Zeile werden nicht im Live-Snapshot übertragen. Die UI rekonstruiert sie aus den Bootstrap-Fahrzeugdaten; textliche Verlaufsmeldungen bleiben in den Einsatz-Events erhalten.
+* `instanz_einsaetze` und `instanz_einsatz_events` halten die dynamischen Einsatzänderungen. `unit_report`-Events mit `event_type = vehicle_alarm` sind die stabile Quelle für Zuordnung, Route (`route_coordinates`), Fortschritt und Rückmeldungen.
+
+Mehrere parallele Spielinstanzen besitzen getrennte Baselines und Deltas; Änderungen in einer Instanz beeinflussen keine andere. Der Snapshot ist damit kein vollständiger Spielstand, sondern ein kompaktes Transportformat für aktuelle Änderungen gegenüber der instanzbezogenen Bootstrap-Basis.
+Lange laufende Simulationsseiten erneuern ihre AJAX-/REST-Nonces automatisch, ohne den Spielstand zu verändern.
+
+## Anruftexte: Profile, Einsatzbausteine, Adresse
+
+Anruftexte werden nicht mehr über ein freies Template-Feld zusammengesetzt. Die Tabellenfelder `caller_template_text` und `anrufertext` bleiben nur als Altspalten bestehen und sind nicht Teil des normalen Anruftext-Vertrags.
+
+* **Anruferprofile** (`anrufer_profile`, `anrufer_profile_parts`) definieren Sprache, Verhalten und Reihenfolge der allgemeinen Formulierungen. Verwendete Bausteine sind `greeting`, `self_intro`, `location_intro`, `problem_intro`, `urgency`, `closing` und `callback_request`.
+* **Einsatzvorlagen** liefern nur die einsatzspezifische Meldung über `einsatz_caller_parts`: `problem`, `observation` und `extra`.
+* **Adresse und Ortsangaben** kommen beim Spawn aus der Adressauflösung und werden über Platzhalter wie `{address_full}` oder `{location}` in Profilbausteine eingesetzt. Der sichtbare Standort ist Pflicht im Anruftext; `uses_address = 0` wirkt nur auf freie Profilplatzhalter, nicht auf den verpflichtenden Wo-Anteil.
+* **Profilwahl pro Einsatz**: Sind im Einsatz Profile zugeordnet, wird zufällig nach deren Gewichtung gewählt und als `caller_profile_source = assigned` gespeichert. Sind keine Profile zugeordnet, wird zufällig aus allen aktiven Anruferprofilen gewählt.
+
+Die gesprochene Reihenfolge ist verbindlich: `greeting` → `self_intro` → `problem_intro` → Einsatzmeldung (`problem`, `observation`, `extra`) → `location_intro` → `urgency` → `closing` → `callback_request`. Jeder Anruf folgt damit `Wer → Was → Wo`: Begrüßung mit Anrufername, konkrete Einsatzmeldung, danach Standort. Fehlt ein aktives Profil oder enthalten die Profilbausteine keinen nutzbaren Opener, ergänzt die Simulation `Hallo, hier ist {formal_name}.`; fehlt ein Standortbaustein, ergänzt sie `Ich bin bei {address_full}.`. `uses_name = 0` blendet Namen nur in freien Profilplatzhaltern aus, nicht im verpflichtenden System-Opener.
 
 
 ## 🚒 Wachentypen

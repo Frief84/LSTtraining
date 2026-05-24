@@ -85,9 +85,18 @@ function lsttraining_fill_anrufer_placeholders(string $text, array $tokens): str
         '{poi_name}'        => (string)($tokens['poi_name'] ?? ''),
         '{company_name}'    => (string)($tokens['company_name'] ?? ''),
         '{problem}'         => (string)($tokens['problem'] ?? ''),
+        '{observation}'     => (string)($tokens['observation'] ?? ''),
+        '{extra}'           => (string)($tokens['extra'] ?? ''),
+        '{greeting}'        => (string)($tokens['greeting'] ?? ''),
+        '{person}'          => (string)($tokens['person'] ?? ''),
+        '{location}'        => (string)($tokens['location'] ?? ''),
     ];
 
     $result = strtr($text, $map);
+    $result = preg_replace_callback('/\{([a-zA-Z0-9_]+)\}/', static function (array $matches) use ($tokens): string {
+        $key = (string) ($matches[1] ?? '');
+        return array_key_exists($key, $tokens) ? (string) $tokens[$key] : $matches[0];
+    }, $result);
     $result = preg_replace('/\s+/', ' ', $result);
     return trim((string)$result);
 }
@@ -97,10 +106,12 @@ function lsttraining_build_anrufer_tokens(PDO $pdo, ?string $genderKey = null, a
     $nameRow = lsttraining_pick_random_anrufer_name($pdo, $genderKey);
     $nameTokens = lsttraining_build_anrufer_name_tokens($nameRow);
 
-    return array_merge($nameTokens, [
+    return array_merge($nameTokens, $context, [
         'address_full' => (string)($context['address_full'] ?? ''),
         'poi_name' => (string)($context['poi_name'] ?? ''),
         'company_name' => (string)($context['company_name'] ?? ''),
         'problem' => (string)($context['problem'] ?? ''),
+        'observation' => (string)($context['observation'] ?? ''),
+        'extra' => (string)($context['extra'] ?? ''),
     ]);
 }

@@ -181,7 +181,7 @@ window.openCreateForm = function () {
 /* ---------------------------------------------------------- */
 /* Open the “edit” popup                                      */
 /* ---------------------------------------------------------- */
-window.editLeitstelle = function (id, name, ort, bl, land, lat, lon) {
+window.editLeitstelle = function (id, name, ort, bl, land, lat, lon, policeImage, policeSignals, rescueImage, rescueSignals) {
   const createFrm = document.getElementById('neue-leitstelle-formular');
   const editFrm   = document.getElementById('edit-leitstelle-formular');
 
@@ -199,6 +199,19 @@ window.editLeitstelle = function (id, name, ort, bl, land, lat, lon) {
     const el = document.getElementById(`lst_update_${k}`);
     if (el) el.value = values[k];
   });
+  const policeImageEl = document.getElementById('lst_update_police_vehicle_image');
+  if (policeImageEl) policeImageEl.value = policeImage || 'img/fahrzeug/default_pol.png';
+  const policeSignalsEl = document.getElementById('lst_update_police_signal_lights_json');
+  if (policeSignalsEl) policeSignalsEl.value = policeSignals || '';
+  const rescueImageEl = document.getElementById('lst_update_rescue_vehicle_image');
+  if (rescueImageEl) rescueImageEl.value = rescueImage || 'img/fahrzeug/default.png';
+  const rescueSignalsEl = document.getElementById('lst_update_rescue_signal_lights_json');
+  if (rescueSignalsEl) rescueSignalsEl.value = rescueSignals || '';
+  const mode = document.getElementById('lst_form_mode');
+  if (mode) mode.value = 'update';
+  if (typeof window.updateAllDefaultVehiclePreviews === 'function') {
+    window.updateAllDefaultVehiclePreviews();
+  }
 
   /* clear polygon field */
   document.getElementById('geojson_edit').value = '[]';
@@ -261,7 +274,11 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.dataset.bl,
         btn.dataset.land,
         btn.dataset.lat,
-        btn.dataset.lon
+        btn.dataset.lon,
+        btn.dataset.policeImage,
+        btn.dataset.policeSignalLights,
+        btn.dataset.rescueImage,
+        btn.dataset.rescueSignalLights
       );
     });
   });
@@ -315,6 +332,17 @@ function openLeitstellePopupForCreate() {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
+  const policeImageEl = document.getElementById('lst_update_police_vehicle_image');
+  if (policeImageEl) policeImageEl.value = 'img/fahrzeug/default_pol.png';
+  const policeSignalsEl = document.getElementById('lst_update_police_signal_lights_json');
+  if (policeSignalsEl) policeSignalsEl.value = '';
+  const rescueImageEl = document.getElementById('lst_update_rescue_vehicle_image');
+  if (rescueImageEl) rescueImageEl.value = 'img/fahrzeug/default.png';
+  const rescueSignalsEl = document.getElementById('lst_update_rescue_signal_lights_json');
+  if (rescueSignalsEl) rescueSignalsEl.value = '';
+  if (typeof window.updateAllDefaultVehiclePreviews === 'function') {
+    window.updateAllDefaultVehiclePreviews();
+  }
 
   // mode = create
   const mode = document.getElementById('lst_form_mode');

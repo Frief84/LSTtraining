@@ -55,6 +55,35 @@ function lst_rest_can_route( WP_REST_Request $request ) : bool {
         $ls_id = (int)$body['leitstelle_id'];
     }
 
+    if ( is_array($body) && isset($body['instanz_id']) && is_numeric($body['instanz_id']) ) {
+        $instanz_id = (int) $body['instanz_id'];
+        if ( $instanz_id > 0 ) {
+            require_once plugin_dir_path(__FILE__) . 'db.php';
+
+            $pdo = lsttraining_get_connection();
+            if ( $pdo instanceof PDO ) {
+                if ( current_user_can('manage_options') ) {
+                    return true;
+                }
+
+                try {
+                    $stmt = $pdo->prepare('
+                        SELECT COUNT(*)
+                        FROM instanz_user
+                        WHERE instanz_id = ? AND user_id = ? AND connected = 1
+                    ');
+                    $stmt->execute([$instanz_id, get_current_user_id()]);
+                    if ( (int) $stmt->fetchColumn() > 0 ) {
+                        return true;
+                    }
+                } catch (Throwable $e) {
+                    error_log('REST /route permission ERROR: ' . $e->getMessage());
+                    return false;
+                }
+            }
+        }
+    }
+
     if ( lsttraining_user_can('leitstellen', $ls_id) ) { return true; }
     if ( lsttraining_user_can('wachen', $ls_id) ) { return true; }
 
@@ -148,8 +177,16 @@ function lst_rest_post_route( WP_REST_Request $request ) {
     }
     set_transient($rl_key, $count + 1, 10 * MINUTE_IN_SECONDS);
 
+    $preference = isset($body['preference']) ? sanitize_key((string) $body['preference']) : 'fastest';
+    if ( ! in_array($preference, ['fastest', 'recommended', 'shortest'], true) ) {
+        $preference = 'fastest';
+    }
+
     // Cache: identische Anfrage kurz cachen
-    $cache_key = 'lst_route_' . md5(wp_json_encode($coordinates));
+    $cache_key = 'lst_route_' . md5(wp_json_encode([
+        'coordinates' => $coordinates,
+        'preference' => $preference,
+    ]));
     $cached = get_transient($cache_key);
     if ( $cached ) {
         return new WP_REST_Response(['ok' => true, 'cached' => true, 'data' => $cached], 200);
@@ -163,7 +200,10 @@ function lst_rest_post_route( WP_REST_Request $request ) {
             'Authorization' => $apiKey,
             'Content-Type'  => 'application/json',
         ],
-        'body' => wp_json_encode(['coordinates' => $coordinates]),
+        'body' => wp_json_encode([
+            'coordinates' => $coordinates,
+            'preference' => $preference,
+        ]),
     ]);
 
     if ( is_wp_error($res) ) {

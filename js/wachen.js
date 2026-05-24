@@ -439,7 +439,10 @@ $('body').on('click', '#wache-fahrzeuge-toggle', function (e) {
       const params = new URLSearchParams({ action: 'lsttraining_get_wachen' });
       if (ls) params.set('ls_id', String(ls));
       if (nls) params.set('nls_id', String(nls));
-      if (bl) params.set('bundesland', bl);
+      if (bl) {
+        params.set('bundesland', bl);
+        params.set('land', String($('#land').val() || ''));
+      }
 
       return fetch(AJAX_URL + '?' + params.toString(), { credentials: 'same-origin' })
         .then(res => res.json())
@@ -894,27 +897,44 @@ $('body').on('click', '#wache-fahrzeuge-toggle', function (e) {
     // --------------------------------------------------------
     // Filter Init (nur wenn Elemente existieren)
     // --------------------------------------------------------
-    function updateDisabled() {
-      const hasLS = parseInt($('#ls_id').val(), 10) || 0;
-      const hasNLS = parseInt($('#nls_id').val(), 10) || 0;
-      const hasBL = (String($('#bundesland').val() || '').trim() !== '');
-
-      $('#ls_id').prop('disabled', !!hasNLS || !!hasBL);
-      $('#nls_id').prop('disabled', !!hasLS || !!hasBL);
-      $('#bundesland').prop('disabled', !!hasLS || !!hasNLS);
-    }
-
     const $ls = $('#ls_id');
     const $nls = $('#nls_id');
     const $bl = $('#bundesland');
     const $land = $('#land');
+    const $region = $('#region-filter');
+    const $regionStatus = $('#region-filter-status');
+
+    function updateDisabled() {
+      const hasLS = parseInt($('#ls_id').val(), 10) || 0;
+      const hasNLS = parseInt($('#nls_id').val(), 10) || 0;
+      const hasBL = (String($('#bundesland').val() || '').trim() !== '');
+      const regionBlocked = !!hasLS || !!hasNLS;
+
+      $('#ls_id').prop('disabled', !!hasNLS || !!hasBL);
+      $('#nls_id').prop('disabled', !!hasLS || !!hasBL);
+      $land.prop('disabled', regionBlocked);
+      $bl.prop('disabled', regionBlocked);
+
+      if (!$region.length || !$regionStatus.length) return;
+
+      $region.toggleClass('is-disabled', regionBlocked);
+      $region.toggleClass('is-active', !regionBlocked && hasBL);
+
+      if (regionBlocked) {
+        $regionStatus.text('Regionsfilter pausiert: Es ist bereits eine Leitstelle oder Nebenleitstelle aktiv.');
+      } else if (hasBL) {
+        $regionStatus.text('Regionsfilter aktiv: ' + $bl.find('option:selected').text() + ' (' + $land.val() + ').');
+      } else {
+        $regionStatus.text('Nächster Schritt: Bundesland für ' + $land.val() + ' auswählen.');
+      }
+    }
 
     const blMap = (() => { try { return JSON.parse($bl.attr('data-map') || '{}'); } catch (e) { return {}; } })();
 
     function fillBundeslaender(land, selected) {
       const arr = blMap[land] || [];
       const opts = [];
-      opts.push('<option value="">— Bitte wählen —</option>');
+      opts.push('<option value="">— Bundesland wählen —</option>');
       opts.push('<option value="__none__"' + (selected === '__none__' ? ' selected' : '') + '>Ohne Bundesland</option>');
       for (let i = 0; i < arr.length; i++) {
         const blOpt = arr[i];
@@ -944,6 +964,7 @@ $('body').on('click', '#wache-fahrzeuge-toggle', function (e) {
         if ($ls.length) $ls.val('0');
         if ($nls.length) $nls.val('0');
         updateDisabled();
+        loadCurrent();
       });
 
       $bl.off('change.filters').on('change.filters', function () {

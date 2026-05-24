@@ -1,6 +1,70 @@
 <?php
 if (!defined('ABSPATH')) { exit; }
 
+if (!function_exists('lsttraining_fahrzeuge_column_exists')) {
+    function lsttraining_fahrzeuge_column_exists(PDO $pdo, string $table, string $column): bool {
+        try {
+            $st = $pdo->prepare("SHOW COLUMNS FROM `$table` LIKE ?");
+            $st->execute([$column]);
+            return ($st && $st->rowCount() > 0);
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
+}
+
+if (!function_exists('lsttraining_fahrzeuge_ensure_signal_lights_column')) {
+    function lsttraining_fahrzeuge_ensure_signal_lights_column(PDO $pdo): bool {
+        if (lsttraining_fahrzeuge_column_exists($pdo, 'fahrzeuge', 'signal_lights_json')) {
+            return true;
+        }
+        try {
+            $pdo->exec('ALTER TABLE fahrzeuge ADD COLUMN signal_lights_json LONGTEXT NULL AFTER bild_datei');
+            return true;
+        } catch (Throwable $e) {
+            error_log('[LSTtraining][fahrzeuge_signal_lights_column] ' . $e->getMessage());
+            return false;
+        }
+    }
+}
+
+if (!function_exists('lsttraining_fahrzeuge_normalize_signal_lights_json')) {
+    function lsttraining_fahrzeuge_normalize_signal_lights_json($raw): string {
+        $decoded = is_array($raw) ? $raw : json_decode((string) wp_unslash($raw), true);
+        if (!is_array($decoded)) {
+            return '';
+        }
+        $lights = is_array($decoded['lights'] ?? null) ? $decoded['lights'] : (array_values($decoded) === $decoded ? $decoded : []);
+        $normalized = [];
+        foreach ($lights as $light) {
+            if (!is_array($light)) {
+                continue;
+            }
+            $x = isset($light['x']) ? (float) $light['x'] : null;
+            $y = isset($light['y']) ? (float) $light['y'] : null;
+            if ($x === null || $y === null || !is_finite($x) || !is_finite($y)) {
+                continue;
+            }
+            $type = sanitize_key((string) ($light['type'] ?? 'beacon'));
+            if (!in_array($type, ['beacon', 'strobe', 'bar', 'glow'], true)) {
+                $type = 'beacon';
+            }
+            $normalized[] = [
+                'x' => max(0.0, min(1.0, $x)),
+                'y' => max(0.0, min(1.0, $y)),
+                'type' => $type,
+                'interval' => max(120, min(2000, (int) ($light['interval'] ?? 420))),
+                'phase' => max(0, min(5000, (int) ($light['phase'] ?? 0))),
+                'size' => max(0.4, min(2.5, (float) ($light['size'] ?? 1))),
+            ];
+        }
+        if (!$normalized) {
+            return '';
+        }
+        return (string) wp_json_encode(['version' => 1, 'lights' => $normalized], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+}
+
 /* ===============================
  * Einzelnes Fahrzeug laden
  * =============================== */
@@ -32,6 +96,7 @@ add_action('wp_ajax_lsttraining_get_fahrzeug', function () {
     }
 
     try {
+        $has_signal_lights = lsttraining_fahrzeuge_ensure_signal_lights_column($pdo);
 $st = $pdo->prepare("
   SELECT
     f.id,
@@ -42,6 +107,7 @@ $st = $pdo->prepare("
     f.fms_status,
     f.dienstzeiten,
     f.bild_datei,
+    " . ($has_signal_lights ? "f.signal_lights_json," : "NULL AS signal_lights_json,") . "
     f.is_first_responder,
 
     w.name AS wache_name,
@@ -151,6 +217,10 @@ add_action('wp_ajax_lsttraining_save_fahrzeug', function () {
     $dienst    = isset($_POST['dienstzeiten']) ? trim((string)$_POST['dienstzeiten']) : null;
     $bild      = isset($_POST['bild_datei']) ? trim((string)$_POST['bild_datei']) : null;
     $is_fr     = !empty($_POST['is_first_responder']) ? 1 : 0;
+    $has_signal_lights = lsttraining_fahrzeuge_ensure_signal_lights_column($pdo);
+    $signal_lights = $has_signal_lights
+        ? lsttraining_fahrzeuge_normalize_signal_lights_json($_POST['signal_lights_json'] ?? '')
+        : '';
 
     if ($wache_id <= 0 || $rufname === '' || $typ === '') {
         status_header(400);
@@ -186,7 +256,7 @@ add_action('wp_ajax_lsttraining_save_fahrzeug', function () {
         }
 
         if ($id > 0) {
-            $st = $pdo->prepare("
+            $sql = "
                 UPDATE fahrzeuge
                 SET wache_id = ?,
                     rufname = ?,
@@ -194,19 +264,31 @@ add_action('wp_ajax_lsttraining_save_fahrzeug', function () {
                     source_note = ?,
                     fms_status = ?,
                     dienstzeiten = ?,
-                    bild_datei = ?,
-                    is_first_responder = ?
-                WHERE id = ?
-            ");
-            $st->execute([$wache_id, $rufname, $typ, $source, $fms, $dienst, $bild, $is_fr, $id]);
+                    bild_datei = ?";
+            $params = [$wache_id, $rufname, $typ, $source, $fms, $dienst, $bild];
+            if ($has_signal_lights) {
+                $sql .= ', signal_lights_json = ?';
+                $params[] = $signal_lights;
+            }
+            $sql .= ', is_first_responder = ? WHERE id = ?';
+            $params[] = $is_fr;
+            $params[] = $id;
+            $st = $pdo->prepare($sql);
+            $st->execute($params);
         } else {
-            $st = $pdo->prepare("
-                INSERT INTO fahrzeuge
-                    (wache_id, rufname, fahrzeugtyp, source_note, fms_status, dienstzeiten, bild_datei, is_first_responder)
-                VALUES
-                    (?, ?, ?, ?, ?, ?, ?, ?)
-            ");
-            $st->execute([$wache_id, $rufname, $typ, $source, $fms, $dienst, $bild, $is_fr]);
+            $columns = 'wache_id, rufname, fahrzeugtyp, source_note, fms_status, dienstzeiten, bild_datei';
+            $values = '?, ?, ?, ?, ?, ?, ?';
+            $params = [$wache_id, $rufname, $typ, $source, $fms, $dienst, $bild];
+            if ($has_signal_lights) {
+                $columns .= ', signal_lights_json';
+                $values .= ', ?';
+                $params[] = $signal_lights;
+            }
+            $columns .= ', is_first_responder';
+            $values .= ', ?';
+            $params[] = $is_fr;
+            $st = $pdo->prepare("INSERT INTO fahrzeuge ($columns) VALUES ($values)");
+            $st->execute($params);
             $id = (int)$pdo->lastInsertId();
         }
 

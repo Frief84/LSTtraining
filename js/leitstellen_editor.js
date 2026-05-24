@@ -71,6 +71,14 @@
             const el = document.getElementById(id);
             if (el) el.value = '';
         });
+        const policeImage = document.getElementById('lst_update_police_vehicle_image');
+        if (policeImage) policeImage.value = 'img/fahrzeug/default_pol.png';
+        const policeSignals = document.getElementById('lst_update_police_signal_lights_json');
+        if (policeSignals) policeSignals.value = '';
+        const rescueImage = document.getElementById('lst_update_rescue_vehicle_image');
+        if (rescueImage) rescueImage.value = 'img/fahrzeug/default.png';
+        const rescueSignals = document.getElementById('lst_update_rescue_signal_lights_json');
+        if (rescueSignals) rescueSignals.value = '';
 
         const mode = document.getElementById('lst_form_mode');
         if (mode) mode.value = 'create';
@@ -83,6 +91,9 @@
 
         const popup = document.getElementById('edit-leitstelle-formular');
         if (popup) popup.style.display = 'block';
+        if (typeof window.updateAllDefaultVehiclePreviews === 'function') {
+            window.updateAllDefaultVehiclePreviews();
+        }
     }
     window.openLeitstellePopupForCreate = openLeitstellePopupForCreate;
 
@@ -112,6 +123,382 @@
     });
 
 })(window, document, ol);
+
+(function($) {
+    var signalLights = [];
+    var dragLightIndex = null;
+    var failedSignalSprites = {};
+    var activeSignalJsonField = null;
+    var activeSignalImageField = null;
+
+    function pluginBaseUrl() {
+        var script = document.querySelector('script[src*="/js/leitstellen_editor.js"]');
+        if (!script || !script.src) return '';
+        return script.src.split('/js/leitstellen_editor.js')[0].replace(/\/?$/, '/');
+    }
+
+    function spriteMap() {
+        var configured = window.lstLeitstellenAjax && lstLeitstellenAjax.signal_sprite_urls ? lstLeitstellenAjax.signal_sprite_urls : {};
+        var base = pluginBaseUrl();
+        return {
+            beacon: configured.beacon || (base ? base + 'img/signal/beacon.png' : ''),
+            strobe: configured.strobe || (base ? base + 'img/signal/strobe.png' : ''),
+            bar: configured.bar || (base ? base + 'img/signal/lightbar.png' : ''),
+            glow: configured.glow || (base ? base + 'img/signal/glow.png' : ''),
+            editor_point: configured.editor_point || (base ? base + 'img/signal/editor-point.png' : '')
+        };
+    }
+
+    function spriteUrl(type) {
+        var map = spriteMap();
+        var key = ['beacon', 'strobe', 'bar', 'glow'].indexOf(String(type || '')) !== -1 ? String(type) : 'beacon';
+        if (map[key] && !failedSignalSprites[key]) return map[key];
+        if (map.editor_point && !failedSignalSprites.editor_point) return map.editor_point;
+        return '';
+    }
+
+    function clamp(value, min, max) {
+        value = Number(value);
+        if (!Number.isFinite(value)) return min;
+        return Math.max(min, Math.min(max, value));
+    }
+
+    function normalizeSignalLights(raw) {
+        var decoded = raw;
+        if (typeof raw === 'string' && raw.trim()) {
+            try { decoded = JSON.parse(raw); } catch (e) { decoded = {}; }
+        }
+        var lights = Array.isArray(decoded) ? decoded : (decoded && Array.isArray(decoded.lights) ? decoded.lights : []);
+        return lights.map(function(light) {
+            return {
+                x: clamp(light && light.x, 0, 1),
+                y: clamp(light && light.y, 0, 1),
+                type: ['beacon', 'strobe', 'bar', 'glow'].indexOf(String(light && light.type || '')) !== -1 ? String(light.type) : 'beacon',
+                interval: Math.round(clamp(light && light.interval || 420, 120, 2000)),
+                phase: Math.round(clamp(light && light.phase || 0, 0, 5000)),
+                size: clamp(light && light.size || 1, 0.4, 2.5)
+            };
+        });
+    }
+
+    function signalLightsJson() {
+        return signalLights.length ? JSON.stringify({ version: 1, lights: signalLights }) : '';
+    }
+
+    function publicImageUrl(value) {
+        value = String(value || '').trim();
+        if (!value) return '';
+        if (/^(https?:)?\/\//i.test(value) || value.charAt(0) === '/') return value;
+        var base = pluginBaseUrl();
+        return base ? base + value.replace(/^\/+/, '') : value;
+    }
+
+    function previewElements(inputId) {
+        return {
+            input: document.getElementById(inputId),
+            image: document.querySelector('[data-lst-default-image-preview-for="' + inputId + '"]'),
+            empty: document.querySelector('[data-lst-default-image-empty-for="' + inputId + '"]'),
+            status: document.querySelector('[data-lst-default-image-status-for="' + inputId + '"]')
+        };
+    }
+
+    function updateDefaultVehiclePreview(inputId) {
+        var refs = previewElements(inputId);
+        if (!refs.input || !refs.image) return;
+        var raw = String(refs.input.value || '').trim();
+        var url = publicImageUrl(raw);
+
+        refs.image.onload = function() {
+            refs.image.style.display = 'block';
+            refs.image.closest('.lst-default-vehicle-card__preview') &&
+                refs.image.closest('.lst-default-vehicle-card__preview').classList.remove('is-error');
+            if (refs.empty) refs.empty.style.display = 'none';
+            if (refs.status) refs.status.textContent = raw || '';
+        };
+        refs.image.onerror = function() {
+            refs.image.style.display = 'none';
+            refs.image.closest('.lst-default-vehicle-card__preview') &&
+                refs.image.closest('.lst-default-vehicle-card__preview').classList.add('is-error');
+            if (refs.empty) {
+                refs.empty.textContent = raw ? 'Bild nicht verfügbar' : 'Kein Bild geladen';
+                refs.empty.style.display = 'block';
+            }
+            if (refs.status) refs.status.textContent = raw || '';
+        };
+
+        if (!url) {
+            refs.image.removeAttribute('src');
+            refs.image.style.display = 'none';
+            if (refs.empty) {
+                refs.empty.textContent = 'Kein Bild geladen';
+                refs.empty.style.display = 'block';
+            }
+            if (refs.status) refs.status.textContent = '';
+            return;
+        }
+
+        if (refs.status) refs.status.textContent = raw;
+        refs.image.src = url;
+    }
+
+    function updateAllDefaultVehiclePreviews() {
+        $('[data-lst-default-image-input]').each(function() {
+            updateDefaultVehiclePreview(this.id);
+        });
+    }
+
+    window.updateDefaultVehiclePreview = updateDefaultVehiclePreview;
+    window.updateAllDefaultVehiclePreviews = updateAllDefaultVehiclePreviews;
+
+    function selectedLightIndex() {
+        var index = parseInt($('#lst-default-signal-delete').attr('data-index'), 10);
+        return Number.isFinite(index) && index >= 0 ? index : -1;
+    }
+
+    function setSelectedLight(index) {
+        index = Number.isFinite(index) ? index : -1;
+        $('#lst-default-signal-delete')
+            .prop('disabled', index < 0 || !signalLights[index])
+            .attr('data-index', index >= 0 ? String(index) : '');
+        if (signalLights[index]) {
+            $('#lst-default-signal-type').val(signalLights[index].type);
+            $('#lst-default-signal-interval').val(signalLights[index].interval);
+            $('#lst-default-signal-phase').val(signalLights[index].phase);
+            $('#lst-default-signal-size').val(signalLights[index].size);
+        }
+        renderSignalLights();
+    }
+
+    function stageRect() {
+        var img = $('#lst-default-signal-preview').get(0);
+        if (!img || !img.complete || !img.naturalWidth) return null;
+        var rect = img.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0) return null;
+        return rect;
+    }
+
+    function pointFromEvent(event) {
+        var rect = stageRect();
+        if (!rect) return null;
+        return {
+            x: clamp((event.clientX - rect.left) / rect.width, 0, 1),
+            y: clamp((event.clientY - rect.top) / rect.height, 0, 1)
+        };
+    }
+
+    function renderSignalLights() {
+        var $layer = $('[data-lst-default-signal-layer]');
+        var $img = $('#lst-default-signal-preview');
+        var src = publicImageUrl(activeSignalImageField ? activeSignalImageField.value : '');
+        $img.attr('src', src || '').toggle(!!src);
+        $('[data-lst-default-signal-empty]').toggle(!src);
+        $layer.empty().toggle(!!src);
+        if (!src) return;
+
+        var selected = selectedLightIndex();
+        signalLights.forEach(function(light, index) {
+            var icon = spriteUrl(light.type);
+            var $point = $('<button type="button" class="lst-signal-point"></button>');
+            $point
+                .attr('data-index', String(index))
+                .attr('data-signal-type', light.type || 'beacon')
+                .attr('title', light.type + ' ' + Math.round(light.x * 100) + '/' + Math.round(light.y * 100))
+                .toggleClass('is-selected', index === selected)
+                .toggleClass('is-bar', light.type === 'bar')
+                .toggleClass('has-sprite', !!icon)
+                .css({
+                    left: (light.x * 100) + '%',
+                    top: (light.y * 100) + '%',
+                    transform: 'translate(-50%, -50%) scale(' + light.size + ')',
+                    animationDuration: Math.max(120, light.interval) + 'ms',
+                    animationDelay: '-' + Math.max(0, light.phase) + 'ms',
+                    backgroundImage: icon ? 'url("' + icon.replace(/"/g, '%22') + '")' : ''
+                });
+            if (icon) {
+                $('<img alt="">')
+                    .attr('src', icon)
+                    .on('error', function() {
+                        var key = icon === spriteMap().editor_point ? 'editor_point' : String(light.type || 'beacon');
+                        failedSignalSprites[key] = true;
+                        renderSignalLights();
+                    })
+                    .appendTo($point);
+            }
+            $layer.append($point);
+        });
+    }
+
+    function applyPreset(name) {
+        var presets = {
+            rd: [
+                { x: 0.38, y: 0.18, type: 'beacon', interval: 420, phase: 0, size: 1 },
+                { x: 0.62, y: 0.18, type: 'beacon', interval: 420, phase: 210, size: 1 }
+            ],
+            pol: [
+                { x: 0.42, y: 0.18, type: 'bar', interval: 360, phase: 0, size: 1 },
+                { x: 0.58, y: 0.18, type: 'bar', interval: 360, phase: 180, size: 1 }
+            ],
+            clear: []
+        };
+        signalLights = normalizeSignalLights(presets[name] || []);
+        setSelectedLight(signalLights.length ? 0 : -1);
+    }
+
+    function updateSelectedFromControls() {
+        var index = selectedLightIndex();
+        if (index < 0 || !signalLights[index]) return;
+        signalLights[index].type = $('#lst-default-signal-type').val() || 'beacon';
+        signalLights[index].interval = Math.round(clamp($('#lst-default-signal-interval').val(), 120, 2000));
+        signalLights[index].phase = Math.round(clamp($('#lst-default-signal-phase').val(), 0, 5000));
+        signalLights[index].size = clamp($('#lst-default-signal-size').val(), 0.4, 2.5);
+        renderSignalLights();
+    }
+
+    function ensureSignalModal() {
+        if ($('#lst-default-signal-modal').length) return;
+        $('body').append(
+            '<div id="lst-default-signal-modal" class="lst-default-signal-modal" style="display:none">' +
+                '<div class="lst-default-signal-dialog">' +
+                    '<h2 data-lst-default-signal-title>Blaulichter bearbeiten</h2>' +
+                    '<section class="lst-signal-editor">' +
+                        '<div class="lst-signal-editor__head">' +
+                            '<strong>Default-Blaulichter</strong>' +
+                            '<div class="lst-signal-editor__presets">' +
+                                '<button type="button" class="button" data-lst-default-signal-preset="rd">RTW/KTW</button>' +
+                                '<button type="button" class="button" data-lst-default-signal-preset="pol">Polizei</button>' +
+                                '<button type="button" class="button" data-lst-default-signal-preset="clear">Leer</button>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="lst-signal-editor__body">' +
+                            '<div class="lst-signal-stage" data-lst-default-signal-stage>' +
+                                '<img id="lst-default-signal-preview" alt="Fahrzeugvorschau">' +
+                                '<div class="lst-signal-layer" data-lst-default-signal-layer></div>' +
+                                '<p data-lst-default-signal-empty>Bitte erst ein Fahrzeugbild wählen.</p>' +
+                            '</div>' +
+                            '<div class="lst-signal-panel">' +
+                                '<label>Typ<select id="lst-default-signal-type">' +
+                                    '<option value="beacon">Rundumleuchte</option>' +
+                                    '<option value="strobe">Frontblitzer</option>' +
+                                    '<option value="bar">Lichtbalken</option>' +
+                                    '<option value="glow">Glow</option>' +
+                                '</select></label>' +
+                                '<label>Intervall <input type="number" id="lst-default-signal-interval" value="420" min="120" max="2000" step="20"></label>' +
+                                '<label>Phase <input type="number" id="lst-default-signal-phase" value="0" min="0" max="5000" step="20"></label>' +
+                                '<label>Größe <input type="number" id="lst-default-signal-size" value="1" min="0.4" max="2.5" step="0.1"></label>' +
+                                '<button type="button" class="button" id="lst-default-signal-delete" disabled>Ausgewähltes Licht löschen</button>' +
+                                '<small>Klick auf das Bild setzt ein Licht. Ziehen verschiebt es.</small>' +
+                            '</div>' +
+                        '</div>' +
+                    '</section>' +
+                    '<div class="lst-default-signal-actions">' +
+                        '<button type="button" class="button" data-lst-default-signal-cancel>Abbrechen</button>' +
+                        '<button type="button" class="button button-primary" data-lst-default-signal-save>Speichern</button>' +
+                    '</div>' +
+                '</div>' +
+            '</div>'
+        );
+
+        $('[data-lst-default-signal-stage]').on('click', function(event) {
+            if ($(event.target).closest('.lst-signal-point').length) return;
+            var point = pointFromEvent(event);
+            if (!point || !(activeSignalImageField && activeSignalImageField.value)) return;
+            signalLights.push({
+                x: point.x,
+                y: point.y,
+                type: $('#lst-default-signal-type').val() || 'beacon',
+                interval: Math.round(clamp($('#lst-default-signal-interval').val() || 420, 120, 2000)),
+                phase: Math.round(clamp($('#lst-default-signal-phase').val() || 0, 0, 5000)),
+                size: clamp($('#lst-default-signal-size').val() || 1, 0.4, 2.5)
+            });
+            setSelectedLight(signalLights.length - 1);
+        });
+        $('[data-lst-default-signal-layer]').on('pointerdown', '.lst-signal-point', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            dragLightIndex = parseInt($(this).attr('data-index'), 10);
+            setSelectedLight(dragLightIndex);
+            this.setPointerCapture && this.setPointerCapture(event.originalEvent.pointerId);
+        });
+        $(document).on('pointermove.lstDefaultSignals', function(event) {
+            if (dragLightIndex === null || !signalLights[dragLightIndex]) return;
+            var point = pointFromEvent(event);
+            if (!point) return;
+            signalLights[dragLightIndex].x = point.x;
+            signalLights[dragLightIndex].y = point.y;
+            renderSignalLights();
+        });
+        $(document).on('pointerup.lstDefaultSignals pointercancel.lstDefaultSignals', function() {
+            dragLightIndex = null;
+        });
+        $('[data-lst-default-signal-preset]').on('click', function() {
+            applyPreset($(this).attr('data-lst-default-signal-preset') || 'clear');
+        });
+        $('#lst-default-signal-type, #lst-default-signal-interval, #lst-default-signal-phase, #lst-default-signal-size').on('input change', updateSelectedFromControls);
+        $('#lst-default-signal-delete').on('click', function() {
+            var index = selectedLightIndex();
+            if (index < 0 || !signalLights[index]) return;
+            signalLights.splice(index, 1);
+            setSelectedLight(signalLights.length ? Math.min(index, signalLights.length - 1) : -1);
+        });
+        $('[data-lst-default-signal-cancel], #lst-default-signal-modal').on('click', function(event) {
+            if (event.target !== this && !$(event.target).is('[data-lst-default-signal-cancel]')) return;
+            $('#lst-default-signal-modal').hide();
+        });
+        $('[data-lst-default-signal-save]').on('click', function() {
+            if (activeSignalJsonField) {
+                activeSignalJsonField.value = signalLightsJson();
+            }
+            $('#lst-default-signal-modal').hide();
+        });
+    }
+
+    $(document).on('click', '.lst-default-image-upload', function(event) {
+        event.preventDefault();
+        var target = document.getElementById($(this).attr('data-target') || '');
+        if (!target || !window.wp || !wp.media) return;
+        var frame = wp.media({
+            title: 'Fahrzeugbild auswählen',
+            button: { text: 'Bild verwenden' },
+            multiple: false
+        });
+        frame.on('select', function() {
+            var attachment = frame.state().get('selection').first();
+            var data = attachment ? attachment.toJSON() : null;
+            if (data && data.url) {
+                target.value = data.url;
+                updateDefaultVehiclePreview(target.id);
+            }
+        });
+        frame.open();
+    });
+
+    $(document).on('input change', '[data-lst-default-image-input]', function() {
+        updateDefaultVehiclePreview(this.id);
+    });
+
+    $(document).on('click', '.lst-default-signal-editor-open', function(event) {
+        event.preventDefault();
+        ensureSignalModal();
+        activeSignalImageField = document.getElementById($(this).attr('data-image-field') || '');
+        activeSignalJsonField = document.getElementById($(this).attr('data-json-field') || '');
+        $('[data-lst-default-signal-title]').text($(this).attr('data-title') || 'Blaulichter bearbeiten');
+        signalLights = normalizeSignalLights(activeSignalJsonField ? activeSignalJsonField.value : '');
+        if (!signalLights.length) {
+            $('#lst-default-signal-type').val('beacon');
+            $('#lst-default-signal-interval').val('420');
+            $('#lst-default-signal-phase').val('0');
+            $('#lst-default-signal-size').val('1');
+        }
+        setSelectedLight(signalLights.length ? 0 : -1);
+        updateAllDefaultVehiclePreviews();
+        renderSignalLights();
+        $('#lst-default-signal-modal').css('display', 'flex');
+    });
+
+    $(function() {
+        updateAllDefaultVehiclePreviews();
+    });
+})(jQuery);
 
 function updateWachenZuordButtonState() {
     var $btn = jQuery('#w_zuord_button_l');
@@ -512,7 +899,7 @@ function updateWachenZuordButtonState() {
         return labels[layerKey] ? labels[layerKey] : String(layerKey || '');
     }
 
-    function updateProgress(overallFloat, layerKey, layerPct, phase, dirtyDone, dirtyTotal) {
+    function updateProgress(overallFloat, layerKey, layerPct, phase, dirtyDone, dirtyTotal, initialDownload) {
         ensureOsmProgressUi();
 
         var overallClamped = Math.max(0, Math.min(100, Number(overallFloat || 0)));
@@ -527,7 +914,7 @@ function updateWachenZuordButtonState() {
             if (phase === 'scan') {
                 phaseText = 'Scan';
             } else if (phase === 'download') {
-                phaseText = 'Download';
+                phaseText = initialDownload ? 'Initialdownload' : 'Download';
             } else if (phase) {
                 phaseText = String(phase);
             }
@@ -564,7 +951,7 @@ function updateWachenZuordButtonState() {
         return 'rt_' + String(Date.now()) + '_' + String(Math.random()).slice(2);
     }
 
-    function postLayerStep(lsId, layerKey, nonce, runToken, cursor, chunk, reset, force) {
+    function postLayerStep(lsId, layerKey, nonce, runToken, cursor, chunk, reset, force, endpointOffset) {
         return $.ajax({
             url: getAjaxUrl(),
             method: 'POST',
@@ -579,7 +966,8 @@ function updateWachenZuordButtonState() {
                 chunk: chunk,
                 scan_budget: (layerKey === 'roads_lines' ? 3 : 5),
                 reset: reset ? '1' : '0',
-                force: force ? '1' : '0'
+                force: force ? '1' : '0',
+                endpoint_offset: Math.max(0, Number(endpointOffset || 0))
             }
         });
     }
@@ -641,6 +1029,20 @@ function updateWachenZuordButtonState() {
         if (message) {
             setOsmStatus(message, type || 'error');
         }
+    }
+
+    function isRetryableServerAbort(xhr) {
+        if (!xhr || xhr.status === 0) {
+            return true;
+        }
+
+        var status = Number(xhr.status || 0);
+        var body = xhr.responseText ? String(xhr.responseText) : '';
+        var hasJsonError = !!(xhr.responseJSON && xhr.responseJSON.data);
+
+        return !hasJsonError &&
+            (status === 500 || status === 502 || status === 503 || status === 504) &&
+            (body === '' || /Internal Server Error|Bad Gateway|Service Unavailable|Gateway Time-out/i.test(body));
     }
 
     $(document).on('click', '#btn-osm-refresh, #lst-osm-refresh-all, #lst-osm-refresh, #osm-refresh', function(e) {
@@ -710,6 +1112,8 @@ function updateWachenZuordButtonState() {
         var total = layersQueue.length;
         var doneLayers = 0;
         var combined = {};
+        var syncStartedAt = Date.now();
+        var maxContinuousRunMs = 45 * 60 * 1000;
 
         (async function runQueue() {
             for (var i = 0; i < layersQueue.length; i++) {
@@ -721,10 +1125,31 @@ function updateWachenZuordButtonState() {
                 var lastFeatureCount = 0;
                 var lastDirtyTotal = 0;
                 var lastPhase = 'scan';
+                var lastLayerProgress = 0;
+                var lastInitialDownload = false;
+                var endpointOffset = 0;
+                var networkRetryCount = 0;
                 var rt = makeRunToken();
 
                 while (!layerDone) {
-                    updateProgress((doneLayers / total) * 100, layerKey, 0, lastPhase, null, null);
+                    if ((Date.now() - syncStartedAt) >= maxContinuousRunMs) {
+                        abortRun(
+                            'Der Sync wurde nach 45 Minuten kontrolliert pausiert, bevor das Hosting den Langlauf beendet. ' +
+                            'Der Fortschritt ist gespeichert. Bitte nach kurzer Pause erneut auf <strong>OSM Tiles sync</strong> klicken.',
+                            'warning'
+                        );
+                        return;
+                    }
+
+                    updateProgress(
+                        ((doneLayers + (lastLayerProgress / 100)) / total) * 100,
+                        layerKey,
+                        lastLayerProgress,
+                        lastPhase,
+                        null,
+                        null,
+                        lastInitialDownload
+                    );
 
                     try {
                         var resp = await postLayerStep(
@@ -735,7 +1160,8 @@ function updateWachenZuordButtonState() {
                             cursor,
                             chunkForLayer(layerKey),
                             first,
-                            false
+                            false,
+                            endpointOffset
                         );
 
                         if (!resp || typeof resp !== 'object') {
@@ -747,6 +1173,7 @@ function updateWachenZuordButtonState() {
                             var waitMs = Math.min(180000, Math.max(1000, resp.data.retry_after_ms));
                             var msg = resp.data.message ? String(resp.data.message) : 'Warte vor dem nächsten Schritt …';
 
+                            endpointOffset += 1;
                             setOsmStatus(
                                 msg + ' Retry in ' + Math.round(waitMs / 1000) + 's',
                                 'warning'
@@ -780,9 +1207,11 @@ function updateWachenZuordButtonState() {
                             return;
                         }
 
+                        endpointOffset = 0;
+                        networkRetryCount = 0;
                         lastPhase = resp.data.phase || lastPhase;
 
-                        var layerProgress = 0;
+                        var layerProgress = lastLayerProgress;
                         if (typeof resp.data.progress === 'number') {
                             layerProgress = resp.data.progress;
                         } else if (
@@ -793,16 +1222,19 @@ function updateWachenZuordButtonState() {
                         ) {
                             layerProgress = (resp.data.dirty_done / resp.data.dirty_total) * 100;
                         }
+                        lastLayerProgress = Math.max(lastLayerProgress, Math.min(100, layerProgress));
+                        lastInitialDownload = lastPhase === 'download' && !!resp.data.initial_download;
 
-                        var overall = ((doneLayers + (layerProgress / 100)) / total) * 100;
+                        var overall = ((doneLayers + (lastLayerProgress / 100)) / total) * 100;
 
                         updateProgress(
                             overall,
                             layerKey,
-                            layerProgress,
+                            lastLayerProgress,
                             lastPhase,
                             resp.data.dirty_done,
-                            resp.data.dirty_total
+                            resp.data.dirty_total,
+                            lastInitialDownload
                         );
 
                         if (typeof resp.data.cursor === 'number') {
@@ -841,6 +1273,32 @@ function updateWachenZuordButtonState() {
                         console.error('[OSM AJAX ERROR]', xhr);
                         console.error('[OSM AJAX STATUS]', xhr && xhr.status, xhr && xhr.statusText);
                         console.error('[OSM AJAX RESPONSE]', xhr && xhr.responseText);
+
+                        if (isRetryableServerAbort(xhr) && (Date.now() - syncStartedAt) >= (30 * 60 * 1000)) {
+                            abortRun(
+                                'Der Server hat den längeren Sync-Lauf beendet. Der Fortschritt ist gespeichert. ' +
+                                'Bitte nach kurzer Pause erneut auf <strong>OSM Tiles sync</strong> klicken.',
+                                'warning'
+                            );
+                            return;
+                        }
+
+                        if (isRetryableServerAbort(xhr) && networkRetryCount < 6) {
+                            networkRetryCount += 1;
+                            endpointOffset += 1;
+                            var retryDelay = Math.min(15000, 1500 * networkRetryCount);
+
+                            setOsmStatus(
+                                'Serververbindung beim Sync von <code>' + layerLabel(layerKey) +
+                                '</code> unterbrochen. Neuer Versuch ' + networkRetryCount +
+                                '/6 in ' + Math.round(retryDelay / 1000) + 's …',
+                                'warning'
+                            );
+
+                            await sleepMs(retryDelay);
+                            first = false;
+                            continue;
+                        }
 
                         var body = (xhr && xhr.responseText) ? String(xhr.responseText) : '';
                         var shortBody = body ? body.slice(0, 600) : '';

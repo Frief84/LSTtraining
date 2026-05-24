@@ -3,6 +3,13 @@ jQuery(function ($) {
     let vectorSource = null;
     let vectorLayer = null;
     let currentPoiTypes = [];
+    let currentVehicleTypes = [];
+    let currentCallerProfiles = [];
+    let callerProfilesLoading = false;
+    let callerProfilesLoadFailed = false;
+    let callerProfilesReady = false;
+    let followupCardSeq = 0;
+    const wizardSteps = ['general', 'location', 'time', 'caller', 'situation', 'followups'];
 
     function esc(str) {
         return String(str == null ? '' : str)
@@ -25,11 +32,22 @@ jQuery(function ($) {
     }
 
     function showModal() {
-        $('#lst-einsatz-modal').removeClass('hidden');
+        $('#lst-einsatz-modal')
+            .removeClass('hidden')
+            .attr('aria-hidden', 'false')
+            .removeAttr('inert');
     }
 
     function hideModal() {
-        $('#lst-einsatz-modal').addClass('hidden');
+        const $modal = $('#lst-einsatz-modal');
+        if ($modal.has(document.activeElement).length) {
+            document.activeElement.blur();
+        }
+
+        $modal
+            .attr('aria-hidden', 'true')
+            .attr('inert', '')
+            .addClass('hidden');
     }
 
     function renderList(items) {
@@ -43,28 +61,197 @@ jQuery(function ($) {
         item.seasons = Array.isArray(item.seasons) ? item.seasons : [];
         item.weather_conditions = Array.isArray(item.weather_conditions) ? item.weather_conditions : [];
         item.followups = Array.isArray(item.followups) ? item.followups : [];
+        item.caller_profiles = Array.isArray(item.caller_profiles) ? item.caller_profiles : [];
+        item.base_required_resources_json = item.base_required_resources_json || '';
+        item.patient_profile_json = item.patient_profile_json || '';
         item.caller_parts = item.caller_parts || {
             greeting: [],
             person: [],
             location: [],
             problem: [],
+            observation: [],
             extra: []
         };
         item.poi_types = currentPoiTypes;
         return item;
     }
 
+    function selectedCallerProfileMap(item) {
+        const selected = {};
+        (item.caller_profiles || []).forEach(function (row) {
+            const id = parseInt(row.profile_id || row.id || 0, 10);
+            if (!id) return;
+            selected[id] = {
+                profile_id: id,
+                weight: parseInt(row.weight || 100, 10) || 100
+            };
+        });
+        return selected;
+    }
+
+    function renderCallerProfileAssignment(item) {
+        const $target = $('#lst-einsatz-profile-assignment');
+        if (!$target.length) return;
+
+        item = item || {};
+        const selected = selectedCallerProfileMap(item);
+
+        if (callerProfilesLoading && !currentCallerProfiles.length) {
+            callerProfilesReady = false;
+            $target.html('<p class="description">Anruferprofile werden geladen...</p>');
+            return;
+        }
+
+        if (!currentCallerProfiles.length) {
+            callerProfilesReady = !callerProfilesLoadFailed && !callerProfilesLoading;
+            $target.html(callerProfilesLoadFailed
+                ? '<p class="description">Anruferprofile konnten nicht geladen werden. Bitte erneut öffnen oder später speichern.</p>'
+                : '<p class="description">Noch keine aktiven Anruferprofile vorhanden.</p>');
+            return;
+        }
+        callerProfilesReady = true;
+
+        const rows = currentCallerProfiles.map(function (profile) {
+            const id = parseInt(profile.id || 0, 10);
+            const assigned = selected[id] || null;
+            const checked = assigned ? ' checked' : '';
+            const weight = assigned ? assigned.weight : 100;
+
+            return `
+                <tr class="lst-caller-profile-row" data-profile-id="${esc(id)}">
+                    <td>
+                        <label>
+                            <input type="checkbox" class="lst-caller-profile-enabled" value="${esc(id)}"${checked}>
+                            <strong>${esc(profile.name || ('Profil #' + id))}</strong>
+                        </label>
+                        <div class="description">
+                            ${esc(profile.category || 'Profil')}${profile.tone ? ' · ' + esc(profile.tone) : ''}
+                        </div>
+                    </td>
+                    <td style="width:140px;">
+                        <input type="number" class="small-text lst-caller-profile-weight" min="1" max="1000" step="1" value="${esc(weight)}">
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        $target.html(`
+            <table class="widefat striped lst-subtable">
+                <thead>
+                    <tr>
+                        <th>Profil</th>
+                        <th style="width:140px;">Gewichtung</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+            <p class="description">Gewichtung 100 ist normal. Höhere Werte werden beim konkreten Einsatz häufiger gewählt.</p>
+        `);
+    }
+
+    function loadCallerProfilesForEditor(item) {
+        if (currentCallerProfiles.length) {
+            callerProfilesLoadFailed = false;
+            callerProfilesReady = true;
+            renderCallerProfileAssignment(item);
+            return;
+        }
+
+        callerProfilesLoading = true;
+        callerProfilesLoadFailed = false;
+        callerProfilesReady = false;
+        renderCallerProfileAssignment(item);
+
+        postAjax({
+            action: 'lst_get_anruferprofile_list',
+            enabled: '1'
+        })
+        .done(function (res) {
+            if (!res || !res.success) {
+                console.error('lst_get_anruferprofile_list Fehler', res);
+                currentCallerProfiles = [];
+                callerProfilesLoadFailed = true;
+                return;
+            }
+
+            currentCallerProfiles = Array.isArray(res.data.items) ? res.data.items : [];
+            callerProfilesLoadFailed = false;
+        })
+        .fail(function (xhr) {
+            console.error('lst_get_anruferprofile_list fehlgeschlagen', xhr);
+            currentCallerProfiles = [];
+            callerProfilesLoadFailed = true;
+        })
+        .always(function () {
+            callerProfilesLoading = false;
+            renderCallerProfileAssignment(item);
+        });
+    }
+
+    function scopeLabel(scopeType) {
+        const labels = {
+            anywhere: 'Überall im Einsatzgebiet',
+            landscape: 'Nach Gebietstyp',
+            poi_type: 'An bestimmtem POI-Typ',
+            fixed_point: 'Fester Punkt auf Karte'
+        };
+        return labels[scopeType] || 'Überall im Einsatzgebiet';
+    }
+
+    function updateWizardSummary() {
+        const title = ($('#lst-title').val() || '').trim() || 'Unbenannter Einsatz';
+        const scopeType = $('input[name="lst_scope_type"]:checked').val() || 'anywhere';
+        const resources = collectResources('#lst-base-resource-list');
+        const followupCount = $('#lst-followup-cards .lst-followup-row').length;
+
+        $('[data-lst-summary="title"]').text(title);
+        $('[data-lst-summary="scope"]').text(scopeLabel(scopeType));
+        $('[data-lst-summary="resources"]').text(resources.length
+            ? resources.map(function (row) { return row.count + 'x ' + row.label; }).join(', ')
+            : 'Kein Grundbedarf');
+        $('[data-lst-summary="followups"]').text(followupCount === 1 ? '1 Lagevariante' : followupCount + ' Lagevarianten');
+    }
+
+    function updateWizardStepState(tabKey) {
+        const activeIndex = Math.max(0, wizardSteps.indexOf(tabKey));
+        $('.lst-tab-btn').each(function () {
+            const key = $(this).data('tab');
+            const index = wizardSteps.indexOf(key);
+            $(this)
+                .toggleClass('is-active', key === tabKey)
+                .toggleClass('is-complete', index > -1 && index < activeIndex);
+        });
+
+        $('[data-lst-wizard-prev]').prop('disabled', activeIndex <= 0);
+        $('[data-lst-wizard-next]')
+            .prop('disabled', activeIndex >= wizardSteps.length - 1)
+            .toggle(activeIndex < wizardSteps.length - 1);
+    }
+
     function setTab(tabKey) {
-        $('.lst-tab-btn').removeClass('is-active');
+        if (wizardSteps.indexOf(tabKey) === -1) {
+            tabKey = 'general';
+        }
+
         $('.lst-tab-panel').removeClass('is-active').hide();
 
-        $('.lst-tab-btn[data-tab="' + tabKey + '"]').addClass('is-active');
-        $('.lst-tab-panel[data-tab-panel="' + tabKey + '"]').addClass('is-active').show();
+        const $panel = $('.lst-tab-panel[data-tab-panel="' + tabKey + '"]');
+        $panel.addClass('is-active').show().scrollTop(0);
+        $('#lst-einsatz-modal .modal-body').scrollTop(0);
+        updateWizardStepState(tabKey);
+        updateWizardSummary();
 
         if (tabKey === 'location' && $('input[name="lst_scope_type"]:checked').val() === 'fixed_point') {
             setTimeout(initMapIfNeeded, 50);
             setTimeout(syncMapFromFields, 80);
         }
+    }
+
+    function moveWizard(delta) {
+        const current = $('.lst-tab-btn.is-active').data('tab') || 'general';
+        const index = Math.max(0, wizardSteps.indexOf(current));
+        const nextIndex = Math.min(wizardSteps.length - 1, Math.max(0, index + delta));
+        setTab(wizardSteps[nextIndex]);
     }
 
     function setScopePanels(scopeType) {
@@ -102,21 +289,73 @@ jQuery(function ($) {
         });
     }
 
+    function cleanupLegacyPatientRequirementFields() {
+        const $modal = $('#lst-einsatz-modal');
+        const removeGridWithDescription = function ($grid) {
+            const $next = $grid.next('.description');
+            if ($next.length && /KTW|RTW|Notarzt|Rettungsmittelbedarf/.test($next.text())) {
+                $next.remove();
+            }
+            $grid.remove();
+        };
+
+        $modal.find('h3').each(function () {
+            const $heading = $(this);
+            if ($heading.text().trim() === 'Patienten- und Rettungsmittelbedarf') {
+                $heading.text('Patienten und Rettungsmittel');
+            }
+        });
+
+        const $baseLegacyGrid = $modal
+            .find('#lst-patientenzahl, #lst-patient-ktw, #lst-patient-rtw, #lst-patient-notarzt')
+            .filter(function () {
+                return String($(this).attr('type') || '').toLowerCase() !== 'hidden';
+            })
+            .first()
+            .closest('.lst-grid');
+        if ($baseLegacyGrid.length) {
+            removeGridWithDescription($baseLegacyGrid);
+        }
+
+        $modal
+            .find('.lst-followup-patient-total, .lst-followup-patient-ktw, .lst-followup-patient-rtw, .lst-followup-patient-notarzt')
+            .closest('.lst-grid')
+            .each(function () {
+                removeGridWithDescription($(this));
+            });
+
+        $modal.find('.lst-patient-editor > .description').each(function () {
+            const $description = $(this);
+            if ($description.text().indexOf('Hier stellst du Triage') !== -1) {
+                $description.text('Jede Zeile beschreibt einen Patienten. Aus KTW, RTW und Notarztmittel wird der Rettungsmittelbedarf automatisch berechnet. 0 % = verstorben, ab Zielwert transportbereit.');
+            }
+        });
+    }
+
     function openEditor(item) {
         item = normalizeItem(item);
+        const mode = item.__editor_mode || (item.id ? 'edit' : 'create');
+        const editorTitle = mode === 'copy' ? 'Einsatz kopieren' : (item.id ? 'Einsatz bearbeiten' : 'Einsatz anlegen');
 
         const tpl = wp.template('lst-einsatz-editor');
         $('#lst-einsatz-modal .modal-body').html(tpl(item));
-        $('#lst-einsatz-modal-title').text(item.id ? 'Einsatz bearbeiten' : 'Neuer Einsatz');
+        $('#lst-einsatz-modal-title').text(editorTitle);
+        cleanupLegacyPatientRequirementFields();
 
         showModal();
         bindDynamicUi();
         restoreEmptyRows();
+        followupCardSeq = $('.lst-followup-row').length;
+        hydrateResourceEditors(item);
+        callerProfilesReady = false;
+        callerProfilesLoadFailed = false;
+        loadCallerProfilesForEditor(item);
 
         setTab('general');
 
         const scopeType = $('input[name="lst_scope_type"]:checked').val() || 'anywhere';
         setScopePanels(scopeType);
+        updateWizardSummary();
     }
 
     function fetchOne(id, asCopy) {
@@ -134,6 +373,9 @@ jQuery(function ($) {
             if (asCopy) {
                 item.id = '';
                 item.title = (item.title || 'Einsatz') + ' (Kopie)';
+                item.__editor_mode = 'copy';
+            } else {
+                item.__editor_mode = 'edit';
             }
 
             openEditor(item);
@@ -153,16 +395,16 @@ jQuery(function ($) {
             <tr class="lst-time-window-row">
                 <td>
                     <select class="lst-day-type">
-                        <option value="any" ${row.day_type === 'any' ? 'selected' : ''}>any</option>
-                        <option value="weekday" ${row.day_type === 'weekday' ? 'selected' : ''}>weekday</option>
-                        <option value="weekend" ${row.day_type === 'weekend' ? 'selected' : ''}>weekend</option>
-                        <option value="monday" ${row.day_type === 'monday' ? 'selected' : ''}>monday</option>
-                        <option value="tuesday" ${row.day_type === 'tuesday' ? 'selected' : ''}>tuesday</option>
-                        <option value="wednesday" ${row.day_type === 'wednesday' ? 'selected' : ''}>wednesday</option>
-                        <option value="thursday" ${row.day_type === 'thursday' ? 'selected' : ''}>thursday</option>
-                        <option value="friday" ${row.day_type === 'friday' ? 'selected' : ''}>friday</option>
-                        <option value="saturday" ${row.day_type === 'saturday' ? 'selected' : ''}>saturday</option>
-                        <option value="sunday" ${row.day_type === 'sunday' ? 'selected' : ''}>sunday</option>
+                        <option value="any" ${row.day_type === 'any' ? 'selected' : ''}>Alle</option>
+                        <option value="weekday" ${row.day_type === 'weekday' ? 'selected' : ''}>Werktag</option>
+                        <option value="weekend" ${row.day_type === 'weekend' ? 'selected' : ''}>Wochenende</option>
+                        <option value="monday" ${row.day_type === 'monday' ? 'selected' : ''}>Montag</option>
+                        <option value="tuesday" ${row.day_type === 'tuesday' ? 'selected' : ''}>Dienstag</option>
+                        <option value="wednesday" ${row.day_type === 'wednesday' ? 'selected' : ''}>Mittwoch</option>
+                        <option value="thursday" ${row.day_type === 'thursday' ? 'selected' : ''}>Donnerstag</option>
+                        <option value="friday" ${row.day_type === 'friday' ? 'selected' : ''}>Freitag</option>
+                        <option value="saturday" ${row.day_type === 'saturday' ? 'selected' : ''}>Samstag</option>
+                        <option value="sunday" ${row.day_type === 'sunday' ? 'selected' : ''}>Sonntag</option>
                     </select>
                 </td>
                 <td><input type="time" class="lst-start-time" value="${esc(row.start_time || '')}"></td>
@@ -173,47 +415,746 @@ jQuery(function ($) {
     }
 
     function addCallerRow(partKey, row) {
-        const tbody = $('.lst-caller-part-table[data-part-key="' + partKey + '"] tbody');
-        tbody.find('.lst-caller-empty-row').remove();
+        const tbody = $('.lst-einsatz-part-table[data-part-key="' + partKey + '"], .lst-caller-part-table[data-part-key="' + partKey + '"]').find('tbody');
+        tbody.find('.lst-einsatz-part-empty-row, .lst-caller-empty-row').remove();
 
         const text = row && row.text ? row.text : '';
         const sortOrder = row && row.sort_order != null ? row.sort_order : 0;
         const enabled = !row || String(row.enabled) !== '0';
 
         tbody.append(`
-            <tr class="lst-caller-part-row">
-                <td><input type="text" class="regular-text lst-caller-part-text" value="${esc(text)}"></td>
-                <td><input type="number" class="small-text lst-caller-part-sort-order" min="0" step="1" value="${esc(sortOrder)}"></td>
-                <td><label><input type="checkbox" class="lst-caller-part-enabled" value="1" ${enabled ? 'checked' : ''}> aktiv</label></td>
+            <tr class="lst-einsatz-part-row">
+                <td><input type="text" class="regular-text lst-einsatz-part-text" value="${esc(text)}"></td>
+                <td><input type="number" class="small-text lst-einsatz-part-sort-order" min="0" step="1" value="${esc(sortOrder)}"></td>
+                <td><label><input type="checkbox" class="lst-einsatz-part-enabled" value="1" ${enabled ? 'checked' : ''}> aktiv</label></td>
                 <td><button type="button" class="button-link-delete lst-remove-row">Entfernen</button></td>
             </tr>
         `);
     }
 
+    function parseJsonValue(raw, fallback) {
+        if (!raw) return fallback;
+        if (typeof raw !== 'string') return raw;
+        try {
+            return JSON.parse(raw);
+        } catch (e) {
+            return fallback;
+        }
+    }
+
+    function normalizeResourceRows(raw) {
+        let rows = [];
+        if (Array.isArray(raw)) {
+            rows = raw;
+        } else if (raw && Array.isArray(raw.resources)) {
+            rows = raw.resources;
+        } else if (raw && typeof raw === 'object') {
+            rows = Object.keys(raw).map(function (type) {
+                return { type: type, count: raw[type] };
+            });
+        }
+
+        return rows.map(function (row) {
+            const type = String(row.type || row.vehicle_type || row.fahrzeugtyp || '').trim();
+            const count = parseInt(row.count || row.amount || row.anzahl || 1, 10) || 1;
+            const normalized = normalizeResourceType(type);
+            return normalized ? { type: normalized, count: Math.max(1, count) } : null;
+        }).filter(Boolean);
+    }
+
+    const resourceClasses = [
+        { group: 'Rettungsdienst', value: 'rettungswagen', label: 'Rettungswagen' },
+        { group: 'Rettungsdienst', value: 'krankentransport', label: 'Krankentransportwagen' },
+        { group: 'Rettungsdienst', value: 'notarzt', label: 'Notarztmittel' },
+        { group: 'Rettungsdienst', value: 'san_betreuung', label: 'Sanitäts-/Betreuungskomponente' },
+        { group: 'Feuerwehr', value: 'loeschfahrzeug', label: 'Löschfahrzeug' },
+        { group: 'Feuerwehr', value: 'hubrettung', label: 'Hubrettungsfahrzeug' },
+        { group: 'Feuerwehr', value: 'ruestung', label: 'Rüst-/Hilfeleistungsfahrzeug' },
+        { group: 'Feuerwehr', value: 'fuehrung', label: 'Führungsfahrzeug' },
+        { group: 'Feuerwehr', value: 'logistik', label: 'Logistik' },
+        { group: 'Feuerwehr', value: 'gefahrgut', label: 'Gefahrgut' },
+        { group: 'Feuerwehr', value: 'atemschutz_messung', label: 'Atemschutz/Messung' },
+        { group: 'THW', value: 'thw_bergung', label: 'THW-Bergung' },
+        { group: 'THW', value: 'thw_fuehrung', label: 'THW-Führung' },
+        { group: 'THW', value: 'thw_logistik', label: 'THW-Logistik' },
+        { group: 'Sonstige', value: 'sonderkomponente', label: 'Sonderkomponente' }
+    ];
+
+    const resourceClassMap = resourceClasses.reduce(function (out, item) {
+        out[item.value] = item;
+        return out;
+    }, {});
+
+    function resourceClassLabel(type) {
+        const normalized = normalizeResourceType(type);
+        return normalized && resourceClassMap[normalized] ? resourceClassMap[normalized].label : String(type || '');
+    }
+
+    function normalizeResourceType(type) {
+        const raw = String(type || '').trim();
+        const value = raw.toUpperCase();
+        const canonical = raw.toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '');
+
+        if (resourceClassMap[canonical]) return canonical;
+        if (!value) return '';
+        if (value.indexOf('THW MTW') !== -1 || value.indexOf('TRUPPFÜHRER') !== -1) return 'thw_fuehrung';
+        if (value.indexOf('THW LKW') !== -1 || value.indexOf('MZGW') !== -1 || value.indexOf('MLW') !== -1) return 'thw_logistik';
+        if (value.indexOf('THW') === 0 || value.indexOf('GKW') !== -1) return 'thw_bergung';
+        if (/^(NEF|NAW|RTH|ITH|BABY-NAW)/.test(value)) return 'notarzt';
+        if (/^(KTW|KTW-B|KTW-4)/.test(value)) return 'krankentransport';
+        if (/^(RTW|NKTW|ITW|GRTW)/.test(value)) return 'rettungswagen';
+        if (value.indexOf('GW-SAN') !== -1 || value.indexOf('BETREU') !== -1 || value.indexOf('MANV') !== -1 || value.indexOf('SAN') !== -1) return 'san_betreuung';
+        if (value.indexOf('DEKON') !== -1 || value.indexOf('GEFAHR') !== -1 || value.indexOf('GW-G') !== -1) return 'gefahrgut';
+        if (value.indexOf('ATEMSCHUTZ') !== -1 || value.indexOf('GW-MESS') !== -1 || value.indexOf('MESS') !== -1) return 'atemschutz_messung';
+        if (/^(DLK|DLA|TMB)/.test(value)) return 'hubrettung';
+        if (/^(RW|VRW|VLF)/.test(value)) return 'ruestung';
+        if (/^(ELW|KDOW|KDO|ORGL|LNA)/.test(value)) return 'fuehrung';
+        if (value.indexOf('LOGISTIK') !== -1 || value.indexOf('GW-L') !== -1 || value.indexOf('WLF') !== -1 || value.indexOf('AB-') === 0) return 'logistik';
+        if (/^(HLF|LF|TLF|FLF|LÖSCHBOOT|FLB)/.test(value)) return 'loeschfahrzeug';
+        return 'sonderkomponente';
+    }
+
+    function vehicleTypeOptionsHtml(selected) {
+        const normalizedSelected = normalizeResourceType(selected);
+        const grouped = {};
+        resourceClasses.forEach(function (item) {
+            grouped[item.group] = grouped[item.group] || [];
+            grouped[item.group].push(item);
+        });
+
+        let html = '<option value="">Fahrzeugklasse wählen</option>';
+        Object.keys(grouped).forEach(function (group) {
+            if (!grouped[group].length) return;
+            html += '<optgroup label="' + esc(group) + '">';
+            grouped[group].forEach(function (item) {
+                html += '<option value="' + esc(item.value) + '"' + (item.value === normalizedSelected ? ' selected' : '') + '>' + esc(item.label) + '</option>';
+            });
+            html += '</optgroup>';
+        });
+        return html;
+    }
+
+    function addResourceRow(target, row) {
+        const $target = $(target);
+        const data = row || {};
+
+        $target.append(`
+            <div class="lst-resource-row">
+                <select class="lst-resource-type">${vehicleTypeOptionsHtml(data.type || '')}</select>
+                <button type="button" class="button lst-resource-minus" aria-label="Anzahl verringern">-</button>
+                <input type="number" min="1" step="1" class="small-text lst-resource-count" value="${esc(data.count || 1)}">
+                <button type="button" class="button lst-resource-plus" aria-label="Anzahl erhöhen">+</button>
+                <button type="button" class="button-link-delete lst-remove-resource">Entfernen</button>
+            </div>
+        `);
+        updateBaseResourceSummary();
+        updateFollowupCardSummary($target.closest('.lst-followup-row'));
+        updateWizardSummary();
+    }
+
+    function collectResources(target) {
+        const rows = [];
+        $(target).find('.lst-resource-row').each(function () {
+            const type = normalizeResourceType($(this).find('.lst-resource-type').val() || '');
+            const count = parseInt($(this).find('.lst-resource-count').val() || '1', 10) || 1;
+            if (!type) return;
+            rows.push({ type: type, label: resourceClassLabel(type), count: Math.max(1, count) });
+        });
+        return rows;
+    }
+
+    function resourceSummaryText(rows) {
+        rows = Array.isArray(rows) ? rows : [];
+        if (!rows.length) {
+            return 'Kein Zusatzbedarf';
+        }
+        return rows.map(function (row) {
+            return '+' + row.count + ' ' + row.label;
+        }).join(', ');
+    }
+
+    function followupTriggerLabel(value) {
+        const labels = {
+            on_unit_arrival: 'Nach Eintreffen',
+            on_missing_resources: 'Wenn Kräfte fehlen',
+            random: 'Zufällig',
+            manual: 'Manuell',
+            on_dispatcher_question: 'Auf Nachfrage'
+        };
+        return labels[value] || 'Nach Eintreffen';
+    }
+
+    function updateFollowupCardSummary($card) {
+        if (!$card || !$card.length) return;
+        const label = ($card.find('.lst-followup-label').val() || '').trim() || $card.find('[data-followup-title]').text() || 'Lagevariante';
+        const trigger = $card.find('.lst-followup-trigger').val() || 'on_unit_arrival';
+        const probability = $card.find('.lst-followup-probability').val() || '100';
+        const patient = patientRequirementsFromRows(collectPatientRows($card.find('.lst-followup-patient-list')));
+        const resources = mergeResourceRows(
+            patientResourcesFromCounts(patient.ktw, patient.rtw, patient.notarzt),
+            collectResources($card.find('.lst-followup-resource-list'))
+        );
+
+        $card.find('[data-followup-title]').text(label);
+        $card.find('[data-followup-chip="trigger"]').text(followupTriggerLabel(trigger));
+        $card.find('[data-followup-chip="probability"]').text(probability + ' %');
+        $card.find('[data-followup-chip="resources"]').text(resourceSummaryText(resources));
+    }
+
+    function updateAllFollowupCardSummaries() {
+        $('#lst-followup-cards .lst-followup-row').each(function () {
+            updateFollowupCardSummary($(this));
+        });
+    }
+
+    function summarizeResources(rows) {
+        const out = {};
+        rows.forEach(function (row) {
+            out[row.type] = (out[row.type] || 0) + (parseInt(row.count, 10) || 1);
+        });
+        return out;
+    }
+
+    function updateBaseResourceSummary() {
+        const patient = patientRequirementsFromRows(collectPatientRows($('#lst-base-patient-list')));
+        const summary = summarizeResources(mergeResourceRows(
+            patientResourcesFromCounts(patient.ktw, patient.rtw, patient.notarzt),
+            collectResources('#lst-base-resource-list')
+        ));
+        const $tbody = $('#lst-base-resource-summary');
+        if (!$tbody.length) return;
+
+        const types = Object.keys(summary).sort();
+        if (!types.length) {
+            $tbody.html('<tr><td colspan="2">Noch keine Fahrzeuge ausgewählt.</td></tr>');
+            updateWizardSummary();
+            return;
+        }
+
+        $tbody.html(types.map(function (type) {
+            return '<tr><td>' + esc(resourceClassLabel(type)) + '</td><td>' + esc(summary[type]) + '</td></tr>';
+        }).join(''));
+        updateWizardSummary();
+    }
+
+    function effectNoteFromJson(raw) {
+        const decoded = parseJsonValue(raw, {});
+        if (!decoded || typeof decoded !== 'object') return '';
+        return String(decoded.note || decoded.message || '');
+    }
+
+    const patientResourceTypes = ['krankentransport', 'rettungswagen', 'notarzt'];
+
+    function intValue(value) {
+        return Math.max(0, parseInt(value || '0', 10) || 0);
+    }
+
+    function boolValue(value) {
+        if (value === true || value === 1) return true;
+        if (value === false || value === 0 || value == null) return false;
+        const normalized = String(value).trim().toLowerCase();
+        return normalized === '1' || normalized === 'true' || normalized === 'yes' || normalized === 'ja';
+    }
+
+    function triageOptionsHtml(value) {
+        value = String(value || 'III').toUpperCase();
+        return ['I', 'II', 'III', 'IV', 'V'].map(function (item) {
+            const labels = { I: 'I Rot', II: 'II Gelb', III: 'III Grün', IV: 'IV Blau', V: 'V Schwarz' };
+            return '<option value="' + item + '"' + (value === item ? ' selected' : '') + '>' + labels[item] + '</option>';
+        }).join('');
+    }
+
+    function normalizePatientRows(raw) {
+        const decoded = Array.isArray(raw) ? raw : parseJsonValue(raw || '', []);
+        const rows = decoded && decoded.patients && Array.isArray(decoded.patients) ? decoded.patients : decoded;
+        return Array.isArray(rows) ? rows.map(function (row, index) {
+            row = row && typeof row === 'object' ? row : {};
+            const progress = Math.max(0, Math.min(100, parseInt(row.care_progress_percent != null ? row.care_progress_percent : (row.percent != null ? row.percent : 50), 10) || 0));
+            const dead = progress === 0;
+            return {
+                patient_id: String(row.patient_id || ('p' + (index + 1))),
+                label: String(row.label || ('Patient ' + (index + 1))),
+                triage_category: dead ? 'V' : String(row.triage_category || 'III').toUpperCase(),
+                injury_summary: String(row.injury_summary || row.description || ''),
+                requires_ktw: dead ? false : boolValue(row.requires_ktw),
+                requires_rtw: dead ? false : boolValue(row.requires_rtw),
+                requires_notarzt: dead ? false : boolValue(row.requires_notarzt),
+                care_progress_percent: progress,
+                care_target_percent: Math.max(1, Math.min(100, parseInt(row.care_target_percent || 100, 10) || 100))
+            };
+        }) : [];
+    }
+
+    function patientRequirementsFromLegacyText(text) {
+        const requirements = { total: 0, ktw: 0, rtw: 0, notarzt: 0 };
+        const value = String(text || '');
+        const patterns = [
+            { key: 'ktw', re: /(\d+)\s*(?:x\s*)?(?:ktw|krankentransport)/ig },
+            { key: 'rtw', re: /(\d+)\s*(?:x\s*)?(?:rtw|rettungswagen)/ig },
+            { key: 'notarzt', re: /(\d+)\s*(?:x\s*)?(?:notarzt|nef|naw|rth|ith|notarztmittel)/ig }
+        ];
+        patterns.forEach(function (pattern) {
+            let match;
+            while ((match = pattern.re.exec(value)) !== null) {
+                requirements[pattern.key] += intValue(match[1]);
+            }
+        });
+        requirements.total = Math.max(requirements.ktw + requirements.rtw, requirements.notarzt);
+        return requirements;
+    }
+
+    function derivePatientRows(requirements) {
+        const rows = [];
+        const total = Math.max(intValue(requirements.total), intValue(requirements.ktw) + intValue(requirements.rtw), intValue(requirements.notarzt));
+        for (let i = 0; i < total; i++) {
+            const needsNotarzt = i < intValue(requirements.notarzt);
+            const needsRtw = needsNotarzt || i < intValue(requirements.rtw);
+            const needsKtw = !needsRtw && i < (intValue(requirements.rtw) + intValue(requirements.ktw));
+            rows.push({
+                patient_id: 'p' + (i + 1),
+                label: 'Patient ' + (i + 1),
+                triage_category: needsNotarzt ? 'I' : (needsRtw ? 'II' : 'III'),
+                injury_summary: '',
+                requires_ktw: needsKtw,
+                requires_rtw: needsRtw,
+                requires_notarzt: needsNotarzt,
+                care_progress_percent: 50,
+                care_target_percent: 100
+            });
+        }
+        return rows;
+    }
+
+    function addPatientRow($target, row) {
+        row = normalizePatientRows([row || {}])[0] || normalizePatientRows([{}])[0];
+        $target.append(`
+            <div class="lst-patient-editor-row">
+                <div class="lst-patient-main">
+                    <input type="text" class="regular-text lst-patient-label lst-patient-label--compact" value="${esc(row.label)}" placeholder="Patient">
+                    <select class="lst-patient-triage" aria-label="Triage">${triageOptionsHtml(row.triage_category)}</select>
+                    <input type="text" class="regular-text lst-patient-injury" value="${esc(row.injury_summary)}" placeholder="Verletzungsbild / Zustand">
+                    <div class="lst-patient-care">
+                        <label><span>Prozent</span><input type="number" min="0" max="100" step="1" class="small-text lst-patient-progress" value="${esc(row.care_progress_percent)}"></label>
+                        <label><span>Transport ab</span><input type="number" min="1" max="100" step="1" class="small-text lst-patient-target" value="${esc(row.care_target_percent)}"></label>
+                        <button type="button" class="button-link-delete lst-remove-patient">Entfernen</button>
+                    </div>
+                </div>
+                <div class="lst-patient-needs" aria-label="Rettungsmittelbedarf">
+                    <span>Bedarf</span>
+                    <label><input type="checkbox" class="lst-patient-ktw" ${row.requires_ktw ? 'checked' : ''}> KTW</label>
+                    <label><input type="checkbox" class="lst-patient-rtw" ${row.requires_rtw ? 'checked' : ''}> RTW</label>
+                    <label><input type="checkbox" class="lst-patient-notarzt" ${row.requires_notarzt ? 'checked' : ''}> Notarztmittel</label>
+                </div>
+                <p class="description">0 % = verstorben, ab Zielwert transportbereit.</p>
+            </div>
+        `);
+    }
+
+    function collectPatientRows($scope) {
+        const rows = [];
+        $scope.find('.lst-patient-editor-row').each(function (index) {
+            const $row = $(this);
+            const progress = Math.max(0, Math.min(100, parseInt($row.find('.lst-patient-progress').val() || '0', 10) || 0));
+            const dead = progress === 0;
+            rows.push({
+                patient_id: 'p' + (index + 1),
+                label: ($row.find('.lst-patient-label').val() || ('Patient ' + (index + 1))).trim(),
+                triage_category: dead ? 'V' : ($row.find('.lst-patient-triage').val() || 'III'),
+                injury_summary: ($row.find('.lst-patient-injury').val() || '').trim(),
+                requires_ktw: dead ? false : $row.find('.lst-patient-ktw').is(':checked'),
+                requires_rtw: dead ? false : $row.find('.lst-patient-rtw').is(':checked'),
+                requires_notarzt: dead ? false : $row.find('.lst-patient-notarzt').is(':checked'),
+                care_progress_percent: progress,
+                care_target_percent: Math.max(1, Math.min(100, parseInt($row.find('.lst-patient-target').val() || '100', 10) || 100))
+            });
+        });
+        return rows;
+    }
+
+    function patientRequirementsFromRows(rows) {
+        const requirements = { total: 0, ktw: 0, rtw: 0, notarzt: 0 };
+        normalizePatientRows(rows).forEach(function (row) {
+            requirements.total++;
+            if (row.care_progress_percent <= 0) return;
+            if (row.requires_notarzt) requirements.notarzt++;
+            if (row.requires_rtw) requirements.rtw++;
+            else if (row.requires_ktw) requirements.ktw++;
+        });
+        return requirements;
+    }
+
+    function patientRequirementsFromJson(raw) {
+        const decoded = parseJsonValue(raw, {});
+        return decoded && typeof decoded === 'object' && decoded.patient_requirements && typeof decoded.patient_requirements === 'object'
+            ? decoded.patient_requirements
+            : {};
+    }
+
+    function patientRequirementsFromText(raw) {
+        const text = String(raw || '').toLowerCase();
+        const requirements = { total: 0, ktw: 0, rtw: 0, notarzt: 0 };
+        text.replace(/(\d+)\s*x?\s*(ktw|krankentransport|rtw|rettungswagen|notarzt|notarztmittel|nef|rth|naw|ith)/g, function (match, count, type) {
+            count = intValue(count);
+            if (type === 'ktw' || type === 'krankentransport') {
+                requirements.ktw += count;
+            } else if (type === 'rtw' || type === 'rettungswagen') {
+                requirements.rtw += count;
+            } else if (type === 'notarzt' || type === 'notarztmittel' || type === 'nef' || type === 'rth' || type === 'naw' || type === 'ith') {
+                requirements.notarzt += count;
+            }
+            return match;
+        });
+        requirements.total = Math.max(requirements.ktw + requirements.rtw, requirements.notarzt);
+        return requirements;
+    }
+
+    function legacySituationTextFromJson(raw) {
+        const decoded = parseJsonValue(raw, {});
+        const situation = decoded && typeof decoded === 'object' && decoded.situation_report && typeof decoded.situation_report === 'object'
+            ? decoded.situation_report
+            : {};
+        const keys = ['environment', 'damage_event', 'people', 'patients', 'hazards', 'summary'];
+        return keys.map(function (key) {
+            return String(situation[key] || '').trim();
+        }).filter(Boolean).join('\n');
+    }
+
+    function patientResourcesFromCounts(ktw, rtw, notarzt) {
+        const rows = [];
+        ktw = intValue(ktw);
+        rtw = intValue(rtw);
+        notarzt = intValue(notarzt);
+        if (ktw > 0) rows.push({ type: 'krankentransport', label: resourceClassLabel('krankentransport'), count: ktw });
+        if (rtw > 0) rows.push({ type: 'rettungswagen', label: resourceClassLabel('rettungswagen'), count: rtw });
+        if (notarzt > 0) rows.push({ type: 'notarzt', label: resourceClassLabel('notarzt'), count: notarzt });
+        return rows;
+    }
+
+    function mergeResourceRows() {
+        const summary = {};
+        Array.prototype.slice.call(arguments).forEach(function (rows) {
+            normalizeResourceRows(rows || []).forEach(function (row) {
+                summary[row.type] = (summary[row.type] || 0) + (parseInt(row.count, 10) || 1);
+            });
+        });
+        return Object.keys(summary).map(function (type) {
+            return { type: type, label: resourceClassLabel(type), count: summary[type] };
+        });
+    }
+
+    function splitPatientAndManualResources(rows) {
+        const patient = { krankentransport: 0, rettungswagen: 0, notarzt: 0 };
+        const manual = [];
+        normalizeResourceRows(rows || []).forEach(function (row) {
+            if (patientResourceTypes.indexOf(row.type) !== -1) {
+                patient[row.type] += parseInt(row.count, 10) || 1;
+            } else {
+                manual.push(row);
+            }
+        });
+        return { patient: patient, manual: manual };
+    }
+
+    function updateFollowupCardMode($card) {
+        $card.find('.lst-situation-section').prop('hidden', false);
+        updateFollowupCardSummary($card);
+    }
+
+    function hasPatientRequirements(requirements) {
+        requirements = requirements && typeof requirements === 'object' ? requirements : {};
+        return Boolean(intValue(requirements.total) || intValue(requirements.ktw) || intValue(requirements.rtw) || intValue(requirements.notarzt));
+    }
+
+    function mergePatientRequirements() {
+        const out = { total: 0, ktw: 0, rtw: 0, notarzt: 0 };
+        Array.prototype.slice.call(arguments).forEach(function (requirements) {
+            requirements = requirements && typeof requirements === 'object' ? requirements : {};
+            out.total = Math.max(out.total, intValue(requirements.total));
+            out.ktw = Math.max(out.ktw, intValue(requirements.ktw));
+            out.rtw = Math.max(out.rtw, intValue(requirements.rtw));
+            out.notarzt = Math.max(out.notarzt, intValue(requirements.notarzt));
+        });
+        return out;
+    }
+
+    function buildEffectJson(note, patientRequirements, patients) {
+        const text = String(note || '').trim();
+        const patient = patientRequirements && typeof patientRequirements === 'object' ? patientRequirements : {};
+        const payload = {};
+        if (text) {
+            payload.note = text;
+        }
+        if (intValue(patient.total) || intValue(patient.ktw) || intValue(patient.rtw) || intValue(patient.notarzt)) {
+            payload.patient_requirements = {
+                total: intValue(patient.total),
+                ktw: intValue(patient.ktw),
+                rtw: intValue(patient.rtw),
+                notarzt: intValue(patient.notarzt)
+            };
+        }
+        patients = normalizePatientRows(patients || []);
+        if (patients.length) {
+            payload.patients = patients;
+        }
+        return Object.keys(payload).length ? JSON.stringify(payload) : '';
+    }
+
+    function applyConditionUi($card, raw) {
+        const condition = parseJsonValue(raw, {});
+        const resources = normalizeResourceRows(condition && condition.resources ? condition.resources : []);
+        const first = resources[0] || {};
+
+        $card.find('.lst-followup-cond-arrived').prop('checked', Boolean(condition && condition.unit_arrived));
+        $card.find('.lst-followup-cond-missing').prop('checked', Boolean(condition && condition.missing_resources));
+        $card.find('.lst-followup-cond-type').html(vehicleTypeOptionsHtml(first.type || ''));
+        $card.find('.lst-followup-cond-count').val(first.count || 1);
+    }
+
+    function collectConditionJson($card) {
+        const unitArrived = $card.find('.lst-followup-cond-arrived').is(':checked');
+        const missingResources = $card.find('.lst-followup-cond-missing').is(':checked');
+        const type = $card.find('.lst-followup-cond-type').val() || '';
+        const count = parseInt($card.find('.lst-followup-cond-count').val() || '1', 10) || 1;
+
+        if (!unitArrived && !missingResources && !type) {
+            return '';
+        }
+
+        return JSON.stringify({
+            unit_arrived: unitArrived,
+            missing_resources: missingResources,
+            resources: type ? [{ type: type, count: Math.max(1, count) }] : []
+        });
+    }
+
+    function hydrateResourceEditors(item) {
+        const baseSplit = splitPatientAndManualResources(parseJsonValue(item.base_required_resources_json || '', []));
+        const legacyBaseRequirements = mergePatientRequirements(
+            patientRequirementsFromText(item.patient_anforderung || ''),
+            {
+                total: intValue(item.patientenzahl),
+                ktw: baseSplit.patient.krankentransport || 0,
+                rtw: baseSplit.patient.rettungswagen || 0,
+                notarzt: baseSplit.patient.notarzt || (String(item.notarzt_benoetigt || '0') === '1' ? 1 : 0)
+            }
+        );
+        $('#lst-patientenzahl').val(legacyBaseRequirements.total);
+        $('#lst-patient-ktw').val(legacyBaseRequirements.ktw);
+        $('#lst-patient-rtw').val(legacyBaseRequirements.rtw);
+        $('#lst-patient-notarzt').val(legacyBaseRequirements.notarzt);
+        const baseRows = normalizePatientRows(item.patient_profile_json || []);
+        const $basePatientList = $('#lst-base-patient-list').empty();
+        (baseRows.length ? baseRows : derivePatientRows(legacyBaseRequirements)).forEach(function (row) {
+            addPatientRow($basePatientList, row);
+        });
+        baseSplit.manual.forEach(function (row) {
+            addResourceRow('#lst-base-resource-list', row);
+        });
+
+        $('.lst-followup-row').each(function () {
+            const $card = $(this);
+            const index = parseInt($card.data('followup-index'), 10);
+            const row = item.followups[index] || {};
+            const followupSplit = splitPatientAndManualResources(parseJsonValue(row.required_resources_json || '', []));
+            const savedPatientRequirements = patientRequirementsFromJson(row.effect_json || '');
+            const legacyText = legacySituationTextFromJson(row.effect_json || '');
+            if (!$card.find('.lst-followup-text').val() && legacyText) {
+                $card.find('.lst-followup-text').val(legacyText);
+            }
+
+            followupSplit.manual.forEach(function (resource) {
+                addResourceRow($card.find('.lst-followup-resource-list'), resource);
+            });
+            applyConditionUi($card, row.condition_json || '');
+            $card.find('.lst-followup-effect-note').val(effectNoteFromJson(row.effect_json || ''));
+            const effectDecoded = parseJsonValue(row.effect_json || '', {});
+            const followupPatients = normalizePatientRows(effectDecoded && effectDecoded.patients ? effectDecoded.patients : []);
+            const $followupPatientList = $card.find('.lst-followup-patient-list').empty();
+            const legacyFollowupRequirements = mergePatientRequirements(savedPatientRequirements, {
+                ktw: followupSplit.patient.krankentransport,
+                rtw: followupSplit.patient.rettungswagen,
+                notarzt: followupSplit.patient.notarzt
+            });
+            (followupPatients.length ? followupPatients : derivePatientRows(legacyFollowupRequirements)).forEach(function (patient) {
+                addPatientRow($followupPatientList, patient);
+            });
+            updateFollowupCardMode($card);
+            updateFollowupCardSummary($card);
+        });
+
+        $('.lst-followup-cond-type').each(function () {
+            if (!$(this).children().length) {
+                $(this).html(vehicleTypeOptionsHtml(''));
+            }
+        });
+        updateBaseResourceSummary();
+    }
+
     function addFollowupRow(row) {
-        const tbody = $('#lst-followup-table tbody');
-        tbody.find('.lst-followup-empty-row').remove();
+        const container = $('#lst-followup-cards');
+        container.find('.lst-followup-empty-row').remove();
 
         row = row || {};
+        const displayNumber = $('.lst-followup-row').length + 1;
+        const index = 'new-' + (++followupCardSeq);
+        const probability = row.probability_percent != null ? row.probability_percent : 100;
+        const kind = row.kind || 'unit_report';
+        const speakerType = row.speaker_type || 'fire_unit';
+        const triggerMode = row.trigger_mode || 'on_unit_arrival';
+        const minAfter = row.min_after_sec != null && row.min_after_sec !== '' ? row.min_after_sec : 60;
+        const maxAfter = row.max_after_sec != null && row.max_after_sec !== '' ? row.max_after_sec : 180;
+        const rowText = row.text || legacySituationTextFromJson(row.effect_json || '');
 
-        tbody.append(`
-            <tr class="lst-followup-row">
-                <td><input type="number" min="1" step="1" class="small-text lst-followup-step" value="${esc(row.step_no || '')}"></td>
-                <td>
-                    <select class="lst-followup-kind">
-                        <option value="dispatcher_question" ${row.kind === 'dispatcher_question' ? 'selected' : ''}>dispatcher_question</option>
-                        <option value="caller_answer" ${row.kind === 'caller_answer' ? 'selected' : ''}>caller_answer</option>
-                        <option value="update" ${!row.kind || row.kind === 'update' ? 'selected' : ''}>update</option>
-                        <option value="unit_report" ${row.kind === 'unit_report' ? 'selected' : ''}>unit_report</option>
-                    </select>
-                </td>
-                <td><textarea class="large-text lst-followup-text" rows="2">${esc(row.text || '')}</textarea></td>
-                <td><input type="number" min="0" step="1" class="small-text lst-followup-min" value="${esc(row.min_after_sec || '')}"></td>
-                <td><input type="number" min="0" step="1" class="small-text lst-followup-max" value="${esc(row.max_after_sec || '')}"></td>
-                <td><input type="text" class="large-text code lst-followup-condition" value="${esc(row.condition_json || '')}"></td>
-                <td><button type="button" class="button-link-delete lst-remove-row">Entfernen</button></td>
-            </tr>
+        container.append(`
+            <div class="lst-box lst-followup-card lst-followup-row" data-followup-index="${esc(index)}">
+                <div class="lst-followup-card-head">
+                    <div>
+                        <span class="lst-wizard-kicker">Lagevariante</span>
+                        <h3 data-followup-title>${esc(row.label || ('Lagevariante ' + displayNumber))}</h3>
+                        <div class="lst-followup-chips" aria-live="polite">
+                            <span data-followup-chip="trigger">-</span>
+                            <span data-followup-chip="probability">-</span>
+                            <span data-followup-chip="resources">-</span>
+                        </div>
+                    </div>
+                    <button type="button" class="button-link-delete lst-remove-row">Entfernen</button>
+                </div>
+
+                <div class="lst-followup-section">
+                    <h4>Wann tritt die Variante ein?</h4>
+                    <div class="lst-grid lst-grid-3">
+                        <div class="lst-field">
+                            <label><strong>Name der Variante</strong></label>
+                            <input type="text" class="regular-text lst-followup-label" value="${esc(row.label || '')}" placeholder="z.B. Patient schwerer verletzt als gemeldet">
+                        </div>
+                        <div class="lst-field">
+                            <label><strong>Auslöser</strong></label>
+                            <select class="lst-followup-trigger">
+                                <option value="on_unit_arrival" ${triggerMode === 'on_unit_arrival' ? 'selected' : ''}>Nach Eintreffen einer Einheit</option>
+                                <option value="on_missing_resources" ${triggerMode === 'on_missing_resources' ? 'selected' : ''}>Wenn Kräfte fehlen</option>
+                                <option value="random" ${triggerMode === 'random' ? 'selected' : ''}>Zufällig im Zeitfenster</option>
+                                <option value="manual" ${triggerMode === 'manual' ? 'selected' : ''}>Manuell</option>
+                                <option value="on_dispatcher_question" ${triggerMode === 'on_dispatcher_question' ? 'selected' : ''}>Auf Nachfrage des Disponenten</option>
+                            </select>
+                        </div>
+                        <div class="lst-field">
+                            <label><strong>Wahrscheinlichkeit</strong></label>
+                            <select class="lst-followup-probability">
+                                ${[100, 90, 75, 50, 25, 10, 0].map(function (prob) {
+                                    return '<option value="' + prob + '"' + (String(probability) === String(prob) ? ' selected' : '') + '>' + prob + ' %</option>';
+                                }).join('')}
+                            </select>
+                        </div>
+                        <div class="lst-field">
+                            <label><strong>Frühestens nach Sekunden</strong></label>
+                            <input type="number" min="0" step="1" class="small-text lst-followup-min" value="${esc(minAfter)}">
+                        </div>
+                        <div class="lst-field">
+                            <label><strong>Spätestens nach Sekunden</strong></label>
+                            <input type="number" min="0" step="1" class="small-text lst-followup-max" value="${esc(maxAfter)}">
+                        </div>
+                    </div>
+                    <p class="description">Das Zeitfenster zählt je nach Auslöser ab Einsatzbeginn oder ab Eintreffen der ersten Einheit. Die Variante aktualisiert beim Auslösen die sichtbare Lagebeschreibung; bei 0 Sekunden sofort.</p>
+                </div>
+
+                <div class="lst-followup-section lst-situation-section">
+                    <h4>Was findet das ersteintreffende Fahrzeug vor?</h4>
+                    <div class="lst-field">
+                        <label><strong>Sichtbarer Lage-/Beschreibungstext</strong></label>
+                        <textarea class="large-text lst-followup-text" rows="5" placeholder="Beschreibe die Lage, die das ersteintreffende Fahrzeug per S5 meldet.">${esc(rowText)}</textarea>
+                    </div>
+                    <p class="description">Dieser Text wird als S5-Lagemeldung gesendet und ersetzt beim Eintreten der Variante die sichtbare Lagebeschreibung.</p>
+                    <div class="lst-patient-editor">
+                        <div class="lst-box-header">
+                            <h4>Patienten in dieser Variante</h4>
+                            <button type="button" class="button button-secondary lst-add-patient" data-patient-target="[data-followup-index='${esc(index)}'] .lst-followup-patient-list">Patient hinzufügen</button>
+                        </div>
+                        <p class="description">Diese Patientenzeilen bestimmen Triage, Zustand und zusätzlichen Rettungsmittelbedarf dieser Lagevariante.</p>
+                        <div class="lst-patient-editor-list lst-followup-patient-list"></div>
+                    </div>
+                </div>
+
+                <div class="lst-followup-section">
+                    <div class="lst-box-header">
+                        <div>
+                            <h4>Zusätzlicher Sonderbedarf</h4>
+                            <p class="description">Nur zusätzliche Fahrzeuge eintragen, die nicht bereits aus Patienten, KTW, RTW und Notarztbedarf entstehen.</p>
+                        </div>
+                        <button type="button" class="button button-secondary lst-add-resource" data-target="[data-followup-index='${esc(index)}'] .lst-followup-resource-list">Fahrzeugklasse hinzufügen</button>
+                    </div>
+                    <div class="lst-resource-list lst-followup-resource-list"></div>
+                </div>
+
+                <details class="lst-followup-expert">
+                    <summary>Experteneinstellungen</summary>
+                    <div class="lst-grid lst-grid-3">
+                        <div class="lst-field">
+                            <label><strong>Reihenfolge</strong></label>
+                            <input type="number" min="1" step="1" class="small-text lst-followup-step" value="${esc(row.step_no || displayNumber)}">
+                        </div>
+                        <div class="lst-field">
+                            <label><strong>Kommunikationsart</strong></label>
+                            <select class="lst-followup-kind">
+                                <option value="unit_report" ${kind === 'unit_report' ? 'selected' : ''}>Rückmeldung Einheit</option>
+                                <option value="dispatcher_question" ${kind === 'dispatcher_question' ? 'selected' : ''}>Rückfrage Disponent</option>
+                                <option value="caller_answer" ${kind === 'caller_answer' ? 'selected' : ''}>Antwort Anrufer</option>
+                                <option value="update" ${kind === 'update' ? 'selected' : ''}>Lage-Update</option>
+                            </select>
+                        </div>
+                        <div class="lst-field">
+                            <label><strong>Wer meldet sich?</strong></label>
+                            <select class="lst-followup-speaker">
+                                <option value="caller" ${speakerType === 'caller' ? 'selected' : ''}>Anrufer</option>
+                                <option value="fire_unit" ${speakerType === 'fire_unit' ? 'selected' : ''}>Feuerwehr</option>
+                                <option value="ems_unit" ${speakerType === 'ems_unit' ? 'selected' : ''}>Rettungsdienst</option>
+                                <option value="police" ${speakerType === 'police' ? 'selected' : ''}>Polizei</option>
+                                <option value="dispatch" ${speakerType === 'dispatch' ? 'selected' : ''}>Leitstelle</option>
+                                <option value="system" ${speakerType === 'system' ? 'selected' : ''}>System</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="lst-followup-expert-subsection">
+                        <h4>Bedingungen</h4>
+                        <div class="lst-grid lst-grid-3">
+                            <label><input type="checkbox" class="lst-followup-cond-arrived"> Nur wenn Fahrzeug eingetroffen</label>
+                            <label><input type="checkbox" class="lst-followup-cond-missing"> Nur wenn Fahrzeug fehlt</label>
+                            <div class="lst-field">
+                                <label><strong>Fahrzeugklasse</strong></label>
+                                <select class="lst-followup-cond-type">${vehicleTypeOptionsHtml('')}</select>
+                            </div>
+                            <div class="lst-field">
+                                <label><strong>Mindestanzahl</strong></label>
+                                <input type="number" min="1" step="1" class="small-text lst-followup-cond-count" value="1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="lst-field">
+                        <label><strong>Optionale Folgeeffekte</strong></label>
+                        <textarea class="large-text lst-followup-effect-note" rows="2" placeholder="Optionaler Hinweis für spätere Simulationslogik">${esc(effectNoteFromJson(row.effect_json || ''))}</textarea>
+                    </div>
+                </details>
+            </div>
         `);
+
+        const $card = container.find('.lst-followup-row').last();
+        const followupSplit = splitPatientAndManualResources(parseJsonValue(row.required_resources_json || '', []));
+        followupSplit.manual.forEach(function (resource) {
+            addResourceRow($card.find('.lst-followup-resource-list'), resource);
+        });
+        applyConditionUi($card, row.condition_json || '');
+        const effectDecoded = parseJsonValue(row.effect_json || '', {});
+        const savedPatientRequirements = patientRequirementsFromJson(row.effect_json || '');
+        const legacyFollowupRequirements = mergePatientRequirements(savedPatientRequirements, {
+            ktw: followupSplit.patient.krankentransport,
+            rtw: followupSplit.patient.rettungswagen,
+            notarzt: followupSplit.patient.notarzt
+        });
+        const followupPatients = normalizePatientRows(effectDecoded && effectDecoded.patients ? effectDecoded.patients : []);
+        (followupPatients.length ? followupPatients : derivePatientRows(legacyFollowupRequirements)).forEach(function (patient) {
+            addPatientRow($card.find('.lst-followup-patient-list'), patient);
+        });
+        updateFollowupCardMode($card);
+        updateWizardSummary();
     }
 
     function collectTimeWindows() {
@@ -260,15 +1201,20 @@ jQuery(function ($) {
             person: [],
             location: [],
             problem: [],
+            observation: [],
             extra: []
         };
 
-        $('.lst-caller-part-table').each(function () {
+        $('.lst-einsatz-part-table, .lst-caller-part-table').each(function () {
             const partKey = $(this).data('part-key');
-            $(this).find('tbody tr.lst-caller-part-row').each(function () {
-                const text = ($(this).find('.lst-caller-part-text').val() || '').trim();
-                const sortOrder = parseInt($(this).find('.lst-caller-part-sort-order').val() || '0', 10);
-                const enabled = $(this).find('.lst-caller-part-enabled').is(':checked') ? 1 : 0;
+            if (!grouped[partKey]) {
+                grouped[partKey] = [];
+            }
+
+            $(this).find('tbody tr.lst-einsatz-part-row, tbody tr.lst-caller-part-row').each(function () {
+                const text = ($(this).find('.lst-einsatz-part-text, .lst-caller-part-text').val() || '').trim();
+                const sortOrder = parseInt($(this).find('.lst-einsatz-part-sort-order, .lst-caller-part-sort-order').val() || '0', 10);
+                const enabled = $(this).find('.lst-einsatz-part-enabled, .lst-caller-part-enabled').is(':checked') ? 1 : 0;
 
                 if (!text) return;
 
@@ -283,56 +1229,80 @@ jQuery(function ($) {
         return grouped;
     }
 
-    function collectFollowups() {
+    function collectCallerProfiles() {
         const rows = [];
-        $('#lst-followup-table tbody tr.lst-followup-row').each(function () {
+        $('#lst-einsatz-profile-assignment .lst-caller-profile-row').each(function () {
+            const $row = $(this);
+            if (!$row.find('.lst-caller-profile-enabled').is(':checked')) {
+                return;
+            }
+
+            const profileId = parseInt($row.data('profile-id') || 0, 10);
+            const weight = parseInt($row.find('.lst-caller-profile-weight').val() || '100', 10) || 100;
+            if (!profileId) {
+                return;
+            }
+
             rows.push({
-                step_no: $(this).find('.lst-followup-step').val() || '',
-                kind: $(this).find('.lst-followup-kind').val() || 'update',
-                text: $(this).find('.lst-followup-text').val() || '',
-                min_after_sec: $(this).find('.lst-followup-min').val() || '',
-                max_after_sec: $(this).find('.lst-followup-max').val() || '',
-                condition_json: $(this).find('.lst-followup-condition').val() || ''
+                profile_id: profileId,
+                weight: Math.max(1, Math.min(1000, weight))
             });
         });
         return rows;
     }
 
-    function pickRandom(arr) {
-        if (!Array.isArray(arr) || !arr.length) return '';
-        return arr[Math.floor(Math.random() * arr.length)] || '';
-    }
-
-    function buildPreviewText() {
-        const tpl = ($('#lst-caller-template').val() || '').trim();
-        const grouped = collectCallerParts();
-
-        const values = {
-            greeting: pickRandom(grouped.greeting.map(r => r.text)),
-            person: pickRandom(grouped.person.map(r => r.text)),
-            location: pickRandom(grouped.location.map(r => r.text)),
-            problem: pickRandom(grouped.problem.map(r => r.text)),
-            extra: pickRandom(grouped.extra.map(r => r.text))
-        };
-
-        return tpl
-            .replace(/\{greeting\}/g, values.greeting)
-            .replace(/\{person\}/g, values.person)
-            .replace(/\{location\}/g, values.location)
-            .replace(/\{problem\}/g, values.problem)
-            .replace(/\{extra\}/g, values.extra)
-            .replace(/\s+/g, ' ')
-            .replace(/\.\s*\./g, '.')
-            .trim();
+    function collectFollowups() {
+        const rows = [];
+        $('#lst-followup-cards .lst-followup-row').each(function () {
+            const $card = $(this);
+            const patientRows = collectPatientRows($card.find('.lst-followup-patient-list'));
+            const patientRequirements = patientRequirementsFromRows(patientRows);
+            const patientResources = patientResourcesFromCounts(patientRequirements.ktw, patientRequirements.rtw, patientRequirements.notarzt);
+            rows.push({
+                step_no: $card.find('.lst-followup-step').val() || '',
+                label: $card.find('.lst-followup-label').val() || '',
+                kind: $card.find('.lst-followup-kind').val() || 'unit_report',
+                text: $card.find('.lst-followup-text').val() || '',
+                min_after_sec: $card.find('.lst-followup-min').val() || '',
+                max_after_sec: $card.find('.lst-followup-max').val() || '',
+                probability_percent: $card.find('.lst-followup-probability').val() || 100,
+                speaker_type: $card.find('.lst-followup-speaker').val() || 'fire_unit',
+                trigger_mode: $card.find('.lst-followup-trigger').val() || 'on_unit_arrival',
+                condition_json: collectConditionJson($card),
+                required_resources_json: JSON.stringify(mergeResourceRows(patientResources, collectResources($card.find('.lst-followup-resource-list')))),
+                effect_json: buildEffectJson($card.find('.lst-followup-effect-note').val() || '', patientRequirements, patientRows)
+            });
+        });
+        return rows;
     }
 
     function renderCallerPreview() {
         const list = $('#lst-caller-preview-list');
-        list.empty();
+        list.empty().append('<li>Vorschau wird erzeugt...</li>');
 
-        for (let i = 0; i < 3; i++) {
-            list.append('<li>' + esc(buildPreviewText()) + '</li>');
-        }
+        postAjax({
+            action: 'lst_preview_einsatz_caller',
+            caller_parts: JSON.stringify(collectCallerParts()),
+            caller_profiles: JSON.stringify(collectCallerProfiles())
+        })
+        .done(function (res) {
+            list.empty();
+            if (!res || !res.success) {
+                list.append('<li>Vorschau konnte nicht erzeugt werden.</li>');
+                return;
+            }
+            const examples = Array.isArray(res.data.examples) ? res.data.examples : [];
+            if (!examples.length) {
+                list.append('<li>Bitte zuerst mindestens einen aktiven Meldungsbaustein eintragen.</li>');
+                return;
+            }
+            examples.forEach(function (text) {
+                list.append('<li>' + esc(text) + '</li>');
+            });
+        })
+        .fail(function () {
+            list.empty().append('<li>Vorschau konnte nicht erzeugt werden.</li>');
+        });
     }
 
     function restoreEmptyRows() {
@@ -341,16 +1311,22 @@ jQuery(function ($) {
             twBody.append('<tr class="lst-time-window-empty-row"><td colspan="4">Noch keine Zeitfenster vorhanden.</td></tr>');
         }
 
-        $('.lst-caller-part-table').each(function () {
+        $('.lst-einsatz-part-table, .lst-caller-part-table').each(function () {
             const tbody = $(this).find('tbody');
             if (!tbody.find('tr').length) {
-                tbody.append('<tr class="lst-caller-empty-row"><td colspan="4">Noch keine Bausteine.</td></tr>');
+                tbody.append('<tr class="lst-einsatz-part-empty-row"><td colspan="4">Noch keine Bausteine.</td></tr>');
             }
         });
 
-        const fuBody = $('#lst-followup-table tbody');
-        if (fuBody.length && !fuBody.find('tr').length) {
-            fuBody.append('<tr class="lst-followup-empty-row"><td colspan="7">Noch keine Follow-ups vorhanden.</td></tr>');
+        const fuCards = $('#lst-followup-cards');
+        if (fuCards.length && !fuCards.find('.lst-followup-row').length) {
+            fuCards.html(`
+                <div class="lst-followup-empty-row lst-empty-state">
+                    <h4>Noch keine Lagevarianten</h4>
+                    <p>Lege eine Variante an, wenn sich die Lage nach Einsatzbeginn ändern kann, z.B. durch eine Rückmeldung nach Eintreffen oder zusätzlichen Kräftebedarf.</p>
+                    <button type="button" class="button button-primary lst-add-followup-inline">Erste Lagevariante hinzufügen</button>
+                </div>
+            `);
         }
     }
 
@@ -427,15 +1403,24 @@ jQuery(function ($) {
             setTab($(this).data('tab'));
         });
 
+        $(document).on('click.lstEinsatzDyn', '[data-lst-wizard-prev]', function () {
+            moveWizard(-1);
+        });
+
+        $(document).on('click.lstEinsatzDyn', '[data-lst-wizard-next]', function () {
+            moveWizard(1);
+        });
+
         $(document).on('change.lstEinsatzDyn', 'input[name="lst_scope_type"]', function () {
             setScopePanels($(this).val());
+            updateWizardSummary();
         });
 
         $(document).on('click.lstEinsatzDyn', '#lst-add-time-window', function () {
             addTimeWindowRow({ day_type: 'weekday', start_time: '', end_time: '' });
         });
 
-        $(document).on('click.lstEinsatzDyn', '.lst-add-caller-part', function () {
+        $(document).on('click.lstEinsatzDyn', '.lst-einsatz-add-part, .lst-add-caller-part', function () {
             addCallerRow($(this).data('part-key'), {});
         });
 
@@ -443,9 +1428,64 @@ jQuery(function ($) {
             addFollowupRow({});
         });
 
+        $(document).on('click.lstEinsatzDyn', '.lst-add-followup-inline', function () {
+            addFollowupRow({});
+        });
+
+        $(document).on('change.lstEinsatzDyn', '.lst-followup-kind', function () {
+            updateFollowupCardMode($(this).closest('.lst-followup-row'));
+            updateWizardSummary();
+        });
+
+        $(document).on('click.lstEinsatzDyn', '.lst-add-resource', function () {
+            addResourceRow($(this).data('target'), {});
+        });
+
+        $(document).on('click.lstEinsatzDyn', '.lst-add-patient', function () {
+            addPatientRow($($(this).data('patient-target')), {});
+            updateBaseResourceSummary();
+            updateFollowupCardSummary($(this).closest('.lst-followup-row'));
+            updateWizardSummary();
+        });
+
+        $(document).on('click.lstEinsatzDyn', '.lst-remove-patient', function () {
+            const $card = $(this).closest('.lst-followup-row');
+            $(this).closest('.lst-patient-editor-row').remove();
+            updateBaseResourceSummary();
+            updateFollowupCardSummary($card);
+            updateWizardSummary();
+        });
+
+        $(document).on('click.lstEinsatzDyn', '.lst-resource-minus', function () {
+            const input = $(this).siblings('.lst-resource-count');
+            const current = parseInt(input.val() || '1', 10) || 1;
+            input.val(Math.max(1, current - 1)).trigger('change');
+        });
+
+        $(document).on('click.lstEinsatzDyn', '.lst-resource-plus', function () {
+            const input = $(this).siblings('.lst-resource-count');
+            const current = parseInt(input.val() || '1', 10) || 1;
+            input.val(current + 1).trigger('change');
+        });
+
+        $(document).on('click.lstEinsatzDyn', '.lst-remove-resource', function () {
+            const $card = $(this).closest('.lst-followup-row');
+            $(this).closest('.lst-resource-row').remove();
+            updateBaseResourceSummary();
+            updateFollowupCardSummary($card);
+            updateWizardSummary();
+        });
+
+        $(document).on('change.lstEinsatzDyn input.lstEinsatzDyn', '.lst-resource-type, .lst-resource-count', function () {
+            updateBaseResourceSummary();
+            updateFollowupCardSummary($(this).closest('.lst-followup-row'));
+            updateWizardSummary();
+        });
+
         $(document).on('click.lstEinsatzDyn', '.lst-remove-row', function () {
-            $(this).closest('tr').remove();
+            $(this).closest('tr, .lst-followup-row').remove();
             restoreEmptyRows();
+            updateWizardSummary();
         });
 
         $(document).on('click.lstEinsatzDyn', '#lst-generate-caller-preview', function () {
@@ -455,10 +1495,31 @@ jQuery(function ($) {
         $(document).on('input.lstEinsatzDyn change.lstEinsatzDyn', '#lst-fixed-latitude, #lst-fixed-longitude, #lst-fixed-radius', function () {
             syncMapFromFields();
         });
+
+        $(document).on('input.lstEinsatzDyn change.lstEinsatzDyn', '#lst-title, #lst-einsatztyp, .lst-followup-label, .lst-followup-trigger, .lst-followup-probability, .lst-followup-min, .lst-followup-max, .lst-patient-editor-row input, .lst-patient-editor-row select, .lst-caller-profile-enabled, .lst-caller-profile-weight', function () {
+            updateBaseResourceSummary();
+            updateFollowupCardSummary($(this).closest('.lst-followup-row'));
+            updateWizardSummary();
+        });
     }
 
     function saveCurrent() {
+        if (callerProfilesLoading || !callerProfilesReady) {
+            alert(callerProfilesLoadFailed
+                ? 'Anruferprofile konnten nicht geladen werden. Bitte den Einsatzeditor erneut öffnen und dann speichern.'
+                : 'Anruferprofile werden noch geladen. Bitte kurz warten und dann speichern.');
+            return;
+        }
+
         $('#lst-einsatz-save-spinner').css('visibility', 'visible');
+        const basePatientRows = collectPatientRows($('#lst-base-patient-list'));
+        const basePatient = patientRequirementsFromRows(basePatientRows);
+        const basePatientResources = patientResourcesFromCounts(basePatient.ktw, basePatient.rtw, basePatient.notarzt);
+        const patientRequirementText = [
+            basePatient.ktw ? basePatient.ktw + ' KTW' : '',
+            basePatient.rtw ? basePatient.rtw + ' RTW' : '',
+            basePatient.notarzt ? basePatient.notarzt + ' Notarztmittel' : ''
+        ].filter(Boolean).join(', ');
 
         postAjax({
             action: 'lst_save_einsatz',
@@ -475,16 +1536,19 @@ jQuery(function ($) {
             fixed_latitude: $('#lst-fixed-latitude').val() || '',
             fixed_longitude: $('#lst-fixed-longitude').val() || '',
             fixed_radius_m: $('#lst-fixed-radius').val() || '',
-            caller_template_text: $('#lst-caller-template').val() || '',
             lagemeldung: $('#lst-lagemeldung').val() || '',
-            patientenzahl: $('#lst-patientenzahl').val() || 0,
-            patient_anforderung: $('#lst-patient-anforderung').val() || '',
-            notarzt_benoetigt: $('#lst-notarzt-benoetigt').is(':checked') ? 1 : 0,
-            feuerwehr_benoetigt: $('#lst-feuerwehr-benoetigt').is(':checked') ? 1 : 0,
+            patientenzahl: basePatient.total,
+            patient_anforderung: patientRequirementText,
+            notarzt_benoetigt: basePatient.notarzt > 0 ? 1 : 0,
+            feuerwehr_benoetigt: $('#lst-feuerwehr-benoetigt').val() === '1' ? 1 : 0,
+            base_required_resources_json: JSON.stringify(mergeResourceRows(basePatientResources, collectResources('#lst-base-resource-list'))),
+            patient_profile_json: JSON.stringify(basePatientRows),
             time_windows: JSON.stringify(collectTimeWindows()),
             seasons: JSON.stringify(collectSeasons()),
             weather_conditions: JSON.stringify(collectWeather()),
             caller_parts: JSON.stringify(collectCallerParts()),
+            caller_profiles: JSON.stringify(collectCallerProfiles()),
+            caller_profiles_loaded: callerProfilesReady ? 1 : 0,
             followups: JSON.stringify(collectFollowups())
         })
         .done(function (res) {
@@ -499,7 +1563,10 @@ jQuery(function ($) {
         })
         .fail(function (xhr) {
             console.error('lst_save_einsatz fehlgeschlagen', xhr);
-            alert('Speichern fehlgeschlagen.');
+            const message = xhr && xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message
+                ? xhr.responseJSON.data.message
+                : (xhr && xhr.responseText ? xhr.responseText : 'Speichern fehlgeschlagen.');
+            alert(message);
         })
         .always(function () {
             $('#lst-einsatz-save-spinner').css('visibility', 'hidden');
@@ -524,10 +1591,14 @@ jQuery(function ($) {
                 person: [],
                 location: [],
                 problem: [],
+                observation: [],
                 extra: []
             },
+            caller_profiles: [],
             followups: [],
-            caller_template_text: '{greeting} hier ist {person}. {location}. {problem}. {extra}'
+            base_required_resources_json: '',
+            patient_profile_json: '',
+            __editor_mode: 'create'
         });
     });
 
@@ -576,6 +1647,12 @@ jQuery(function ($) {
 
     if (window.lstEinsatzBootstrap && Array.isArray(window.lstEinsatzBootstrap.poi_types)) {
         currentPoiTypes = window.lstEinsatzBootstrap.poi_types;
+    }
+    if (window.lstEinsaetzeAjax && Array.isArray(window.lstEinsaetzeAjax.fahrzeugtypen)) {
+        currentVehicleTypes = window.lstEinsaetzeAjax.fahrzeugtypen;
+    }
+    if (!currentVehicleTypes.length) {
+        currentVehicleTypes = ['RTW', 'NEF', 'KTW', 'HLF 20', 'LF 20', 'DLK 23/12', 'GW-San', 'ELW 1', 'MTW'];
     }
 
     loadList();

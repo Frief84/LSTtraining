@@ -42,7 +42,7 @@ function lsttraining_osm_refresh_layer_step(): void
     $requestCursor = 0;
 
     try {
-        @set_time_limit(25);
+        @set_time_limit(15);
 
         $leitstelleId   = absint($_POST['leitstelle_id'] ?? 0);
         $layerKey       = sanitize_key((string)($_POST['layer'] ?? ($_POST['layer_key'] ?? '')));
@@ -52,6 +52,7 @@ function lsttraining_osm_refresh_layer_step(): void
         $runToken       = sanitize_text_field((string)($_POST['run_token'] ?? wp_generate_password(20, false, false)));
         $scanBudget     = max(1, min(50, (int)($_POST['scan_budget'] ?? 5)));
         $downloadBudget = max(1, min(100, (int)($_POST['chunk'] ?? ($_POST['limit'] ?? 8))));
+        $endpointOffset = max(0, (int)($_POST['endpoint_offset'] ?? 0));
 
         if ($leitstelleId <= 0) {
             wp_send_json_error(['message' => 'Leitstelle fehlt.'], 400);
@@ -61,6 +62,10 @@ function lsttraining_osm_refresh_layer_step(): void
         if (!$layerDef) {
             wp_send_json_error(['message' => 'Layer ungültig.'], 400);
         }
+
+        // Keep hosted admin-ajax requests below webserver execution limits.
+        $scanBudget = min($scanBudget, $layerKey === 'roads_lines' ? 1 : 2);
+        $downloadBudget = min($downloadBudget, $layerKey === 'roads_lines' ? 1 : 2);
 
         $pdo = lsttraining_get_connection();
         if (!$pdo) {
@@ -145,7 +150,8 @@ function lsttraining_osm_refresh_layer_step(): void
                 $layerDef,
                 $state,
                 $scanBudget,
-                $lockToken
+                $lockToken,
+                $endpointOffset
             );
         } elseif ($phase === 'download') {
             $result = lsttraining_osm_process_download_step(
@@ -155,7 +161,8 @@ function lsttraining_osm_refresh_layer_step(): void
                 $layerDef,
                 $state,
                 $downloadBudget,
-                $lockToken
+                $lockToken,
+                $endpointOffset
             );
         } else {
             $result = [
@@ -249,7 +256,8 @@ function lsttraining_osm_process_scan_step(
     array $layerDef,
     array $state,
     int $scanBudget,
-    string $lockToken
+    string $lockToken,
+    int $endpointOffset = 0
 ): array {
     $pdoRead = lsttraining_get_connection();
     if (!$pdoRead instanceof PDO) {
@@ -307,7 +315,7 @@ function lsttraining_osm_process_scan_step(
     $latestOsmBase = (string)($state['scan_osm_base'] ?? '');
 
     $startedAt = microtime(true);
-    $maxWallSeconds = 18.0;
+    $maxWallSeconds = 8.0;
     $retryAfterMs = 0;
     $stopEarly = false;
     $stopReason = '';
@@ -342,7 +350,8 @@ function lsttraining_osm_process_scan_step(
                 $bbox,
                 (string)$state['scan_since'],
                 (int)($layerDef['count_timeout'] ?? 20),
-                (int)($layerDef['count_request_gap_ms'] ?? 1500)
+                (int)($layerDef['count_request_gap_ms'] ?? 1500),
+                $endpointOffset
             );
 
             if (!empty($check['osm_base'])) {
@@ -392,15 +401,7 @@ function lsttraining_osm_process_scan_step(
                 break;
             }
 
-            if (
-				strpos($msg, 'cURL error 28') !== false ||
-				strpos($msg, 'cURL error 35') !== false ||
-				stripos($msg, 'timed out') !== false ||
-				stripos($msg, 'broken pipe') !== false ||
-				stripos($msg, 'empty reply from server') !== false ||
-				stripos($msg, 'connection reset by peer') !== false ||
-				stripos($msg, 'ssl') !== false
-			) {
+            if (lsttraining_osm_is_transient_overpass_error($msg)) {
 				$retryAfterMs = max($retryAfterMs, 8000);
 				$stopEarly = true;
 				$stopReason = 'transport_error';
@@ -561,8 +562,10 @@ function lsttraining_osm_process_download_step(
     array $layerDef,
     array $state,
     int $downloadBudget,
-    string $lockToken
+    string $lockToken,
+    int $endpointOffset = 0
 ): array {
+    $initialDownload = !empty($state['scan_cursor_json']['initial_download_pending']);
     $pdoRead = lsttraining_get_connection();
     if (!$pdoRead instanceof PDO) {
         throw new RuntimeException('process_download_step: DB-Verbindung für dirty-Tiles fehlgeschlagen.');
@@ -578,6 +581,31 @@ function lsttraining_osm_process_download_step(
             throw new RuntimeException('process_download_step: DB-Reconnect für Abschluss fehlgeschlagen.');
         }
         $pdoDone->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+        if ($initialDownload) {
+            $state['phase'] = 'scan';
+            $state['dirty_total'] = 0;
+            $state['dirty_done'] = 0;
+            $state['scan_cursor_json'] = [];
+            lsttraining_osm_upsert_sync_state($pdoDone, $leitstelleId, $layerKey, $state);
+
+            return [
+                'phase' => 'scan',
+                'tiles_total' => $scopeTilesTotal,
+                'tiles_checked' => 0,
+                'tiles_changed' => 0,
+                'tiles_unchanged' => 0,
+                'tiles_errors' => 0,
+                'done' => false,
+                'next_offset' => 0,
+                'cursor' => 0,
+                'progress' => 0,
+                'feature_count' => 0,
+                'dirty_total' => 0,
+                'dirty_done' => 0,
+                'message' => 'Initialdownload abgeschlossen. Änderungsscan startet.',
+            ];
+        }
 
         $state['phase'] = 'idle';
         $state['last_success_at'] = gmdate('Y-m-d H:i:s');
@@ -620,7 +648,7 @@ function lsttraining_osm_process_download_step(
     $featureCount = 0;
 
     $startedAt = microtime(true);
-    $maxWallSeconds = 18.0;
+    $maxWallSeconds = 8.0;
     $stopEarly = false;
     $stopReason = '';
     $retryAfterMs = 0;
@@ -647,7 +675,7 @@ function lsttraining_osm_process_download_step(
         }
 
         try {
-            $download = lsttraining_osm_download_tile($tileRow, $layerKey, 0);
+            $download = lsttraining_osm_download_tile($tileRow, $layerKey, $endpointOffset);
             if (empty($download['ok'])) {
                 throw new RuntimeException((string)($download['message'] ?? 'Tile-Download fehlgeschlagen.'));
             }
@@ -683,13 +711,7 @@ function lsttraining_osm_process_download_step(
 
             if (
                 strpos($msg, 'HTTP 429') !== false ||
-                strpos($msg, 'cURL error 28') !== false ||
-                strpos($msg, 'cURL error 35') !== false ||
-                stripos($msg, 'timed out') !== false ||
-                stripos($msg, 'broken pipe') !== false ||
-                stripos($msg, 'empty reply from server') !== false ||
-                stripos($msg, 'connection reset by peer') !== false ||
-                stripos($msg, 'ssl') !== false
+                lsttraining_osm_is_transient_overpass_error($msg)
             ) {
                 $stopEarly = true;
                 $stopReason = 'transport_error';
@@ -735,9 +757,13 @@ function lsttraining_osm_process_download_step(
 
         $progress = 50 + (int)floor((((int)$state['dirty_done']) / max(1, $dirtyTotal)) * 49);
 
-        $message = 'Download-Step beendet, um Request-Laufzeit kurz zu halten.';
+        $message = $initialDownload
+            ? 'Initialdownload-Step beendet, um Request-Laufzeit kurz zu halten.'
+            : 'Download-Step beendet, um Request-Laufzeit kurz zu halten.';
         if ($stopReason === 'transport_error') {
-            $message = 'Overpass-Verbindung unterbrochen, Download wird später fortgesetzt.';
+            $message = $initialDownload
+                ? 'Overpass-Verbindung unterbrochen, Initialdownload wird später fortgesetzt.'
+                : 'Overpass-Verbindung unterbrochen, Download wird später fortgesetzt.';
         }
 
         return [
@@ -754,6 +780,7 @@ function lsttraining_osm_process_download_step(
             'feature_count' => $featureCount,
             'dirty_total' => $dirtyTotal,
             'dirty_done' => (int)$state['dirty_done'],
+            'initial_download' => $initialDownload,
             'retry_after_ms' => $retryAfterMs > 0 ? $retryAfterMs : 4000,
             'message' => $message,
         ];
@@ -762,6 +789,38 @@ function lsttraining_osm_process_download_step(
     lsttraining_osm_upsert_sync_state($pdoState, $leitstelleId, $layerKey, $state);
 
     if ($remaining <= 0) {
+        if ($initialDownload) {
+            $state['phase'] = 'scan';
+            $state['dirty_total'] = 0;
+            $state['dirty_done'] = 0;
+            $state['scan_cursor_json'] = [];
+            $state['last_error'] = null;
+
+            lsttraining_osm_upsert_sync_state($pdoState, $leitstelleId, $layerKey, $state);
+
+            return [
+                'phase' => 'scan',
+                'tiles_total' => $scopeTilesTotal,
+                'tiles_checked' => $tilesChecked,
+                'tiles_changed' => $tilesChanged,
+                'tiles_unchanged' => $tilesUnchanged,
+                'tiles_errors' => $tilesErrors,
+                'done' => false,
+                'next_offset' => 0,
+                'cursor' => 0,
+                'progress' => 0,
+                'feature_count' => $featureCount,
+                'dirty_total' => 0,
+                'dirty_done' => 0,
+                'message' => sprintf(
+                    'Initialdownload abgeschlossen. %d Tiles geändert, %d unverändert, %d Fehler. Änderungsscan startet.',
+                    $tilesChanged,
+                    $tilesUnchanged,
+                    $tilesErrors
+                ),
+            ];
+        }
+
         $state['phase'] = 'idle';
         $state['last_success_at'] = gmdate('Y-m-d H:i:s');
         if (!empty($state['scan_osm_base'])) {
@@ -817,12 +876,20 @@ function lsttraining_osm_process_download_step(
         'feature_count' => $featureCount,
         'dirty_total' => $dirtyTotal,
         'dirty_done' => (int)$state['dirty_done'],
-        'message' => sprintf(
-            'Download läuft: %d von %d dirty Tiles verarbeitet, %d verbleibend.',
-            (int)$state['dirty_done'],
-            $dirtyTotal,
-            $remaining
-        ),
+        'initial_download' => $initialDownload,
+        'message' => $initialDownload
+            ? sprintf(
+                'Initialdownload läuft: %d von %d fehlenden Tiles verarbeitet, %d verbleibend.',
+                (int)$state['dirty_done'],
+                $dirtyTotal,
+                $remaining
+            )
+            : sprintf(
+                'Download läuft: %d von %d dirty Tiles verarbeitet, %d verbleibend.',
+                (int)$state['dirty_done'],
+                $dirtyTotal,
+                $remaining
+            ),
     ];
 }
 
@@ -834,6 +901,9 @@ function lsttraining_osm_initialize_sync_state(
     bool $force = false
 ): array {
     lsttraining_osm_clear_dirty_for_scope($pdo, $leitstelleId, $layerKey);
+    $missingTiles = $layerKey === 'roads_lines'
+        ? lsttraining_osm_mark_missing_scope_tiles_dirty($pdo, $leitstelleId, $layerKey)
+        : 0;
 
     $existing = lsttraining_osm_get_sync_state($pdo, $leitstelleId, $layerKey);
     $scanSince = null;
@@ -852,12 +922,12 @@ function lsttraining_osm_initialize_sync_state(
     }
 
     $state = [
-        'phase'                 => 'scan',
+        'phase'                 => $missingTiles > 0 ? 'download' : 'scan',
         'scan_since'            => $scanSince,
         'scan_osm_base'         => null,
         'scan_start_z'          => (int)($layerDef['precheck_start_z'] ?? 10),
-        'scan_cursor_json'      => [],
-        'dirty_total'           => 0,
+        'scan_cursor_json'      => $missingTiles > 0 ? ['initial_download_pending' => true] : [],
+        'dirty_total'           => $missingTiles,
         'dirty_done'            => 0,
         'last_error'            => null,
         'last_success_at'       => $existing['last_success_at'] ?? null,
@@ -1257,6 +1327,28 @@ function lsttraining_osm_clear_dirty_for_scope(PDO $pdo, int $leitstelleId, stri
     $stmt->execute([$leitstelleId, $layerKey]);
 }
 
+function lsttraining_osm_mark_missing_scope_tiles_dirty(PDO $pdo, int $leitstelleId, string $layerKey): int
+{
+    $sql = "UPDATE leitstellen_osm_layers m
+            INNER JOIN leitstelle_tile_scope s
+                ON s.layer_key = m.layer_key
+               AND s.tile_z = m.tile_z
+               AND s.tile_x = m.tile_x
+               AND s.tile_y = m.tile_y
+            SET m.is_dirty = 1,
+                m.check_status = 'missing_file',
+                m.check_message = 'Initialer Tile-Download erforderlich.',
+                m.updated_at = CURRENT_TIMESTAMP
+            WHERE s.leitstelle_id = ?
+              AND s.layer_key = ?
+              AND (m.file_relpath IS NULL OR m.file_relpath = '')";
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$leitstelleId, $layerKey]);
+
+    return lsttraining_osm_count_dirty_tiles($pdo, $leitstelleId, $layerKey);
+}
+
 function lsttraining_osm_mark_tile_dirty(
     PDO $pdo,
     string $layerKey,
@@ -1447,10 +1539,12 @@ function lsttraining_osm_super_tile_has_changes(
     array $bbox,
     string $since,
     int $timeout = 20,
-    int $minGapMs = 1500
+    int $minGapMs = 1500,
+    int $endpointOffset = 0
 ): array {
+    $timeout = max(3, min(8, $timeout));
     $query = lsttraining_osm_build_changed_count_query_for_bbox($layerKey, $bbox, $since, $timeout);
-    $response = lsttraining_osm_run_overpass($query, $timeout, 0, $minGapMs);
+    $response = lsttraining_osm_run_overpass($query, $timeout, $endpointOffset, $minGapMs, 1);
 
     return [
         'count'    => lsttraining_osm_extract_count_from_response($response['body'] ?? []),
@@ -1472,7 +1566,9 @@ function lsttraining_osm_build_full_query(string $layerKey, array $bbox): string
         $parts[] = $q['type'] . $q['filter'] . '(' . $bboxStr . ')';
     }
 
-    return "[out:json][timeout:" . (int)$layerDef['download_timeout'] . "];\n(\n  "
+    $timeout = max(3, min(8, (int)$layerDef['download_timeout']));
+
+    return "[out:json][timeout:" . $timeout . "];\n(\n  "
         . implode(";\n  ", $parts)
         . ";\n);\nout body geom;";
 }
@@ -1481,18 +1577,21 @@ function lsttraining_osm_run_overpass(
     string $query,
     int $timeout = 30,
     int $offset = 0,
-    int $minGapMs = 1500
+    int $minGapMs = 1500,
+    int $maxAttempts = 0
 ): array {
     $urls = lsttraining_osm_overpass_urls();
     if (!$urls) {
         throw new RuntimeException('Keine Overpass-URLs verfügbar.');
     }
 
+    $timeout = max(3, min(8, $timeout));
     $count = count($urls);
     $start = $offset % $count;
+    $attempts = $maxAttempts > 0 ? min($count, $maxAttempts) : $count;
     $lastError = 'Unbekannter Overpass-Fehler';
 
-    for ($i = 0; $i < $count; $i++) {
+    for ($i = 0; $i < $attempts; $i++) {
         $url = $urls[($start + $i) % $count];
 
         lsttraining_overpass_rate_gate($minGapMs);
@@ -1586,6 +1685,21 @@ function lsttraining_osm_extract_retry_after_ms_from_message(string $message): i
     return 16000;
 }
 
+function lsttraining_osm_is_transient_overpass_error(string $message): bool
+{
+    return strpos($message, 'cURL error 28') !== false
+        || strpos($message, 'cURL error 35') !== false
+        || stripos($message, 'timed out') !== false
+        || stripos($message, 'broken pipe') !== false
+        || stripos($message, 'empty reply from server') !== false
+        || stripos($message, 'connection reset by peer') !== false
+        || stripos($message, 'ssl') !== false
+        || strpos($message, 'Overpass fehlgeschlagen: HTTP 5') !== false
+        || stripos($message, 'Leere Antwort von') !== false
+        || stripos($message, 'Ungueltige JSON-Antwort von') !== false
+        || stripos($message, 'Ungültige JSON-Antwort von') !== false;
+}
+
 function lsttraining_osm_download_tile(array $tileRow, string $layerKey, int $offset = 0): array
 {
     $bbox = lsttraining_tile_bbox((int)$tileRow['tile_z'], (int)$tileRow['tile_x'], (int)$tileRow['tile_y']);
@@ -1596,7 +1710,8 @@ function lsttraining_osm_download_tile(array $tileRow, string $layerKey, int $of
         $query,
         (int)$layerDef['download_timeout'],
         $offset,
-        (int)$layerDef['download_request_gap_ms']
+        (int)$layerDef['download_request_gap_ms'],
+        1
     );
 
     $features = lsttraining_osm_response_to_features($response['body'] ?? [], $layerKey);

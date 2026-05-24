@@ -1,0 +1,2190 @@
+.lsttraining-start {
+    --lst-bg: #09111a;
+    --lst-panel: rgba(20, 29, 38, 0.96);
+    --lst-panel-strong: #1d2834;
+    --lst-ink: #eef4f7;
+    --lst-muted: #95a8b6;
+    --lst-line: rgba(151, 171, 184, 0.22);
+    --lst-blue: #0f5da8;
+    --lst-blue-bright: #2f8dd8;
+    --lst-red: #a22522;
+    --lst-red-bright: #ef3c35;
+    --lst-yellow: #d8a514;
+    --lst-green: #3f7d34;
+    --lst-input: #111b25;
+
+    position: relative;
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 24px 24px 24px 88px;
+    overflow: hidden;
+    color: var(--lst-ink);
+    background:
+        linear-gradient(rgba(74, 113, 81, 0.18) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(74, 113, 81, 0.18) 1px, transparent 1px),
+        radial-gradient(circle at 72% 18%, rgba(37, 116, 73, 0.28), transparent 34%),
+        linear-gradient(135deg, #0a121b 0%, #111a21 48%, #071018 100%);
+    background-size: 46px 46px, 46px 46px, auto, auto;
+    border: 1px solid var(--lst-line);
+    border-radius: 8px;
+    box-shadow: 0 22px 60px rgba(0, 0, 0, 0.38);
+    box-sizing: border-box;
+}
+
+.lsttraining-start *,
+.lsttraining-start *::before,
+.lsttraining-start *::after {
+    box-sizing: border-box;
+}
+
+.lsttraining-start--plain {
+    padding-left: 24px;
+}
+
+.lsttraining-rail {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 62px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+    padding: 20px 10px;
+    background: #073c78;
+    border-right: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.lsttraining-rail__item {
+    width: 42px;
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+    color: #cfe8ff;
+    background: rgba(255, 255, 255, 0.08);
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.lsttraining-rail__item--rd {
+    border-left: 3px solid #fcf003;
+}
+
+.lsttraining-rail__item--fw {
+    border-left: 3px solid var(--lst-red-bright);
+}
+
+.lsttraining-rail__item--thw {
+    border-left: 3px solid var(--lst-blue-bright);
+}
+
+.lsttraining-start__hero,
+.lsttraining-instance__header {
+    position: relative;
+    padding: 6px 0 20px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid var(--lst-line);
+}
+
+.lsttraining-start__hero::after,
+.lsttraining-instance__header::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    width: 180px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--lst-red-bright), var(--lst-yellow), var(--lst-blue-bright));
+}
+
+.lsttraining-kicker {
+    margin: 0 0 6px;
+    color: #ffd21f;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.lsttraining-start h2,
+.lsttraining-start h3 {
+    letter-spacing: 0;
+}
+
+.lsttraining-start h2 {
+    margin: 0 0 8px;
+    color: #ffffff;
+    font-size: clamp(1.65rem, 3vw, 2.45rem);
+    line-height: 1.08;
+}
+
+.lsttraining-start h3 {
+    margin: 0 0 16px;
+    color: #ffffff;
+    font-size: 1rem;
+    line-height: 1.25;
+}
+
+.lsttraining-start p {
+    margin: 0;
+    color: var(--lst-muted);
+}
+
+.lsttraining-start__workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+    gap: 18px;
+    align-items: start;
+}
+
+.lsttraining-start__form {
+    display: grid;
+    gap: 16px;
+}
+
+.lsttraining-start__side {
+    display: grid;
+    gap: 16px;
+    align-content: start;
+}
+
+.lsttraining-start__panel {
+    background: var(--lst-panel);
+    border: 1px solid var(--lst-line);
+    border-radius: 8px;
+    padding: 18px;
+    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.26);
+}
+
+.lsttraining-area-preview {
+    position: relative;
+    height: 260px;
+    min-height: 220px;
+    overflow: hidden;
+    background:
+        linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+        #0b141d;
+    background-size: 26px 26px, 26px 26px, auto;
+    border: 1px solid rgba(151, 171, 184, 0.28);
+    border-radius: 7px;
+}
+
+.lsttraining-area-map {
+    width: 100%;
+    height: 100%;
+    min-height: 220px;
+    background: #0b141d;
+}
+
+.lsttraining-area-map .ol-viewport {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.lsttraining-area-map .ol-control button {
+    background: rgba(9, 17, 26, 0.82);
+    color: #ffffff;
+}
+
+.lsttraining-area-map .ol-control button:hover,
+.lsttraining-area-map .ol-control button:focus {
+    background: var(--lst-blue);
+}
+
+.lsttraining-area-status {
+    position: absolute;
+    inset: auto 10px 10px 10px;
+    display: inline-flex;
+    align-items: center;
+    min-height: 34px;
+    padding: 7px 10px;
+    color: #e8f1f6;
+    background: rgba(9, 17, 26, 0.88);
+    border: 1px solid rgba(151, 171, 184, 0.3);
+    border-left: 4px solid var(--lst-green);
+    border-radius: 5px;
+    font-size: 0.82rem;
+    font-weight: 750;
+    line-height: 1.25;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
+}
+
+.lsttraining-area-status--error {
+    border-left-color: var(--lst-red-bright);
+    color: #ffdad8;
+}
+
+.lsttraining-start__login {
+    max-width: 640px;
+}
+
+.lsttraining-panel-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.lsttraining-panel-head h3 {
+    margin-bottom: 0;
+}
+
+.lsttraining-field,
+.lsttraining-checks label {
+    display: grid;
+    gap: 8px;
+    color: var(--lst-ink);
+    font-weight: 700;
+}
+
+.lsttraining-field span {
+    color: #cfdbe3;
+    font-size: 0.88rem;
+}
+
+.lsttraining-field input,
+.lsttraining-field select,
+.lsttraining-start select {
+    width: 100%;
+    min-height: 42px;
+    border: 1px solid rgba(151, 171, 184, 0.34);
+    border-radius: 5px;
+    background: var(--lst-input);
+    color: var(--lst-ink);
+    padding: 9px 11px;
+    font: inherit;
+}
+
+.lsttraining-field input:focus,
+.lsttraining-field select:focus,
+.lsttraining-start select:focus {
+    outline: 3px solid rgba(47, 141, 216, 0.24);
+    border-color: var(--lst-blue-bright);
+}
+
+.lsttraining-field-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    align-items: end;
+    margin-top: 12px;
+}
+
+.lsttraining-field-grid:first-of-type {
+    margin-top: 0;
+}
+
+.lsttraining-season-preview {
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    padding: 9px 12px;
+    color: var(--lst-muted);
+    background: #0e1822;
+    border: 1px solid var(--lst-line);
+    border-radius: 5px;
+}
+
+.lsttraining-season-preview strong {
+    color: #ffffff;
+    margin-left: 4px;
+}
+
+.lsttraining-mode-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.lsttraining-mode-card {
+    position: relative;
+    min-height: 156px;
+    display: grid;
+    align-content: start;
+    gap: 10px;
+    padding: 18px;
+    border: 1px solid rgba(151, 171, 184, 0.32);
+    border-left: 5px solid var(--lst-blue);
+    border-radius: 8px;
+    background: linear-gradient(180deg, #172432 0%, #111b25 100%);
+    cursor: pointer;
+    transition: border-color 0.16s ease, transform 0.16s ease, background 0.16s ease;
+}
+
+.lsttraining-mode-card:hover {
+    transform: translateY(-1px);
+    border-color: var(--lst-blue-bright);
+}
+
+.lsttraining-mode-card--leader {
+    border-left-color: var(--lst-red-bright);
+}
+
+.lsttraining-mode-card input {
+    position: absolute;
+    inset: 14px 14px auto auto;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--lst-yellow);
+}
+
+.lsttraining-mode-card span {
+    display: block;
+    padding-right: 28px;
+    color: #ffffff;
+    font-weight: 850;
+    line-height: 1.2;
+}
+
+.lsttraining-mode-card small {
+    color: var(--lst-muted);
+    font-size: 0.88rem;
+    line-height: 1.35;
+}
+
+.lsttraining-mode-card:has(input:checked) {
+    border-color: var(--lst-yellow);
+    background: linear-gradient(180deg, #24313c 0%, #182431 100%);
+    box-shadow: inset 0 0 0 1px rgba(255, 210, 31, 0.6), 0 12px 26px rgba(0, 0, 0, 0.26);
+}
+
+.lsttraining-profile__form {
+    display: grid;
+    gap: 16px;
+}
+
+.lsttraining-profile__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.lsttraining-field input:disabled {
+    color: #8796a3;
+    background: #121b25;
+    cursor: not-allowed;
+}
+
+.lsttraining-difficulty-grid,
+.lsttraining-marker-mode-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.lsttraining-marker-mode-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.lsttraining-difficulty-card,
+.lsttraining-marker-mode-card {
+    position: relative;
+    min-height: 148px;
+    display: grid;
+    align-content: start;
+    gap: 8px;
+    padding: 16px;
+    border: 1px solid rgba(151, 171, 184, 0.32);
+    border-top: 4px solid var(--lst-blue);
+    border-radius: 8px;
+    background: linear-gradient(180deg, #172432 0%, #101a24 100%);
+    cursor: pointer;
+    transition: border-color 0.16s ease, transform 0.16s ease, background 0.16s ease;
+}
+
+.lsttraining-marker-mode-card {
+    min-height: 118px;
+}
+
+.lsttraining-difficulty-card:hover,
+.lsttraining-marker-mode-card:hover {
+    transform: translateY(-1px);
+    border-color: var(--lst-blue-bright);
+}
+
+.lsttraining-difficulty-card input,
+.lsttraining-marker-mode-card input {
+    position: absolute;
+    inset: 13px 13px auto auto;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--lst-yellow);
+}
+
+.lsttraining-difficulty-card span,
+.lsttraining-marker-mode-card span {
+    padding-right: 28px;
+    color: #ffffff;
+    font-weight: 850;
+    line-height: 1.2;
+}
+
+.lsttraining-difficulty-card small,
+.lsttraining-marker-mode-card small {
+    color: var(--lst-muted);
+    font-size: 0.86rem;
+    line-height: 1.35;
+}
+
+.lsttraining-difficulty-card em {
+    align-self: end;
+    color: #dce7ee;
+    font-size: 0.78rem;
+    font-style: normal;
+}
+
+.lsttraining-difficulty-card:has(input:checked),
+.lsttraining-marker-mode-card:has(input:checked) {
+    border-color: var(--lst-yellow);
+    border-top-color: var(--lst-yellow);
+    background: linear-gradient(180deg, #24313c 0%, #182431 100%);
+    box-shadow: inset 0 0 0 1px rgba(255, 210, 31, 0.55), 0 12px 26px rgba(0, 0, 0, 0.26);
+}
+
+.lsttraining-checks {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.lsttraining-checks label {
+    grid-template-columns: 18px 1fr;
+    align-items: center;
+    min-height: 42px;
+    padding: 10px 12px;
+    background: #0e1822;
+    border: 1px solid var(--lst-line);
+    border-radius: 5px;
+}
+
+.lsttraining-checks input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--lst-yellow);
+}
+
+.lsttraining-start__actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.lsttraining-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    border: 1px solid rgba(151, 171, 184, 0.38);
+    border-radius: 5px;
+    background: #1c2a36;
+    color: #ffffff;
+    padding: 10px 16px;
+    font: inherit;
+    font-weight: 800;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.lsttraining-btn:hover,
+.lsttraining-btn:focus {
+    color: #ffffff;
+    border-color: var(--lst-blue-bright);
+    outline: none;
+}
+
+.lsttraining-btn--primary {
+    background: var(--lst-red);
+    border-color: #d53a34;
+    color: #ffffff;
+}
+
+.lsttraining-btn--primary:hover,
+.lsttraining-btn--primary:focus {
+    background: #c32e2a;
+}
+
+.lsttraining-btn--inline,
+.lsttraining-btn--join {
+    width: 100%;
+}
+
+.lsttraining-btn--small {
+    min-height: 34px;
+    padding: 7px 10px;
+    font-size: 0.82rem;
+}
+
+.lsttraining-btn.is-loading,
+.lsttraining-btn:disabled {
+    cursor: wait;
+    opacity: 0.72;
+}
+
+.lsttraining-message {
+    margin-bottom: 16px;
+    border-radius: 5px;
+    padding: 12px 14px;
+    font-weight: 750;
+}
+
+.lsttraining-message--error {
+    color: #fff1f1;
+    background: rgba(162, 37, 34, 0.38);
+    border: 1px solid rgba(239, 60, 53, 0.5);
+}
+
+.lsttraining-message--success {
+    color: #efffe9;
+    background: rgba(63, 125, 52, 0.42);
+    border: 1px solid rgba(106, 180, 89, 0.48);
+}
+
+.lsttraining-open-list {
+    display: grid;
+    gap: 10px;
+}
+
+.lsttraining-open-card {
+    position: relative;
+    display: grid;
+    gap: 7px;
+    padding: 14px 14px 14px 18px;
+    background: #0f1822;
+    border: 1px solid var(--lst-line);
+    border-radius: 7px;
+}
+
+.lsttraining-einsatz-card {
+    position: relative;
+    display: grid;
+    gap: 7px;
+    padding: 14px 14px 14px 18px;
+    background: #101b25;
+    border: 1px solid var(--lst-line);
+    border-radius: 7px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+.lsttraining-einsatz-card .lsttraining-open-card__status {
+    background: var(--lst-red-bright);
+}
+
+.lsttraining-einsatz-card strong {
+    color: #ffffff;
+    line-height: 1.2;
+}
+
+.lsttraining-einsatz-card p,
+.lsttraining-einsatz-card small {
+    color: var(--lst-muted);
+    line-height: 1.35;
+}
+
+.lsttraining-instance__einsatzpanel {
+    margin-top: 22px;
+}
+
+.lsttraining-open-card__status {
+    position: absolute;
+    inset: 14px auto auto 0;
+    width: 5px;
+    height: calc(100% - 28px);
+    background: var(--lst-green);
+    border-radius: 0 4px 4px 0;
+}
+
+.lsttraining-open-card strong {
+    color: #ffffff;
+    line-height: 1.2;
+}
+
+.lsttraining-open-card p,
+.lsttraining-open-card small {
+    color: var(--lst-muted);
+    line-height: 1.35;
+}
+
+.lsttraining-open-card__mode {
+    justify-self: start;
+    padding: 3px 7px;
+    color: #08111a;
+    background: #ffd21f;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    font-weight: 850;
+}
+
+.lsttraining-muted {
+    color: var(--lst-muted);
+    line-height: 1.45;
+}
+
+.lsttraining-muted--error {
+    color: #ffb9b6;
+}
+
+.lsttraining-instance__grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 22px;
+}
+
+.lsttraining-stat {
+    min-height: 108px;
+    display: grid;
+    align-content: center;
+    gap: 8px;
+    background: var(--lst-panel);
+    border: 1px solid var(--lst-line);
+    border-left: 5px solid var(--lst-blue);
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.lsttraining-stat--accent {
+    border-left-color: var(--lst-yellow);
+}
+
+.lsttraining-stat span {
+    color: var(--lst-muted);
+    font-size: 0.82rem;
+    font-weight: 800;
+}
+
+.lsttraining-stat strong {
+    color: #ffffff;
+    font-size: 1rem;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+.lsttraining-instance {
+    max-width: min(1880px, calc(100vw - 24px));
+}
+
+.lsttraining-dispatch {
+    display: grid;
+    gap: 14px;
+}
+
+.lsttraining-dispatch__topbar {
+    display: grid;
+    grid-template-columns: minmax(240px, 1fr) auto auto;
+    gap: 16px;
+    align-items: center;
+    padding: 14px 16px;
+    background: linear-gradient(180deg, rgba(15, 93, 168, 0.28), rgba(14, 24, 34, 0.96));
+    border: 1px solid rgba(47, 141, 216, 0.34);
+    border-radius: 8px;
+    box-shadow: 0 16px 38px rgba(0, 0, 0, 0.28);
+}
+
+.lsttraining-dispatch__topbar h2 {
+    font-size: clamp(1.2rem, 1.7vw, 1.65rem);
+}
+
+.lsttraining-dispatch__topbar p {
+    margin: 0;
+    color: var(--lst-muted);
+}
+
+.lsttraining-dispatch__meta {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(92px, auto));
+    gap: 8px;
+    margin: 0;
+}
+
+.lsttraining-dispatch__meta div {
+    min-height: 56px;
+    display: grid;
+    align-content: center;
+    gap: 4px;
+    padding: 8px 10px;
+    background: rgba(4, 12, 20, 0.62);
+    border: 1px solid var(--lst-line);
+    border-radius: 6px;
+}
+
+.lsttraining-dispatch__meta dt {
+    color: var(--lst-muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.lsttraining-dispatch__meta dd {
+    margin: 0;
+    color: #ffffff;
+    font-weight: 850;
+    line-height: 1.2;
+}
+
+.lsttraining-dispatch__actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.lsttraining-dispatch__workspace {
+    display: grid;
+    grid-template-columns: 310px minmax(420px, 1fr) 360px;
+    grid-template-rows: minmax(520px, 58vh) minmax(220px, 25vh);
+    grid-template-areas:
+        "vehicles map incidents"
+        "fms fms calls";
+    gap: 12px;
+}
+
+.lsttraining-dispatch-panel {
+    min-width: 0;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    background: rgba(6, 15, 24, 0.93);
+    border: 1px solid rgba(47, 141, 216, 0.26);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 14px 34px rgba(0, 0, 0, 0.24);
+}
+
+.lsttraining-dispatch-panel .lsttraining-panel-head {
+    padding: 12px 14px;
+    background: linear-gradient(180deg, rgba(16, 72, 120, 0.45), rgba(6, 15, 24, 0.2));
+    border-bottom: 1px solid var(--lst-line);
+}
+
+.lsttraining-dispatch-panel h3 {
+    font-size: 1rem;
+}
+
+.lsttraining-dispatch-panel--vehicles {
+    grid-area: vehicles;
+}
+
+.lsttraining-dispatch-panel--incidents {
+    grid-area: incidents;
+}
+
+.lsttraining-dispatch-panel--fms {
+    grid-area: fms;
+}
+
+.lsttraining-dispatch-panel--calls {
+    grid-area: calls;
+}
+
+.lsttraining-count {
+    min-width: 34px;
+    padding: 5px 8px;
+    color: #06111a;
+    background: var(--lst-yellow);
+    border-radius: 5px;
+    font-weight: 900;
+    text-align: center;
+}
+
+.lsttraining-dispatch-mapwrap {
+    position: relative;
+    grid-area: map;
+    min-height: 420px;
+    background: #07101a;
+    border: 1px solid rgba(47, 141, 216, 0.34);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 18px 46px rgba(0, 0, 0, 0.34);
+}
+
+.lsttraining-dispatch-map {
+    width: 100%;
+    height: 100%;
+    min-height: 420px;
+}
+
+.lsttraining-dispatch-map .ol-layer canvas {
+    filter: saturate(0.76) contrast(1.05) brightness(0.72) hue-rotate(178deg);
+}
+
+.lsttraining-dispatch-map .ol-control button {
+    color: #ffffff;
+    background: rgba(7, 60, 120, 0.9);
+}
+
+.lsttraining-map-status {
+    position: absolute;
+    left: 14px;
+    bottom: 14px;
+    max-width: min(460px, calc(100% - 28px));
+    padding: 8px 10px;
+    color: #dff5ff;
+    background: rgba(4, 12, 20, 0.84);
+    border: 1px solid rgba(47, 141, 216, 0.36);
+    border-radius: 6px;
+    font-size: 0.84rem;
+    font-weight: 700;
+}
+
+.lsttraining-map-status--error {
+    color: #ffdbd9;
+    border-color: rgba(239, 60, 53, 0.5);
+}
+
+.lsttraining-dispatch-list,
+.lsttraining-log {
+    min-height: 0;
+    overflow: auto;
+    padding: 10px;
+}
+
+.lsttraining-vehicle-card {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+    grid-template-areas:
+        "media body fms"
+        "media body action";
+    gap: 8px 10px;
+    align-items: center;
+    padding: 9px;
+    background: linear-gradient(90deg, rgba(15, 93, 168, 0.24), rgba(15, 24, 34, 0.82));
+    border: 1px solid var(--lst-line);
+    border-left: 4px solid var(--lst-blue-bright);
+    border-radius: 7px;
+}
+
+.lsttraining-vehicle-card + .lsttraining-vehicle-card,
+.lsttraining-einsatz-card + .lsttraining-einsatz-card,
+.lsttraining-log-row + .lsttraining-log-row {
+    margin-top: 8px;
+}
+
+.lsttraining-vehicle-card.is-selected,
+.lsttraining-einsatz-card.is-selected {
+    border-color: rgba(255, 210, 31, 0.72);
+    box-shadow: 0 0 0 1px rgba(255, 210, 31, 0.18), 0 0 24px rgba(255, 210, 31, 0.14);
+}
+
+.lsttraining-vehicle-card__media {
+    grid-area: media;
+    width: 56px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 6px;
+}
+
+.lsttraining-vehicle-card__media img {
+    max-width: 52px;
+    max-height: 40px;
+    object-fit: contain;
+}
+
+.lsttraining-vehicle-fallback {
+    color: #ffffff;
+    font-size: 0.82rem;
+    font-weight: 900;
+}
+
+.lsttraining-vehicle-card__body {
+    grid-area: body;
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+}
+
+.lsttraining-vehicle-card__body strong,
+.lsttraining-vehicle-card__body span,
+.lsttraining-vehicle-card__body small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lsttraining-vehicle-card__body strong {
+    color: #ffffff;
+    font-size: 0.92rem;
+}
+
+.lsttraining-vehicle-card__body span,
+.lsttraining-vehicle-card__body small {
+    color: var(--lst-muted);
+    font-size: 0.78rem;
+}
+
+.lsttraining-fms-badge {
+    grid-area: fms;
+    min-width: 30px;
+    padding: 4px 6px;
+    color: #06111a;
+    background: #4eb45b;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    font-weight: 900;
+    text-align: center;
+}
+
+.lsttraining-fms-badge--s3,
+.lsttraining-fms-badge--s4 {
+    background: #ffd21f;
+}
+
+.lsttraining-fms-badge--s5,
+.lsttraining-fms-badge--s6 {
+    color: #ffffff;
+    background: #ef3c35;
+}
+
+.lsttraining-mini-btn {
+    grid-area: action;
+    justify-self: end;
+    min-height: 28px;
+    padding: 5px 8px;
+    color: #dff5ff;
+    background: rgba(15, 93, 168, 0.42);
+    border: 1px solid rgba(47, 141, 216, 0.48);
+    border-radius: 5px;
+    font-size: 0.76rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.lsttraining-mini-btn:hover,
+.lsttraining-mini-btn:focus {
+    color: #ffffff;
+    background: rgba(47, 141, 216, 0.72);
+}
+
+.lsttraining-mini-btn--muted {
+    color: #333333;
+    background: #eeeeee;
+    border-color: #b8b8b8;
+}
+
+.lsttraining-mini-btn--muted:hover,
+.lsttraining-mini-btn--muted:focus {
+    color: #111111;
+    background: #dddddd;
+}
+
+.lsttraining-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.lsttraining-card-actions .lsttraining-mini-btn {
+    justify-self: start;
+}
+
+.lsttraining-log-row {
+    display: grid;
+    grid-template-columns: 70px 20px minmax(0, 1fr);
+    gap: 8px;
+    align-items: start;
+    padding: 7px 8px;
+    color: #dce8ef;
+    background: rgba(255, 255, 255, 0.045);
+    border-left: 3px solid rgba(47, 141, 216, 0.72);
+    border-radius: 4px;
+    font-size: 0.86rem;
+    line-height: 1.35;
+}
+
+.lsttraining-log--calls .lsttraining-log-row {
+    grid-template-columns: 70px minmax(0, 1fr);
+    border-left-color: rgba(63, 125, 52, 0.84);
+}
+
+.lsttraining-log-row time {
+    color: var(--lst-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.lsttraining-call-actions {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+.lsttraining-log-arrow {
+    color: #ffd21f;
+    font-weight: 900;
+    text-align: center;
+}
+
+@media (max-width: 1040px) {
+    .lsttraining-marker-mode-grid,
+    .lsttraining-difficulty-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .lsttraining-start__workspace {
+        grid-template-columns: 1fr;
+    }
+
+    .lsttraining-instance__grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .lsttraining-difficulty-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .lsttraining-dispatch__topbar,
+    .lsttraining-dispatch__workspace {
+        grid-template-columns: 1fr;
+    }
+
+    .lsttraining-dispatch__topbar {
+        align-items: stretch;
+    }
+
+    .lsttraining-dispatch__workspace {
+        grid-template-rows: auto;
+        grid-template-areas:
+            "map"
+            "vehicles"
+            "incidents"
+            "fms"
+            "calls";
+    }
+
+    .lsttraining-dispatch-map {
+        min-height: 480px;
+    }
+}
+
+@media (max-width: 760px) {
+    .lsttraining-start {
+        padding: 78px 16px 18px;
+    }
+
+    .lsttraining-marker-mode-grid,
+    .lsttraining-difficulty-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .lsttraining-start--plain {
+        padding: 18px;
+    }
+
+    .lsttraining-rail {
+        inset: 0 0 auto 0;
+        width: auto;
+        height: 58px;
+        flex-direction: row;
+        justify-content: flex-start;
+        border-right: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+    }
+
+    .lsttraining-mode-grid,
+    .lsttraining-difficulty-grid,
+    .lsttraining-field-grid,
+    .lsttraining-checks,
+    .lsttraining-instance__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .lsttraining-start__actions {
+        justify-content: stretch;
+    }
+
+    .lsttraining-start__actions .lsttraining-btn {
+        width: 100%;
+    }
+
+    .lsttraining-dispatch__meta {
+        grid-template-columns: 1fr;
+    }
+
+    .lsttraining-dispatch__actions {
+        justify-content: stretch;
+    }
+
+    .lsttraining-dispatch__actions .lsttraining-btn {
+        flex: 1 1 auto;
+    }
+
+    .lsttraining-dispatch-map {
+        min-height: 360px;
+    }
+
+    .lsttraining-vehicle-card {
+        grid-template-columns: 52px minmax(0, 1fr) auto;
+    }
+}
+
+body.lsttraining-sim-body {
+    margin: 0;
+    overflow: hidden;
+    background: #e8e8e8;
+}
+
+.lsttraining-sim-shell {
+    --lst-sim-border: #b8b8b8;
+    --lst-sim-head: #d3d3d3;
+    --lst-sim-panel: #f6f6f6;
+    --lst-sim-line: #d6d6d6;
+    --lst-sim-text: #151515;
+    --lst-sim-muted: #666666;
+    --lst-blue: #1d6fb8;
+    --lst-red-bright: #c92828;
+    --lst-yellow: #fff06a;
+    --lst-green: #178b30;
+
+    width: 100vw;
+    height: 100vh;
+    color: var(--lst-sim-text);
+    background: #e8e8e8;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 13px;
+    line-height: 1.25;
+    box-sizing: border-box;
+}
+
+.lsttraining-sim-shell *,
+.lsttraining-sim-shell *::before,
+.lsttraining-sim-shell *::after {
+    box-sizing: border-box;
+}
+
+.lsttraining-sim-shell .lsttraining-message {
+    position: fixed;
+    z-index: 20;
+    left: 12px;
+    right: 12px;
+    top: 8px;
+    margin: 0;
+    padding: 8px 10px;
+    border-radius: 2px;
+}
+
+.lsttraining-sim-shell .lsttraining-dispatch {
+    width: 100%;
+    height: 100%;
+    display: block;
+    padding: 8px;
+}
+
+.lsttraining-sim-shell .lsttraining-dispatch__topbar {
+    display: none;
+}
+
+.lsttraining-sim-shell .lsttraining-dispatch__workspace {
+    position: relative;
+    height: 100%;
+    display: grid;
+    grid-template-columns: minmax(520px, 1fr) 420px 380px;
+    grid-template-rows: minmax(360px, 52vh) minmax(230px, 1fr);
+    grid-template-areas:
+        "map vehicles incidents"
+        "fms fms calls";
+    gap: 8px;
+}
+
+.lsttraining-sim-shell .lsttraining-resize-handle {
+    position: absolute;
+    z-index: 8;
+    display: block;
+    padding: 0;
+    background: rgba(80, 80, 80, 0.18);
+    border: 0;
+    border-radius: 0;
+    outline: 0;
+}
+
+.lsttraining-sim-shell .lsttraining-resize-handle:hover,
+.lsttraining-sim-shell .lsttraining-resize-handle:focus,
+.lsttraining-sim-shell .lsttraining-dispatch__workspace.is-resizing .lsttraining-resize-handle {
+    background: rgba(21, 94, 161, 0.55);
+}
+
+.lsttraining-sim-shell .lsttraining-resize-handle--vertical {
+    top: 0;
+    bottom: 0;
+    width: 8px;
+    cursor: col-resize;
+    transform: translateX(-4px);
+}
+
+.lsttraining-sim-shell .lsttraining-resize-handle--map {
+    left: var(--lst-resize-map-x, calc(100% - 808px));
+}
+
+.lsttraining-sim-shell .lsttraining-resize-handle--incidents {
+    left: var(--lst-resize-incidents-x, calc(100% - 388px));
+}
+
+.lsttraining-sim-shell .lsttraining-resize-handle--horizontal {
+    left: 0;
+    right: 0;
+    top: var(--lst-resize-row-y, 52%);
+    height: 8px;
+    cursor: row-resize;
+    transform: translateY(-4px);
+}
+
+.lsttraining-sim-shell .lsttraining-dispatch__workspace.is-resizing,
+.lsttraining-sim-shell .lsttraining-dispatch__workspace.is-resizing * {
+    user-select: none;
+}
+
+.lsttraining-sim-shell .lsttraining-dispatch-panel,
+.lsttraining-sim-shell .lsttraining-dispatch-mapwrap {
+    min-width: 0;
+    min-height: 0;
+    background: var(--lst-sim-panel);
+    border: 1px solid var(--lst-sim-border);
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.lsttraining-sim-shell .is-popped-out {
+    display: none !important;
+}
+
+.lsttraining-sim-shell .lsttraining-dispatch__workspace.has-popouts .lsttraining-resize-handle {
+    display: none;
+}
+
+.lsttraining-sim-shell .lsttraining-popout-btn {
+    margin-left: auto;
+    grid-area: auto;
+    justify-self: end;
+    white-space: nowrap;
+}
+
+.lsttraining-sim-shell .lsttraining-dispatch-mapwrap > .lsttraining-popout-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 7;
+}
+
+.lsttraining-popout-body {
+    overflow: hidden;
+}
+
+.lsttraining-popout-shell {
+    display: grid;
+    grid-template-rows: 30px 1fr;
+    padding: 0;
+}
+
+.lsttraining-popout-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 3px 6px;
+    color: #111111;
+    background: linear-gradient(#eeeeee, #d3d3d3);
+    border-bottom: 1px solid #b8b8b8;
+}
+
+.lsttraining-popout-toolbar strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+}
+
+.lsttraining-popout-content {
+    min-height: 0;
+    overflow: auto;
+}
+
+.lsttraining-popout-content .lsttraining-dispatch-panel {
+    height: 100%;
+    border: 0;
+}
+
+.lsttraining-popout-content .lsttraining-dispatch-panel--incidents {
+    grid-template-rows: auto auto 1fr;
+}
+
+.lsttraining-popout-mapwrap,
+.lsttraining-popout-mapwrap .lsttraining-dispatch-map {
+    min-height: 0;
+    height: 100%;
+}
+
+.lsttraining-sim-shell .lsttraining-dispatch-panel {
+    display: grid;
+    grid-template-rows: auto 1fr;
+}
+
+.lsttraining-sim-shell .lsttraining-dispatch-panel--incidents {
+    grid-template-rows: auto auto 1fr;
+}
+
+.lsttraining-sim-shell .lsttraining-dispatch-panel .lsttraining-panel-head {
+    min-height: 28px;
+    align-items: center;
+    margin: 0;
+    padding: 3px 6px;
+    background: linear-gradient(#eeeeee, var(--lst-sim-head));
+    border-bottom: 1px solid var(--lst-sim-border);
+}
+
+.lsttraining-sim-shell .lsttraining-kicker {
+    margin: 0;
+    color: #444444;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: none;
+}
+
+.lsttraining-sim-shell h3 {
+    margin: 0;
+    color: #111111;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.lsttraining-sim-shell .lsttraining-count {
+    min-width: 22px;
+    padding: 1px 4px;
+    color: #ffffff;
+    background: #15803d;
+    border: 1px solid #0f6a2f;
+    border-radius: 0;
+    font-size: 11px;
+}
+
+.lsttraining-sim-shell .lsttraining-dispatch-mapwrap {
+    grid-area: map;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.lsttraining-sim-shell .lsttraining-dispatch-map {
+    height: 100%;
+    min-height: 0;
+}
+
+.lsttraining-sim-shell .lsttraining-dispatch-map .ol-layer canvas {
+    filter: none;
+}
+
+.lsttraining-sim-shell .lsttraining-dispatch-map .ol-control button {
+    color: #ffffff;
+    background: #4588bd;
+    border-radius: 0;
+}
+
+.lsttraining-sim-shell .lsttraining-map-status {
+    left: 8px;
+    bottom: 8px;
+    padding: 5px 7px;
+    color: #222222;
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid #aaaaaa;
+    border-radius: 0;
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.lsttraining-sim-shell .lsttraining-map-status--error {
+    color: #9b1c1c;
+    border-color: #c92828;
+}
+
+.lsttraining-sim-shell .lsttraining-station-info {
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    z-index: 5;
+    width: min(300px, calc(100% - 16px));
+    max-height: min(360px, calc(100% - 16px));
+    padding: 8px 10px 10px;
+    overflow: auto;
+    color: #222222;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid #888888;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+    font-size: 12px;
+}
+
+.lsttraining-sim-shell .lsttraining-station-info[hidden] {
+    display: none;
+}
+
+.lsttraining-sim-shell .lsttraining-station-info__close {
+    position: absolute;
+    top: 4px;
+    right: 5px;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    color: #111111;
+    background: #eeeeee;
+    border: 1px solid #9f9f9f;
+    border-radius: 0;
+    line-height: 18px;
+    cursor: pointer;
+}
+
+.lsttraining-sim-shell .lsttraining-station-info strong {
+    display: block;
+    padding-right: 24px;
+    color: #a71923;
+    font-size: 13px;
+}
+
+.lsttraining-sim-shell .lsttraining-station-info > span,
+.lsttraining-sim-shell .lsttraining-station-info__more {
+    display: block;
+    margin-top: 3px;
+    color: #555555;
+}
+
+.lsttraining-sim-shell .lsttraining-station-info ul {
+    display: grid;
+    gap: 3px;
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.lsttraining-sim-shell .lsttraining-station-info li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 34px;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 4px;
+    background: #f3f3f3;
+    border: 1px solid #dddddd;
+}
+
+.lsttraining-sim-shell .lsttraining-station-info li.is-empty {
+    display: block;
+    color: #555555;
+}
+
+.lsttraining-sim-shell .lsttraining-station-info li strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #222222;
+    font-size: 12px;
+}
+
+.lsttraining-sim-shell .lsttraining-station-info li span {
+    justify-self: end;
+    color: #ffffff;
+    background: #138a35;
+    padding: 1px 4px;
+    font-weight: 800;
+}
+
+.lsttraining-sim-shell .lsttraining-dispatch-panel--vehicles {
+    grid-area: vehicles;
+}
+
+.lsttraining-sim-shell .lsttraining-dispatch-panel--incidents {
+    grid-area: incidents;
+}
+
+.lsttraining-sim-shell .lsttraining-dispatch-panel--fms {
+    grid-area: fms;
+}
+
+.lsttraining-sim-shell .lsttraining-dispatch-panel--calls {
+    grid-area: calls;
+}
+
+.lsttraining-sim-shell .lsttraining-dispatch-list,
+.lsttraining-sim-shell .lsttraining-log {
+    min-height: 0;
+    padding: 0;
+    overflow: auto;
+    background: #ffffff;
+}
+
+.lsttraining-sim-shell .lsttraining-sim-context {
+    display: grid;
+    gap: 5px;
+    padding: 7px 8px;
+    color: #222222;
+    background: #ffffff;
+    border-bottom: 1px solid var(--lst-sim-line);
+}
+
+.lsttraining-sim-shell .lsttraining-sim-context strong {
+    font-size: 12px;
+}
+
+.lsttraining-sim-shell .lsttraining-sim-context span {
+    color: var(--lst-sim-muted);
+    font-size: 12px;
+}
+
+.lsttraining-sim-shell .lsttraining-sim-clock {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 5px 6px;
+    color: #111111;
+    background: #ffffff;
+    border: 1px solid #c9c9c9;
+}
+
+.lsttraining-sim-shell .lsttraining-sim-clock time,
+.lsttraining-sim-shell .lsttraining-sim-clock strong {
+    font-family: Consolas, "Liberation Mono", monospace;
+    font-size: 14px;
+    line-height: 1;
+}
+
+.lsttraining-sim-shell .lsttraining-sim-clock strong {
+    color: #a71923;
+}
+
+.lsttraining-sim-shell .lsttraining-vehicle-card,
+.lsttraining-sim-shell .lsttraining-einsatz-card {
+    margin: 0;
+    padding: 4px 6px;
+    background: linear-gradient(#fdfdfd, #eeeeee);
+    border: 0;
+    border-bottom: 1px solid var(--lst-sim-line);
+    border-left: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.lsttraining-sim-shell .lsttraining-vehicle-card {
+    grid-template-columns: 46px minmax(0, 1fr) 42px;
+    grid-template-areas:
+        "media body fms"
+        "media body action";
+}
+
+.lsttraining-sim-shell .lsttraining-vehicle-card.is-selected,
+.lsttraining-sim-shell .lsttraining-einsatz-card.is-selected {
+    background: #fff9cc;
+    border-color: #d6c94d;
+    box-shadow: inset 0 0 0 1px #d6c94d;
+}
+
+.lsttraining-sim-shell .lsttraining-vehicle-card__media {
+    width: 42px;
+    height: 32px;
+    background: #ffffff;
+    border: 1px solid #bdbdbd;
+    border-radius: 0;
+}
+
+.lsttraining-sim-shell .lsttraining-vehicle-card__media img {
+    max-width: 38px;
+    max-height: 28px;
+}
+
+.lsttraining-sim-shell .lsttraining-vehicle-card__body strong,
+.lsttraining-sim-shell .lsttraining-einsatz-card strong {
+    color: #a71923;
+    font-size: 13px;
+}
+
+.lsttraining-sim-shell .lsttraining-vehicle-card__body span,
+.lsttraining-sim-shell .lsttraining-vehicle-card__body small,
+.lsttraining-sim-shell .lsttraining-einsatz-card p,
+.lsttraining-sim-shell .lsttraining-einsatz-card small {
+    color: #333333;
+    font-size: 12px;
+}
+
+.lsttraining-sim-shell .lsttraining-fms-badge {
+    min-width: 34px;
+    padding: 1px 5px;
+    color: #ffffff;
+    background: #138a35;
+    border-radius: 0;
+    font-size: 11px;
+    text-align: center;
+}
+
+.lsttraining-sim-shell .lsttraining-fms-badge--s3,
+.lsttraining-sim-shell .lsttraining-fms-badge--s4 {
+    color: #111111;
+    background: var(--lst-yellow);
+}
+
+.lsttraining-sim-shell .lsttraining-fms-badge--s5,
+.lsttraining-sim-shell .lsttraining-fms-badge--s6,
+.lsttraining-sim-shell .lsttraining-fms-badge--s7 {
+    color: #ffffff;
+    background: var(--lst-red-bright);
+}
+
+.lsttraining-sim-shell .lsttraining-open-card__status {
+    inset: 0 auto 0 0;
+    width: 3px;
+    height: auto;
+    border-radius: 0;
+}
+
+.lsttraining-sim-shell .lsttraining-open-card__mode {
+    padding: 1px 4px;
+    background: #eeeeee;
+    border: 1px solid #bbbbbb;
+    border-radius: 0;
+    font-size: 11px;
+}
+
+.lsttraining-sim-shell .lsttraining-mini-btn {
+    min-height: 22px;
+    padding: 2px 6px;
+    color: #111111;
+    background: #eeeeee;
+    border: 1px solid #9f9f9f;
+    border-radius: 2px;
+    font-size: 12px;
+    font-weight: 400;
+    text-decoration: none;
+}
+
+.lsttraining-sim-shell .lsttraining-mini-btn:hover,
+.lsttraining-sim-shell .lsttraining-mini-btn:focus {
+    color: #111111;
+    background: #ffffff;
+}
+
+.lsttraining-sim-shell .lsttraining-mini-btn.is-active,
+.lsttraining-dispatch-modal .lsttraining-mini-btn.is-active {
+    color: #111111;
+    background: #fff3a4;
+    border-color: #b79a00;
+}
+
+.lsttraining-sim-shell .lsttraining-mini-btn--muted {
+    color: #555555;
+    background: #f4f4f4;
+    border-color: #c8c8c8;
+}
+
+.lsttraining-sim-shell .lsttraining-mini-btn--muted:hover,
+.lsttraining-sim-shell .lsttraining-mini-btn--muted:focus {
+    color: #111111;
+    background: #e7e7e7;
+}
+
+.lsttraining-sim-shell .lsttraining-mini-note {
+    grid-area: action;
+    justify-self: end;
+    color: #777777;
+    font-size: 11px;
+}
+
+.lsttraining-sim-shell .lsttraining-card-actions {
+    gap: 4px;
+}
+
+.lsttraining-sim-shell .lsttraining-log-row {
+    grid-template-columns: 58px 16px minmax(0, 1fr);
+    margin: 0;
+    padding: 3px 6px;
+    color: #111111;
+    background: #ffffff;
+    border: 0;
+    border-bottom: 1px solid #eeeeee;
+    border-radius: 0;
+    font-size: 12px;
+}
+
+.lsttraining-sim-shell .lsttraining-log--calls .lsttraining-log-row {
+    grid-template-columns: 58px minmax(0, 1fr);
+    border-left: 0;
+}
+
+.lsttraining-sim-shell .lsttraining-log--calls .lsttraining-log-row span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.lsttraining-sim-shell .lsttraining-log-row time {
+    color: #777777;
+}
+
+.lsttraining-sim-shell .lsttraining-log-arrow {
+    color: #444444;
+}
+
+.lsttraining-sim-shell .lsttraining-muted {
+    padding: 8px;
+    color: #666666;
+}
+
+.lsttraining-sim-shell .lsttraining-einsatz-detail {
+    display: grid;
+    gap: 5px;
+    margin: 0 0 6px;
+    padding: 7px;
+    background: #fff8d7;
+    border: 1px solid #d6c94d;
+}
+
+.lsttraining-sim-shell .lsttraining-einsatz-detail > strong {
+    color: #a71923;
+    font-size: 13px;
+}
+
+.lsttraining-sim-shell .lsttraining-einsatz-detail p,
+.lsttraining-sim-shell .lsttraining-einsatz-detail small {
+    margin: 0;
+    color: #222222;
+    font-size: 12px;
+}
+
+.lsttraining-sim-shell .lsttraining-assigned-units {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    padding-top: 4px;
+    border-top: 1px solid #dfd28a;
+    color: #333333;
+    font-size: 12px;
+}
+
+.lsttraining-sim-shell .lsttraining-assigned-units > strong {
+    flex: 0 0 100%;
+    color: #333333;
+    font-size: 12px;
+}
+
+.lsttraining-sim-shell .lsttraining-assigned-units--compact {
+    margin-top: 4px;
+    padding-top: 3px;
+}
+
+.lsttraining-sim-shell .lsttraining-assigned-units--empty {
+    margin-top: 4px;
+    color: #777777;
+    font-size: 11px;
+}
+
+.lsttraining-sim-shell .lsttraining-assigned-unit {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    max-width: 100%;
+    padding: 2px 4px;
+    background: #ffffff;
+    border: 1px solid #d6d6d6;
+}
+
+.lsttraining-sim-shell .lsttraining-assigned-unit em {
+    overflow: hidden;
+    color: #222222;
+    font-style: normal;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lsttraining-sim-shell .lsttraining-assigned-unit .lsttraining-fms-badge {
+    flex: 0 0 auto;
+}
+
+.lsttraining-sim-shell .lsttraining-required-resources {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    padding-top: 4px;
+    border-top: 1px solid #dfd28a;
+    color: #333333;
+    font-size: 12px;
+}
+
+.lsttraining-sim-shell .lsttraining-required-resources > strong {
+    flex: 0 0 100%;
+    color: #333333;
+    font-size: 12px;
+}
+
+.lsttraining-sim-shell .lsttraining-required-resources--compact {
+    margin-top: 4px;
+    padding-top: 3px;
+}
+
+.lsttraining-sim-shell .lsttraining-required-resources--empty {
+    color: #777777;
+    font-size: 11px;
+}
+
+.lsttraining-sim-shell .lsttraining-unit-reports {
+    display: grid;
+    gap: 5px;
+    margin-top: 4px;
+}
+
+.lsttraining-sim-shell .lsttraining-unit-report {
+    display: grid;
+    gap: 4px;
+    padding: 6px;
+    background: #fff3a4;
+    border: 1px solid #d6c94d;
+}
+
+.lsttraining-sim-shell .lsttraining-unit-report p {
+    margin: 0;
+    white-space: pre-line;
+}
+
+.lsttraining-sim-shell .lsttraining-unit-report .lsttraining-mini-btn {
+    grid-area: auto;
+    justify-self: start;
+}
+
+.lsttraining-sim-shell .lsttraining-radio-requests {
+    display: grid;
+    gap: 5px;
+    margin-bottom: 6px;
+}
+
+.lsttraining-sim-shell .lsttraining-radio-request {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 8px;
+    color: #1d2327;
+    text-align: left;
+    background: #fff3a4;
+    border: 1px solid #d6c94d;
+    cursor: pointer;
+}
+
+.lsttraining-sim-shell .lsttraining-radio-request span {
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 11px;
+}
+
+.lsttraining-sim-shell .lsttraining-link-btn {
+    padding: 0;
+    color: #1450a3;
+    font: inherit;
+    font-weight: 700;
+    text-align: left;
+    text-decoration: underline;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+}
+
+.lsttraining-sim-shell .lsttraining-patient-status {
+    display: grid;
+    gap: 6px;
+    margin-top: 5px;
+    padding-top: 5px;
+    border-top: 1px solid #dfd28a;
+}
+
+.lsttraining-sim-shell .lsttraining-patient-row {
+    display: grid;
+    gap: 3px;
+    padding: 5px;
+    background: #ffffff;
+    border: 1px solid #d6d6d6;
+}
+
+.lsttraining-sim-shell .lsttraining-patient-row__head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 6px;
+    align-items: center;
+    font-size: 12px;
+}
+
+.lsttraining-sim-shell .lsttraining-patient-row__head strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lsttraining-sim-shell .lsttraining-patient-row__head span,
+.lsttraining-sim-shell .lsttraining-patient-row__head em {
+    font-style: normal;
+    font-weight: 700;
+}
+
+.lsttraining-sim-shell .lsttraining-patient-bar {
+    height: 8px;
+    overflow: hidden;
+    background: #eeeeee;
+    border: 1px solid #d0d0d0;
+}
+
+.lsttraining-sim-shell .lsttraining-patient-bar i {
+    display: block;
+    height: 100%;
+    background: #4a8f4f;
+}
+
+.lsttraining-sim-shell .lsttraining-patient-row.is-triage-I .lsttraining-patient-bar i { background: #c33a3a; }
+.lsttraining-sim-shell .lsttraining-patient-row.is-triage-II .lsttraining-patient-bar i { background: #d2a327; }
+.lsttraining-sim-shell .lsttraining-patient-row.is-triage-III .lsttraining-patient-bar i { background: #2f8f4e; }
+.lsttraining-sim-shell .lsttraining-patient-row.is-triage-IV .lsttraining-patient-bar i { background: #3f69b1; }
+.lsttraining-sim-shell .lsttraining-patient-row.is-triage-V .lsttraining-patient-bar i { background: #202124; }
+
+.lsttraining-sim-shell .lsttraining-patient-row small {
+    color: #333333;
+    font-size: 11px;
+}
+
+.lsttraining-sim-shell .lsttraining-resource-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    padding: 2px 5px;
+    background: #ffffff;
+    border: 1px solid #d6d6d6;
+}
+
+.lsttraining-sim-shell .lsttraining-resource-chip.is-missing {
+    border-color: #b63838;
+    background: #fff1f1;
+}
+
+.lsttraining-sim-shell .lsttraining-resource-chip.is-ok {
+    border-color: #23914a;
+    background: #edf8f0;
+}
+
+.lsttraining-sim-shell .lsttraining-resource-chip em {
+    overflow: hidden;
+    color: #222222;
+    font-style: normal;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lsttraining-sim-shell .lsttraining-resource-chip b {
+    flex: 0 0 auto;
+    color: #111111;
+    font-size: 11px;
+}
+
+.lsttraining-sim-shell .lsttraining-alarm-list {
+    display: grid;
+    gap: 3px;
+    max-height: 240px;
+    overflow: auto;
+    padding-top: 4px;
+    border-top: 1px solid #dfd28a;
+}
+
+.lsttraining-sim-shell .lsttraining-alarm-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) 58px 34px auto;
+    align-items: center;
+    gap: 5px;
+    padding: 3px;
+    background: #ffffff;
+    border: 1px solid #d6d6d6;
+}
+
+.lsttraining-sim-shell .lsttraining-alarm-row span {
+    min-width: 0;
+}
+
+.lsttraining-sim-shell .lsttraining-alarm-row strong,
+.lsttraining-sim-shell .lsttraining-alarm-row small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lsttraining-sim-shell .lsttraining-alarm-row small,
+.lsttraining-sim-shell .lsttraining-alarm-row em {
+    color: #555555;
+    font-size: 11px;
+    font-style: normal;
+}
+
+.lsttraining-sim-shell .lsttraining-alarm-row .lsttraining-mini-btn,
+.lsttraining-sim-shell .lsttraining-log--calls .lsttraining-mini-btn {
+    grid-area: auto;
+    justify-self: auto;
+}
+
+.lsttraining-dispatch-modal[hidden] {
+    display: none;
+}
+
+.lsttraining-dispatch-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    background: rgba(0, 0, 0, 0.28);
+}
+
+.lsttraining-dispatch-modal__dialog {
+    width: min(720px, 96vw);
+    max-height: 92vh;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    border: 1px solid #8f8f8f;
+    background: #f4f4f4;
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.35);
+    resize: both;
+    overflow: hidden;
+}
+
+.lsttraining-dispatch-modal__dialog > header {
+    min-height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 10px;
+    color: #111111;
+    background: linear-gradient(#efefef, #cfcfcf);
+    border-bottom: 1px solid #9a9a9a;
+}
+
+.lsttraining-dispatch-modal__dialog > header button {
+    border: 0;
+    background: transparent;
+    font-size: 20px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.lsttraining-dispatch-modal__body {
+    min-height: 0;
+    overflow: auto;
+    display: grid;
+    gap: 7px;
+    padding: 14px 16px;
+    color: #111111;
+}
+
+.lsttraining-dispatch-modal__body p {
+    margin: 0 0 4px;
+}
+
+.lsttraining-dispatch-modal__body label {
+    display: grid;
+    grid-template-columns: 132px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+}
+
+.lsttraining-dispatch-modal__body input[type="text"],
+.lsttraining-dispatch-modal__body input[type="time"],
+.lsttraining-dispatch-modal__body textarea {
+    width: 100%;
+    min-height: 27px;
+    color: #111111;
+    background: #ffffff;
+    border: 1px solid #a8a8a8;
+    border-radius: 2px;
+}
+
+.lsttraining-dispatch-modal__body textarea {
+    resize: vertical;
+}
+
+.lsttraining-dispatch-modal__body .lsttraining-check-line {
+    grid-template-columns: 18px 1fr;
+    justify-content: start;
+}
+
+.lsttraining-dispatch-modal__filters,
+.lsttraining-dispatch-modal__body footer {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.lsttraining-dispatch-modal__filters strong {
+    margin-right: auto;
+}
+
+.lsttraining-dispatch-modal__vehicles {
+    max-height: 300px;
+    overflow: auto;
+    border-top: 1px solid #d6d6d6;
+    border-bottom: 1px solid #d6d6d6;
+    background: #ffffff;
+}
+
+.lsttraining-dispatch-vehicle-row {
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr) 70px 36px;
+    gap: 8px;
+    align-items: center;
+    padding: 3px 6px;
+    border-bottom: 1px solid #eeeeee;
+}
+
+.lsttraining-dispatch-vehicle-row.is-resource-match {
+    background: #eef7ff;
+    box-shadow: inset 3px 0 0 #1d70b8;
+}
+
+.lsttraining-dispatch-vehicle-row span {
+    min-width: 0;
+}
+
+.lsttraining-dispatch-vehicle-row strong,
+.lsttraining-dispatch-vehicle-row small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lsttraining-dispatch-vehicle-row em {
+    color: #333333;
+    font-style: normal;
+    text-align: right;
+}
+
+@media (max-width: 980px) {
+    body.lsttraining-sim-body {
+        overflow: auto;
+    }
+
+    .lsttraining-sim-shell {
+        height: auto;
+        min-height: 100vh;
+    }
+
+    .lsttraining-sim-shell .lsttraining-dispatch__workspace {
+        grid-template-columns: 1fr;
+        grid-template-rows: 420px auto auto 260px 320px;
+        grid-template-areas:
+            "map"
+            "vehicles"
+            "incidents"
+            "fms"
+            "calls";
+    }
+
+    .lsttraining-sim-shell .lsttraining-resize-handle {
+        display: none;
+    }
+}
