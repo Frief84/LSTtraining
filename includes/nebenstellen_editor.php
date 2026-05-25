@@ -15,17 +15,8 @@ add_action('wp_ajax_lsttraining_get_next_neben_id', function() {
 });
 
 
-$base = plugin_dir_url( __FILE__ ) . '..';
 require_once plugin_dir_path( __FILE__ ) . '/db.php';
 require_once plugin_dir_path( __FILE__ ) . '/einsatzgebiet-editor.php';
-
-wp_enqueue_script(
-    'lsttraining-einsatzgebiet-editor',
-    $base . '/js/einsatzgebiet-editor.js',
-    [ 'jquery' ],
-    '1.0',
-    true
-);
 
 $pdo          = lsttraining_get_connection();
 $nebenstellen = [];
@@ -197,34 +188,33 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['neben_create'] ) &&
         <input type="hidden" name="geojson_edit" id="geojson_edit" value="[]">
 
         <div class="form-map" id="einsatzgebiet_container">
-            <button type="button" class="button open-einsatzgebiet-editor"
-                    data-map-id="einsatzgebiet_edit"
-                    data-leitstelle-id="0"
-                    data-center=""
-                    data-context="neben">
-                Einsatzgebiet bearbeiten
-            </button>
-					  <!-- Button öffnet Modal -->
-  <button
-    type="button"
-    class="button button-secondary open-copy-leit-modal"
-    style="margin-left:10px"
-  >
-    Leitstelle übernehmen
-  </button>
+            <div class="lst-nebenstellen-map-actions">
+                <button type="button" class="button open-einsatzgebiet-editor"
+                        data-map-id="einsatzgebiet_edit"
+                        data-leitstelle-id="0"
+                        data-center=""
+                        data-context="neben">
+                    Einsatzgebiet bearbeiten
+                </button>
 
-<button type="button"
-        class="button"
-        id="btn-open-zuordnung-neben"
-        style="margin-left:10px;"
-        disabled
-        title="Bitte zuerst speichern">
-  Zuordnung der Wachen bearbeiten
-</button>
+                <button type="button"
+                        class="button"
+                        id="btn-open-zuordnung-neben"
+                        disabled
+                        title="Bitte zuerst speichern">
+                    Zuordnung der Wachen bearbeiten
+                </button>
+            </div>
 
-
-
-
+            <div class="lst-nebenstellen-copy-action">
+                <div>
+                    <strong>Leitstelle als Vorlage übernehmen</strong>
+                    <p>Übernimmt Standort, Einsatzgebiet und Wachen in eine spielbare Leitstelle.</p>
+                </div>
+                <button type="button" class="button button-secondary open-copy-leit-modal">
+                    Leitstelle übernehmen
+                </button>
+            </div>
         </div>
 
         <p style="margin-top:1rem;">

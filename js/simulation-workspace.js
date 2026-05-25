@@ -2452,6 +2452,9 @@
         state.selectedIncidentId = String(id || '');
         renderIncidents();
         renderDetails();
+        if (state.map.layers.incidents) {
+            state.map.layers.incidents.changed();
+        }
         if (focusMap) {
             var incident = findIncident(id);
             var coords = fromLonLat(incident);
@@ -2486,7 +2489,7 @@
     function closeModal() {
         state.modalDrag = null;
         state.activeCallModalIncidentId = '';
-        state.$root.find('[data-lstw-modal]').prop('hidden', true).empty();
+        state.$root.find('[data-lstw-modal]').removeClass('lstw-modal--map-context').prop('hidden', true).empty();
     }
 
     function modalVisible() {
@@ -2525,8 +2528,9 @@
         if (!force && modalVisible()) {
             return false;
         }
+        selectIncident(incidentId, true);
         state.activeCallModalIncidentId = String(incidentId || '');
-        state.$root.find('[data-lstw-modal]').html(modalHtml('Einsatzdetails', '<h2>' + esc(incidentTitle(incident)) + '</h2>' + incidentDetailsModalBody(incident), 'details')).prop('hidden', false);
+        state.$root.find('[data-lstw-modal]').addClass('lstw-modal--map-context').html(modalHtml('Einsatzdetails', '<h2>' + esc(incidentTitle(incident)) + '</h2>' + incidentDetailsModalBody(incident), 'details')).prop('hidden', false);
         return true;
     }
 
@@ -2550,7 +2554,7 @@
 
     function openForceSpawnModal() {
         if (mutationBlocked('Simulation ist pausiert. Neue Einsätze können erst nach Play erzeugt werden.')) return;
-        var $modal = state.$root.find('[data-lstw-modal]');
+        var $modal = state.$root.find('[data-lstw-modal]').removeClass('lstw-modal--map-context');
         function render(items) {
             var options = '<option value="">Zufälliger Einsatz</option>' + asArray(items).map(function (item) {
                 return '<option value="' + esc(item.id) + '">' + esc('#' + item.id + ' ' + (item.title || item.einsatztyp || 'Einsatz') + (item.einsatzart ? ' (' + item.einsatzart + ')' : '')) + '</option>';
@@ -2677,7 +2681,7 @@
             '<section class="lstw-modal__section"><div class="lstw-modal__section-head"><strong>Fahrzeuge alarmieren</strong><div class="lstw-dispatch-filters" aria-label="Fahrzeugfilter"><button type="button" class="is-active" data-lstw-dispatch-filter="all" aria-pressed="true">Alle</button><button type="button" data-lstw-dispatch-filter="ktw" aria-pressed="false">KTW</button><button type="button" data-lstw-dispatch-filter="rtw" aria-pressed="false">RTW</button><button type="button" data-lstw-dispatch-filter="nef" aria-pressed="false" title="Notarztmittel">NEF</button><button type="button" data-lstw-dispatch-filter="rth" aria-pressed="false">RTH</button><button type="button" data-lstw-dispatch-filter="fw" aria-pressed="false">Feuerwehr</button><button type="button" data-lstw-dispatch-filter="thw" aria-pressed="false">THW</button></div><span>Entfernung</span></div><div class="lstw-modal__vehicles">' + (vehicleRows || '<p class="lstw-empty">Keine Fahrzeuge verfügbar.</p>') + '</div></section>' +
             '<footer><button type="button" data-lstw-save-dispatch-alarm="' + esc(incident.id) + '">Alarmieren</button><button type="button" data-lstw-save-dispatch="' + esc(incident.id) + '">Einsatz anlegen</button></footer>';
 
-        state.$root.find('[data-lstw-modal]').html(modalHtml(title, body, 'dispatch')).prop('hidden', false);
+        state.$root.find('[data-lstw-modal]').removeClass('lstw-modal--map-context').html(modalHtml(title, body, 'dispatch')).prop('hidden', false);
         toggleDispatchSignalGlow(signalAllowed);
     }
 

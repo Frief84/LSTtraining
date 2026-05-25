@@ -1132,6 +1132,12 @@ body.lsttraining-sim-body {
     background: rgba(0, 0, 0, 0.64);
 }
 
+.lstw-modal--map-context {
+    justify-items: end;
+    padding: clamp(58px, 8vh, 80px) 18px 16px;
+    background: rgba(0, 0, 0, 0.24);
+}
+
 .lstw-modal__dialog {
     width: min(760px, calc(100vw - 32px));
     max-height: calc(100vh - 32px);
@@ -1142,6 +1148,11 @@ body.lsttraining-sim-body {
     border-radius: 8px;
     background: var(--lstw-panel);
     box-shadow: var(--lstw-shadow);
+}
+
+.lstw-modal__dialog--details {
+    width: min(432px, calc(100vw - 32px));
+    max-height: min(620px, calc(100vh - 96px));
 }
 
 .lstw-modal__dialog.is-dragged {
@@ -1193,6 +1204,67 @@ body.lsttraining-sim-body {
 .lstw-modal__body--dispatch {
     gap: 7px;
     padding: 9px 12px 12px;
+}
+
+.lstw-modal__body--details {
+    gap: 7px;
+    padding: 10px;
+}
+
+.lstw-modal__body--details h2 {
+    margin: 0 0 2px;
+    color: #ffffff;
+    font-size: 1rem;
+    line-height: 1.25;
+}
+
+.lstw-modal__dialog--details .lstw-detail-grid {
+    grid-template-columns: minmax(0, 1fr) 105px;
+    gap: 7px;
+}
+
+.lstw-modal__dialog--details .lstw-detail-row {
+    padding: 7px 8px;
+}
+
+.lstw-modal__dialog--details .lstw-assigned-unit {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+        "call fms"
+        "type state";
+    gap: 3px 8px;
+}
+
+.lstw-modal__dialog--details .lstw-assigned-unit strong {
+    grid-area: call;
+}
+
+.lstw-modal__dialog--details .lstw-assigned-unit span {
+    grid-area: type;
+}
+
+.lstw-modal__dialog--details .lstw-assigned-unit em {
+    grid-area: state;
+}
+
+.lstw-modal__dialog--details .lstw-assigned-unit b {
+    grid-area: fms;
+}
+
+.lstw-modal__dialog--details .lstw-detail-actions {
+    gap: 6px;
+    margin-top: 2px;
+}
+
+.lstw-modal__dialog--details .lstw-detail-actions button {
+    flex: 1 1 calc(50% - 3px);
+    min-height: 32px;
+    padding: 7px 9px;
+}
+
+.lstw-modal__dialog--details .lstw-detail-actions button[data-lstw-no-incident] {
+    flex-basis: 100%;
+    margin-left: 0;
 }
 
 .lstw-modal label {
@@ -1580,6 +1652,20 @@ body.lstw-popout-body {
     .lstw-modal__meta,
     .lstw-modal__meta label,
     .lstw-modal__text {
+        grid-template-columns: 1fr;
+    }
+
+    .lstw-modal--map-context {
+        justify-items: center;
+        padding: 16px;
+        background: rgba(0, 0, 0, 0.48);
+    }
+
+    .lstw-modal__dialog--details {
+        max-height: calc(100vh - 32px);
+    }
+
+    .lstw-modal__dialog--details .lstw-detail-grid {
         grid-template-columns: 1fr;
     }
 }

@@ -31,6 +31,12 @@
     box-sizing: border-box;
 }
 
+/* Dynamische Instanzlisten koennen den Theme-Reveal-Observer unter seiner Sichtbarkeitsschwelle halten. */
+#simulation-start.reveal-up {
+    opacity: 1;
+    transform: translateY(0);
+}
+
 .lsttraining-start *,
 .lsttraining-start *::before,
 .lsttraining-start *::after {
@@ -515,6 +521,21 @@
     font-size: 0.82rem;
 }
 
+.lsttraining-btn--danger {
+    background: rgba(162, 37, 34, 0.38);
+    border-color: rgba(239, 60, 53, 0.5);
+}
+
+.lsttraining-btn--danger:hover,
+.lsttraining-btn--danger:focus {
+    background: #a22522;
+    border-color: #ef3c35;
+}
+
+.lsttraining-btn--secondary {
+    background: #14202c;
+}
+
 .lsttraining-btn.is-loading,
 .lsttraining-btn:disabled {
     cursor: wait;
@@ -545,6 +566,12 @@
     gap: 10px;
 }
 
+[data-lst-saved-instances] {
+    max-height: 520px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
 .lsttraining-open-card {
     position: relative;
     display: grid;
@@ -553,6 +580,16 @@
     background: #0f1822;
     border: 1px solid var(--lst-line);
     border-radius: 7px;
+}
+
+.lsttraining-open-card__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.lsttraining-open-card__actions .lsttraining-btn {
+    flex: 1 1 132px;
 }
 
 .lsttraining-einsatz-card {

@@ -5,6 +5,7 @@ jQuery(function ($) {
     let currentPoiTypes = [];
     let currentVehicleTypes = [];
     let currentCallerProfiles = [];
+    let currentHospitalDepartments = {};
     let callerProfilesLoading = false;
     let callerProfilesLoadFailed = false;
     let callerProfilesReady = false;
@@ -327,7 +328,7 @@ jQuery(function ($) {
         $modal.find('.lst-patient-editor > .description').each(function () {
             const $description = $(this);
             if ($description.text().indexOf('Hier stellst du Triage') !== -1) {
-                $description.text('Jede Zeile beschreibt einen Patienten. Aus KTW, RTW und Notarztmittel wird der Rettungsmittelbedarf automatisch berechnet. 0 % = verstorben, ab Zielwert transportbereit.');
+                $description.text('Jede Zeile beschreibt einen Patienten. Rettungsmittel und optionales Klinikziel werden je Patient festgelegt. 0 % = verstorben, ab Zielwert transportbereit.');
             }
         });
     }
@@ -347,6 +348,7 @@ jQuery(function ($) {
         restoreEmptyRows();
         followupCardSeq = $('.lst-followup-row').length;
         hydrateResourceEditors(item);
+        queueAllPatientHospitalPreviews();
         callerProfilesReady = false;
         callerProfilesLoadFailed = false;
         loadCallerProfilesForEditor(item);
@@ -664,6 +666,28 @@ jQuery(function ($) {
         }).join('');
     }
 
+    function normalizeHospitalDepartment(value) {
+        const code = String(value || '').trim().toUpperCase();
+        return code && Object.prototype.hasOwnProperty.call(currentHospitalDepartments, code) ? code : '';
+    }
+
+    function hospitalDepartmentLabel(code) {
+        code = normalizeHospitalDepartment(code);
+        if (!code) return 'Automatisch';
+        const item = currentHospitalDepartments[code] || {};
+        return String(item.label || code) + ' (' + code + ')';
+    }
+
+    function hospitalDepartmentOptionsHtml(value) {
+        value = normalizeHospitalDepartment(value);
+        const rows = ['<option value="">Automatisch nach Lage und Triage</option>'];
+        Object.keys(currentHospitalDepartments).forEach(function (code) {
+            const selected = value === code ? ' selected' : '';
+            rows.push('<option value="' + esc(code) + '"' + selected + '>' + esc(hospitalDepartmentLabel(code)) + '</option>');
+        });
+        return rows.join('');
+    }
+
     function normalizePatientRows(raw) {
         const decoded = Array.isArray(raw) ? raw : parseJsonValue(raw || '', []);
         const rows = decoded && decoded.patients && Array.isArray(decoded.patients) ? decoded.patients : decoded;
@@ -671,6 +695,9 @@ jQuery(function ($) {
             row = row && typeof row === 'object' ? row : {};
             const progress = Math.max(0, Math.min(100, parseInt(row.care_progress_percent != null ? row.care_progress_percent : (row.percent != null ? row.percent : 50), 10) || 0));
             const dead = progress === 0;
+            const rawPreferredDepartment = String(row.preferred_hospital_department || '').trim().toUpperCase();
+            const preferredDepartment = normalizeHospitalDepartment(rawPreferredDepartment);
+            const invalidPreferredDepartment = String(row.invalid_preferred_hospital_department || '').trim().toUpperCase();
             return {
                 patient_id: String(row.patient_id || ('p' + (index + 1))),
                 label: String(row.label || ('Patient ' + (index + 1))),
@@ -679,6 +706,8 @@ jQuery(function ($) {
                 requires_ktw: dead ? false : boolValue(row.requires_ktw),
                 requires_rtw: dead ? false : boolValue(row.requires_rtw),
                 requires_notarzt: dead ? false : boolValue(row.requires_notarzt),
+                preferred_hospital_department: preferredDepartment,
+                invalid_preferred_hospital_department: rawPreferredDepartment && !preferredDepartment ? rawPreferredDepartment : invalidPreferredDepartment,
                 care_progress_percent: progress,
                 care_target_percent: Math.max(1, Math.min(100, parseInt(row.care_target_percent || 100, 10) || 100))
             };
@@ -718,6 +747,7 @@ jQuery(function ($) {
                 requires_ktw: needsKtw,
                 requires_rtw: needsRtw,
                 requires_notarzt: needsNotarzt,
+                preferred_hospital_department: '',
                 care_progress_percent: 50,
                 care_target_percent: 100
             });
@@ -727,6 +757,12 @@ jQuery(function ($) {
 
     function addPatientRow($target, row) {
         row = normalizePatientRows([row || {}])[0] || normalizePatientRows([{}])[0];
+        const hasManualHospital = Boolean(row.preferred_hospital_department);
+        const invalidHospital = String(row.invalid_preferred_hospital_department || '');
+        const hospitalDetailsOpen = hasManualHospital || Boolean(invalidHospital) ? ' open' : '';
+        const invalidHospitalMessage = invalidHospital
+            ? '<p class="lst-patient-routing-warning">Der gespeicherte Fachbereich <code>' + esc(invalidHospital) + '</code> ist nicht mehr verfügbar und wurde auf Automatik gesetzt.</p>'
+            : '';
         $target.append(`
             <div class="lst-patient-editor-row">
                 <div class="lst-patient-main">
@@ -745,6 +781,22 @@ jQuery(function ($) {
                     <label><input type="checkbox" class="lst-patient-rtw" ${row.requires_rtw ? 'checked' : ''}> RTW</label>
                     <label><input type="checkbox" class="lst-patient-notarzt" ${row.requires_notarzt ? 'checked' : ''}> Notarztmittel</label>
                 </div>
+                <details class="lst-patient-hospital"${hospitalDetailsOpen}>
+                    <summary>
+                        <span>Klinikziel: <strong class="lst-patient-hospital-status">${esc(hospitalDepartmentLabel(row.preferred_hospital_department))}</strong></span>
+                        <em>Zielklinik festlegen</em>
+                    </summary>
+                    <div class="lst-patient-hospital-controls">
+                        <label>
+                            <span>Bevorzugter Fachbereich</span>
+                            <select class="lst-patient-hospital-department">${hospitalDepartmentOptionsHtml(row.preferred_hospital_department)}</select>
+                        </label>
+                        ${invalidHospitalMessage}
+                        <div class="lst-patient-routing-preview" aria-live="polite">
+                            <p class="description">Vorschau wird berechnet.</p>
+                        </div>
+                    </div>
+                </details>
                 <p class="description">0 % = verstorben, ab Zielwert transportbereit.</p>
             </div>
         `);
@@ -764,6 +816,7 @@ jQuery(function ($) {
                 requires_ktw: dead ? false : $row.find('.lst-patient-ktw').is(':checked'),
                 requires_rtw: dead ? false : $row.find('.lst-patient-rtw').is(':checked'),
                 requires_notarzt: dead ? false : $row.find('.lst-patient-notarzt').is(':checked'),
+                preferred_hospital_department: normalizeHospitalDepartment($row.find('.lst-patient-hospital-department').val() || ''),
                 care_progress_percent: progress,
                 care_target_percent: Math.max(1, Math.min(100, parseInt($row.find('.lst-patient-target').val() || '100', 10) || 100))
             });
@@ -897,6 +950,77 @@ jQuery(function ($) {
             payload.patients = patients;
         }
         return Object.keys(payload).length ? JSON.stringify(payload) : '';
+    }
+
+    function hospitalRoutingScope($row) {
+        const $card = $row.closest('.lst-followup-row');
+        return $card.length ? $card.find('.lst-followup-patient-list') : $('#lst-base-patient-list');
+    }
+
+    function refreshPatientHospitalStatus($row) {
+        const selected = normalizeHospitalDepartment($row.find('.lst-patient-hospital-department').val() || '');
+        $row.find('.lst-patient-hospital-status').text(hospitalDepartmentLabel(selected));
+    }
+
+    function renderPatientHospitalPreview($row, item, automaticNotice) {
+        const preferences = Array.isArray(item && item.department_preferences) ? item.department_preferences : [];
+        const sequence = preferences.join(' > ') || '-';
+        const reason = String(item && item.reason_label || '');
+        const manual = String(item && item.mode || '') === 'manual';
+        const lines = manual
+            ? '<p><strong>Festgelegt:</strong> ' + esc(sequence) + '</p><p class="description">' + esc(item.notice || '') + '</p>'
+            : '<p><strong>Erwartete Zielbereiche:</strong> ' + esc(sequence) + '</p><p class="description">Grund: ' + esc(reason) + '</p><p class="description">' + esc(automaticNotice || '') + '</p>';
+        $row.find('.lst-patient-routing-preview').html(lines);
+    }
+
+    function requestPatientHospitalPreview($scope) {
+        if (!$scope || !$scope.length) return;
+        const rows = collectPatientRows($scope);
+        if (!rows.length) return;
+        const $followup = $scope.closest('.lst-followup-row');
+        const requestId = (parseInt($scope.data('routing-request-id') || '0', 10) || 0) + 1;
+        $scope.data('routing-request-id', requestId);
+        postAjax({
+            action: 'lst_preview_patient_hospital_routing',
+            einsatzart: $('#lst-einsatzart').val() || 'RD',
+            einsatztyp: $('#lst-einsatztyp').val() || '',
+            lagemeldung: $followup.length ? ($followup.find('.lst-followup-text').val() || '') : ($('#lst-lagemeldung').val() || ''),
+            patients: JSON.stringify(rows)
+        })
+        .done(function (res) {
+            if (requestId !== $scope.data('routing-request-id')) return;
+            if (!res || !res.success || !res.data) {
+                $scope.find('.lst-patient-routing-preview').html('<p class="description">Vorschau konnte nicht berechnet werden.</p>');
+                return;
+            }
+            const byId = {};
+            (res.data.items || []).forEach(function (item) {
+                byId[String(item.patient_id || '')] = item;
+            });
+            $scope.find('.lst-patient-editor-row').each(function (index) {
+                const patientId = String(rows[index] && rows[index].patient_id || '');
+                renderPatientHospitalPreview($(this), byId[patientId] || {}, res.data.automatic_notice || '');
+            });
+        })
+        .fail(function () {
+            if (requestId !== $scope.data('routing-request-id')) return;
+            $scope.find('.lst-patient-routing-preview').html('<p class="description">Vorschau konnte nicht berechnet werden.</p>');
+        });
+    }
+
+    function queuePatientHospitalPreview($scope) {
+        if (!$scope || !$scope.length) return;
+        clearTimeout($scope.data('routing-preview-timer'));
+        $scope.data('routing-preview-timer', setTimeout(function () {
+            requestPatientHospitalPreview($scope);
+        }, 220));
+    }
+
+    function queueAllPatientHospitalPreviews() {
+        queuePatientHospitalPreview($('#lst-base-patient-list'));
+        $('.lst-followup-patient-list').each(function () {
+            queuePatientHospitalPreview($(this));
+        });
     }
 
     function applyConditionUi($card, raw) {
@@ -1069,7 +1193,7 @@ jQuery(function ($) {
                             <h4>Patienten in dieser Variante</h4>
                             <button type="button" class="button button-secondary lst-add-patient" data-patient-target="[data-followup-index='${esc(index)}'] .lst-followup-patient-list">Patient hinzufügen</button>
                         </div>
-                        <p class="description">Diese Patientenzeilen bestimmen Triage, Zustand und zusätzlichen Rettungsmittelbedarf dieser Lagevariante.</p>
+                        <p class="description">Diese Patientenzeilen bestimmen Triage, Zustand, Klinikziel und zusätzlichen Rettungsmittelbedarf dieser Lagevariante.</p>
                         <div class="lst-patient-editor-list lst-followup-patient-list"></div>
                     </div>
                 </div>
@@ -1442,7 +1566,9 @@ jQuery(function ($) {
         });
 
         $(document).on('click.lstEinsatzDyn', '.lst-add-patient', function () {
-            addPatientRow($($(this).data('patient-target')), {});
+            const $target = $($(this).data('patient-target'));
+            addPatientRow($target, {});
+            queuePatientHospitalPreview($target);
             updateBaseResourceSummary();
             updateFollowupCardSummary($(this).closest('.lst-followup-row'));
             updateWizardSummary();
@@ -1450,7 +1576,9 @@ jQuery(function ($) {
 
         $(document).on('click.lstEinsatzDyn', '.lst-remove-patient', function () {
             const $card = $(this).closest('.lst-followup-row');
+            const $scope = hospitalRoutingScope($(this).closest('.lst-patient-editor-row'));
             $(this).closest('.lst-patient-editor-row').remove();
+            queuePatientHospitalPreview($scope);
             updateBaseResourceSummary();
             updateFollowupCardSummary($card);
             updateWizardSummary();
@@ -1500,6 +1628,26 @@ jQuery(function ($) {
             updateBaseResourceSummary();
             updateFollowupCardSummary($(this).closest('.lst-followup-row'));
             updateWizardSummary();
+        });
+
+        $(document).on('change.lstEinsatzDyn', '.lst-patient-hospital-department', function () {
+            const $row = $(this).closest('.lst-patient-editor-row');
+            refreshPatientHospitalStatus($row);
+            queuePatientHospitalPreview(hospitalRoutingScope($row));
+        });
+
+        $(document).on('input.lstEinsatzDyn change.lstEinsatzDyn', '#lst-einsatzart, #lst-einsatztyp, #lst-lagemeldung, .lst-followup-text, .lst-patient-injury, .lst-patient-triage', function () {
+            const $row = $(this).closest('.lst-patient-editor-row');
+            if ($row.length) {
+                queuePatientHospitalPreview(hospitalRoutingScope($row));
+                return;
+            }
+            const $followup = $(this).closest('.lst-followup-row');
+            if ($followup.length) {
+                queuePatientHospitalPreview($followup.find('.lst-followup-patient-list'));
+                return;
+            }
+            queueAllPatientHospitalPreviews();
         });
     }
 
@@ -1650,6 +1798,9 @@ jQuery(function ($) {
     }
     if (window.lstEinsaetzeAjax && Array.isArray(window.lstEinsaetzeAjax.fahrzeugtypen)) {
         currentVehicleTypes = window.lstEinsaetzeAjax.fahrzeugtypen;
+    }
+    if (window.lstEinsaetzeAjax && window.lstEinsaetzeAjax.departments && typeof window.lstEinsaetzeAjax.departments === 'object') {
+        currentHospitalDepartments = window.lstEinsaetzeAjax.departments;
     }
     if (!currentVehicleTypes.length) {
         currentVehicleTypes = ['RTW', 'NEF', 'KTW', 'HLF 20', 'LF 20', 'DLK 23/12', 'GW-San', 'ELW 1', 'MTW'];

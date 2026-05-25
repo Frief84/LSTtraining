@@ -646,6 +646,41 @@ tr {
 	margin-top: 10px;
 }
 
+.lst-nebenstellen-map-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.lst-nebenstellen-copy-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  border: 1px solid #dba617;
+  border-left: 4px solid #dba617;
+  border-radius: 4px;
+  background: #fcf9e8;
+}
+
+.lst-nebenstellen-copy-action p {
+  margin: 4px 0 0;
+  color: #50575e;
+}
+
+.lst-nebenstellen-copy-action .button {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 782px) {
+  .lst-nebenstellen-copy-action {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
 .widefat td.num { text-align: right; }
 
 .row-2col { display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; }
@@ -2227,6 +2262,73 @@ tr {
     color: #50575e;
 }
 
+.lst-patient-hospital {
+    border: 1px solid #dcdcde;
+    border-radius: 6px;
+    background: #f6f7f7;
+}
+
+.lst-patient-hospital summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 10px;
+    cursor: pointer;
+    list-style: none;
+    color: #1d2327;
+}
+
+.lst-patient-hospital summary::-webkit-details-marker {
+    display: none;
+}
+
+.lst-patient-hospital summary em {
+    font-style: normal;
+    font-size: 12px;
+    font-weight: 600;
+    color: #2271b1;
+}
+
+.lst-patient-hospital[open] summary {
+    border-bottom: 1px solid #dcdcde;
+}
+
+.lst-patient-hospital-controls {
+    display: grid;
+    gap: 8px;
+    padding: 10px;
+    background: #fff;
+    border-radius: 0 0 6px 6px;
+}
+
+.lst-patient-hospital-controls select {
+    min-width: min(360px, 100%);
+}
+
+.lst-patient-routing-preview {
+    padding: 8px 10px;
+    background: #f0f6fc;
+    border-left: 3px solid #72aee6;
+    border-radius: 3px;
+}
+
+.lst-patient-routing-preview p,
+.lst-patient-routing-warning {
+    margin: 0;
+}
+
+.lst-patient-routing-preview p + p {
+    margin-top: 4px;
+}
+
+.lst-patient-routing-warning {
+    padding: 8px 10px;
+    color: #8a2424;
+    background: #fcf0f1;
+    border-radius: 3px;
+}
+
 .lst-patient-care {
     justify-content: flex-start;
     flex-wrap: nowrap;
@@ -2272,6 +2374,12 @@ tr {
 
     .lst-patient-care {
         flex-wrap: wrap;
+    }
+
+    .lst-patient-hospital summary {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 4px;
     }
 }
 

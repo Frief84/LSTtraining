@@ -7,6 +7,7 @@ if (!defined('ABSPATH')) { exit(); }
 
 require_once __DIR__ . '/ajax_common.php';
 require_once dirname(__DIR__) . '/simulation/spawn.php';
+require_once dirname(__DIR__) . '/simulation/transport.php';
 
 function lsttraining_einsatzeditor_validate_json_array(?string $raw): ?string {
     $raw = trim((string) $raw);
@@ -44,6 +45,23 @@ function lsttraining_einsatzeditor_normalize_resources_json(?string $raw): ?stri
 function lsttraining_einsatzeditor_normalize_patients_json(?string $raw): ?string {
     $patients = lsttraining_sim_normalize_patients((string) $raw);
     return $patients ? wp_json_encode($patients, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null;
+}
+
+function lsttraining_einsatzeditor_normalize_effect_json(?string $raw): ?string {
+    $raw = trim((string) $raw);
+    if ($raw === '') {
+        return null;
+    }
+
+    $decoded = json_decode($raw, true);
+    if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
+        return null;
+    }
+    if (isset($decoded['patients']) && is_array($decoded['patients'])) {
+        $decoded['patients'] = lsttraining_sim_normalize_patients($decoded['patients']);
+    }
+
+    return wp_json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 }
 
 function lsttraining_einsatzeditor_column_exists(PDO $pdo, string $table, string $column): bool {
@@ -492,6 +510,41 @@ add_action('wp_ajax_lst_preview_einsatz_caller', function () {
     wp_send_json_success(['examples' => $examples]);
 });
 
+add_action('wp_ajax_lst_preview_patient_hospital_routing', function () {
+    lsttraining_ajax_guard([
+        'area'         => 'leitstellen',
+        'nonce_action' => 'lsttraining_leitstellen',
+        'nonce_field'  => 'nonce',
+        'method'       => 'POST',
+    ]);
+
+    $raw_patients = isset($_POST['patients']) ? (string) wp_unslash($_POST['patients']) : '[]';
+    $patients = lsttraining_sim_normalize_patients($raw_patients);
+    $incident = [
+        'einsatzart' => isset($_POST['einsatzart']) ? sanitize_text_field(wp_unslash($_POST['einsatzart'])) : '',
+        'einsatztyp' => isset($_POST['einsatztyp']) ? sanitize_text_field(wp_unslash($_POST['einsatztyp'])) : '',
+        'caller_text' => '',
+        'lagemeldung' => isset($_POST['lagemeldung']) ? sanitize_textarea_field(wp_unslash($_POST['lagemeldung'])) : '',
+    ];
+
+    $items = [];
+    foreach ($patients as $index => $patient) {
+        $resolution = lsttraining_sim_transport_patient_department_resolution($patient, $incident);
+        $items[] = [
+            'patient_id' => (string) ($patient['patient_id'] ?? ('p' . ($index + 1))),
+            'mode' => (string) ($resolution['mode'] ?? 'automatic'),
+            'reason_label' => (string) ($resolution['reason_label'] ?? ''),
+            'department_preferences' => array_values((array) ($resolution['department_preferences'] ?? [])),
+            'notice' => (string) ($resolution['notice'] ?? ''),
+        ];
+    }
+
+    wp_send_json_success([
+        'items' => $items,
+        'automatic_notice' => 'Der erzeugte Anruftext kann die Auswahl im laufenden Einsatz noch verändern.',
+    ]);
+});
+
 add_action('wp_ajax_lst_get_einsatz', function () {
     lsttraining_ajax_guard([
         'area'         => 'leitstellen',
@@ -893,7 +946,7 @@ add_action('wp_ajax_lst_save_einsatz', function () {
                     $speakerType,
                     $triggerMode,
                     lsttraining_einsatzeditor_normalize_resources_json(isset($row['required_resources_json']) ? (string) $row['required_resources_json'] : null),
-                    lsttraining_einsatzeditor_normalize_optional_json(isset($row['effect_json']) ? (string) $row['effect_json'] : null),
+                    lsttraining_einsatzeditor_normalize_effect_json(isset($row['effect_json']) ? (string) $row['effect_json'] : null),
                 ]);
             }
         }

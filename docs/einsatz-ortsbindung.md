@@ -6,6 +6,8 @@ Diese Notiz dokumentiert die Ortsbindung fuer automatisch erzeugte Einsatzvorlag
 
 Einsatzvorlagen mit `scope_type = 'landscape'` nutzen `landscape_tags_json`, um erlaubte Flaechen oder Linienlayer festzulegen. Mehrere Werte sind als JSON-Array moeglich.
 
+Die Ortsauswahl scannt passende Features im gesamten Einsatzgebiet und zieht daraus gewichtet zufaellig einen Punkt. Dass Tiles oder Layer in einer technischen Reihenfolge gelesen werden, bevorzugt daher keinen Gebietsteil. Bei `scope_type = 'anywhere'` werden typische Siedlungs- und Nutzflaechen realistisch hoeher gewichtet; ein freier Zufallspunkt im Einsatzgebiet bleibt als seltener Fallback moeglich.
+
 Beispiele:
 
 ```json

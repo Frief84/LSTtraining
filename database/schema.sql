@@ -164,10 +164,15 @@ CREATE TABLE IF NOT EXISTS `spielinstanzen` (
   `started_at`    DATETIME NULL DEFAULT NULL,
   `sim_state`     ENUM('created','running','paused','ended')
                   COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'created',
+  `owner_user_id` BIGINT UNSIGNED NULL DEFAULT NULL,
+  `last_activity_at` DATETIME NULL DEFAULT NULL,
+  `retention_notice_sent_at` DATETIME NULL DEFAULT NULL,
+  `retention_delete_at` DATETIME NULL DEFAULT NULL,
   `created_at`    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   PRIMARY KEY (`id`),
   KEY `leitstelle_id` (`leitstelle_id`),
+  KEY `idx_spielinstanzen_retention` (`ist_aktiv`, `sim_state`, `last_activity_at`, `retention_delete_at`),
 
   CONSTRAINT `fk_spielinstanzen_leitstelle`
     FOREIGN KEY (`leitstelle_id`) REFERENCES `leitstellen`(`id`) ON DELETE CASCADE

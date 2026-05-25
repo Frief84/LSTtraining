@@ -274,6 +274,40 @@ function lsttraining_sim_default_triage_for_patient(array $patient): string {
     return 'III';
 }
 
+function lsttraining_sim_hospital_department_catalog(): array {
+    static $catalog = null;
+    if (is_array($catalog)) {
+        return $catalog;
+    }
+
+    $catalog = [];
+    $path = defined('LSTTRAINING_PATH')
+        ? LSTTRAINING_PATH . 'data/departments.json'
+        : dirname(__DIR__, 2) . '/data/departments.json';
+    if (!is_readable($path)) {
+        return $catalog;
+    }
+
+    $decoded = json_decode((string) file_get_contents($path), true);
+    if (!is_array($decoded)) {
+        return $catalog;
+    }
+
+    foreach ($decoded as $code => $details) {
+        $normalized = strtoupper(trim((string) $code));
+        if ($normalized !== '') {
+            $catalog[$normalized] = is_array($details) ? $details : [];
+        }
+    }
+
+    return $catalog;
+}
+
+function lsttraining_sim_normalize_hospital_department($value): string {
+    $code = strtoupper(trim((string) $value));
+    return $code !== '' && array_key_exists($code, lsttraining_sim_hospital_department_catalog()) ? $code : '';
+}
+
 function lsttraining_sim_normalize_patients($raw, array $fallback_requirements = []): array {
     $rows = is_array($raw) ? $raw : lsttraining_sim_decode_json($raw, []);
     if (isset($rows['patients']) && is_array($rows['patients'])) {
@@ -295,6 +329,7 @@ function lsttraining_sim_normalize_patients($raw, array $fallback_requirements =
             'requires_ktw' => !empty($row['requires_ktw']),
             'requires_rtw' => !empty($row['requires_rtw']),
             'requires_notarzt' => !empty($row['requires_notarzt']),
+            'preferred_hospital_department' => lsttraining_sim_normalize_hospital_department($row['preferred_hospital_department'] ?? ''),
             'care_progress_percent' => $progress,
             'care_target_percent' => $target,
             'patient_status' => (string) ($row['patient_status'] ?? ''),
@@ -349,6 +384,7 @@ function lsttraining_sim_normalize_patients($raw, array $fallback_requirements =
             'requires_ktw' => $requires_ktw,
             'requires_rtw' => $requires_rtw,
             'requires_notarzt' => $requires_notarzt,
+            'preferred_hospital_department' => '',
             'care_progress_percent' => 50,
             'care_target_percent' => 100,
             'patient_status' => 'in_care',
@@ -1479,20 +1515,62 @@ function lsttraining_sim_diag_missing_file(&$diagnostics, string $relative_path)
     }
 }
 
-function lsttraining_sim_collect_road_points_from_tiles(PDO $pdo, int $leitstelle_id, string $layer_key, array $area, int $max_candidates = 80, &$diagnostics = null): array {
-    $out = [];
+function lsttraining_sim_diag_merge(&$diagnostics, array $additional): void {
+    if (!is_array($diagnostics)) {
+        return;
+    }
+
+    foreach ($additional as $key => $value) {
+        if (is_int($value)) {
+            lsttraining_sim_diag_inc($diagnostics, (string) $key, $value);
+            continue;
+        }
+
+        if (is_array($value)) {
+            if (!isset($diagnostics[$key]) || !is_array($diagnostics[$key])) {
+                $diagnostics[$key] = [];
+            }
+            foreach ($value as $item) {
+                if (!in_array($item, $diagnostics[$key], true)) {
+                    $diagnostics[$key][] = $item;
+                }
+            }
+            continue;
+        }
+
+        if (!isset($diagnostics[$key]) || $diagnostics[$key] === '') {
+            $diagnostics[$key] = $value;
+        }
+    }
+}
+
+function lsttraining_sim_consider_weighted_location(array &$selection, array $candidate, &$diagnostics = null): void {
+    $weight = max(0, (int) ($candidate['weight'] ?? 0));
+    if ($weight <= 0) {
+        return;
+    }
+
+    lsttraining_sim_diag_inc($diagnostics, 'location_candidates_selectable');
+    lsttraining_sim_diag_inc($diagnostics, 'location_candidate_weight_total', $weight);
+
+    $total_weight = (int) ($selection['total_weight'] ?? 0) + $weight;
+    $selection['total_weight'] = $total_weight;
+    // Weighted reservoir sampling visits every candidate without retaining an order-biased capped list.
+    if (!isset($selection['picked']) || mt_rand(1, $total_weight) <= $weight) {
+        $selection['picked'] = $candidate;
+    }
+}
+
+function lsttraining_sim_select_road_point_from_tiles(PDO $pdo, int $leitstelle_id, string $layer_key, array $area, array &$selection, &$diagnostics = null): void {
     $tileState = lsttraining_sim_road_tile_state($pdo, $leitstelle_id);
     lsttraining_sim_diag_road_tile_state($diagnostics, $tileState);
     if (empty($tileState['complete'])) {
-        return [];
+        return;
     }
 
     $required_highway = lsttraining_sim_road_highway_filter($layer_key);
     foreach ($tileState['paths'] as $path) {
         foreach (lsttraining_sim_open_gzip_lines($path) as $line) {
-            if (count($out) >= $max_candidates) {
-                break 2;
-            }
             if (strpos($line, 'LineString') === false) {
                 continue;
             }
@@ -1503,6 +1581,7 @@ function lsttraining_sim_collect_road_points_from_tiles(PDO $pdo, int $leitstell
             }
 
             lsttraining_sim_diag_inc($diagnostics, 'road_line_features_checked');
+            lsttraining_sim_diag_inc($diagnostics, 'location_features_checked');
             $properties = lsttraining_sim_osm_feature_properties($feature);
             $highway = (string) ($properties['highway'] ?? '');
             if ($required_highway === 'motorway' && !in_array(strtolower(trim($highway)), ['motorway', 'motorway_link', 'trunk', 'trunk_link'], true)) {
@@ -1524,7 +1603,7 @@ function lsttraining_sim_collect_road_points_from_tiles(PDO $pdo, int $leitstell
                 continue;
             }
 
-            $out[] = [
+            lsttraining_sim_consider_weighted_location($selection, [
                 'longitude' => $point['longitude'],
                 'latitude' => $point['latitude'],
                 'weight' => lsttraining_sim_landuse_weight($layer_key),
@@ -1541,46 +1620,36 @@ function lsttraining_sim_collect_road_points_from_tiles(PDO $pdo, int $leitstell
                 'road_segment_start' => $point['road_segment_start'] ?? null,
                 'road_segment_end' => $point['road_segment_end'] ?? null,
                 'road_bearing_deg' => $point['road_bearing_deg'] ?? null,
-            ];
+            ], $diagnostics);
         }
     }
-
-    return $out;
 }
 
-function lsttraining_sim_collect_landuse_points_from_tile_files(string $layer_key, array $area, int $max_candidates, &$diagnostics = null): array {
-    $out = [];
+function lsttraining_sim_select_landuse_point_from_tile_files(string $layer_key, array $area, array &$selection, &$diagnostics = null): void {
     $bbox = $area['bbox'];
     $paths = lsttraining_sim_tile_paths_for_area($layer_key, $area);
     if (!$paths) {
         if (lsttraining_sim_landuse_tile_layer_available($layer_key)) {
             lsttraining_sim_diag_inc($diagnostics, 'landuse_no_tiles_in_area');
         }
-        return [];
+        return;
     }
 
     lsttraining_sim_diag_inc($diagnostics, 'landuse_tile_files_read', count($paths));
     foreach ($paths as $path) {
-        if (count($out) >= $max_candidates) {
-            break;
-        }
-
         $lines = lsttraining_sim_open_gzip_lines($path);
         if (!$lines) {
             continue;
         }
 
         foreach ($lines as $line) {
-            if (count($out) >= $max_candidates) {
-                break;
-            }
-
             $feature = json_decode($line, true);
             if (!is_array($feature)) {
                 continue;
             }
 
             lsttraining_sim_diag_inc($diagnostics, 'landuse_features_checked');
+            lsttraining_sim_diag_inc($diagnostics, 'location_features_checked');
             $mpoly = lsttraining_sim_feature_mpoly($feature);
             if (!$mpoly) {
                 lsttraining_sim_diag_inc($diagnostics, 'landuse_invalid_geometry');
@@ -1599,41 +1668,35 @@ function lsttraining_sim_collect_landuse_points_from_tile_files(string $layer_ke
                 continue;
             }
 
-            $out[] = [
+            lsttraining_sim_consider_weighted_location($selection, [
                 'longitude' => $point['longitude'],
                 'latitude' => $point['latitude'],
                 'weight' => lsttraining_sim_landuse_weight($layer_key),
                 'density_source' => 'landuse',
                 'landuse_layer' => $layer_key,
-            ];
+            ], $diagnostics);
         }
     }
-
-    return $out;
 }
 
-function lsttraining_sim_collect_landuse_points_from_source_file(string $layer_key, array $area, int $max_candidates, &$diagnostics = null): array {
-    $out = [];
+function lsttraining_sim_select_landuse_point_from_source_file(string $layer_key, array $area, array &$selection, &$diagnostics = null): void {
     $bbox = $area['bbox'];
     $path = lsttraining_sim_layer_path($layer_key);
     if (!is_readable($path)) {
         lsttraining_sim_diag_inc($diagnostics, 'landuse_source_missing');
         lsttraining_sim_diag_missing_file($diagnostics, 'landuse/' . $layer_key . '.geojsonl.gz');
-        return [];
+        return;
     }
 
     $lines = lsttraining_sim_open_gzip_lines($path);
     foreach ($lines as $line) {
-        if (count($out) >= $max_candidates) {
-            break;
-        }
-
         $feature = json_decode($line, true);
         if (!is_array($feature)) {
             continue;
         }
 
         lsttraining_sim_diag_inc($diagnostics, 'landuse_features_checked');
+        lsttraining_sim_diag_inc($diagnostics, 'location_features_checked');
         $mpoly = lsttraining_sim_feature_mpoly($feature);
         if (!$mpoly) {
             lsttraining_sim_diag_inc($diagnostics, 'landuse_invalid_geometry');
@@ -1652,20 +1715,26 @@ function lsttraining_sim_collect_landuse_points_from_source_file(string $layer_k
             continue;
         }
 
-        $out[] = [
+        lsttraining_sim_consider_weighted_location($selection, [
             'longitude' => $point['longitude'],
             'latitude' => $point['latitude'],
             'weight' => lsttraining_sim_landuse_weight($layer_key),
             'density_source' => 'landuse',
             'landuse_layer' => $layer_key,
-        ];
+        ], $diagnostics);
     }
-
-    return $out;
 }
 
-function lsttraining_sim_collect_landuse_points_from_files(PDO $pdo, int $leitstelle_id, array $layer_keys, array $area, int $max_candidates = 80, &$diagnostics = null): array {
-    $out = [];
+function lsttraining_sim_pick_landuse_point_from_files(PDO $pdo, int $leitstelle_id, array $layer_keys, array $area, array $seed_candidates = [], &$diagnostics = null): ?array {
+    $selection = [
+        'picked' => null,
+        'total_weight' => 0,
+    ];
+    foreach ($seed_candidates as $candidate) {
+        if (is_array($candidate)) {
+            lsttraining_sim_consider_weighted_location($selection, $candidate, $diagnostics);
+        }
+    }
 
     foreach ($layer_keys as $layer_key) {
         $layer_key = lsttraining_sim_normalize_landuse_layer((string) $layer_key);
@@ -1675,28 +1744,18 @@ function lsttraining_sim_collect_landuse_points_from_files(PDO $pdo, int $leitst
 
         lsttraining_sim_diag_inc($diagnostics, 'landuse_layers_checked');
         if (lsttraining_sim_is_road_layer($layer_key)) {
-            $out = array_merge($out, lsttraining_sim_collect_road_points_from_tiles($pdo, $leitstelle_id, $layer_key, $area, $max_candidates, $diagnostics));
-            if (count($out) >= $max_candidates) {
-                break;
-            }
+            lsttraining_sim_select_road_point_from_tiles($pdo, $leitstelle_id, $layer_key, $area, $selection, $diagnostics);
             continue;
         }
 
-        $before = count($out);
-        $out = array_merge($out, lsttraining_sim_collect_landuse_points_from_tile_files($layer_key, $area, $max_candidates - count($out), $diagnostics));
-        if (count($out) >= $max_candidates) {
-            break;
-        }
-
-        if (count($out) === $before && !lsttraining_sim_landuse_tile_layer_available($layer_key)) {
-            $out = array_merge($out, lsttraining_sim_collect_landuse_points_from_source_file($layer_key, $area, $max_candidates - count($out), $diagnostics));
-            if (count($out) >= $max_candidates) {
-                break;
-            }
+        if (lsttraining_sim_landuse_tile_layer_available($layer_key)) {
+            lsttraining_sim_select_landuse_point_from_tile_files($layer_key, $area, $selection, $diagnostics);
+        } else {
+            lsttraining_sim_select_landuse_point_from_source_file($layer_key, $area, $selection, $diagnostics);
         }
     }
 
-    return $out;
+    return is_array($selection['picked']) ? $selection['picked'] : null;
 }
 
 function lsttraining_sim_landuse_weight(string $layer_key): int {
@@ -1821,19 +1880,18 @@ function lsttraining_sim_resolve_location(PDO $pdo, array $einsatz, int $leitste
         if (!$layers) {
             return null;
         }
-        $points = lsttraining_sim_collect_landuse_points_from_files($pdo, $leitstelle_id, $layers, $area, 80, $diagnostics);
-        return lsttraining_sim_weighted_pick($points);
+        return lsttraining_sim_pick_landuse_point_from_files($pdo, $leitstelle_id, $layers, $area, [], $diagnostics);
     }
 
-    $points = lsttraining_sim_collect_landuse_points_from_files($pdo, $leitstelle_id, lsttraining_sim_anywhere_layers(), $area, 90, $diagnostics);
+    $fallback_candidates = [];
     $fallback = lsttraining_sim_random_point_in_area($area);
     if ($fallback) {
         $fallback['weight'] = 4;
         $fallback['density_source'] = 'fallback';
-        $points[] = $fallback;
+        $fallback_candidates[] = $fallback;
     }
 
-    return lsttraining_sim_weighted_pick($points);
+    return lsttraining_sim_pick_landuse_point_from_files($pdo, $leitstelle_id, lsttraining_sim_anywhere_layers(), $area, $fallback_candidates, $diagnostics);
 }
 
 function lsttraining_sim_time_window_matches(PDO $pdo, int $einsatz_id, DateTimeImmutable $sim_time): bool {
@@ -1928,6 +1986,9 @@ function lsttraining_sim_spawn_diagnostics_message(array $diagnostics): string {
         'landuse_no_point_in_area' => 'Landuse ohne Punkt im Gebiet',
         'landuse_source_missing' => 'Landuse-Quelle fehlt',
         'road_source_missing' => 'Straßenquelle fehlt',
+        'location_features_checked' => 'Ortsfeatures geprüft',
+        'location_candidates_selectable' => 'wählbare Ortskandidaten',
+        'location_candidate_weight_total' => 'Summengewicht Ortskandidaten',
         'road_line_features_checked' => 'Straßenlinien geprüft',
         'road_no_point_in_area' => 'Straßen ohne Punkt im Gebiet',
         'road_highway_mismatch' => 'Straßen nicht Autobahn',
@@ -1992,7 +2053,9 @@ function lsttraining_sim_fetch_candidates(PDO $pdo, int $leitstelle_id, array $s
             continue;
         }
 
-        $location = lsttraining_sim_resolve_location($pdo, $row, $leitstelle_id, $area, $diagnostics);
+        $location_diagnostics = [];
+        $location = lsttraining_sim_resolve_location($pdo, $row, $leitstelle_id, $area, $location_diagnostics);
+        lsttraining_sim_diag_merge($diagnostics, $location_diagnostics);
         if (!$location) {
             $scope = (string) ($row['scope_type'] ?? 'anywhere');
             lsttraining_sim_diag_inc($diagnostics, 'skipped_location');
@@ -2006,6 +2069,7 @@ function lsttraining_sim_fetch_candidates(PDO $pdo, int $leitstelle_id, array $s
         }
 
         $row['_spawn_location'] = $location;
+        $row['_spawn_location_diagnostics'] = $location_diagnostics;
         $row['weight'] = max(1, (int) ($row['weight_base'] ?? 100));
         $candidates[] = $row;
     }
@@ -2987,6 +3051,14 @@ function lsttraining_sim_spawn_one(PDO $pdo, int $instanz_id, array $options = [
         'season_factor' => lsttraining_sim_season_factor((string) ($settings['season'] ?? '')),
         'call_status' => 'ringing',
     ];
+    $location_diagnostics = is_array($picked['_spawn_location_diagnostics'] ?? null)
+        ? $picked['_spawn_location_diagnostics']
+        : [];
+    foreach (['location_features_checked', 'location_candidates_selectable', 'location_candidate_weight_total'] as $diagnostic_key) {
+        if (isset($location_diagnostics[$diagnostic_key])) {
+            $meta[$diagnostic_key] = (int) $location_diagnostics[$diagnostic_key];
+        }
+    }
     if ($selected_einsatz_id > 0) {
         $meta['manual_selected_einsatz_id'] = $selected_einsatz_id;
     }

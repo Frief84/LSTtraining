@@ -47,7 +47,23 @@ function lsttraining_sim_transport_route(float $from_lat, float $from_lon, float
     ];
 }
 
-function lsttraining_sim_transport_patient_department_preferences(array $patient, array $incident): array {
+function lsttraining_sim_transport_patient_department_resolution(array $patient, array $incident): array {
+    $preferred_department = function_exists('lsttraining_sim_normalize_hospital_department')
+        ? lsttraining_sim_normalize_hospital_department($patient['preferred_hospital_department'] ?? '')
+        : strtoupper(trim((string) ($patient['preferred_hospital_department'] ?? '')));
+    if ($preferred_department !== '') {
+        $preferences = [$preferred_department];
+        if ($preferred_department !== 'NOTF') {
+            $preferences[] = 'NOTF';
+        }
+        return [
+            'mode' => 'manual',
+            'reason_label' => 'Manuell festgelegt',
+            'department_preferences' => $preferences,
+            'notice' => 'Stichwortauswertung wird für diesen Patienten nicht verwendet.',
+        ];
+    }
+
     $text = strtolower(implode(' ', [
         (string) ($patient['injury_summary'] ?? ''),
         (string) ($incident['einsatzart'] ?? ''),
@@ -58,25 +74,58 @@ function lsttraining_sim_transport_patient_department_preferences(array $patient
     $triage = strtoupper((string) ($patient['triage_category'] ?? ''));
 
     if (preg_match('/schlaganfall|stroke|halbseit|neurolog/i', $text)) {
-        return ['STRK', 'NEUR', 'CT', 'NOTF'];
+        return [
+            'mode' => 'automatic',
+            'reason_label' => 'Schlaganfall/Neurologie erkannt',
+            'department_preferences' => ['STRK', 'NEUR', 'CT', 'NOTF'],
+        ];
     }
     if (preg_match('/herz|brustschmerz|infarkt|reanimation|kreislauf/i', $text)) {
-        return ['CARD', 'CAT', 'INTX', 'NOTF'];
+        return [
+            'mode' => 'automatic',
+            'reason_label' => 'Herz/Kreislauf erkannt',
+            'department_preferences' => ['CARD', 'CAT', 'INTX', 'NOTF'],
+        ];
     }
     if (preg_match('/brand|verbrenn/i', $text)) {
-        return ['BURN', 'CHIR', 'NOTF'];
+        return [
+            'mode' => 'automatic',
+            'reason_label' => 'Brand/Verbrennung erkannt',
+            'department_preferences' => ['BURN', 'CHIR', 'NOTF'],
+        ];
     }
     if (preg_match('/vergift|intox|gas|rauch/i', $text)) {
-        return ['TOXI', 'INTX', 'NOTF'];
+        return [
+            'mode' => 'automatic',
+            'reason_label' => 'Vergiftung/Rauch/Gas erkannt',
+            'department_preferences' => ['TOXI', 'INTX', 'NOTF'],
+        ];
     }
     if (preg_match('/kind|baby|saeugling|säugling/i', $text)) {
-        return ['KINA', 'PED', 'KKH', 'NOTF'];
+        return [
+            'mode' => 'automatic',
+            'reason_label' => 'Kind/Säugling erkannt',
+            'department_preferences' => ['KINA', 'PED', 'KKH', 'NOTF'],
+        ];
     }
     if ($triage === 'I' || $triage === 'II' || preg_match('/unfall|trauma|sturz|verletz|blutung|verkehr/i', $text)) {
-        return ['TRAU', 'UNF', 'CHIR', 'CT', 'NOTF'];
+        return [
+            'mode' => 'automatic',
+            'reason_label' => ($triage === 'I' || $triage === 'II') ? 'Triage I/II oder Trauma erkannt' : 'Verkehr/Unfall/Trauma erkannt',
+            'department_preferences' => ['TRAU', 'UNF', 'CHIR', 'CT', 'NOTF'],
+        ];
     }
 
-    return ['NOTF', 'IMED', 'CHIR'];
+    return [
+        'mode' => 'automatic',
+        'reason_label' => 'Standardzuordnung',
+        'department_preferences' => ['NOTF', 'IMED', 'CHIR'],
+    ];
+}
+
+function lsttraining_sim_transport_patient_department_preferences(array $patient, array $incident): array {
+    $resolution = lsttraining_sim_transport_patient_department_resolution($patient, $incident);
+    return is_array($resolution['department_preferences'] ?? null) ? $resolution['department_preferences'] : [];
 }
 
 function lsttraining_sim_transport_available_hospitals(PDO $pdo, int $leitstelle_id): array {

@@ -6,6 +6,95 @@
  */
 if (!defined('ABSPATH')) { exit; }
 
+if (!function_exists('lsttraining_enqueue_nebenstellen_assets')) {
+    function lsttraining_enqueue_nebenstellen_assets(): void {
+        if (wp_script_is('lst-nebenstellen-editor', 'enqueued')) {
+            return;
+        }
+
+        $plugin_file = dirname(__DIR__) . '/lsttraining-plugin.php';
+        $root_url    = plugin_dir_url($plugin_file);
+        $root_path   = plugin_dir_path($plugin_file);
+        $version     = static function (string $relative) use ($root_path): string {
+            $path = $root_path . ltrim($relative, '/\\');
+            return is_readable($path) ? (string) filemtime($path) : '1.0.0';
+        };
+
+        wp_enqueue_style('lst-openlayers-css', $root_url . 'openlayers/ol.css', [], null);
+        wp_enqueue_script('lst-openlayers', $root_url . 'openlayers/ol.js', [], null, true);
+
+        wp_enqueue_script(
+            'lsttraining-einsatzgebiet-editor',
+            $root_url . 'js/einsatzgebiet-editor.js',
+            ['jquery', 'lst-openlayers'],
+            $version('js/einsatzgebiet-editor.js'),
+            true
+        );
+
+        wp_enqueue_script(
+            'lsttraining-turf',
+            $root_url . 'js/turf.min.js',
+            [],
+            $version('js/turf.min.js'),
+            true
+        );
+
+        wp_enqueue_script(
+            'lst-nebenstellen-editor',
+            $root_url . 'js/nebenstellen_editor.js',
+            ['jquery', 'lst-openlayers', 'lsttraining-einsatzgebiet-editor', 'lsttraining-turf'],
+            $version('js/nebenstellen_editor.js'),
+            true
+        );
+
+        wp_enqueue_script(
+            'lsttraining-einsatzgebiet-upload',
+            $root_url . 'js/einsatzgebiet_upload.js',
+            ['lsttraining-turf', 'lst-openlayers', 'lsttraining-einsatzgebiet-editor', 'lst-nebenstellen-editor'],
+            $version('js/einsatzgebiet_upload.js'),
+            true
+        );
+
+        wp_enqueue_script(
+            'lst-zuordnung-inline',
+            $root_url . 'js/zuordnung_modal.js',
+            ['lst-openlayers', 'lst-nebenstellen-editor'],
+            $version('js/zuordnung_modal.js'),
+            true
+        );
+
+        $all_leitstellen = [];
+        try {
+            $pdo = lsttraining_get_connection();
+            if ($pdo instanceof PDO) {
+                $stmt = $pdo->query('SELECT id, name FROM leitstellen ORDER BY name');
+                if ($stmt) {
+                    $all_leitstellen = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                }
+            }
+        } catch (Throwable $e) {
+            $all_leitstellen = [];
+        }
+
+        wp_localize_script('lst-nebenstellen-editor', 'LSTTRAINING', [
+            'ajax_url'           => admin_url('admin-ajax.php'),
+            'nonce_nebenstellen' => wp_create_nonce('lst_nebenstellen_nonce'),
+        ]);
+
+        wp_localize_script('lst-nebenstellen-editor', 'lstNebenstellenAjax', [
+            'ajax_url'       => admin_url('admin-ajax.php'),
+            'nonce_copy'     => wp_create_nonce('lsttraining_copy_leitstelle'),
+            'nonce_delete'   => wp_create_nonce('lsttraining_delete_nebenstelle'),
+            'allLeitstellen' => $all_leitstellen,
+        ]);
+
+        wp_localize_script('lst-zuordnung-inline', 'lstZuordnungAjax', [
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce'    => wp_create_nonce('lst_zuordnung'),
+        ]);
+    }
+}
+
 add_action('admin_enqueue_scripts', function ($hook) {
 
     // admin-ui.php liegt in /includes/
@@ -114,6 +203,13 @@ add_action('admin_enqueue_scripts', function ($hook) {
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce'    => wp_create_nonce('lst_zuordnung'),
         ]);
+    }
+
+    // ───────────────────────────────────────────
+    // Nebenstellen
+    // ───────────────────────────────────────────
+    if ($page === 'lsttraining_nebenstellen' || strpos((string)$hook, 'lsttraining_nebenstellen') !== false) {
+        lsttraining_enqueue_nebenstellen_assets();
     }
 
     // ───────────────────────────────────────────
@@ -255,6 +351,7 @@ add_action('admin_enqueue_scripts', function ($hook) {
 	
 	if ($page === 'lsttraining_einsaetze' || strpos((string)$hook, 'lsttraining_einsaetze') !== false) {
         $einsatz_fahrzeugtypen = [];
+        $einsatz_departments = [];
         $einsatz_ft_path = $root_path . 'data/fahrzeugtypen.json';
         if (is_readable($einsatz_ft_path)) {
             $tmp = json_decode(file_get_contents($einsatz_ft_path), true);
@@ -264,6 +361,13 @@ add_action('admin_enqueue_scripts', function ($hook) {
         }
         if (empty($einsatz_fahrzeugtypen)) {
             $einsatz_fahrzeugtypen = ['RTW','NEF','KTW','HLF 20','LF 20','DLK 23/12','GW-San','ELW 1','MTW'];
+        }
+        $einsatz_departments_path = $root_path . 'data/departments.json';
+        if (is_readable($einsatz_departments_path)) {
+            $tmp = json_decode(file_get_contents($einsatz_departments_path), true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($tmp)) {
+                $einsatz_departments = $tmp;
+            }
         }
 
 		wp_enqueue_script(
@@ -278,6 +382,7 @@ add_action('admin_enqueue_scripts', function ($hook) {
 			'ajax_url'      => admin_url('admin-ajax.php'),
 			'nonce'         => wp_create_nonce('lsttraining_leitstellen'),
             'fahrzeugtypen' => $einsatz_fahrzeugtypen,
+            'departments' => $einsatz_departments,
 		]);
 	}	
 		if ($page === 'lsttraining_anruferprofile' || strpos((string)$hook, 'lsttraining_anruferprofile') !== false) {
@@ -311,6 +416,7 @@ if (!function_exists('lsttraining_render_leitstellen')) {
 
 if (!function_exists('lsttraining_render_nebenstellen')) {
     function lsttraining_render_nebenstellen() {
+        lsttraining_enqueue_nebenstellen_assets();
         require_once plugin_dir_path(__FILE__) . 'nebenstellen_editor.php';
     }
 }

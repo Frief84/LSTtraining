@@ -195,12 +195,13 @@
   }
 
   // ------------------------------------------------------------
-  // AJAX Save (Leitstelle)
+  // AJAX Save (Leitstelle oder Nebenstelle)
   // ------------------------------------------------------------
   async function ajaxSaveEinsatzgebiet(popup) {
-    const leitstelleId = parseInt(popup.dataset.leitstelleId || '0', 10);
-    if (!leitstelleId) {
-      alert('Leitstellen-ID fehlt.');
+    const context = popup.dataset.context === 'neben' ? 'neben' : 'leitstelle';
+    const entityId = parseInt(popup.dataset.leitstelleId || '0', 10);
+    if (!entityId) {
+      alert(context === 'neben' ? 'Nebenstellen-ID fehlt.' : 'Leitstellen-ID fehlt.');
       return false;
     }
 
@@ -214,8 +215,13 @@
     }
 
     const fd = new FormData();
-    fd.append('action', 'lsttraining_save_einsatzgebiet');
-    fd.append('leitstelle_id', String(leitstelleId));
+    if (context === 'neben') {
+      fd.append('action', 'lsttraining_save_neben_einsatzgebiet');
+      fd.append('neben_id', String(entityId));
+    } else {
+      fd.append('action', 'lsttraining_save_einsatzgebiet');
+      fd.append('leitstelle_id', String(entityId));
+    }
     fd.append('geojson', geojson);
 
     const url = window.ajaxurl || (typeof ajaxurl !== 'undefined' ? ajaxurl : null);

@@ -158,6 +158,7 @@ add_action('wp_ajax_lsttraining_sim_set_runtime', function () {
             lsttraining_sim_encode_meta($settings),
             $instanz_id,
         ]);
+        lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
 
         wp_send_json_success([
             'sim_state' => $state,
@@ -237,6 +238,7 @@ add_action('wp_ajax_lsttraining_sim_force_spawn', function () {
         }
 
         $result = lsttraining_sim_spawn_one($pdo, $instanz_id, $options);
+        lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
         wp_send_json_success($result);
     } catch (Throwable $e) {
         if ($pdo instanceof PDO && $pdo->inTransaction()) {
@@ -4198,6 +4200,7 @@ add_action('wp_ajax_lsttraining_sim_repair_motorway_location', function () {
         $incident['longitude'] = (float) ($incident['longitude'] ?? 0.0);
 
         if (!lsttraining_sim_incident_needs_motorway_repair($incident)) {
+            lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
             wp_send_json_success([
                 'repaired' => false,
                 'display_address' => lsttraining_sim_display_address_for_incident($incident),
@@ -4205,6 +4208,7 @@ add_action('wp_ajax_lsttraining_sim_repair_motorway_location', function () {
         }
 
         $result = lsttraining_sim_repair_motorway_location_for_incident($pdo, $incident);
+        lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
         wp_send_json_success($result);
     } catch (Throwable $e) {
         error_log('[LSTtraining][sim_repair_motorway_location] ' . $e->getMessage());
@@ -4237,7 +4241,9 @@ add_action('wp_ajax_lsttraining_sim_get_bootstrap', function () {
             wp_send_json_error(['message' => 'Kein Zugriff auf diese Simulation.'], 403);
         }
 
-        wp_send_json_success(lsttraining_sim_fetch_bootstrap($pdo, $instanz_id, (int) get_current_user_id()));
+        $bootstrap = lsttraining_sim_fetch_bootstrap($pdo, $instanz_id, (int) get_current_user_id());
+        lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
+        wp_send_json_success($bootstrap);
     } catch (Throwable $e) {
         error_log('[LSTtraining][sim_get_bootstrap] ' . $e->getMessage());
         $legacy_model = strpos($e->getMessage(), 'altes Fahrzeugstatusmodell') !== false;
@@ -4344,6 +4350,7 @@ add_action('wp_ajax_lsttraining_sim_accept_call', function () {
             $update->execute(['active', $einsatz_id]);
         }
 
+        lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
         wp_send_json_success([
             'einsatz_id' => $einsatz_id,
             'state' => 'active',
@@ -4418,6 +4425,7 @@ add_action('wp_ajax_lsttraining_sim_save_dispatch', function () {
             lsttraining_sim_ensure_police_support($pdo, $instanz_id, $einsatz_id, $game_now);
         }
 
+        lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
         wp_send_json_success([
             'einsatz_id' => $einsatz_id,
             'signal_allowed' => (bool) $meta['signal_allowed'],
@@ -4616,6 +4624,7 @@ add_action('wp_ajax_lsttraining_sim_alarm_vehicle', function () {
             'bemerkung' => 'Alarmiert, Route wird berechnet.',
         ]);
         $pdo->commit();
+        lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
 
         wp_send_json_success([
             'einsatz_id' => $einsatz_id,
@@ -4690,6 +4699,7 @@ add_action('wp_ajax_lsttraining_sim_resolve_vehicle_route', function () {
             wp_send_json_error(['message' => 'Diese Alarmierung wurde bereits aufgehoben.'], 409);
         }
         if ((string) ($meta['route_status'] ?? '') === 'ready' && is_array($meta['route_coordinates'] ?? null) && count($meta['route_coordinates']) >= 2) {
+            lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
             wp_send_json_success([
                 'event_id' => $event_id,
                 'route_status' => 'ready',
@@ -4851,6 +4861,7 @@ add_action('wp_ajax_lsttraining_sim_resolve_vehicle_route', function () {
             ]);
         }
 
+        lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
         wp_send_json_success([
             'event_id' => $event_id,
             'route_status' => 'ready',
@@ -4907,6 +4918,7 @@ add_action('wp_ajax_lsttraining_sim_unassign_vehicle', function () {
             wp_send_json_error(['message' => 'Diese Meldung ist keine Fahrzeugzuordnung.'], 400);
         }
         if (!empty($meta['cancelled_at'])) {
+            lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
             wp_send_json_success([
                 'einsatz_id' => (int) $event['instanz_einsatz_id'],
                 'message' => 'Zuordnung war bereits aufgehoben.',
@@ -4948,6 +4960,7 @@ add_action('wp_ajax_lsttraining_sim_unassign_vehicle', function () {
             'source_event_id' => $event_id,
         ]);
         $pdo->commit();
+        lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
 
         wp_send_json_success([
             'einsatz_id' => (int) $event['instanz_einsatz_id'],
@@ -5005,6 +5018,7 @@ add_action('wp_ajax_lsttraining_sim_ack_unit_report', function () {
             wp_send_json_error(['message' => 'Diese Rückmeldung kann nicht bestätigt werden.'], 400);
         }
         if (!empty($meta['acknowledged_at'])) {
+            lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
             wp_send_json_success(['message' => 'Rückmeldung war bereits bestätigt.']);
         }
 
@@ -5039,6 +5053,7 @@ add_action('wp_ajax_lsttraining_sim_ack_unit_report', function () {
             'source' => 'unit_report_ack',
         ]);
         $pdo->commit();
+        lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
 
         wp_send_json_success(['message' => 'Lagemeldung bestätigt.']);
     } catch (Throwable $e) {
@@ -5131,6 +5146,7 @@ add_action('wp_ajax_lsttraining_sim_open_unit_report', function () {
             $pdo->commit();
         }
 
+        lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
         wp_send_json_success(['message' => 'Sprechwunsch geöffnet.']);
     } catch (Throwable $e) {
         if ($pdo instanceof PDO && $pdo->inTransaction()) {
@@ -5187,6 +5203,7 @@ add_action('wp_ajax_lsttraining_sim_update_einsatz_state', function () {
             ]);
         }
 
+        lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
         wp_send_json_success(['einsatz_id' => $einsatz_id, 'state' => $state]);
     } catch (Throwable $e) {
         error_log('[LSTtraining][sim_update_einsatz_state] ' . $e->getMessage());

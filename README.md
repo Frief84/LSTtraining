@@ -32,7 +32,7 @@
    ```
 2. Plugin im WordPress-Adminbereich unter **Plugins** aktivieren.
 3. Schreibrechte für AJAX-Endpunkte (`admin-ajax.php`) sicherstellen.
-4. Datenbanktabellen importieren (siehe `database/schema.sql`).
+4. Datenbanktabellen importieren beziehungsweise bei bestehenden Installationen die aktualisierte Struktur ausführen (siehe `database/schema.sql`).
 
 ## 🧱 Datenbank
 
@@ -43,7 +43,7 @@ Das Schema in `database/schema.sql` definiert acht Tabellen:
 3. **fahrzeuge**: Zuweisung zu Wachen, Typ (ENUM), letzte bekannte Position  
 4. **fahrzeug_status**: unveränderliche Fahrzeug-Baseline pro Spielinstanz
 5. **instanz_fahrzeug_status**: laufende Abweichungen der Fahrzeuge von ihrer Baseline
-6. **spielinstanzen**, **instanz_wachen**, **instanz_user**: Multi-User-Instanzen für Trainingsszenarien
+6. **spielinstanzen**, **instanz_wachen**, **instanz_user**: gespeicherte Trainingsinstanzen, Teilnehmer, Verantwortlichkeit und Aufbewahrung
 7. **einsatzvorlagen**: Vorlagen für wiederkehrende Übungen
 
 ## Simulationsdaten: DB-Basis, Bootstrap, Snapshot
@@ -59,6 +59,27 @@ Die Datenbank bleibt die Wahrheit für Stammdaten und gespeicherte Simulationsä
 
 Mehrere parallele Spielinstanzen besitzen getrennte Baselines und Deltas; Änderungen in einer Instanz beeinflussen keine andere. Der Snapshot ist damit kein vollständiger Spielstand, sondern ein kompaktes Transportformat für aktuelle Änderungen gegenüber der instanzbezogenen Bootstrap-Basis.
 Lange laufende Simulationsseiten erneuern ihre AJAX-/REST-Nonces automatisch, ohne den Spielstand zu verändern.
+
+## Gespeicherte Spielinstanzen
+
+* **Simulation starten** erzeugt immer eine neue Spielinstanz. Ein bestehender Spielstand wird dadurch niemals stillschweigend wiederverwendet.
+* Angemeldete Nutzer sehen unter **Meine gespeicherten Spiele** ihre fortsetzbaren Instanzen und öffnen sie mit **Fortsetzen**.
+* Der verantwortliche Ersteller und Administratoren dürfen eine gespeicherte Instanz über **Löschen** endgültig entfernen. Bei gemeinsamen Spielen löscht dies den Spielstand für alle Teilnehmer.
+* Nicht verantwortliche Teilnehmer eines gemeinsamen Multiplayer- oder Einsatzleiter-Spiels können **Spiel verlassen** wählen. Dabei wird nur ihre eigene Teilnahme beendet; die gemeinsame Instanz bleibt erhalten.
+* Der Ersteller ist für gemeinsam genutzte Instanzen verantwortlich. Normale Mitspieler dürfen einen gemeinsamen Spielstand nicht global löschen.
+
+## Aufbewahrung und Erinnerung
+
+`spielinstanzen` speichert für den Lebenszyklus die Felder `owner_user_id`, `last_activity_at`, `retention_notice_sent_at` und `retention_delete_at`. Der Index `idx_spielinstanzen_retention` unterstützt die tägliche Prüfung fortsetzbarer Instanzen.
+
+* Neue Instanzen erhalten beim Erstellen direkt einen Verantwortlichen und ein Aktivitätsdatum.
+* Erfolgreiches Öffnen einer Instanz sowie echte Spielaktionen aktualisieren `last_activity_at` und heben eine bereits geplante Löschung auf. Reines Snapshot-Polling oder eine offen gelassene Seite verlängern die Frist nicht.
+* Nach einem Kalendermonat ohne Aktivität erhält der verantwortliche Nutzer einmalig eine Erinnerungs-E-Mail mit Instanz, Leitstelle, letzter Nutzung, Fortsetzen-Link und konkretem Löschdatum.
+* Erst nach erfolgreichem Mailversand wird die automatische Löschung auf 14 Tage später terminiert. Scheitert der Versand, wird beim nächsten Lauf erneut versucht und nicht automatisch gelöscht.
+* Der tägliche WordPress-Cron-Job `lsttraining_instance_retention_daily` übernimmt Erinnerungen und die endgültige Löschung fälliger Instanzen.
+* Bestehende Einzelspieler- und Einsatzleiter-Instanzen werden beim Einführen der Funktion anhand ihrer Teilnehmerzuordnung einem Verantwortlichen zugeordnet und erhalten eine neue volle Inaktivitätsfrist.
+
+Bei bestehenden Installationen ergänzt die Schema-Ensure-Logik die neuen Spalten und den Index beim ersten relevanten Aufruf automatisch. `database/schema.sql` enthält die Struktur für Neuinstallationen beziehungsweise eine kontrollierte Aktualisierung der Datenbank.
 
 ## Anruftexte: Profile, Einsatzbausteine, Adresse
 

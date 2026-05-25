@@ -437,13 +437,24 @@ $name       = sanitize_text_field($_POST['name'] ?? '');
  * 9. ZUORDNUNG: WACHEN im Polygon (Helper + Endpunkte)
  * ---------------------------------------------------------------------- */
 
-function lst_z_check($cap = 'manage_options') {
-    if (!current_user_can($cap)) {
-        wp_send_json_error(['msg' => 'Keine Berechtigung'], 403);
-    }
+function lst_z_check() {
     $nonce = $_POST['_wpnonce'] ?? ($_POST['wpnonce'] ?? ($_POST['nonce'] ?? ''));
     if (!wp_verify_nonce($nonce, 'lst_zuordnung')) {
         wp_send_json_error(['msg' => 'Ungültiger Nonce'], 403);
+    }
+}
+
+function lst_z_check_entity(string $type, int $id): void {
+    if ($type === 'leitstelle') {
+        $allowed = lsttraining_user_can('leitstellen', $id);
+    } elseif ($type === 'nebenleitstelle') {
+        $allowed = lsttraining_user_can('nebenstellen');
+    } else {
+        $allowed = false;
+    }
+
+    if (!$allowed) {
+        wp_send_json_error(['msg' => 'Keine Berechtigung'], 403);
     }
 }
 
@@ -498,6 +509,7 @@ add_action('wp_ajax_lsttraining_find_wachen_in_polygon', function () {
     if (!in_array($type, ['leitstelle', 'nebenleitstelle'], true) || $id <= 0) {
         wp_send_json_error(['msg' => 'Ungültige Parameter'], 400);
     }
+    lst_z_check_entity($type, $id);
 
     $geojson = trim((string)wp_unslash($_POST['geojson'] ?? ''));
 
@@ -572,6 +584,7 @@ add_action('wp_ajax_lsttraining_get_entity_polygon', function () {
     if (!in_array($type, ['leitstelle', 'nebenleitstelle'], true) || $id <= 0) {
         wp_send_json_error(['msg' => 'Ungültige Parameter'], 400);
     }
+    lst_z_check_entity($type, $id);
 
     if (isset($_POST['geojson']) && $_POST['geojson'] !== '') {
         $geojson = wp_unslash($_POST['geojson']);
@@ -584,14 +597,8 @@ add_action('wp_ajax_lsttraining_get_entity_polygon', function () {
     }
 
     if ($type === 'leitstelle') {
-        if (!lsttraining_user_can('leitstellen', $id)) {
-            wp_send_json_error(['msg' => 'Keine Berechtigung'], 403);
-        }
         $stmt = $pdo->prepare('SELECT geojson FROM leitstellen WHERE id = ?');
     } else {
-        if (!lsttraining_user_can('nebenstellen')) {
-            wp_send_json_error(['msg' => 'Keine Berechtigung'], 403);
-        }
         $stmt = $pdo->prepare('SELECT geojson FROM nebenleitstellen WHERE id = ?');
     }
 
@@ -617,6 +624,7 @@ add_action('wp_ajax_lsttraining_assign_wachen_in_polygon', function () {
     if (!in_array($type, ['leitstelle', 'nebenleitstelle'], true) || $id <= 0) {
         wp_send_json_error(['msg' => 'Ungültige Parameter'], 400);
     }
+    lst_z_check_entity($type, $id);
 
     $ids = lst_find_ids_via_geo_override($type, $id);
     if (!$ids) {
@@ -659,6 +667,7 @@ add_action('wp_ajax_lsttraining_unassign_wachen_in_polygon', function () {
     if (!in_array($type, ['leitstelle', 'nebenleitstelle'], true) || $id <= 0) {
         wp_send_json_error(['msg' => 'Ungültige Parameter'], 400);
     }
+    lst_z_check_entity($type, $id);
 
     $ids = lst_find_ids_via_geo_override($type, $id);
     if (!$ids) {
@@ -687,16 +696,14 @@ add_action('wp_ajax_lsttraining_unassign_wachen_in_polygon', function () {
  * Wachen im sichtbaren Kartenausschnitt laden (ohne zuzuordnen)
  */
 add_action('wp_ajax_lsttraining_get_wachen_bbox', function () {
-        // Guard
-    lsttraining_ajax_guard([
-        'area' => 'wachen',
-    ]);
+    lst_z_check();
 
-$type = sanitize_key($_POST['entity_type'] ?? '');
+    $type = sanitize_key($_POST['entity_type'] ?? '');
     $eid  = (int)($_POST['entity_id'] ?? 0);
     if (!in_array($type, ['leitstelle', 'nebenleitstelle'], true) || $eid <= 0) {
         wp_send_json_error('Ungültige Parameter', 400);
     }
+    lst_z_check_entity($type, $eid);
 
     $minLon = (float)($_POST['min_lon'] ?? 0);
     $minLat = (float)($_POST['min_lat'] ?? 0);
@@ -758,13 +765,7 @@ add_action('wp_ajax_lsttraining_toggle_wache_assignment', function () {
     if (!in_array($type, ['leitstelle', 'nebenleitstelle'], true) || $ownerId <= 0 || $wacheId <= 0) {
         wp_send_json_error('Ungültige Parameter', 400);
     }
-
-    if ($type === 'leitstelle' && !lsttraining_user_can('leitstellen', $ownerId)) {
-        wp_send_json_error('Keine Berechtigung', 403);
-    }
-    if ($type === 'nebenleitstelle' && !lsttraining_user_can('nebenstellen')) {
-        wp_send_json_error('Keine Berechtigung', 403);
-    }
+    lst_z_check_entity($type, $ownerId);
 
     $pdo = lsttraining_get_connection();
     if (!$pdo instanceof PDO) {

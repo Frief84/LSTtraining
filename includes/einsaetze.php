@@ -542,7 +542,7 @@ if (is_readable($poi_json)) {
                             <h4>Patienten</h4>
                             <button type="button" class="button button-secondary lst-add-patient" data-patient-target="#lst-base-patient-list">Patient hinzufügen</button>
                         </div>
-                        <p class="description">Jede Zeile beschreibt einen Patienten. Aus KTW, RTW und Notarztmittel wird der Rettungsmittelbedarf automatisch berechnet. 0 % = verstorben, ab Zielwert transportbereit.</p>
+                        <p class="description">Jede Zeile beschreibt einen Patienten. Rettungsmittel und optionales Klinikziel werden je Patient festgelegt. 0 % = verstorben, ab Zielwert transportbereit.</p>
                         <div class="lst-patient-editor-list" id="lst-base-patient-list"></div>
                     </div>
                 </div>
@@ -651,7 +651,7 @@ if (is_readable($poi_json)) {
                                         <h4>Patienten in dieser Variante</h4>
                                         <button type="button" class="button button-secondary lst-add-patient" data-patient-target="[data-followup-index='{{ index }}'] .lst-followup-patient-list">Patient hinzufügen</button>
                                     </div>
-                                    <p class="description">Diese Patientenzeilen bestimmen Triage, Zustand und zusätzlichen Rettungsmittelbedarf dieser Lagevariante.</p>
+                                    <p class="description">Diese Patientenzeilen bestimmen Triage, Zustand, Klinikziel und zusätzlichen Rettungsmittelbedarf dieser Lagevariante.</p>
                                     <div class="lst-patient-editor-list lst-followup-patient-list"></div>
                                 </div>
                             </div>

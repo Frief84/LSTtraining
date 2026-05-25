@@ -767,6 +767,28 @@
         return parts.join(' - ');
     }
 
+    function instanceCard(item) {
+        var mode = item.mode || (item.settings && item.settings.mode) || '';
+        var $card = $('<article>', {
+            class: 'lsttraining-open-card',
+            'data-instance-id': item.id
+        });
+
+        $('<div>', { class: 'lsttraining-open-card__status' }).appendTo($card);
+        $('<strong>', { text: item.name || 'Simulation ' + item.id }).appendTo($card);
+        $('<span>', {
+            class: 'lsttraining-open-card__mode',
+            text: modeLabels[mode] || item.mode_label || mode
+        }).appendTo($card);
+        $('<p>', { text: instanceMeta(item) }).appendTo($card);
+        $('<small>', {
+            text: (parseInt(item.participants_count, 10) || 0) + ' Teilnehmer - ' +
+                (parseInt(item.fahrzeuge_count, 10) || 0) + ' Fahrzeuge'
+        }).appendTo($card);
+
+        return $card;
+    }
+
     function renderOpenInstances($root, items, message) {
         var $list = $root.find('[data-lst-open-instances]');
         $list.empty();
@@ -787,24 +809,8 @@
         }
 
         items.forEach(function (item) {
-            var mode = item.mode || (item.settings && item.settings.mode) || '';
             var canJoin = !!item.can_join;
-            var $card = $('<article>', {
-                class: 'lsttraining-open-card',
-                'data-instance-id': item.id
-            });
-
-            $('<div>', { class: 'lsttraining-open-card__status' }).appendTo($card);
-            $('<strong>', { text: item.name || 'Simulation ' + item.id }).appendTo($card);
-            $('<span>', {
-                class: 'lsttraining-open-card__mode',
-                text: modeLabels[mode] || item.mode_label || mode
-            }).appendTo($card);
-            $('<p>', { text: instanceMeta(item) }).appendTo($card);
-            $('<small>', {
-                text: (parseInt(item.participants_count, 10) || 0) + ' Teilnehmer - ' +
-                    (parseInt(item.fahrzeuge_count, 10) || 0) + ' Fahrzeuge'
-            }).appendTo($card);
+            var $card = instanceCard(item);
 
             $('<button>', {
                 type: 'button',
@@ -816,6 +822,69 @@
 
             $list.append($card);
         });
+    }
+
+    function renderSavedInstances($root, items, message, append, hasMore, nextOffset) {
+        var $list = $root.find('[data-lst-saved-instances]');
+        $list.find('[data-lst-load-more-saved]').remove();
+        if (!append) {
+            $list.empty();
+        }
+
+        if (message && !append) {
+            $list.append($('<p>', {
+                class: 'lsttraining-muted lsttraining-muted--error',
+                text: message
+            }));
+        }
+
+        if ((!items || !items.length) && !append) {
+            $list.append($('<p>', {
+                class: 'lsttraining-muted',
+                text: lsttrainingFrontend.texts.noSavedInstances
+            }));
+            return;
+        }
+
+        items.forEach(function (item) {
+            var $card = instanceCard(item);
+            var $actions = $('<div>', {
+                class: 'lsttraining-open-card__actions'
+            }).appendTo($card);
+            $('<button>', {
+                type: 'button',
+                class: 'lsttraining-btn lsttraining-btn--small lsttraining-btn--join',
+                text: 'Fortsetzen',
+                'data-lst-open-saved-instance': item.id
+            }).appendTo($actions);
+
+            if (item.can_delete) {
+                $('<button>', {
+                    type: 'button',
+                    class: 'lsttraining-btn lsttraining-btn--small lsttraining-btn--danger',
+                    text: 'Löschen',
+                    'data-lst-delete-saved-instance': item.id,
+                    'data-lst-shared-instance': item.is_shared ? '1' : '0'
+                }).appendTo($actions);
+            } else if (item.can_leave) {
+                $('<button>', {
+                    type: 'button',
+                    class: 'lsttraining-btn lsttraining-btn--small lsttraining-btn--secondary',
+                    text: 'Spiel verlassen',
+                    'data-lst-leave-saved-instance': item.id
+                }).appendTo($actions);
+            }
+            $list.append($card);
+        });
+
+        if (hasMore) {
+            $list.append($('<button>', {
+                type: 'button',
+                class: 'lsttraining-btn lsttraining-btn--small lsttraining-btn--join',
+                text: 'Weitere Spiele laden',
+                'data-lst-load-more-saved': nextOffset
+            }));
+        }
     }
 
     function loadOpenInstances($root) {
@@ -837,6 +906,40 @@
                 class: 'lsttraining-muted lsttraining-muted--error',
                 text: ajaxErrorMessage(xhr, 'Offene Spiele konnten nicht geladen werden.')
             }));
+        });
+    }
+
+    function loadSavedInstances($root, append, offset) {
+        var $list = $root.find('[data-lst-saved-instances]');
+        var $loadMore = $list.find('[data-lst-load-more-saved]');
+        if (!append) {
+            $list.html($('<p>', {
+                class: 'lsttraining-muted',
+                text: lsttrainingFrontend.texts.loadingSavedInstances
+            }));
+        } else {
+            $loadMore.prop('disabled', true).addClass('is-loading').text('Spiele werden geladen...');
+        }
+
+        $.post(lsttrainingFrontend.ajax_url, {
+            action: 'lsttraining_frontend_get_saved_instances',
+            nonce: lsttrainingFrontend.nonce,
+            offset: offset || 0
+        }).done(function (response) {
+            var items = response && response.success && response.data ? response.data.items : [];
+            var message = response && response.success && response.data ? response.data.message : '';
+            var hasMore = !!(response && response.success && response.data && response.data.has_more);
+            var nextOffset = response && response.success && response.data ? response.data.next_offset : 0;
+            renderSavedInstances($root, items, message, !!append, hasMore, nextOffset);
+        }).fail(function (xhr) {
+            if (append) {
+                $loadMore.prop('disabled', false).removeClass('is-loading').text('Weitere Spiele laden');
+                return;
+            }
+            $list.html($('<p>', {
+                    class: 'lsttraining-muted lsttraining-muted--error',
+                    text: ajaxErrorMessage(xhr, 'Gespeicherte Spiele konnten nicht geladen werden.')
+                }));
         });
     }
 
@@ -2327,6 +2430,61 @@
         });
     }
 
+    function deleteSavedInstance($root, instanzId, $button, isShared) {
+        var warning = isShared
+            ? 'Diese gemeinsame Simulation und der Spielstand aller Teilnehmer werden endgültig gelöscht. Wirklich löschen?'
+            : 'Diese gespeicherte Simulation endgültig löschen?';
+        if (!window.confirm(warning)) {
+            return;
+        }
+
+        clearMessage($root);
+        $button.prop('disabled', true).addClass('is-loading');
+        $.post(lsttrainingFrontend.ajax_url, {
+            action: 'lsttraining_frontend_delete_saved_instance',
+            nonce: lsttrainingFrontend.nonce,
+            instanz_id: instanzId
+        }).done(function (response) {
+            if (!response || !response.success) {
+                showMessage($root, 'error', lsttrainingFrontend.texts.deleteInstanceError);
+                return;
+            }
+            showMessage($root, 'success', lsttrainingFrontend.texts.deleteInstanceSuccess);
+            loadSavedInstances($root);
+            loadOpenInstances($root);
+        }).fail(function (xhr) {
+            showMessage($root, 'error', ajaxErrorMessage(xhr, lsttrainingFrontend.texts.deleteInstanceError));
+        }).always(function () {
+            $button.prop('disabled', false).removeClass('is-loading');
+        });
+    }
+
+    function leaveSavedInstance($root, instanzId, $button) {
+        if (!window.confirm('Dieses gemeinsame Spiel verlassen? Der Spielstand bleibt für die übrigen Teilnehmer bestehen.')) {
+            return;
+        }
+
+        clearMessage($root);
+        $button.prop('disabled', true).addClass('is-loading');
+        $.post(lsttrainingFrontend.ajax_url, {
+            action: 'lsttraining_frontend_leave_saved_instance',
+            nonce: lsttrainingFrontend.nonce,
+            instanz_id: instanzId
+        }).done(function (response) {
+            if (!response || !response.success) {
+                showMessage($root, 'error', lsttrainingFrontend.texts.leaveInstanceError);
+                return;
+            }
+            showMessage($root, 'success', lsttrainingFrontend.texts.leaveInstanceSuccess);
+            loadSavedInstances($root);
+            loadOpenInstances($root);
+        }).fail(function (xhr) {
+            showMessage($root, 'error', ajaxErrorMessage(xhr, lsttrainingFrontend.texts.leaveInstanceError));
+        }).always(function () {
+            $button.prop('disabled', false).removeClass('is-loading');
+        });
+    }
+
     function loadSnapshot($root, silent) {
         var instanzId = $root.attr('data-instance-id');
         if (!dispatchMap.bootstrap) {
@@ -3309,6 +3467,7 @@
         }
 
         loadLeitstellen($root);
+        loadSavedInstances($root);
         loadOpenInstances($root);
         clearAreaPreview($root);
         updateSeason($root);
@@ -3331,6 +3490,33 @@
 
         $root.on('click', '[data-lst-refresh-instances]', function () {
             loadOpenInstances($root);
+        });
+
+        $root.on('click', '[data-lst-refresh-saved-instances]', function () {
+            loadSavedInstances($root);
+        });
+
+        $root.on('click', '[data-lst-load-more-saved]', function () {
+            loadSavedInstances($root, true, parseInt($(this).attr('data-lst-load-more-saved'), 10) || 0);
+        });
+
+        $root.on('click', '[data-lst-open-saved-instance]', function () {
+            navigateToSimulation(instanceUrl($(this).attr('data-lst-open-saved-instance')), openSimulationWindow());
+        });
+
+        $root.on('click', '[data-lst-delete-saved-instance]', function () {
+            var $button = $(this);
+            deleteSavedInstance(
+                $root,
+                $button.attr('data-lst-delete-saved-instance'),
+                $button,
+                $button.attr('data-lst-shared-instance') === '1'
+            );
+        });
+
+        $root.on('click', '[data-lst-leave-saved-instance]', function () {
+            var $button = $(this);
+            leaveSavedInstance($root, $button.attr('data-lst-leave-saved-instance'), $button);
         });
 
         $root.on('click', '[data-lst-join-instance]', function () {

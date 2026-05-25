@@ -6,7 +6,7 @@ function lsttraining_frontend_enqueue_style(): void {
         'lsttraining-frontend',
         LSTTRAINING_URL . 'css/frontend.css',
         [],
-        '1.0.11'
+        '1.0.13'
     );
 }
 
@@ -32,7 +32,7 @@ function lsttraining_frontend_enqueue_script(): void {
         'lsttraining-frontend-start',
         LSTTRAINING_URL . 'js/frontend-start.js',
         ['jquery', 'lst-openlayers'],
-        '1.0.16',
+        '1.0.19',
         true
     );
 
@@ -48,6 +48,12 @@ function lsttraining_frontend_enqueue_script(): void {
             'startError'         => 'Die Simulation konnte nicht gestartet werden.',
             'loadingInstances'    => 'Offene Spiele werden geladen...',
             'noInstances'         => 'Aktuell sind keine offenen Multiplayer- oder Einsatzleiter-Spiele vorhanden.',
+            'loadingSavedInstances' => 'Gespeicherte Spiele werden geladen...',
+            'noSavedInstances'      => 'Du hast aktuell keine fortsetzbaren Spiele.',
+            'deleteInstanceSuccess' => 'Gespeicherte Simulation wurde gelöscht.',
+            'deleteInstanceError'   => 'Simulation konnte nicht gelöscht werden.',
+            'leaveInstanceSuccess'  => 'Du hast das gemeinsame Spiel verlassen.',
+            'leaveInstanceError'    => 'Spiel konnte nicht verlassen werden.',
             'joinSuccess'         => 'Du bist dem Spiel beigetreten. Du wirst weitergeleitet...',
             'joinError'           => 'Beitritt konnte nicht abgeschlossen werden.',
             'loadingEinsaetze'    => 'Einsätze werden geladen...',
@@ -683,6 +689,19 @@ function lsttraining_render_start_shortcode(): string {
                         <p class="lsttraining-area-status" data-lst-area-status>Wähle eine Leitstelle aus, um das Einsatzgebiet anzuzeigen.</p>
                     </div>
                 </section>
+
+                <aside class="lsttraining-join lsttraining-start__panel">
+                    <div class="lsttraining-panel-head">
+                        <div>
+                            <p class="lsttraining-kicker">Fortsetzen</p>
+                            <h3>Meine gespeicherten Spiele</h3>
+                        </div>
+                        <button type="button" class="lsttraining-btn lsttraining-btn--small" data-lst-refresh-saved-instances>Aktualisieren</button>
+                    </div>
+                    <div class="lsttraining-open-list" data-lst-saved-instances aria-live="polite">
+                        <p class="lsttraining-muted">Gespeicherte Spiele werden geladen...</p>
+                    </div>
+                </aside>
 
                 <aside class="lsttraining-join lsttraining-start__panel">
                     <div class="lsttraining-panel-head">

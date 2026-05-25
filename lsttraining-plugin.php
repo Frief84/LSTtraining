@@ -32,6 +32,7 @@ if (!defined('LSTTRAINING_URL')) {
 }
 
 require_once LSTTRAINING_PATH . 'includes/db.php';
+require_once LSTTRAINING_PATH . 'includes/instance-lifecycle.php';
 require_once LSTTRAINING_PATH . 'includes/permissions.php';
 require_once LSTTRAINING_PATH . 'includes/settings.php';
 require_once LSTTRAINING_PATH . 'includes/schema_import.php';

@@ -13,7 +13,7 @@ function lsttraining_workspace_enqueue_assets(): void {
         'lsttraining-simulation-workspace',
         LSTTRAINING_URL . 'css/simulation-workspace.css',
         ['lst-openlayers-css'],
-        '1.0.16'
+        '1.0.17'
     );
 
     wp_enqueue_script(
@@ -28,7 +28,7 @@ function lsttraining_workspace_enqueue_assets(): void {
         'lsttraining-simulation-workspace',
         LSTTRAINING_URL . 'js/simulation-workspace.js',
         ['jquery', 'lst-openlayers'],
-        '1.0.17',
+        '1.0.18',
         true
     );
 

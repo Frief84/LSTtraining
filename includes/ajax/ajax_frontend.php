@@ -51,6 +51,10 @@ function lsttraining_frontend_ensure_instance_columns(PDO $pdo): void {
     if (lsttraining_frontend_table_exists($pdo, 'instanz_user') && !lsttraining_frontend_column_exists($pdo, 'instanz_user', 'connected')) {
         $pdo->exec('ALTER TABLE instanz_user ADD COLUMN connected TINYINT(1) NULL DEFAULT 1 AFTER rolle');
     }
+
+    if (function_exists('lsttraining_instance_lifecycle_ensure_schema')) {
+        lsttraining_instance_lifecycle_ensure_schema($pdo);
+    }
 }
 
 function lsttraining_frontend_required_schema_errors(PDO $pdo): array {
@@ -73,7 +77,7 @@ function lsttraining_frontend_required_schema_errors(PDO $pdo): array {
     }
 
     $required_columns = [
-        'spielinstanzen' => ['leitstelle_id', 'name', 'erstellt_am', 'ist_aktiv', 'settings_json', 'started_at', 'sim_state'],
+        'spielinstanzen' => ['leitstelle_id', 'name', 'erstellt_am', 'ist_aktiv', 'settings_json', 'started_at', 'sim_state', 'owner_user_id', 'last_activity_at', 'retention_notice_sent_at', 'retention_delete_at'],
         'instanz_user' => ['instanz_id', 'user_id', 'rolle', 'connected'],
         'fahrzeug_status' => ['instanz_id', 'fahrzeug_id', 'wache_id', 'latitude', 'longitude', 'status', 'fms_status', 'sondersignal'],
         'instanz_fahrzeug_status' => ['instanz_id', 'fahrzeug_status_id', 'latitude', 'longitude', 'ziel_latitude', 'ziel_longitude', 'status', 'fms_status', 'sondersignal', 'bemerkung'],
@@ -400,8 +404,9 @@ function lsttraining_frontend_fetch_open_instances(PDO $pdo, int $user_id, array
     $fahrzeuge_count = $has_fahrzeug_status
         ? '(SELECT COUNT(*) FROM fahrzeug_status fs WHERE fs.instanz_id = si.id)'
         : '0';
+    $current_user_role_where = $has_connected ? ' AND COALESCE(iu_me.connected, 1) = 1' : '';
     $current_user_role = $has_instanz_user
-        ? '(SELECT rolle FROM instanz_user iu_me WHERE iu_me.instanz_id = si.id AND iu_me.user_id = ' . (int) $user_id . ' LIMIT 1)'
+        ? '(SELECT rolle FROM instanz_user iu_me WHERE iu_me.instanz_id = si.id AND iu_me.user_id = ' . (int) $user_id . $current_user_role_where . ' LIMIT 1)'
         : 'NULL';
     $started_at_select = $has_started_at ? 'si.started_at' : 'NULL AS started_at';
     $sim_state_select = $has_sim_state ? 'si.sim_state' : "'created' AS sim_state";
@@ -435,16 +440,114 @@ function lsttraining_frontend_fetch_open_instances(PDO $pdo, int $user_id, array
         if (!in_array($mode, ['multiplayer', 'einsatzleiter'], true)) {
             continue;
         }
+        if (!empty($row['current_user_rolle'])) {
+            continue;
+        }
 
         unset($row['settings_json']);
         $row['settings'] = $settings;
         $row['mode'] = $mode;
         $row['mode_label'] = lsttraining_frontend_mode_label($mode);
-        $row['can_join'] = empty($row['current_user_rolle']);
+        $row['can_join'] = true;
         $items[] = $row;
     }
 
     return $items;
+}
+
+function lsttraining_frontend_fetch_saved_instances(PDO $pdo, int $user_id, array &$diagnostics = [], int $offset = 0, int $limit = 10): array {
+    try {
+        lsttraining_frontend_ensure_instance_columns($pdo);
+    } catch (Throwable $e) {
+        $diagnostics[] = 'Schema-Prüfung fehlgeschlagen: ' . $e->getMessage();
+        error_log('[LSTtraining][frontend_saved_instances_schema] ' . $e->getMessage());
+    }
+
+    foreach (['spielinstanzen', 'instanz_user', 'leitstellen'] as $table) {
+        if (!lsttraining_frontend_table_exists($pdo, $table)) {
+            $diagnostics[] = 'Datenbanktabelle fehlt: ' . $table;
+            return ['items' => [], 'has_more' => false];
+        }
+    }
+
+    if (!lsttraining_frontend_column_exists($pdo, 'spielinstanzen', 'settings_json')) {
+        $diagnostics[] = 'Datenbankspalte fehlt: spielinstanzen.settings_json';
+        return ['items' => [], 'has_more' => false];
+    }
+
+    $offset = max(0, $offset);
+    $limit = max(1, min(20, $limit));
+    $fetch_limit = $limit + 1;
+    $has_started_at = lsttraining_frontend_column_exists($pdo, 'spielinstanzen', 'started_at');
+    $has_sim_state = lsttraining_frontend_column_exists($pdo, 'spielinstanzen', 'sim_state');
+    $has_connected = lsttraining_frontend_column_exists($pdo, 'instanz_user', 'connected');
+    $has_fahrzeug_status = lsttraining_frontend_table_exists($pdo, 'fahrzeug_status');
+    $participants_where = $has_connected ? 'iu.instanz_id = si.id AND iu.connected = 1' : 'iu.instanz_id = si.id';
+    $participants_count = "(SELECT COUNT(*) FROM instanz_user iu WHERE {$participants_where})";
+    $fahrzeuge_count = $has_fahrzeug_status
+        ? '(SELECT COUNT(*) FROM fahrzeug_status fs WHERE fs.instanz_id = si.id)'
+        : '0';
+    $started_at_select = $has_started_at ? 'si.started_at' : 'NULL AS started_at';
+    $sim_state_select = $has_sim_state ? 'si.sim_state' : "'created' AS sim_state";
+    $sim_state_where = $has_sim_state ? "AND COALESCE(si.sim_state, 'created') IN ('created', 'running', 'paused')" : '';
+    $membership_where = $has_connected ? 'AND COALESCE(iu_me.connected, 1) = 1' : '';
+
+    $stmt = $pdo->prepare("
+        SELECT
+            si.id,
+            si.name,
+            {$started_at_select},
+            si.settings_json,
+            {$sim_state_select},
+            si.owner_user_id,
+            si.last_activity_at,
+            si.retention_delete_at,
+            l.name AS leitstelle_name,
+            l.ort AS leitstelle_ort,
+            l.bundesland AS leitstelle_bundesland,
+            {$participants_count} AS participants_count,
+            {$fahrzeuge_count} AS fahrzeuge_count,
+            iu_me.rolle AS current_user_rolle
+        FROM instanz_user iu_me
+        INNER JOIN spielinstanzen si ON si.id = iu_me.instanz_id
+        INNER JOIN leitstellen l ON l.id = si.leitstelle_id
+        WHERE iu_me.user_id = ?
+          {$membership_where}
+          AND COALESCE(si.ist_aktiv, 1) = 1
+          {$sim_state_where}
+        ORDER BY si.erstellt_am DESC, si.id DESC
+        LIMIT {$fetch_limit}
+        OFFSET {$offset}
+    ");
+    $stmt->execute([$user_id]);
+
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    $has_more = count($rows) > $limit;
+    $rows = array_slice($rows, 0, $limit);
+    $items = [];
+    foreach ($rows as $row) {
+        $settings = lsttraining_frontend_decode_settings($row['settings_json'] ?? null);
+        $mode = (string) ($settings['mode'] ?? '');
+        unset($row['settings_json']);
+        $row['settings'] = $settings;
+        $row['mode'] = $mode;
+        $row['mode_label'] = lsttraining_frontend_mode_label($mode);
+        $owner_user_id = (int) ($row['owner_user_id'] ?? 0);
+        $is_owner = $owner_user_id > 0 && $owner_user_id === $user_id;
+        $is_shared = function_exists('lsttraining_instance_lifecycle_is_shared_mode')
+            ? lsttraining_instance_lifecycle_is_shared_mode($mode)
+            : in_array($mode, ['multiplayer', 'einsatzleiter'], true);
+        $row['is_shared'] = $is_shared;
+        $row['is_owner'] = $is_owner;
+        $row['can_delete'] = $is_owner || current_user_can('manage_options');
+        $row['can_leave'] = $is_shared && !$is_owner && !current_user_can('manage_options');
+        $items[] = $row;
+    }
+
+    return [
+        'items' => $items,
+        'has_more' => $has_more,
+    ];
 }
 
 add_action('wp_ajax_lsttraining_frontend_get_leitstellen', function () {
@@ -561,9 +664,9 @@ add_action('wp_ajax_lsttraining_frontend_create_instance', function () {
         $debug_step = 'insert_instance';
         $insert_instance = $pdo->prepare('
             INSERT INTO spielinstanzen
-                (leitstelle_id, name, erstellt_am, ist_aktiv, settings_json, started_at, sim_state)
+                (leitstelle_id, name, erstellt_am, ist_aktiv, settings_json, started_at, sim_state, owner_user_id, last_activity_at)
             VALUES
-                (?, ?, NOW(), 1, ?, ?, ?)
+                (?, ?, NOW(), 1, ?, ?, ?, ?, NOW())
         ');
         $insert_instance->execute([
             $leitstelle_id,
@@ -571,6 +674,7 @@ add_action('wp_ajax_lsttraining_frontend_create_instance', function () {
             $settings_json,
             $settings['started_at'],
             'created',
+            (int) get_current_user_id(),
         ]);
         $instanz_id = (int) $pdo->lastInsertId();
 
@@ -651,6 +755,10 @@ add_action('wp_ajax_lsttraining_frontend_create_instance', function () {
         $debug_step = 'commit';
         $pdo->commit();
 
+        if (function_exists('lsttraining_instance_lifecycle_touch')) {
+            lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
+        }
+
         $redirect_url = lsttraining_frontend_redirect_url($instanz_id);
         unset($settings['started_at']);
 
@@ -717,6 +825,140 @@ add_action('wp_ajax_lsttraining_frontend_get_open_instances', function () {
             'diagnostics' => current_user_can('manage_options') ? [$message] : [],
             'message' => current_user_can('manage_options') ? $message : '',
         ]);
+    }
+});
+
+add_action('wp_ajax_lsttraining_frontend_get_saved_instances', function () {
+    lsttraining_frontend_check_nonce();
+
+    if (!is_user_logged_in()) {
+        wp_send_json_error(['message' => 'Nicht angemeldet.'], 401);
+    }
+
+    $pdo = lsttraining_get_connection();
+    if (!$pdo) {
+        wp_send_json_error(['message' => 'Datenbankverbindung fehlgeschlagen.'], 500);
+    }
+
+    try {
+        $diagnostics = [];
+        $offset = isset($_POST['offset']) ? absint($_POST['offset']) : 0;
+        $result = lsttraining_frontend_fetch_saved_instances($pdo, (int) get_current_user_id(), $diagnostics, $offset);
+        $items = $result['items'];
+
+        wp_send_json_success([
+            'items' => $items,
+            'has_more' => !empty($result['has_more']),
+            'next_offset' => $offset + count($items),
+            'diagnostics' => current_user_can('manage_options') ? $diagnostics : [],
+            'message' => current_user_can('manage_options') ? implode(' | ', $diagnostics) : '',
+        ]);
+    } catch (Throwable $e) {
+        error_log('[LSTtraining][frontend_get_saved_instances] ' . $e->getMessage());
+        $message = 'Gespeicherte Spiele konnten nicht geladen werden: ' . $e->getMessage();
+        wp_send_json_success([
+            'items' => [],
+            'has_more' => false,
+            'next_offset' => null,
+            'diagnostics' => current_user_can('manage_options') ? [$message] : [],
+            'message' => current_user_can('manage_options') ? $message : '',
+        ]);
+    }
+});
+
+add_action('wp_ajax_lsttraining_frontend_delete_saved_instance', function () {
+    lsttraining_frontend_check_nonce();
+
+    if (!is_user_logged_in()) {
+        wp_send_json_error(['message' => 'Nicht angemeldet.'], 401);
+    }
+
+    $instanz_id = isset($_POST['instanz_id']) ? absint($_POST['instanz_id']) : 0;
+    if ($instanz_id <= 0) {
+        wp_send_json_error(['message' => 'Simulation fehlt.'], 400);
+    }
+
+    $pdo = lsttraining_get_connection();
+    if (!$pdo) {
+        wp_send_json_error(['message' => 'Datenbankverbindung fehlgeschlagen.'], 500);
+    }
+
+    try {
+        lsttraining_frontend_ensure_instance_columns($pdo);
+        $stmt = $pdo->prepare('SELECT owner_user_id FROM spielinstanzen WHERE id = ? LIMIT 1');
+        $stmt->execute([$instanz_id]);
+        $owner_user_id = (int) $stmt->fetchColumn();
+        if ($owner_user_id <= 0) {
+            wp_send_json_error(['message' => 'Simulation nicht gefunden oder ohne Verantwortlichen.'], 404);
+        }
+        if ($owner_user_id !== (int) get_current_user_id() && !current_user_can('manage_options')) {
+            wp_send_json_error(['message' => 'Nur der Verantwortliche kann diese Simulation löschen.'], 403);
+        }
+
+        if (!lsttraining_instance_lifecycle_delete($pdo, $instanz_id, (int) get_current_user_id(), 'delete')) {
+            wp_send_json_error(['message' => 'Simulation konnte nicht gelöscht werden.'], 404);
+        }
+
+        wp_send_json_success(['message' => 'Gespeicherte Simulation wurde gelöscht.']);
+    } catch (Throwable $e) {
+        error_log('[LSTtraining][frontend_delete_saved_instance] ' . $e->getMessage());
+        $message = 'Simulation konnte nicht gelöscht werden.';
+        if (current_user_can('manage_options')) {
+            $message .= ' Datenbankfehler: ' . $e->getMessage();
+        }
+        wp_send_json_error(['message' => $message], 500);
+    }
+});
+
+add_action('wp_ajax_lsttraining_frontend_leave_saved_instance', function () {
+    lsttraining_frontend_check_nonce();
+
+    if (!is_user_logged_in()) {
+        wp_send_json_error(['message' => 'Nicht angemeldet.'], 401);
+    }
+
+    $instanz_id = isset($_POST['instanz_id']) ? absint($_POST['instanz_id']) : 0;
+    if ($instanz_id <= 0) {
+        wp_send_json_error(['message' => 'Simulation fehlt.'], 400);
+    }
+
+    $pdo = lsttraining_get_connection();
+    if (!$pdo) {
+        wp_send_json_error(['message' => 'Datenbankverbindung fehlgeschlagen.'], 500);
+    }
+
+    try {
+        lsttraining_frontend_ensure_instance_columns($pdo);
+        $stmt = $pdo->prepare('
+            SELECT si.owner_user_id, si.settings_json, iu.id AS membership_id
+            FROM spielinstanzen si
+            INNER JOIN instanz_user iu ON iu.instanz_id = si.id AND iu.user_id = ?
+            WHERE si.id = ? AND COALESCE(iu.connected, 1) = 1
+            LIMIT 1
+        ');
+        $stmt->execute([(int) get_current_user_id(), $instanz_id]);
+        $instance = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$instance) {
+            wp_send_json_error(['message' => 'Simulation nicht gefunden.'], 404);
+        }
+
+        $settings = lsttraining_frontend_decode_settings($instance['settings_json'] ?? null);
+        $mode = (string) ($settings['mode'] ?? '');
+        if (!lsttraining_instance_lifecycle_is_shared_mode($mode)) {
+            wp_send_json_error(['message' => 'Ein Einzelspiel kann nur gelöscht werden.'], 409);
+        }
+        if ((int) ($instance['owner_user_id'] ?? 0) === (int) get_current_user_id()) {
+            wp_send_json_error(['message' => 'Der Verantwortliche kann das gemeinsame Spiel nicht verlassen, sondern nur löschen.'], 409);
+        }
+
+        $update = $pdo->prepare('UPDATE instanz_user SET connected = 0 WHERE id = ?');
+        $update->execute([(int) $instance['membership_id']]);
+        lsttraining_instance_lifecycle_log($instanz_id, (int) get_current_user_id(), 'leave', ['mode' => $mode]);
+
+        wp_send_json_success(['message' => 'Du hast das gemeinsame Spiel verlassen.']);
+    } catch (Throwable $e) {
+        error_log('[LSTtraining][frontend_leave_saved_instance] ' . $e->getMessage());
+        wp_send_json_error(['message' => 'Spiel konnte nicht verlassen werden.'], 500);
     }
 });
 
@@ -796,6 +1038,10 @@ add_action('wp_ajax_lsttraining_frontend_join_instance', function () {
         }
 
         $pdo->commit();
+
+        if (function_exists('lsttraining_instance_lifecycle_touch')) {
+            lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
+        }
 
         wp_send_json_success([
             'instanz_id'   => $instanz_id,

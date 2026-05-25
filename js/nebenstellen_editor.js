@@ -535,13 +535,20 @@ document.addEventListener('DOMContentLoaded', initNebenstellenFilter);
         const nebenId = document.getElementById('neben_update_id').value;
         const leitId = selectLS.value;
         if (leitId === '0') return;
+        const sourceName = selectLS.options[selectLS.selectedIndex]?.textContent?.trim() || 'die gewählte Leitstelle';
+        const targetName = document.getElementById('neben_update_name')?.value?.trim() || 'diese Nebenstelle';
+        const confirmed = window.confirm(
+            'Möchtest du "' + sourceName + '" wirklich in die Nebenstelle "' + targetName + '" übernehmen?\n\n' +
+            'Standort, Einsatzgebiet und Wachen werden übernommen und in der Simulation für die Nebenstelle verwendet.'
+        );
+        if (!confirmed) return;
 
         fetch(lstNebenstellenAjax.ajax_url, {
                 method: 'POST',
                 credentials: 'same-origin',
                 body: new URLSearchParams({
                     action: 'lsttraining_copy_leitstelle',
-                    wpnonce: lstNebenstellenAjax.nonce_copy,
+                    _wpnonce: lstNebenstellenAjax.nonce_copy,
                     neben_id: nebenId,
                     leit_id: leitId,
                 })

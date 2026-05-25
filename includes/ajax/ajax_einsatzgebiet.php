@@ -72,7 +72,7 @@ add_action('wp_ajax_lsttraining_save_einsatzgebiet', function () {
 
 
 /* -------------------------------------------------------------------------
- * 2) NEBENLEITSTELLEN (GeoJSON-Endpunkte, aber NICHT Editor)
+ * 2) NEBENLEITSTELLEN (GeoJSON-Endpunkte)
  * ---------------------------------------------------------------------- */
 
 /**
@@ -135,26 +135,25 @@ add_action('wp_ajax_lsttraining_save_neben_einsatzgebiet', function () {
 
 
 /* -------------------------------------------------------------------------
- * 3) POP-UP-EDITOR RENDER (nur Leitstelle)
+ * 3) POP-UP-EDITOR RENDER
  * ---------------------------------------------------------------------- */
 
 /**
  * Pop-up Editor HTML rendern
  * @action wp_ajax_lsttraining_render_einsatzgebiet_editor
  *
- * Wichtig:
- * - Nebenleitstellen sollen laut Vorgabe NICHT über den Editor bearbeitet werden.
- * - Darum wird hier nur context=leitstelle zugelassen.
+ * Der Kontext bestimmt die Berechtigung und den Speicher-Endpunkt im Client.
  */
 add_action('wp_ajax_lsttraining_render_einsatzgebiet_editor', function () {
 
-    if (!lsttraining_user_can('leitstellen')) {
-        wp_send_json_error('Keine Berechtigung', 403);
+    $context = sanitize_text_field($_GET['context'] ?? 'leitstelle');
+    if (!in_array($context, ['leitstelle', 'neben'], true)) {
+        wp_send_json_error('Ungültiger Editor-Kontext', 400);
     }
 
-    $context = sanitize_text_field($_GET['context'] ?? 'leitstelle');
-    if ($context !== 'leitstelle') {
-        wp_send_json_error('Editor ist nur für Leitstellen verfügbar', 400);
+    $area = ($context === 'neben') ? 'nebenstellen' : 'leitstellen';
+    if (!lsttraining_user_can($area)) {
+        wp_send_json_error('Keine Berechtigung', 403);
     }
 
     // Datei liegt in /includes/einsatzgebiet-editor.php
@@ -162,12 +161,12 @@ add_action('wp_ajax_lsttraining_render_einsatzgebiet_editor', function () {
 
     $mapId        = sanitize_text_field($_GET['map_id'] ?? 'einsatzgebiet_edit');
     $inputId      = sanitize_text_field($_GET['input_id'] ?? 'geojson_edit');
-    $leitstelleId = (int)($_GET['leitstelle_id'] ?? 0);
+    $entityId      = (int)($_GET['leitstelle_id'] ?? 0);
     $center       = sanitize_text_field($_GET['center'] ?? '');
     $geojson      = '';
 
     ob_start();
-    lsttraining_einsatzgebiet_editor($mapId, $inputId, $geojson, $leitstelleId, 'leitstelle', $center);
+    lsttraining_einsatzgebiet_editor($mapId, $inputId, $geojson, $entityId, $context, $center);
     echo ob_get_clean();
     wp_die();
 });
