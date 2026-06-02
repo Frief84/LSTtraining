@@ -2,27 +2,117 @@
 /* ---------------------------------------------------------- */
 /* Open polygon editor popup                                  */
 /* ---------------------------------------------------------- */
+function normalizeNebenGeoJSON(rawGeo) {
+  try {
+    const parsed = typeof rawGeo === 'string' ? JSON.parse(rawGeo || '[]') : rawGeo;
+    if (parsed?.type === 'FeatureCollection' && Array.isArray(parsed.features)) {
+      return parsed;
+    }
+    if (parsed?.type === 'Feature') {
+      return { type: 'FeatureCollection', features: [parsed] };
+    }
+    if (Array.isArray(parsed)) {
+      return { type: 'FeatureCollection', features: parsed };
+    }
+  } catch (_) {}
+
+  return { type: 'FeatureCollection', features: [] };
+}
+
+function cleanupNebenEinsatzgebietPopup(nextMapId) {
+  document.querySelectorAll('body > textarea.einsatzgebiet-geojson-hidden').forEach((field) => field.remove());
+
+  document.querySelectorAll('.einsatzgebiet-popup').forEach((popup) => {
+    if (popup.closest('#edit-leitstelle-formular')) return;
+
+    const oldMapId = popup.dataset.mapId;
+    if (oldMapId && window._openlayersMaps?.[oldMapId]) {
+      try { window._openlayersMaps[oldMapId].setTarget(null); } catch (_) {}
+      delete window._openlayersMaps[oldMapId];
+    }
+    popup.remove();
+  });
+
+  if (nextMapId && window._openlayersMaps?.[nextMapId]) {
+    try { window._openlayersMaps[nextMapId].setTarget(null); } catch (_) {}
+    delete window._openlayersMaps[nextMapId];
+  }
+}
+
+function syncNebenEinsatzgebietButton(btn, id, gps) {
+  if (!btn) return;
+  const nebenId = String(id || '').trim();
+
+  btn.dataset.context = 'neben';
+  btn.dataset.leitstelleId = nebenId || '0';
+  btn.dataset.mapId = nebenId ? `einsatzgebiet_${nebenId}` : 'einsatzgebiet_edit';
+  btn.dataset.center = (gps || document.getElementById('neben_update_gps')?.value || '').trim();
+  btn.disabled = !(/^\d+$/.test(nebenId) && nebenId !== '0');
+  btn.title = btn.disabled ? 'Bitte zuerst speichern' : '';
+}
+
+function nebenHasEinsatzgebiet() {
+  const geoStr = (document.getElementById('geojson_edit')?.value || '').trim();
+  if (geoStr && geoStr !== '[]') {
+    try {
+      const geo = JSON.parse(geoStr);
+      if (Array.isArray(geo)) return geo.length > 0;
+      if (geo?.type === 'FeatureCollection') return Array.isArray(geo.features) && geo.features.length > 0;
+      if (geo?.type === 'Feature') return !!geo.geometry;
+      if (geo?.type && (geo.coordinates || geo.geometries)) return true;
+    } catch (_) {}
+  }
+
+  return !!(window.nebenPolygonSource && window.nebenPolygonSource.getFeatures().length > 0);
+}
+
+function syncNebenFlaecheButton() {
+  const btn = document.getElementById('calc-flaeche');
+  if (!btn) return;
+
+  const hasGeo = nebenHasEinsatzgebiet();
+  btn.disabled = !hasGeo;
+  btn.title = hasGeo ? '' : 'Bitte zuerst ein Einsatzgebiet speichern';
+}
+
+function syncNebenZuordnungButton() {
+  const btn = document.getElementById('btn-open-zuordnung-neben');
+  const idField = document.getElementById('neben_update_id');
+  syncNebenFlaecheButton();
+  if (!btn || !idField) return;
+
+  const id = (idField.value || '').trim();
+  const hasId = (/^\d+$/).test(id) && id !== '0';
+  const hasGeo = nebenHasEinsatzgebiet();
+
+  btn.disabled = !(hasId && hasGeo);
+  btn.title = !hasId
+    ? 'Bitte zuerst speichern'
+    : (!hasGeo ? 'Bitte zuerst ein Einsatzgebiet speichern' : '');
+}
+
 document.addEventListener('click', (ev) => {
   const btn = ev.target.closest('.open-einsatzgebiet-editor');
   if (!btn) return;
+  if ((btn.dataset.context || '') !== 'neben') return;
 
-  const mapId        = btn.dataset.mapId;           // z.B. "einsatzgebiet_new"
-  const context      = btn.dataset.context;         // "leitstelle" oder "neben"
-  const leitstelleId = btn.dataset.leitstelleId;    // "0" beim Erstellen
-  const rawGeo       = btn.dataset.geojson || '[]'; // kann '[]' sein
+  ev.preventDefault();
 
-  // Versuche GeoJSON zu parsen – bei Fehlern mache daraus eine leere Collection
-  let poly;
-  try {
-    const parsed = JSON.parse(rawGeo);
-    if (parsed?.type === 'FeatureCollection') {
-      poly = parsed;
-    } else {
-      poly = { type: 'FeatureCollection', features: [] };
-    }
-  } catch {
-    poly = { type: 'FeatureCollection', features: [] };
+  const leitstelleId = (btn.dataset.leitstelleId || document.getElementById('neben_update_id')?.value || '').trim();
+  if (!(/^\d+$/.test(leitstelleId) && leitstelleId !== '0')) {
+    alert('Bitte speichere die Nebenstelle zuerst, damit ein Einsatzgebiet zugeordnet werden kann.');
+    return;
   }
+
+  const mapId = `einsatzgebiet_${leitstelleId}`;
+  const geoField = document.getElementById('geojson_edit');
+  const rawGeo = geoField?.value || btn.dataset.geojson || '[]';
+  const poly = normalizeNebenGeoJSON(rawGeo);
+
+  syncNebenEinsatzgebietButton(btn, leitstelleId, btn.dataset.center || '');
+  cleanupNebenEinsatzgebietPopup(mapId);
+  if (geoField) geoField.value = JSON.stringify(poly);
+  syncNebenZuordnungButton();
 
   // Anstatt loadPolygon(…) direkt den Popup-HTML anfordern
   const qs = new URLSearchParams({
@@ -30,7 +120,7 @@ document.addEventListener('click', (ev) => {
     map_id        : mapId,
     input_id      : 'geojson_edit',
     leitstelle_id: leitstelleId,
-    context       : context,
+    context       : 'neben',
     center        : btn.dataset.center || ''
   });
 
@@ -38,16 +128,30 @@ document.addEventListener('click', (ev) => {
     .then(r => r.text())
     .then(html => {
       // Popup aus dem Server-HTML erzeugen
-      const tmp   = document.createElement('div');
+      const tmp = document.createElement('div');
       tmp.innerHTML = html.trim();
-      const popup = tmp.firstElementChild;
+      const popup = tmp.querySelector('.einsatzgebiet-popup');
+      if (!popup) {
+        throw new Error('Einsatzgebiet-Popup im AJAX-HTML nicht gefunden.');
+      }
+
+      popup.dataset.mapId = mapId;
+      popup.dataset.geojsonId = 'geojson_edit';
+      popup.dataset.leitstelleId = leitstelleId;
+      popup.dataset.context = 'neben';
+      popup.dataset.center = btn.dataset.center || '';
+
+      const mapDiv = popup.querySelector('[data-einsatzgebiet-map]');
+      if (mapDiv) mapDiv.id = mapId;
+
       document.body.appendChild(popup);
 
       // GeoJSON injizieren
-      const geoEl = popup.querySelector('#geojson_edit');
-      if (geoEl) geoEl.value = JSON.stringify(poly);
+      if (geoField) geoField.value = JSON.stringify(poly);
 
       popup.style.display = 'block';
+      const overlay = document.getElementById('popup-overlay');
+      if (overlay) overlay.style.display = 'block';
 
       // Editor initialisieren (funktioniert jetzt auch ohne initiales Polygon)
       if (typeof window.initEinsatzgebietEditor === 'function') {
@@ -57,7 +161,7 @@ document.addEventListener('click', (ev) => {
 // nach initEinsatzgebietEditor(popup)
 requestAnimationFrame(() => {
   const map    = window._openlayersMaps?.[mapId];
-  const srcTo  = window._egSources?.[mapId];
+  const srcTo  = popup._egVectorSource;
   const srcFrom = window.nebenPolygonSource; // kommt aus der Nebenstellen-Karte
 
   if (!map || !srcTo || !srcFrom) return;
@@ -77,9 +181,7 @@ requestAnimationFrame(() => {
     dataProjection: 'EPSG:4326',
     featureProjection: map.getView().getProjection()
   });
-  popup.querySelector('#geojson_edit')?.setAttribute('value', geo);
-  const ta = document.getElementById('geojson_edit');
-  if (ta) ta.value = geo;
+  if (geoField) geoField.value = geo;
 });
 
 	  
@@ -311,6 +413,7 @@ window.editNebenstelle = function (id, name, zust, einwohner, flaeche, gps, nach
     ? (geojson && geojson.length ? geojson : '[]')
     : JSON.stringify(geojson || []);
   if (geoField) geoField.value = geoStr;
+  syncNebenZuordnungButton();
 
   if (idField) {
   idField.value = String(id);
@@ -333,10 +436,8 @@ window.editNebenstelle = function (id, name, zust, einwohner, flaeche, gps, nach
 
   // EG-Button aktivieren + Daten setzen
   if (egBtn) {
-    egBtn.disabled = false;
-    egBtn.setAttribute('data-leitstelle-id', String(id));
-    egBtn.setAttribute('data-map-id', 'einsatzgebiet_edit');
-    egBtn.setAttribute('data-center', gps || '');
+    syncNebenEinsatzgebietButton(egBtn, id, gps || '');
+    egBtn.dataset.geojson = geoStr;
   }
 
   // Modal öffnen
@@ -354,6 +455,7 @@ window.editNebenstelle = function (id, name, zust, einwohner, flaeche, gps, nach
   if (typeof window.initNebenstelleMap === 'function') {
     window.initNebenstelleMap(gps || '', geoStr);
   }
+  syncNebenZuordnungButton();
 
   // Speichern = UPDATE
   if (saveBtn) {
@@ -451,8 +553,9 @@ window.closeNebenstellePopup = function () {
 
 // Nachbar-Feld ausblenden (optional)
 const feld = document.getElementById('neben_update_nachbar');
-if (feld && feld.closest) {
-    feld.closest('tr').style.display = 'none';
+const feldRow = feld && feld.closest ? feld.closest('tr') : null;
+if (feldRow) {
+    feldRow.style.display = 'none';
 }
 
 ;
@@ -581,24 +684,43 @@ document.addEventListener('DOMContentLoaded', initNebenstellenFilter);
         const inputFlaeche = document.getElementById('neben_update_flaeche');
 
         if (btnCalc && inputFlaeche) {
+            syncNebenFlaecheButton();
             btnCalc.addEventListener('click', () => {
-                // 1) Quelle: das Einsatzgebiet aus nebenPolygonSource
+                let geojsonObj = null;
+
+                // 1) Bevorzugte Quelle: die sichtbare Nebenstellen-Karte
                 const source = window.nebenPolygonSource;
-                if (!source) {
-                    return alert('Kein Einsatzgebiet geladen!');
+                const features = source ? source.getFeatures() : [];
+
+                if (features.length) {
+                    geojsonObj = new ol.format.GeoJSON().writeFeaturesObject(features, {
+                        featureProjection: 'EPSG:3857',
+                        dataProjection: 'EPSG:4326'
+                    });
+                } else {
+                    // 2) Fallback: gespeichertes Einsatzgebiet aus dem Hidden-Feld
+                    const geoStr = (document.getElementById('geojson_edit')?.value || '').trim();
+                    if (geoStr) {
+                        try {
+                            geojsonObj = JSON.parse(geoStr);
+                            if (Array.isArray(geojsonObj)) {
+                                geojsonObj = { type: 'FeatureCollection', features: geojsonObj };
+                            }
+                            if (geojsonObj?.type === 'Feature') {
+                                geojsonObj = { type: 'FeatureCollection', features: [geojsonObj] };
+                            }
+                        } catch (_) {
+                            geojsonObj = null;
+                        }
+                    }
                 }
-                const features = source.getFeatures();
-                if (!features.length) {
+
+                if (!geojsonObj || (geojsonObj.type === 'FeatureCollection' && !geojsonObj.features?.length)) {
+                    syncNebenFlaecheButton();
                     return alert('Einsatzgebiet ist leer!');
                 }
 
-                // 2) in GeoJSON umwandeln
-                const geojsonObj = new ol.format.GeoJSON().writeFeaturesObject(features, {
-                    featureProjection: 'EPSG:3857',
-                    dataProjection: 'EPSG:4326'
-                });
-
-                // 3) Fläche mit Turf berechnen (m² → km²)
+                // 3) Fläche mit Turf berechnen (m2 -> km2)
                 const areaM2 = turf.area(geojsonObj);
                 const areaKm2 = (areaM2 / 1e6).toFixed(2);
 
@@ -657,6 +779,7 @@ window.createNebenstelle = function () {
   ['neben_update_name','neben_update_zustandigkeit','neben_update_einwohner','neben_update_flaeche','neben_update_gps','neben_update_nachbar']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   if (geoField) geoField.value = '[]';
+  syncNebenZuordnungButton();
 
   // Titel & ID
   const heading = formBox.querySelector('h2');
@@ -672,7 +795,7 @@ window.createNebenstelle = function () {
     saveBtn.textContent = 'Speichern um Einsatzgebiet anzulegen';
     saveBtn.disabled = false;
   }
-  if (egBtn) egBtn.disabled = true; // erst nach echtem INSERT
+  syncNebenEinsatzgebietButton(egBtn, '', '');
 
   // Modal öffnen
   if (overlay) overlay.style.display = 'block';
@@ -724,14 +847,12 @@ if (newId && idField) {
 }
 
           if (egBtn) {
-            egBtn.disabled = false;
-            egBtn.setAttribute('data-leitstelle-id', newId);
-            egBtn.setAttribute('data-map-id', 'einsatzgebiet_' + newId);
             const gpsVal = document.getElementById('neben_update_gps')?.value?.trim() || '';
-            egBtn.setAttribute('data-center', gpsVal);
+            syncNebenEinsatzgebietButton(egBtn, newId, gpsVal);
           }
 
           this.textContent = 'Speichern'; // ab jetzt UPDATE
+          syncNebenZuordnungButton();
           return; // Modal bleibt offen
         }
 
@@ -763,15 +884,16 @@ function wireZuordnungButtonNeben() {
   }
 
   function syncBtn() {
-    var id = getValidId();
-    btn.disabled = !id;
-    btn.title    = btn.disabled ? 'Bitte zuerst speichern' : '';
+    syncNebenZuordnungButton();
   }
 
   btn.addEventListener('click', function (e) {
     e.preventDefault();
     var id = getValidId();
-    if (!id) return;
+    if (!id || !nebenHasEinsatzgebiet()) {
+      syncNebenZuordnungButton();
+      return;
+    }
     // vorausgesetzt: zuordnung_modal.js ist enqueued und exportiert window.openZuordnungPopup
     window.openZuordnungPopup({ entityType: 'nebenleitstelle', entityId: id });
   });
@@ -803,7 +925,8 @@ document.addEventListener('DOMContentLoaded', function () {
   const egBtn = document.querySelector('#edit-nebenstelle-formular .open-einsatzgebiet-editor');
   if (gpsInput && egBtn) {
     gpsInput.addEventListener('input', function () {
-      egBtn.setAttribute('data-center', (gpsInput.value || '').trim());
+      const nebenId = document.getElementById('neben_update_id')?.value || egBtn.dataset.leitstelleId || '';
+      syncNebenEinsatzgebietButton(egBtn, nebenId, (gpsInput.value || '').trim());
     });
   }
 });
@@ -889,17 +1012,38 @@ window.updateNebenstellenMapFromGeo = function(geoStr) {
     }
 
     window.nebenPolygonSource.clear();
-    if (feats && feats.length) {
+  if (feats && feats.length) {
       window.nebenPolygonSource.addFeatures(feats);
       const ext = window.nebenPolygonSource.getExtent();
       if (!ol.extent.isEmpty(ext)) {
         window.nebenstelleMap.getView().fit(ext, { padding:[20,20,20,20], duration:300 });
       }
     }
+    syncNebenZuordnungButton();
   } catch (e) {
     console.warn('updateNebenstellenMapFromGeo: Parse/Update-Fehler', e, geoStr);
   }
 };											
+
+document.addEventListener('lsttraining:einsatzgebiet-saved', function (event) {
+  const detail = event.detail || {};
+  if (detail.context !== 'neben') return;
+
+  const currentId = (document.getElementById('neben_update_id')?.value || '').trim();
+  if (String(detail.entityId || '') !== currentId) return;
+
+  const geojson = detail.geojson || document.getElementById('geojson_edit')?.value || '[]';
+  const geoField = document.getElementById('geojson_edit');
+  if (geoField) geoField.value = geojson;
+
+  const egBtn = document.querySelector('#edit-nebenstelle-formular .open-einsatzgebiet-editor');
+  if (egBtn) egBtn.dataset.geojson = geojson;
+
+  if (typeof window.updateNebenstellenMapFromGeo === 'function') {
+    window.updateNebenstellenMapFromGeo(geojson);
+  }
+  syncNebenZuordnungButton();
+});
 
 	  document.addEventListener('DOMContentLoaded', function(){
   var btn = document.getElementById('btn-open-zuordnung-neben');
@@ -909,16 +1053,18 @@ window.updateNebenstellenMapFromGeo = function(geoStr) {
   function valid(v){ return /^\d+$/.test(v) && v !== '0'; }
 
   function sync(){
-    var id = getId();
-    btn.disabled = !valid(id);
-    btn.title    = btn.disabled ? 'Bitte zuerst speichern' : '';
+    syncNebenZuordnungButton();
   }
 
   if (!btn._bound){
     btn._bound = true;
     btn.addEventListener('click', function(e){
       e.preventDefault();
-      var id = getId(); if (!valid(id)) return;
+      var id = getId();
+      if (!valid(id) || !nebenHasEinsatzgebiet()) {
+        syncNebenZuordnungButton();
+        return;
+      }
       window.openZuordnungPopup({ entityType:'nebenleitstelle', entityId:id });
     });
   }

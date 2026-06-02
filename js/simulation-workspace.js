@@ -12,6 +12,7 @@
         osmLayers: [],
         pendingDispatchIncidentId: '',
         pendingDetailsIncidentId: '',
+        pendingRevealIncidentId: '',
         activeCallModalIncidentId: '',
         selectedIncidentId: '',
         selectedVehicleId: '',
@@ -40,7 +41,8 @@
         timers: {
             snapshot: null,
             tick: null,
-            clock: null
+            clock: null,
+            radioNext: null
         },
         busy: {
             bootstrap: false,
@@ -54,6 +56,7 @@
         nonceRefreshPromise: null,
         forceSpawnOptions: null,
         forceSpawnSubmitting: false,
+        neighborSupportDrafts: {},
         layoutKey: '',
         layout: null,
         map: {
@@ -319,6 +322,64 @@
         return match ? match[1] : String(value);
     }
 
+    function timeValueTimestamp(value) {
+        var match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/);
+        if (!match) {
+            return 0;
+        }
+        return Math.floor(Date.UTC(
+            Number(match[1]),
+            Number(match[2]) - 1,
+            Number(match[3]),
+            Number(match[4]),
+            Number(match[5]),
+            Number(match[6] || 0)
+        ) / 1000);
+    }
+
+    function currentSimWallTimestamp() {
+        var timestamp = currentSimTimestamp();
+        if (!timestamp) {
+            return 0;
+        }
+        var now = new Date(timestamp * 1000);
+        return Math.floor(Date.UTC(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate(),
+            now.getHours(),
+            now.getMinutes(),
+            now.getSeconds()
+        ) / 1000);
+    }
+
+    function formatElapsed(seconds) {
+        seconds = Math.max(0, Math.floor(Number(seconds) || 0));
+        var hours = Math.floor(seconds / 3600);
+        var minutes = Math.floor((seconds % 3600) / 60);
+        var remaining = seconds % 60;
+        return [
+            String(hours).padStart(2, '0'),
+            String(minutes).padStart(2, '0'),
+            String(remaining).padStart(2, '0')
+        ].join(':');
+    }
+
+    function incidentElapsedText(incident) {
+        var start = timeValueTimestamp(incident && (incident.sim_created_at || incident.created_at));
+        var now = currentSimWallTimestamp();
+        return formatElapsed(start && now ? now - start : 0);
+    }
+
+    function updateIncidentElapsedTimes() {
+        state.$root.find('[data-lstw-incident-elapsed]').each(function () {
+            var incident = findIncident($(this).attr('data-lstw-incident-elapsed'));
+            if (incident) {
+                $(this).text(incidentElapsedText(incident));
+            }
+        });
+    }
+
     function supportsMapImage(url) {
         var clean = String(url || '').split('?')[0].split('#')[0].toLowerCase();
         return clean === '' || /\.(png|webp|gif|svg|jpe?g)$/.test(clean);
@@ -400,6 +461,39 @@
             String(now.getMinutes()).padStart(2, '0'),
             String(now.getSeconds()).padStart(2, '0')
         ].join(':'));
+        updateIncidentElapsedTimes();
+        renderWeather();
+    }
+
+    function currentWeather() {
+        return asObject((state.snapshot && state.snapshot.weather_current) || (state.bootstrap && state.bootstrap.weather_current) || (instanceContext().weather_current));
+    }
+
+    function weatherSummary() {
+        return asObject((state.snapshot && state.snapshot.weather_forecast_summary) || (state.bootstrap && state.bootstrap.weather_forecast_summary) || (instanceContext().weather_forecast_summary));
+    }
+
+    function renderWeather() {
+        var weather = currentWeather();
+        var summary = weatherSummary();
+        var label = weather.label || summary.label || weather.primary || 'unbekannt';
+        var tags = asArray(weather.tags || summary.tags).filter(Boolean);
+        var source = String(weather.source || summary.source || '');
+        var suffix = source === 'open_meteo' ? 'Vorhersage' : (source ? 'simuliert' : '');
+        state.$root.find('[data-lstw-weather-label]').text([label, suffix].filter(Boolean).join(' · '));
+        var next = asObject(summary.next_change || {});
+        var nextText = '';
+        if (next.time && next.label) {
+            var ts = timeValueTimestamp(next.time);
+            if (ts) {
+                var d = new Date(ts * 1000);
+                nextText = 'ändert sich gegen ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + ' zu ' + next.label;
+            }
+        }
+        if (!nextText && tags.length) {
+            nextText = tags.join(', ');
+        }
+        state.$root.find('[data-lstw-weather-next]').text(nextText);
     }
 
     function isPaused() {
@@ -442,7 +536,7 @@
             .attr('aria-pressed', paused ? 'true' : 'false');
         state.$root.find('[data-lstw-speed]').removeClass('is-active');
         state.$root.find('[data-lstw-speed="' + state.speed + '"]').addClass('is-active');
-        state.$root.find('[data-lstw-new-incident], [data-lstw-edit-incident], [data-lstw-close-incident], [data-lstw-no-incident], [data-lstw-accept-call], [data-lstw-ack-report], [data-lstw-open-report], [data-lstw-submit-force-spawn], [data-lstw-save-dispatch], [data-lstw-save-dispatch-alarm], [data-lstw-unassign-unit], [name="alarm_status_id"]')
+        state.$root.find('[data-lstw-new-incident], [data-lstw-edit-incident], [data-lstw-close-incident], [data-lstw-no-incident], [data-lstw-accept-call], [data-lstw-ack-report], [data-lstw-open-report], [data-lstw-submit-force-spawn], [data-lstw-save-dispatch], [data-lstw-save-dispatch-alarm], [data-lstw-open-neighbor-support], [data-lstw-request-neighbor-support], [data-lstw-accept-neighbor-support], [data-lstw-unassign-unit], [data-lstw-recall-vehicle], [data-lstw-vehicle-radio-command], [name="alarm_status_id"], [name="neighbor_vehicle_id"]')
             .prop('disabled', paused)
             .attr('aria-disabled', paused ? 'true' : 'false');
         if (state.forceSpawnSubmitting) {
@@ -497,7 +591,20 @@
     }
 
     function stations() {
-        return asArray((state.bootstrap && state.bootstrap.stations) || []);
+        return asArray((state.bootstrap && state.bootstrap.stations) || [])
+            .concat(asArray((state.bootstrap && state.bootstrap.neighbor_stations) || []));
+    }
+
+    function neighborDispatchCenters() {
+        return asArray((state.bootstrap && state.bootstrap.neighbor_dispatch_centers) || []);
+    }
+
+    function neighborVehicles() {
+        return asArray((state.snapshot && state.snapshot.neighbor_vehicle_availability) || []);
+    }
+
+    function neighborSupportRequests() {
+        return asArray((state.snapshot && state.snapshot.neighbor_support_requests) || []);
     }
 
     function hospitals() {
@@ -558,6 +665,22 @@
         return String(incident && (incident.disposition_status || (incident.meta && incident.meta.disposition_status) || '')) === 'prepared';
     }
 
+    function incidentHasDispatch(incident) {
+        var meta = asObject(incident && incident.meta);
+        if (incidentPrepared(incident)) {
+            return true;
+        }
+        if (asArray(incident && incident.assigned_units).length) {
+            return true;
+        }
+        if (String(meta.dispatch_saved_at || '') !== '') {
+            return true;
+        }
+        return ['einsatzcode', 'ausrueckorder', 'einsatzkategorie', 'zusatz_text', 'abholzeit'].some(function (key) {
+            return String(meta[key] || '').trim() !== '';
+        }) || meta.polizei_verstaendigen === true || meta.polizei_verstaendigen === 1 || meta.polizei_verstaendigen === '1';
+    }
+
     function incidentPlace(incident) {
         var meta = asObject(incident && incident.meta);
         return incident.display_address || meta.generated_address || incident.poi_name_snapshot || '';
@@ -595,7 +718,7 @@
     }
 
     function vehicleVisibleOnMap(vehicle) {
-        if (vehicle && vehicle.support_type === 'police') {
+        if (vehicle && vehicle.support_type) {
             return true;
         }
         return ['1', '3', '5', '7'].indexOf(String(vehicle && vehicle.fms_status)) !== -1;
@@ -1023,6 +1146,11 @@
 
     function stationVehicles(station) {
         var stationId = String(station && station.id || '');
+        if (station && station.is_neighbor) {
+            return neighborVehicles().filter(function (vehicle) {
+                return String(vehicle.wache_id || '') === stationId;
+            });
+        }
         return mergeVehicleLists().filter(function (vehicle) {
             return String(vehicle.wache_id || '') === stationId;
         });
@@ -1031,9 +1159,17 @@
     function stationPopupHtml(station) {
         var vehicles = stationVehicles(station);
         var rows = vehicles.length ? vehicles.map(function (vehicle) {
-            return '<li><strong>' + esc(vehicle.rufname || 'Fahrzeug') + '</strong><span>' + esc(vehicle.fahrzeugtyp || vehicle.resource_class_label || '') + '</span><em>' + esc(fmsLabel(vehicle.fms_status)) + '</em></li>';
+            var available = station && station.is_neighbor ? !!vehicle.available : true;
+            var stateText = station && station.is_neighbor ? (vehicle.availability_state || (available ? 'verfügbar' : 'nicht verfügbar')) : fmsLabel(vehicle.fms_status);
+            return '<li class="' + (available ? '' : 'is-muted') + '"><strong>' + esc(vehicle.rufname || 'Fahrzeug') + '</strong><span>' + esc(vehicle.fahrzeugtyp || vehicle.resource_class_label || '') + '</span><em>' + esc(stateText) + '</em></li>';
         }).join('') : '<li><span>Keine Fahrzeuge stationiert.</span></li>';
-        return '<div class="lstw-map-card"><div class="lstw-map-card__head"><strong>' + esc(station.name || 'Wache') + '</strong><button type="button" data-lstw-map-card-close aria-label="Kartenhinweis schließen">x</button></div><small>' + esc(station.typ || '') + '</small><ul>' + rows + '</ul></div>';
+        var support = station && station.is_neighbor
+            ? '<button type="button" data-lstw-support-neighbor="' + esc(station.nebenleitstelle_id || '') + '">Unterstützung bei dieser Leitstelle anfragen</button>'
+            : '';
+        var title = station && station.is_neighbor
+            ? (station.name || 'Nachbarwache') + ' (' + (station.nebenleitstelle_name || 'Nachbarleitstelle') + ')'
+            : (station.name || 'Wache');
+        return '<div class="lstw-map-card' + (station && station.is_neighbor ? ' lstw-map-card--neighbor' : '') + '"><div class="lstw-map-card__head"><strong>' + esc(title) + '</strong><button type="button" data-lstw-map-card-close aria-label="Kartenhinweis schließen">x</button></div><small>' + esc(station.typ || '') + '</small><ul>' + rows + '</ul>' + support + '</div>';
     }
 
     function departmentLabel(code) {
@@ -1070,8 +1206,9 @@
 
     function featureColor(type, data) {
         if (type === 'vehicle') {
+            if (data && data.support_type === 'neighbor') return '#0f766e';
             var fms = String(data && data.fms_status || '2');
-            return { 1: '#64748b', 2: '#22c55e', 3: '#f59e0b', 4: '#ef4444', 5: '#3b82f6', 6: '#334155' }[fms] || '#22c55e';
+            return { 1: '#64748b', 2: '#22c55e', 3: '#f59e0b', 4: '#ef4444', 5: '#3b82f6', 6: '#334155', 7: '#7c3aed', 8: '#0891b2' }[fms] || '#22c55e';
         }
         if (type === 'incident') {
             return String(data && data.einsatzart) === 'FW' ? '#ef4444' : '#3b82f6';
@@ -1079,6 +1216,7 @@
         if (type === 'hospital') return '#06b6d4';
         if (type === 'poi') return '#c084fc';
         if (type === 'station') {
+            if (data && data.is_neighbor) return '#94a3b8';
             return { rd: '#22c55e', fw: '#ef4444', thw: '#3b82f6' }[String(data && data.kind || '').toLowerCase()] || '#f59e0b';
         }
         return '#94a3b8';
@@ -1315,11 +1453,11 @@
     function vehicleStyle(vehicle, selected) {
         var imageUrl = vehicle && vehicle.image_url || '';
         var mode = vehicleMarkerMode(state.snapshot || {});
-        if (((vehicle && vehicle.support_type === 'police') || mode === 'image') && imageUrl && supportsMapImage(imageUrl)) {
-            var isPoliceSupport = vehicle && vehicle.support_type === 'police';
-            var iconScale = isPoliceSupport ? (selected ? 0.11 : 0.085) : (selected ? 0.12 : 0.09);
-            var iconAnchor = isPoliceSupport ? [0.5, 0.68] : [0.5, 0.85];
-            var labelOffsetY = isPoliceSupport ? 10 : 18;
+        if (((vehicle && vehicle.support_type) || mode === 'image') && imageUrl && supportsMapImage(imageUrl)) {
+            var isSupport = vehicle && vehicle.support_type;
+            var iconScale = isSupport ? (selected ? 0.11 : 0.085) : (selected ? 0.12 : 0.09);
+            var iconAnchor = isSupport ? [0.5, 0.68] : [0.5, 0.85];
+            var labelOffsetY = isSupport ? 10 : 18;
             var styles = [new ol.style.Style({
                 image: new ol.style.Icon({
                     src: imageUrl,
@@ -1403,7 +1541,7 @@
                 radius: radius,
                 angle: Math.PI / 4,
                 fill: new ol.style.Fill({ color: color }),
-                stroke: new ol.style.Stroke({ color: '#ffffff', width: 2 })
+                stroke: new ol.style.Stroke({ color: data && data.is_neighbor ? '#cbd5e1' : '#ffffff', width: data && data.is_neighbor ? 1 : 2 })
             });
         }
         if (type === 'incident') {
@@ -1623,6 +1761,23 @@
             state.map.sources.stations.addFeature(feature);
             ol.extent.extend(extent, feature.getGeometry().getExtent());
         });
+        neighborDispatchCenters().forEach(function (center) {
+            var coords = fromLonLat(center);
+            if (!coords) return;
+            var data = $.extend({
+                id: 'neighbor-center-' + center.id,
+                name: center.name,
+                typ: 'Nachbarleitstelle',
+                is_neighbor: true,
+                is_neighbor_center: true,
+                nebenleitstelle_id: center.id,
+                nebenleitstelle_name: center.name,
+                label: center.name
+            }, center);
+            var feature = new ol.Feature({ geometry: new ol.geom.Point(coords), type: 'station', data: data });
+            state.map.sources.stations.addFeature(feature);
+            ol.extent.extend(extent, feature.getGeometry().getExtent());
+        });
 
         mapVehicles().forEach(function (vehicle) {
             var lonLatValue = animatedVehicleCoordinate(vehicle);
@@ -1733,15 +1888,19 @@
         var html = filtered.length ? filtered.map(function (vehicle) {
             var id = vehicleKey(vehicle);
             var selected = id && id === state.selectedVehicleId;
+            var assignment = activeDispatchAssignment(vehicle);
+            var radioAction = vehicleRadioCommands(assignment).length
+                ? '<button type="button" class="lstw-vehicle-radio-btn" data-lstw-open-vehicle-radio="' + esc(id) + '" title="Funksprüche" aria-label="Funksprüche"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i></button>'
+                : '';
             var detailText = [vehicle.fahrzeugtyp || 'Fahrzeug', vehicle.wache_name || 'Keine Wache', vehicle.bemerkung || ''].filter(Boolean).join(' | ');
             var line = [vehicle.fahrzeugtyp || 'Fahrzeug', vehicle.wache_name || 'Keine Wache'].filter(Boolean).join(' | ');
             return '<article class="lstw-card lstw-vehicle-card' + (selected ? ' is-selected' : '') + '" data-lstw-focus-vehicle="' + esc(id) + '">' +
                 '<div class="lstw-card-main">' +
                     '<strong title="' + esc(detailText) + '">' + esc(vehicle.rufname || ('Fahrzeug ' + id)) + '</strong>' +
                     '<span>' + esc(line) + '</span>' +
-                    (vehicle.bemerkung ? '<small>' + esc(vehicle.bemerkung) + '</small>' : '') +
                 '</div>' +
                 '<span class="' + fmsClass(vehicle.fms_status) + '">' + esc(fmsLabel(vehicle.fms_status)) + '</span>' +
+                radioAction +
             '</article>';
         }).join('') : '<p class="lstw-empty">' + esc(lsttrainingWorkspace.texts.emptyVehicles) + '</p>';
 
@@ -1827,17 +1986,13 @@
         var incidents = incidentsForTab();
         var html = incidents.length ? incidents.map(function (incident) {
             var selected = String(incident.id) === String(state.selectedIncidentId);
-            var priority = incidentPriority(incident);
             return '<article class="lstw-card lstw-incident-card' + (selected ? ' is-selected' : '') + '" data-lstw-focus-incident="' + esc(incident.id) + '" data-kind="' + esc(incident.einsatzart || '') + '">' +
                 '<div class="lstw-card-title"><strong>' + esc(incidentTitle(incident)) + '</strong><button type="button" class="lstw-map-focus" data-lstw-show-incident-map="' + esc(incident.id) + '" aria-label="Auf Karte anzeigen" title="Auf Karte anzeigen"><span aria-hidden="true"></span></button></div>' +
                 '<span>' + esc([incident.einsatzart, incident.einsatztyp].filter(Boolean).join(' - ')) + '</span>' +
                 '<small>' + esc(incidentPlace(incident)) + '</small>' +
-                patientRowsHtml(incident, true) +
                 incidentAssignedUnitsHtml(incident) +
                 '<div class="lstw-badges">' +
-                    '<span class="lstw-badge">' + esc(formatTime(incident.sim_created_at || incident.created_at)) + '</span>' +
-                    '<span class="lstw-badge">' + esc(incidentStatusLabel(incident)) + '</span>' +
-                    '<span class="lstw-badge lstw-priority--' + (String(priority).toLowerCase() === 'hoch' ? 'high' : 'normal') + '">' + esc(priority) + '</span>' +
+                    '<span class="lstw-badge" data-lstw-incident-elapsed="' + esc(incident.id) + '">' + esc(incidentElapsedText(incident)) + '</span>' +
                 '</div>' +
             '</article>';
         }).join('') : '<p class="lstw-empty">' + esc(lsttrainingWorkspace.texts.emptyIncidents) + '</p>';
@@ -1855,10 +2010,11 @@
         return '<div class="lstw-incident-units"><span>Fahrzeuge</span><div>' + units.map(function (unit) {
             var label = unit.rufname || 'Fahrzeug';
             var status = assignmentStatusLabel(unit.assignment_status);
+            var typeLabel = unit.resource_class ? resourceClassLabel(unit.resource_class) : (unit.fahrzeugtyp || unit.resource_class_label || 'Fahrzeug');
             return '<button type="button" class="lstw-incident-unit-chip" data-lstw-select-vehicle="' + esc(unit.unit_key || unit.status_id || unit.fahrzeug_id || '') + '" title="' + esc(label + ' - ' + fmsLabel(unit.fms_status) + ' - ' + status) + '">' +
                 '<strong>' + esc(label) + '</strong>' +
                 '<b class="' + fmsClass(unit.fms_status) + '">' + esc(fmsLabel(unit.fms_status)) + '</b>' +
-                '<em>' + esc(status) + '</em>' +
+                '<em>' + esc(typeLabel) + '</em>' +
             '</button>';
         }).join('') + '</div></div>';
     }
@@ -1994,6 +2150,86 @@
         }) || null;
     }
 
+    function recallableAssignment(assignment) {
+        return assignment && !assignment.is_support && assignment.event_id &&
+            ['alarmiert', 'ausrueckend', 'anfahrt'].indexOf(String(assignment.assignment_status || '')) !== -1;
+    }
+
+    function vehicleRadioCommands(assignment) {
+        if (!assignment || !assignment.event_id) {
+            return [];
+        }
+        if (assignment.is_support) {
+            if (assignment.support_type !== 'neighbor' || !assignment.contact_established) {
+                return [];
+            }
+            if (['anfahrt', 'vor_ort'].indexOf(String(assignment.assignment_status || '')) !== -1) {
+                return [
+                    { action: 'request_situation', label: 'Lage erfragen' },
+                    { action: 'request_additional_resources', label: 'Weitere Kräfte erforderlich?' },
+                    { action: 'request_transport_destination', label: 'Transportziel bekannt?' },
+                    { action: 'request_notarzt_requirement', label: 'Notarzt erforderlich?' }
+                ];
+            }
+            return [];
+        }
+        if (recallableAssignment(assignment)) {
+            return [{ action: 'recall', label: 'Anfahrt abbrechen' }];
+        }
+        if (String(assignment.assignment_status || '') === 'vor_ort') {
+            return [
+                { action: 'request_situation', label: 'Lage erfragen' },
+                { action: 'request_additional_resources', label: 'Weitere Kräfte erforderlich?' },
+                { action: 'request_transport_destination', label: 'Transportziel bekannt?' },
+                { action: 'request_notarzt_requirement', label: 'Notarzt erforderlich?' }
+            ];
+        }
+        if (['transport', 'uebergabe'].indexOf(String(assignment.assignment_status || '')) !== -1) {
+            return [{ action: 'request_transport_destination', label: 'Transportziel erfragen' }];
+        }
+        return [];
+    }
+
+    function assignmentByEventId(eventId) {
+        return asArray(state.snapshot && state.snapshot.assignments).find(function (assignment) {
+            return String(assignment.event_id || '') === String(eventId || '');
+        }) || null;
+    }
+
+    function closeVehicleContextMenu() {
+        state.$root.find('[data-lstw-vehicle-context-menu]').remove();
+    }
+
+    function openVehicleContextMenu(event, vehicle) {
+        var assignment = activeDispatchAssignment(vehicle);
+        var commands = vehicleRadioCommands(assignment);
+        closeVehicleContextMenu();
+        if (!commands.length) {
+            return;
+        }
+
+        var disabled = isPaused();
+        var html = '<div class="lstw-vehicle-context-menu" data-lstw-vehicle-context-menu role="menu" aria-label="Funkbefehle">' +
+            commands.map(function (command) {
+                var attribute = command.action === 'recall'
+                    ? 'data-lstw-recall-vehicle="' + esc(assignment.event_id) + '"'
+                    : 'data-lstw-vehicle-radio-command="' + esc(command.action) + '" data-event-id="' + esc(assignment.event_id) + '"';
+                return '<button type="button" role="menuitem" ' + attribute + (disabled ? ' disabled aria-disabled="true"' : '') + '>' +
+                    '<i class="fa-solid fa-bullhorn" aria-hidden="true"></i>' +
+                    '<span>' + esc(command.label) + '</span>' +
+                '</button>';
+            }).join('') +
+        '</div>';
+        state.$root.append(html);
+
+        var $menu = state.$root.find('[data-lstw-vehicle-context-menu]').last();
+        var width = $menu.outerWidth() || 210;
+        var height = $menu.outerHeight() || 40;
+        var left = Math.max(8, Math.min(event.clientX, window.innerWidth - width - 8));
+        var top = Math.max(8, Math.min(event.clientY, window.innerHeight - height - 8));
+        $menu.css({ left: left + 'px', top: top + 'px' });
+    }
+
     function dispatchBlockReason(vehicle, assignedStatusIds) {
         var statusId = String(vehicle && vehicle.status_id || '');
         if (statusId && assignedStatusIds && assignedStatusIds[statusId]) {
@@ -2018,6 +2254,8 @@
         var fms = String(vehicle && vehicle.fms_status || '');
         if (fms === '6') return 'nicht verfügbar';
         if (fms === '5') return 'Sprechwunsch';
+        if (fms === '8') return 'im Krankenhaus';
+        if (fms === '7') return 'Patiententransport';
         if (fms === '4') return 'vor Ort';
         if (fms === '3') return 'auf Anfahrt';
         var status = String(vehicle && vehicle.status || '').toLowerCase();
@@ -2076,6 +2314,9 @@
         }
         return '<div class="lstw-assigned-list">' + units.map(function (unit) {
             var typeLabel = unit.resource_class_label || (unit.resource_class ? resourceClassLabel(unit.resource_class) : '');
+            if (unit.foreign_unit || unit.support_type === 'neighbor') {
+                typeLabel = (typeLabel || 'Fremdfahrzeug') + ' | ' + (unit.home_nebenleitstelle_name || 'Nachbarleitstelle');
+            }
             var routeStatus = String(unit.route_status || '');
             var routeNote = '';
             if (routeStatus === 'failed') {
@@ -2083,13 +2324,18 @@
             } else if (routeStatus === 'pending') {
                 routeNote = '<small class="lstw-route-pending">Route wird berechnet</small>';
             }
-            var remove = removable && unit.event_id ? '<button type="button" class="lstw-remove-unit" data-lstw-unassign-unit="' + esc(unit.event_id) + '" title="Zuordnung auflösen" aria-label="Zuordnung auflösen">x</button>' : '';
+            var removeLabel = recallableAssignment(unit) ? 'Anfahrt abbrechen und Rückfahrt anordnen' : 'Zuordnung auflösen';
+            var remove = removable && unit.event_id ? '<button type="button" class="lstw-remove-unit" data-lstw-unassign-unit="' + esc(unit.event_id) + '" title="' + esc(removeLabel) + '" aria-label="' + esc(removeLabel) + '">x</button>' : '';
+            var radio = vehicleRadioCommands(unit).map(function (command) {
+                return '<button type="button" class="lstw-assigned-radio" data-lstw-vehicle-radio-command="' + esc(command.action) + '" data-event-id="' + esc(unit.event_id) + '">' + esc(command.label) + '</button>';
+            }).join('');
             return '<div class="lstw-assigned-unit">' +
                 '<strong>' + esc(unit.rufname || 'Fahrzeug') + '</strong>' +
                 '<span>' + esc(typeLabel) + '</span>' +
                 '<em>' + esc(assignmentStatusLabel(unit.assignment_status)) + '</em>' +
                 '<b class="' + fmsClass(unit.fms_status) + '">' + esc(fmsLabel(unit.fms_status)) + '</b>' +
                 routeNote +
+                radio +
                 remove +
             '</div>';
         }).join('') + '</div>';
@@ -2251,13 +2497,57 @@
             if (item.can_open_unit_report) {
                 actions += '<button type="button" data-lstw-open-report="' + esc(item.event_id) + '">Öffnen</button>';
             }
-            var vehicle = item.rufname ? item.rufname + ': ' : '';
+            var selectedVehicle = item.source_type === 'vehicles' ? findVehicle(item.status_id || item.fahrzeug_id) : null;
+            var rufname = item.rufname || (selectedVehicle && selectedVehicle.rufname) || '';
+            var vehicleKeyValue = selectedVehicle ? vehicleKey(selectedVehicle) : String(item.status_id || item.fahrzeug_id || '');
+            var sender = esc(item.source_label || 'System');
+            if (item.source_type === 'vehicles' && rufname) {
+                sender = vehicleKeyValue
+                    ? '<button type="button" class="lstw-timeline-vehicle" data-lstw-show-vehicle-card="' + esc(vehicleKeyValue) + '" title="' + esc(rufname) + '">' + esc(rufname) + '</button>'
+                    : esc(rufname);
+            }
             return '<div class="lstw-timeline-row">' +
                 '<time>' + esc(formatTime(item.ts)) + '</time>' +
-                '<b>' + esc(item.source_label || 'System') + '</b>' +
-                '<span>' + esc(vehicle + (item.text || '')) + (actions ? '<span class="lstw-detail-actions">' + actions + '</span>' : '') + '</span>' +
+                '<b>' + sender + '</b>' +
+                '<span>' + esc(item.text || '') + (actions ? '<span class="lstw-detail-actions">' + actions + '</span>' : '') + '</span>' +
             '</div>';
         }).join('') : '<p class="lstw-empty">' + esc(lsttrainingWorkspace.texts.emptyTimeline) + '</p>');
+        renderPendingCommunications();
+    }
+
+    function renderPendingCommunications() {
+        var $target = state.$root.find('[data-lstw-pending-communications]');
+        var callsOpen = $target.find('[data-lstw-pending-kind="calls"]').prop('open');
+        var reportsOpen = $target.find('[data-lstw-pending-kind="reports"]').prop('open');
+        var calls = asArray(state.snapshot && state.snapshot.call_log).filter(function (item) {
+            return !!item.can_accept;
+        }).sort(function (a, b) {
+            return String(a.ts || '').localeCompare(String(b.ts || ''));
+        });
+        var reports = asArray(state.snapshot && state.snapshot.radio_requests).sort(function (a, b) {
+            return String(a.ts || '').localeCompare(String(b.ts || ''));
+        });
+
+        function rows(items, kind) {
+            return items.map(function (item) {
+                var action = kind === 'calls'
+                    ? '<button type="button" data-lstw-accept-call="' + esc(item.einsatz_id) + '">Entgegennehmen</button>'
+                    : (item.opened_at
+                        ? '<button type="button" data-lstw-ack-report="' + esc(item.event_id) + '">Bestätigen</button>'
+                        : '<button type="button" data-lstw-open-report="' + esc(item.event_id) + '">Öffnen</button>');
+                var label = kind === 'calls' ? (item.text || 'Neuer Notruf') : ((item.rufname ? item.rufname + ': ' : '') + (item.opened_at ? (item.text || 'Lagemeldung') : 'Sprechwunsch'));
+                return '<div class="lstw-pending-row"><time>' + esc(formatTime(item.ts)) + '</time><span>' + esc(label) + '</span>' + action + '</div>';
+            }).join('');
+        }
+
+        var html = '';
+        if (calls.length) {
+            html += '<details class="lstw-head-task" data-lstw-pending-kind="calls"' + (callsOpen ? ' open' : '') + '><summary>Notrufe <b>' + calls.length + '</b></summary><div class="lstw-head-task__list">' + rows(calls, 'calls') + '</div></details>';
+        }
+        if (reports.length) {
+            html += '<details class="lstw-head-task" data-lstw-pending-kind="reports"' + (reportsOpen ? ' open' : '') + '><summary>Sprechwünsche <b>' + reports.length + '</b></summary><div class="lstw-head-task__list">' + rows(reports, 'reports') + '</div></details>';
+        }
+        $target.html(html).prop('hidden', !html);
     }
 
     function renderAll() {
@@ -2393,16 +2683,23 @@
             var previousPaused = state.paused;
             prepareVehicleAnimation(state.snapshot || {}, response.data);
             state.snapshot = response.data;
+            closeVehicleContextMenu();
             logSnapshotRouteFailures(state.snapshot);
             syncSimClock(response.data);
             if (previousSpeed !== state.speed || previousPaused !== state.paused) {
                 scheduleLoops();
             }
+            scheduleNextRadioRefresh(response.data);
             handleAttentionReset(response.data);
             repairMotorwayLocations(response.data);
             showMessage('', 'success');
             renderAll();
             refreshDispatchVehicleAvailability();
+            if (state.pendingRevealIncidentId) {
+                var pendingRevealId = state.pendingRevealIncidentId;
+                state.pendingRevealIncidentId = '';
+                focusIncidentInWorkspace(pendingRevealId, false);
+            }
             if (state.pendingDetailsIncidentId) {
                 var pendingDetailsId = state.pendingDetailsIncidentId;
                 state.pendingDetailsIncidentId = '';
@@ -2423,6 +2720,25 @@
         });
     }
 
+    function scheduleNextRadioRefresh(data) {
+        window.clearTimeout(state.timers.radioNext);
+        state.timers.radioNext = null;
+        if (!data || isPaused()) {
+            return;
+        }
+        var nextTs = timeValueTimestamp(data.next_radio_refresh_at);
+        var nowTs = Number(data.sim_timestamp || currentSimWallTimestamp());
+        if (!nextTs || !nowTs || nextTs <= nowTs) {
+            return;
+        }
+        var speed = Math.max(1, Number(state.speed || 1));
+        var delay = Math.max(250, Math.ceil(((nextTs - nowTs) * 1000) / speed) + 200);
+        state.timers.radioNext = window.setTimeout(function () {
+            state.timers.radioNext = null;
+            loadSnapshot(true);
+        }, Math.min(delay, 7000));
+    }
+
     function runTick(silent) {
         if (isPaused() || state.busy.tick) return;
         state.busy.tick = true;
@@ -2437,6 +2753,8 @@
     function scheduleLoops() {
         window.clearInterval(state.timers.snapshot);
         window.clearInterval(state.timers.tick);
+        window.clearTimeout(state.timers.radioNext);
+        state.timers.radioNext = null;
         if (isPaused()) return;
 
         state.timers.snapshot = window.setInterval(function () {
@@ -2464,16 +2782,93 @@
         }
     }
 
-    function selectVehicle(id, focusMap) {
+    function ensureIncidentPanelVisible() {
+        var layout = readLayout();
+        var config = layout.panels.incidents || {};
+        var changed = false;
+
+        if (config.minimized) {
+            config.minimized = false;
+            changed = true;
+        }
+        if (config.hiddenTab) {
+            if (config.group) {
+                Object.keys(layout.panels).forEach(function (panelId) {
+                    if (layout.panels[panelId].group === config.group) {
+                        layout.panels[panelId].hiddenTab = panelId !== 'incidents';
+                        layout.panels[panelId].area = config.area || layout.panels[panelId].area;
+                    }
+                });
+            } else {
+                config.hiddenTab = false;
+            }
+            changed = true;
+        }
+
+        layout.panels.incidents = config;
+        if (changed) {
+            applyLayout();
+        }
+    }
+
+    function focusIncidentInWorkspace(id, focusMap) {
+        if (!id) {
+            return;
+        }
+        ensureIncidentPanelVisible();
+        selectIncident(id, focusMap);
+        revealIncidentInList(id);
+    }
+
+    function revealIncidentInList(id) {
+        var key = String(id || '');
+        if (!key) {
+            return;
+        }
+        var $card = state.$root.find('[data-lstw-incident-list] [data-lstw-focus-incident]').filter(function () {
+            return String($(this).attr('data-lstw-focus-incident') || '') === key;
+        }).first();
+        if ($card.length && $card[0].scrollIntoView) {
+            $card[0].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }
+
+    function findRenderedVehicleCard(id) {
+        var key = String(id || '');
+        return state.$root.find('[data-lstw-vehicle-list] [data-lstw-focus-vehicle]').filter(function () {
+            return String($(this).attr('data-lstw-focus-vehicle') || '') === key;
+        }).first();
+    }
+
+    function revealVehicleInList(id) {
+        var $card = findRenderedVehicleCard(id);
+        if (!$card.length && (state.vehicleSearch || state.vehicleFilter !== 'all')) {
+            state.vehicleSearch = '';
+            state.vehicleFilter = 'all';
+            state.$root.find('[data-lstw-vehicle-search]').val('');
+            state.$root.find('[data-lstw-vehicle-filters] button').removeClass('is-active').filter('[data-filter="all"]').addClass('is-active');
+            renderVehicles();
+            $card = findRenderedVehicleCard(id);
+        }
+        if ($card.length && $card[0].scrollIntoView) {
+            $card[0].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }
+
+    function selectVehicle(id, focusMap, revealInList) {
         var vehicle = findVehicle(id);
-        state.selectedVehicleId = String(id || '');
+        var selectedId = vehicle ? vehicleKey(vehicle) : String(id || '');
+        state.selectedVehicleId = selectedId;
         renderVehicles();
+        if (revealInList && selectedId) {
+            revealVehicleInList(selectedId);
+        }
         drawSelectedVehicleRoute();
         if (state.map.layers.vehicles) {
             state.map.layers.vehicles.changed();
         }
         var coords = fromLonLat(vehicle);
-        var assignment = selectedVehicleAssignment(id);
+        var assignment = selectedVehicleAssignment(selectedId || id);
         if (!coords && assignment && assignment.last_position) {
             coords = fromLonLat(assignment.last_position);
         }
@@ -2483,10 +2878,13 @@
     }
 
     function focusVehicle(id) {
-        selectVehicle(id, true);
+        selectVehicle(id, true, true);
     }
 
     function closeModal() {
+        if (state.$root.find('.lstw-modal__dialog--neighbor-support').length) {
+            state.neighborSupportDrafts = {};
+        }
         state.modalDrag = null;
         state.activeCallModalIncidentId = '';
         state.$root.find('[data-lstw-modal]').removeClass('lstw-modal--map-context').prop('hidden', true).empty();
@@ -2507,16 +2905,21 @@
 
     function incidentDetailsModalBody(incident) {
         var editLabel = incidentPrepared(incident) ? 'Einsatz bearbeiten' : 'Einsatz erstellen';
+        var blockers = asArray(incident && incident.close_blockers);
+        var closeDisabled = blockers.length ? ' disabled aria-disabled="true" title="' + esc(blockers.join(' ')) + '"' : '';
+        var closeNotice = blockers.length ? '<p class="lstw-close-blocked">' + esc(blockers.join(' ')) + '</p>' : '';
         return '<div class="lstw-detail-grid">' +
             '<div class="lstw-detail-row"><span>Einsatzort</span><strong>' + esc(incidentPlace(incident)) + '</strong></div>' +
             '<div class="lstw-detail-row"><span>Alarmzeit</span><strong>' + esc(formatTime(incident.sim_created_at || incident.created_at)) + '</strong></div>' +
             '</div>' +
             '<div class="lstw-detail-row"><span>Meldung</span><p>' + esc(incidentVisibleText(incident)) + '</p></div>' +
             '<div class="lstw-detail-row"><span>Zugeordnete Fahrzeuge</span>' + assignedUnitsHtml(incident, false) + '</div>' +
+            closeNotice +
             '<footer class="lstw-detail-actions">' +
                 '<button type="button" data-lstw-show-incident-map="' + esc(incident.id) + '">Auf Karte anzeigen</button>' +
+                '<button type="button" data-lstw-open-neighbor-support="' + esc(incident.id) + '">Unterstützung anfordern</button>' +
                 '<button type="button" data-lstw-edit-incident="' + esc(incident.id) + '">' + esc(editLabel) + '</button>' +
-                '<button type="button" data-lstw-no-incident="' + esc(incident.id) + '">Kein Einsatz</button>' +
+                '<button type="button" data-lstw-no-incident="' + esc(incident.id) + '"' + closeDisabled + '>Kein Einsatz</button>' +
             '</footer>';
     }
 
@@ -2665,12 +3068,14 @@
         }).join('');
         var meta = asObject(incident.meta);
         var signalAllowed = dispatchSignalAllowed(meta);
-        var title = incidentPrepared(incident) ? 'Einsatz bearbeiten' : 'Neuen Einsatz erstellen';
+        var hasDispatch = incidentHasDispatch(incident);
+        var title = hasDispatch ? 'Einsatz bearbeiten' : 'Neuen Einsatz erstellen';
+        var alarmLabel = hasDispatch ? 'Alarmierung bearbeiten' : 'Alarmieren';
         var body =
             '<p class="lstw-modal__place"><strong>Einsatzort:</strong> ' + esc(incidentPlace(incident) || 'Nicht gesetzt') + '</p>' +
             '<div class="lstw-modal__meta">' +
-                '<label class="lstw-signal-toggle"><span>Sondersignale erlauben</span><input type="checkbox" name="signal_allowed" data-lstw-signal-allowed value="1"' + (signalAllowed ? ' checked' : '') + '></label>' +
-                '<label class="lstw-police-toggle"><span>Polizei mitverständigen</span><input type="checkbox" name="polizei_verstaendigen" value="1"' + (meta.polizei_verstaendigen ? ' checked' : '') + '></label>' +
+                '<label class="lstw-signal-toggle"><span><i class="fa-solid fa-lightbulb lstw-toggle-icon" aria-hidden="true"></i>Sondersignale erlauben</span><input type="checkbox" name="signal_allowed" data-lstw-signal-allowed value="1"' + (signalAllowed ? ' checked' : '') + '></label>' +
+                '<label class="lstw-police-toggle"><span><i class="fa-solid fa-user-shield lstw-toggle-icon" aria-hidden="true"></i>Polizei mitverständigen</span><input type="checkbox" name="polizei_verstaendigen" value="1"' + (meta.polizei_verstaendigen ? ' checked' : '') + '></label>' +
                 '<label><span>Einsatzcode</span><input type="text" name="einsatzcode" value="' + esc(meta.einsatzcode || incident.einsatztyp || '') + '"></label>' +
                 '<label><span>Ausrückorder</span><input type="text" name="ausrueckorder" value="' + esc(meta.ausrueckorder || '') + '"></label>' +
                 '<label><span>Einsatzkategorie</span><input type="text" name="einsatzkategorie" value="' + esc(meta.einsatzkategorie || incident.einsatzart || '') + '"></label>' +
@@ -2679,7 +3084,7 @@
             '<label class="lstw-modal__text"><span>Zusatz / Freitext</span><textarea name="zusatz_text" rows="3">' + esc(dispatchDescriptionText(incident)) + '</textarea></label>' +
             '<section class="lstw-modal__section"><div class="lstw-modal__section-head"><strong>Bereits zugeordnet</strong><button type="button" data-lstw-show-incident-map="' + esc(incident.id) + '">Auf Karte anzeigen</button></div>' + assignedUnitsHtml(incident, true) + '</section>' +
             '<section class="lstw-modal__section"><div class="lstw-modal__section-head"><strong>Fahrzeuge alarmieren</strong><div class="lstw-dispatch-filters" aria-label="Fahrzeugfilter"><button type="button" class="is-active" data-lstw-dispatch-filter="all" aria-pressed="true">Alle</button><button type="button" data-lstw-dispatch-filter="ktw" aria-pressed="false">KTW</button><button type="button" data-lstw-dispatch-filter="rtw" aria-pressed="false">RTW</button><button type="button" data-lstw-dispatch-filter="nef" aria-pressed="false" title="Notarztmittel">NEF</button><button type="button" data-lstw-dispatch-filter="rth" aria-pressed="false">RTH</button><button type="button" data-lstw-dispatch-filter="fw" aria-pressed="false">Feuerwehr</button><button type="button" data-lstw-dispatch-filter="thw" aria-pressed="false">THW</button></div><span>Entfernung</span></div><div class="lstw-modal__vehicles">' + (vehicleRows || '<p class="lstw-empty">Keine Fahrzeuge verfügbar.</p>') + '</div></section>' +
-            '<footer><button type="button" data-lstw-save-dispatch-alarm="' + esc(incident.id) + '">Alarmieren</button><button type="button" data-lstw-save-dispatch="' + esc(incident.id) + '">Einsatz anlegen</button></footer>';
+            '<footer><button type="button" data-lstw-open-neighbor-support="' + esc(incident.id) + '">Unterstützung anfordern</button><button type="button" data-lstw-save-dispatch-alarm="' + esc(incident.id) + '">' + esc(alarmLabel) + '</button><button type="button" data-lstw-save-dispatch="' + esc(incident.id) + '">Einsatz anlegen</button></footer>';
 
         state.$root.find('[data-lstw-modal]').removeClass('lstw-modal--map-context').html(modalHtml(title, body, 'dispatch')).prop('hidden', false);
         toggleDispatchSignalGlow(signalAllowed);
@@ -2705,6 +3110,149 @@
         return state.$root.find('[data-lstw-modal] [name="alarm_status_id"]:checked:not(:disabled)').map(function () {
             return $(this).val();
         }).get();
+    }
+
+    function neighborSupportDraftKey(incidentId, neighborId) {
+        return String(incidentId || '') + ':' + String(neighborId || '');
+    }
+
+    function latestNeighborSupportRequest(incidentId, neighborId) {
+        var draft = state.neighborSupportDrafts[neighborSupportDraftKey(incidentId, neighborId)];
+        if (draft) return draft;
+        return null;
+    }
+
+    function neighborSupportOfferRows(request) {
+        var accepted = {};
+        asArray(request && request.accepted_vehicle_ids).forEach(function (id) {
+            accepted[String(id)] = true;
+        });
+        var offer = asArray(request && request.offer);
+        if (!offer.length) {
+            return '<p class="lstw-empty">Keine Fahrzeuge im Angebot.</p>';
+        }
+        return offer.map(function (vehicle) {
+            var id = String(vehicle.fahrzeug_id || '');
+            var already = !!accepted[id];
+            var available = !!vehicle.available && !already;
+            var stateText = already ? 'bereits angefordert' : (vehicle.availability_state || (available ? 'verfügbar' : 'nicht verfügbar'));
+            return '<label class="lstw-check-row' + (available ? '' : ' is-disabled') + '" data-neighbor-offer-vehicle="' + esc(id) + '" aria-disabled="' + (available ? 'false' : 'true') + '">' +
+                '<input type="checkbox" name="neighbor_vehicle_id" value="' + esc(id) + '"' + (available ? '' : ' disabled') + '>' +
+                '<span><strong>' + esc(vehicle.rufname || 'Fahrzeug') + '</strong><small>' + esc([vehicle.fahrzeugtyp || vehicle.resource_class_label || '', vehicle.home_wache_name || ''].filter(Boolean).join(' | ')) + '<i>' + esc(stateText) + '</i></small></span>' +
+                '<em>' + esc(vehicle.nebenleitstelle_name || '') + '</em>' +
+            '</label>';
+        }).join('');
+    }
+
+    function neighborSupportModalBody(incident, selectedNeighborId) {
+        var centers = neighborDispatchCenters();
+        if (!centers.length) {
+            return '<p class="lstw-empty">Für diese Leitstelle sind keine Nachbarleitstellen hinterlegt.</p>';
+        }
+        selectedNeighborId = selectedNeighborId || (centers[0] && centers[0].id) || '';
+        var options = centers.map(function (center) {
+            return '<option value="' + esc(center.id) + '"' + (String(center.id) === String(selectedNeighborId) ? ' selected' : '') + '>' + esc(center.name || ('Nebenleitstelle ' + center.id)) + '</option>';
+        }).join('');
+        var request = latestNeighborSupportRequest(incident.id, selectedNeighborId);
+        var offerTime = request && (request.offer_generated_at || request.ts) ? '<small>Antwort von ' + esc(String(request.offer_generated_at || request.ts).slice(11, 16) || request.offer_generated_at || request.ts) + '</small>' : '';
+        var offerHtml = request
+            ? '<section class="lstw-modal__section"><div class="lstw-modal__section-head"><strong>Gemeldete Fahrzeuge</strong><span>' + esc((request.available_count || 0) + ' verfügbar') + '</span>' + offerTime + '</div><div class="lstw-modal__vehicles">' + neighborSupportOfferRows(request) + '</div><footer><button type="button" data-lstw-accept-neighbor-support="' + esc(request.event_id) + '">Ausgewählte Fahrzeuge anfordern</button></footer></section>'
+            : '<p class="lstw-empty">Noch kein Angebot angefragt.</p>';
+        return '<p class="lstw-modal__place"><strong>Einsatzort:</strong> ' + esc(incidentPlace(incident) || 'Nicht gesetzt') + '</p>' +
+            '<label><span>Nachbarleitstelle</span><select data-lstw-neighbor-support-select>' + options + '</select></label>' +
+            '<footer><button type="button" data-lstw-request-neighbor-support="' + esc(incident.id) + '">Unterstützung anfordern</button></footer>' +
+            offerHtml;
+    }
+
+    function openNeighborSupportModal(incidentId, neighborId) {
+        if (mutationBlocked('Simulation ist pausiert. Unterstützung kann erst nach Play angefordert werden.')) return;
+        var incident = findIncident(incidentId);
+        if (!incident) {
+            showMessage('Bitte zuerst einen Einsatz auswählen.', 'error');
+            return;
+        }
+        state.$root.find('[data-lstw-modal]').removeClass('lstw-modal--map-context')
+            .html(modalHtml('Unterstützung anfordern', neighborSupportModalBody(incident, neighborId || ''), 'neighbor-support'))
+            .prop('hidden', false);
+    }
+
+    function refreshNeighborSupportModal() {
+        var $dialog = state.$root.find('.lstw-modal__dialog--neighbor-support');
+        if (!$dialog.length) return;
+        var incidentId = $dialog.find('[data-lstw-request-neighbor-support]').attr('data-lstw-request-neighbor-support') || '';
+        var neighborId = $dialog.find('[data-lstw-neighbor-support-select]').val() || '';
+        if (incidentId) openNeighborSupportModal(incidentId, neighborId);
+    }
+
+    function requestNeighborSupport(incidentId) {
+        var neighborId = state.$root.find('[data-lstw-modal] [data-lstw-neighbor-support-select]').val() || '';
+        if (!neighborId) {
+            showMessage('Bitte eine Nachbarleitstelle auswählen.', 'error');
+            return;
+        }
+        simPost({
+            action: 'lsttraining_sim_request_neighbor_support',
+            instanz_id: state.instanceId,
+            einsatz_id: incidentId,
+            nebenleitstelle_id: neighborId
+        }).done(function (response) {
+            if (!response || !response.success || !response.data) {
+                showMessage(response && response.data && response.data.message ? response.data.message : 'Unterstützungsanfrage fehlgeschlagen.', 'error');
+                return;
+            }
+            state.neighborSupportDrafts[neighborSupportDraftKey(incidentId, neighborId)] = {
+                event_id: response.data.event_id,
+                einsatz_id: incidentId,
+                nebenleitstelle_id: neighborId,
+                nebenleitstelle_name: response.data.nebenleitstelle_name || '',
+                offer: asArray(response.data.offer),
+                offer_generated_at: response.data.offer_generated_at || '',
+                offer_session_id: response.data.offer_session_id || '',
+                available_count: response.data.available_count || 0,
+                total_count: asArray(response.data.offer).length,
+                accepted_vehicle_ids: []
+            };
+            showMessage(response.data.message || 'Nachbarleitstelle hat geantwortet.', 'success');
+            refreshNeighborSupportModal();
+            loadSnapshot(true);
+        }).fail(function (xhr) {
+            showMessage(ajaxErrorMessage(xhr, 'Unterstützungsanfrage konnte nicht gestellt werden.'), 'error');
+        });
+    }
+
+    function selectedNeighborVehicleIds() {
+        return state.$root.find('[data-lstw-modal] [name="neighbor_vehicle_id"]:checked:not(:disabled)').map(function () {
+            return $(this).val();
+        }).get();
+    }
+
+    function acceptNeighborSupport(requestEventId) {
+        var selected = selectedNeighborVehicleIds();
+        if (!selected.length) {
+            showMessage('Bitte mindestens ein verfügbares Fremdfahrzeug auswählen.', 'error');
+            return;
+        }
+        simPost({
+            action: 'lsttraining_sim_accept_neighbor_support',
+            instanz_id: state.instanceId,
+            request_event_id: requestEventId,
+            vehicle_ids: selected
+        }).done(function (response) {
+            if (!response || !response.success) {
+                showMessage(response && response.data && response.data.message ? response.data.message : 'Fremdfahrzeuge konnten nicht angefordert werden.', 'error');
+                return;
+            }
+            showMessage(response.data && response.data.message ? response.data.message : 'Fremdfahrzeuge angefordert.', 'success');
+            Object.keys(state.neighborSupportDrafts).forEach(function (key) {
+                if (String(state.neighborSupportDrafts[key].event_id || '') === String(requestEventId || '')) {
+                    delete state.neighborSupportDrafts[key];
+                }
+            });
+            closeModal();
+            loadSnapshot(true);
+        }).fail(function (xhr) {
+            showMessage(ajaxErrorMessage(xhr, 'Fremdfahrzeuge konnten nicht angefordert werden.'), 'error');
+        });
     }
 
     function setDispatchBusy(active, text) {
@@ -2786,13 +3334,15 @@
         var payload = dispatchPayload(incidentId);
         var selected = selectedAlarmStatusIds();
         var signalAllowed = payload.signal_allowed === 1;
-        if (shouldAlarm && !selected.length) {
+        var incident = findIncident(incidentId);
+        var hasDispatch = incidentHasDispatch(incident);
+        if (shouldAlarm && !selected.length && !hasDispatch) {
             showMessage('Keine alarmierbaren Fahrzeuge ausgewählt.', 'error');
             return;
         }
         if (shouldAlarm) {
-            setDispatchBusy(true, 'Alarmierung läuft...');
-            showMessage('Einsatz wird gespeichert und Fahrzeuge werden alarmiert...', 'success');
+            setDispatchBusy(true, selected.length ? 'Alarmierung läuft...' : 'Alarmierung wird bearbeitet...');
+            showMessage(selected.length ? 'Einsatz wird gespeichert und Fahrzeuge werden alarmiert...' : 'Alarmierung wird bearbeitet...', 'success');
         }
         simPost(payload).done(function (response) {
             if (!response || !response.success) {
@@ -2853,8 +3403,62 @@
         });
     }
 
+    function recallVehicle(eventId, reopenDispatch) {
+        if (mutationBlocked('Simulation ist pausiert. Funkbefehle können erst nach Play gesendet werden.')) return;
+        closeVehicleContextMenu();
+        simPost({
+            action: 'lsttraining_sim_recall_vehicle',
+            instanz_id: state.instanceId,
+            event_id: eventId
+        }).done(function (response) {
+            if (!response || !response.success) {
+                showMessage(response && response.data && response.data.message ? response.data.message : 'Rückruf konnte nicht gefunkt werden.', 'error');
+                return;
+            }
+            var data = response.data || {};
+            if (data.route_fallback) {
+                logRoutingError('recall_vehicle_fallback', { data: data.route_fallback }, {
+                    eventId: eventId,
+                    statusId: data.status_id || '',
+                    incidentId: data.einsatz_id || ''
+                }, true);
+            }
+            showMessage(data.message || 'Anfahrt wurde abgebrochen.', 'success');
+            if (reopenDispatch && data.einsatz_id) {
+                state.pendingDispatchIncidentId = String(data.einsatz_id);
+            }
+            loadSnapshot(true);
+        }).fail(function (xhr) {
+            showMessage(ajaxErrorMessage(xhr, 'Rückruf konnte nicht gefunkt werden.'), 'error');
+        });
+    }
+
+    function sendVehicleRadioCommand(eventId, commandCode) {
+        if (mutationBlocked('Simulation ist pausiert. Funksprüche können erst nach Play gesendet werden.')) return;
+        closeVehicleContextMenu();
+        simPost({
+            action: 'lsttraining_sim_send_vehicle_radio_command',
+            instanz_id: state.instanceId,
+            event_id: eventId,
+            command_code: commandCode
+        }).done(function (response) {
+            if (!response || !response.success) {
+                showMessage(response && response.data && response.data.message ? response.data.message : 'Funkspruch konnte nicht gesendet werden.', 'error');
+                return;
+            }
+            showMessage(response.data && response.data.message ? response.data.message : 'Funkspruch gesendet.', 'success');
+            loadSnapshot(true);
+        }).fail(function (xhr) {
+            showMessage(ajaxErrorMessage(xhr, 'Funkspruch konnte nicht gesendet werden.'), 'error');
+        });
+    }
+
     function unassignUnit(eventId) {
         if (mutationBlocked('Simulation ist pausiert. Fahrzeugzuordnungen können erst nach Play geändert werden.')) return;
+        if (recallableAssignment(assignmentByEventId(eventId))) {
+            recallVehicle(eventId, true);
+            return;
+        }
         simPost({
             action: 'lsttraining_sim_unassign_vehicle',
             instanz_id: state.instanceId,
@@ -2905,7 +3509,12 @@
 
     function ackReport(eventId) {
         if (mutationBlocked()) return;
-        simPost({ action: 'lsttraining_sim_ack_unit_report', instanz_id: state.instanceId, event_id: eventId }).done(function () {
+        simPost({ action: 'lsttraining_sim_ack_unit_report', instanz_id: state.instanceId, event_id: eventId }).done(function (response) {
+            var incidentId = response && response.data && response.data.einsatz_id ? String(response.data.einsatz_id) : '';
+            if (incidentId) {
+                state.pendingRevealIncidentId = incidentId;
+                focusIncidentInWorkspace(incidentId, true);
+            }
             loadSnapshot(true);
         }).fail(function (xhr) {
             showMessage(ajaxErrorMessage(xhr, 'Lagemeldung konnte nicht bestätigt werden.'), 'error');
@@ -2914,7 +3523,16 @@
 
     function openUnitReport(eventId) {
         if (mutationBlocked()) return;
-        simPost({ action: 'lsttraining_sim_open_unit_report', instanz_id: state.instanceId, event_id: eventId }).done(function () {
+        simPost({ action: 'lsttraining_sim_open_unit_report', instanz_id: state.instanceId, event_id: eventId }).done(function (response) {
+            if (!response || !response.success) {
+                showMessage(response && response.data && response.data.message ? response.data.message : 'Sprechwunsch konnte nicht geöffnet werden.', 'error');
+                return;
+            }
+            var incidentId = response && response.data && response.data.einsatz_id ? String(response.data.einsatz_id) : '';
+            if (incidentId) {
+                state.pendingRevealIncidentId = incidentId;
+                focusIncidentInWorkspace(incidentId, true);
+            }
             loadSnapshot(true);
         }).fail(function (xhr) {
             showMessage(ajaxErrorMessage(xhr, 'Sprechwunsch konnte nicht geöffnet werden.'), 'error');
@@ -3226,6 +3844,23 @@
             var coords = fromLonLat(station);
             if (coords) popout.sources.stations.addFeature(new ol.Feature({ geometry: new ol.geom.Point(coords), data: $.extend({ label: station.name }, station) }));
         });
+        neighborDispatchCenters().forEach(function (center) {
+            var coords = fromLonLat(center);
+            if (!coords) return;
+            popout.sources.stations.addFeature(new ol.Feature({
+                geometry: new ol.geom.Point(coords),
+                data: $.extend({
+                    id: 'neighbor-center-' + center.id,
+                    name: center.name,
+                    typ: 'Nachbarleitstelle',
+                    is_neighbor: true,
+                    is_neighbor_center: true,
+                    nebenleitstelle_id: center.id,
+                    nebenleitstelle_name: center.name,
+                    label: center.name
+                }, center)
+            }));
+        });
         hospitals().forEach(function (hospital) {
             var coords = fromLonLat(hospital);
             if (coords) popout.sources.hospitals.addFeature(new ol.Feature({ geometry: new ol.geom.Point(coords), data: $.extend({ label: hospital.name }, hospital) }));
@@ -3259,7 +3894,7 @@
             var id = $panel.attr('data-lstw-panel');
             var layout = readLayout();
             var config = layout.panels[id] || {};
-            if ($(event.target).closest('button,a,input,select,textarea').length) return;
+            if ($(event.target).closest('button,a,input,select,textarea,summary,details,[data-lstw-pending-communications]').length) return;
             drag = {
                 id: id,
                 $panel: $panel,
@@ -3431,13 +4066,59 @@
             event.stopPropagation();
             focusVehicle($(this).attr('data-lstw-select-vehicle'));
         });
+        state.$root.on('click', '[data-lstw-show-vehicle-card]', function (event) {
+            event.stopPropagation();
+            selectVehicle($(this).attr('data-lstw-show-vehicle-card'), false, true);
+        });
         state.$root.on('click', '[data-lstw-focus-vehicle]', function () {
             focusVehicle($(this).attr('data-lstw-focus-vehicle'));
+        });
+        state.$root.on('click', '[data-lstw-open-vehicle-radio]', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            var id = $(this).attr('data-lstw-open-vehicle-radio');
+            var rect = this.getBoundingClientRect();
+            selectVehicle(id, false);
+            openVehicleContextMenu({ clientX: rect.right, clientY: rect.bottom }, findVehicle(id));
+        });
+        state.$root.on('contextmenu', '[data-lstw-focus-vehicle]', function (event) {
+            event.preventDefault();
+            var id = $(this).attr('data-lstw-focus-vehicle');
+            selectVehicle(id, false);
+            openVehicleContextMenu(event, findVehicle(id));
+        });
+        state.$root.on('click', '[data-lstw-recall-vehicle]', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            recallVehicle($(this).attr('data-lstw-recall-vehicle'), false);
+        });
+        state.$root.on('click', '[data-lstw-vehicle-radio-command]', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            sendVehicleRadioCommand($(this).attr('data-event-id'), $(this).attr('data-lstw-vehicle-radio-command'));
         });
         state.$root.on('click', '[data-lstw-new-incident]', openForceSpawnModal);
         state.$root.on('click', '[data-lstw-submit-force-spawn]', submitForceSpawn);
         state.$root.on('click', '[data-lstw-edit-incident]', function () {
             openDispatchModal($(this).attr('data-lstw-edit-incident'));
+        });
+        state.$root.on('click', '[data-lstw-open-neighbor-support]', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            openNeighborSupportModal($(this).attr('data-lstw-open-neighbor-support'));
+        });
+        state.$root.on('click', '[data-lstw-support-neighbor]', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            var incidentId = state.selectedIncidentId || (currentIncidents()[0] && currentIncidents()[0].id) || '';
+            openNeighborSupportModal(incidentId, $(this).attr('data-lstw-support-neighbor'));
+        });
+        state.$root.on('change', '[data-lstw-neighbor-support-select]', refreshNeighborSupportModal);
+        state.$root.on('click', '[data-lstw-request-neighbor-support]', function () {
+            requestNeighborSupport($(this).attr('data-lstw-request-neighbor-support'));
+        });
+        state.$root.on('click', '[data-lstw-accept-neighbor-support]', function () {
+            acceptNeighborSupport($(this).attr('data-lstw-accept-neighbor-support'));
         });
         state.$root.on('click', '[data-lstw-save-dispatch]', function () {
             saveDispatch($(this).attr('data-lstw-save-dispatch'), false);
@@ -3474,6 +4155,16 @@
             event.preventDefault();
             event.stopPropagation();
             clearMapStatus();
+        });
+        $(document).on('pointerdown.lsttrainingVehicleContextMenu', function (event) {
+            if (!$(event.target).closest('[data-lstw-vehicle-context-menu]').length) {
+                closeVehicleContextMenu();
+            }
+        });
+        $(document).on('keydown.lsttrainingVehicleContextMenu', function (event) {
+            if (event.key === 'Escape') {
+                closeVehicleContextMenu();
+            }
         });
         state.$root.on('pointerdown', '[data-lstw-modal-drag-handle]', function (event) {
             if ($(event.target).is('button, a, input, select, textarea')) {

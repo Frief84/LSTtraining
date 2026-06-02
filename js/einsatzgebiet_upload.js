@@ -194,6 +194,36 @@
     requestAnimationFrame(() => map.updateSize());
   }
 
+  function syncEditorMapToHidden(popup) {
+    const geoId = popup?.dataset?.geojsonId;
+    const target = geoId ? document.getElementById(geoId) : null;
+    const map = getMap(popup);
+
+    if (!target || !map) return target ? (target.value || '') : '';
+
+    let source = popup._egVectorSource || null;
+    if (!source) {
+      map.getLayers().forEach(layer => {
+        if (!source && layer instanceof ol.layer.Vector) {
+          source = layer.getSource();
+        }
+      });
+    }
+
+    if (!source) return target.value || '';
+
+    const features = source.getFeatures();
+    if (!features.length) return target.value || '';
+
+    const format = new ol.format.GeoJSON();
+    target.value = format.writeFeatures(features, {
+      dataProjection: 'EPSG:4326',
+      featureProjection: map.getView().getProjection()
+    });
+
+    return target.value;
+  }
+
   // ------------------------------------------------------------
   // AJAX Save (Leitstelle oder Nebenstelle)
   // ------------------------------------------------------------
@@ -323,8 +353,28 @@
     const popup = getPopupFromEl(saveBtn) || getPopup();
     if (!popup) return;
 
+    const syncedGeojson = syncEditorMapToHidden(popup);
     const ok = await ajaxSaveEinsatzgebiet(popup);
     if (ok) {
+      const geoId = popup.dataset.geojsonId;
+      const target = geoId ? document.getElementById(geoId) : null;
+      const savedGeojson = target ? (target.value || syncedGeojson || '') : (syncedGeojson || '');
+      const context = popup.dataset.context === 'neben' ? 'neben' : 'leitstelle';
+      const entityId = parseInt(popup.dataset.leitstelleId || '0', 10);
+
+      document.dispatchEvent(new CustomEvent('lsttraining:einsatzgebiet-saved', {
+        detail: {
+          context,
+          entityId,
+          geojson: savedGeojson
+        }
+      }));
+      popup.style.display = 'none';
+      const overlay = document.getElementById('popup-overlay');
+      if (overlay) overlay.style.display = 'none';
+      if (context === 'neben' && typeof window.updateNebenstellenMapFromGeo === 'function') {
+        requestAnimationFrame(() => window.updateNebenstellenMapFromGeo(savedGeojson));
+      }
       alert('Einsatzgebiet gespeichert.');
     }
   });

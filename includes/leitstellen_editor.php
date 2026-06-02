@@ -15,6 +15,7 @@ require_once plugin_dir_path( __FILE__ ) . '/einsatzgebiet-editor.php';
 
 $pdo         = lsttraining_get_connection();
 $leitstellen = [];
+$neighbor_ids_by_leitstelle = [];
 $suchbegriff = isset( $_GET['suchbegriff'] ) ? $_GET['suchbegriff'] : '';
 
 if ( ! function_exists( 'lsttraining_leitstellen_column_exists' ) ) {
@@ -31,6 +32,91 @@ if ( ! function_exists( 'lsttraining_leitstellen_column_exists' ) ) {
             return (int) $stmt->fetchColumn() > 0;
         } catch ( Throwable $e ) {
             return false;
+        }
+    }
+}
+
+if ( ! function_exists( 'lsttraining_leitstellen_table_exists' ) ) {
+    function lsttraining_leitstellen_table_exists( PDO $pdo, string $table ): bool {
+        try {
+            $stmt = $pdo->prepare(
+                'SELECT COUNT(*)
+                   FROM INFORMATION_SCHEMA.TABLES
+                  WHERE TABLE_SCHEMA = DATABASE()
+                    AND TABLE_NAME = ?'
+            );
+            $stmt->execute( [ $table ] );
+            return (int) $stmt->fetchColumn() > 0;
+        } catch ( Throwable $e ) {
+            return false;
+        }
+    }
+}
+
+if ( ! function_exists( 'lsttraining_leitstellen_ensure_neighbor_table' ) ) {
+    function lsttraining_leitstellen_ensure_neighbor_table( PDO $pdo ): void {
+        if ( lsttraining_leitstellen_table_exists( $pdo, 'leitstelle_nebenleitstellen' ) ) {
+            return;
+        }
+
+        $pdo->exec(
+            "CREATE TABLE IF NOT EXISTS `leitstelle_nebenleitstellen` (
+              `leitstelle_id` INT NOT NULL,
+              `nebenleitstelle_id` INT NOT NULL,
+              PRIMARY KEY (`leitstelle_id`, `nebenleitstelle_id`),
+              KEY `idx_ln_nebenleitstelle` (`nebenleitstelle_id`),
+              CONSTRAINT `fk_ln_leitstelle`
+                FOREIGN KEY (`leitstelle_id`) REFERENCES `leitstellen`(`id`) ON DELETE CASCADE,
+              CONSTRAINT `fk_ln_nebenleitstelle`
+                FOREIGN KEY (`nebenleitstelle_id`) REFERENCES `nebenleitstellen`(`id`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci"
+        );
+    }
+}
+
+if ( ! function_exists( 'lsttraining_leitstellen_save_neighbors' ) ) {
+    function lsttraining_leitstellen_save_neighbors( PDO $pdo, int $leitstelle_id, array $neben_ids ): void {
+        if ( $leitstelle_id <= 0 ) {
+            return;
+        }
+        lsttraining_leitstellen_ensure_neighbor_table( $pdo );
+
+        $clean_ids = array_values( array_filter(
+            array_unique( array_filter( array_map( 'intval', $neben_ids ) ) ),
+            static function ( int $neben_id ) use ( $leitstelle_id ): bool {
+                return $neben_id !== $leitstelle_id;
+            }
+        ) );
+        if ( $clean_ids ) {
+            try {
+                $own_stmt = $pdo->prepare( 'SELECT name FROM leitstellen WHERE id = ? LIMIT 1' );
+                $own_stmt->execute( [ $leitstelle_id ] );
+                $own_name = trim( (string) $own_stmt->fetchColumn() );
+                if ( $own_name !== '' ) {
+                    $placeholders = implode( ',', array_fill( 0, count( $clean_ids ), '?' ) );
+                    $self_stmt = $pdo->prepare(
+                        'SELECT id FROM nebenleitstellen WHERE id IN (' . $placeholders . ') AND LOWER(TRIM(name)) = LOWER(TRIM(?))'
+                    );
+                    $self_stmt->execute( array_merge( $clean_ids, [ $own_name ] ) );
+                    $self_ids = array_map( 'intval', $self_stmt->fetchAll( PDO::FETCH_COLUMN ) ?: [] );
+                    if ( $self_ids ) {
+                        $clean_ids = array_values( array_diff( $clean_ids, $self_ids ) );
+                    }
+                }
+            } catch ( Throwable $e ) {
+                error_log( '[LSTtraining][leitstellen_editor] self_neighbor_filter: ' . $e->getMessage() );
+            }
+        }
+        $pdo->prepare( 'DELETE FROM leitstelle_nebenleitstellen WHERE leitstelle_id = ?' )->execute( [ $leitstelle_id ] );
+        if ( ! $clean_ids ) {
+            return;
+        }
+
+        $insert = $pdo->prepare(
+            'INSERT IGNORE INTO leitstelle_nebenleitstellen (leitstelle_id, nebenleitstelle_id) VALUES (?, ?)'
+        );
+        foreach ( $clean_ids as $neben_id ) {
+            $insert->execute( [ $leitstelle_id, $neben_id ] );
         }
     }
 }
@@ -102,6 +188,16 @@ if ( $pdo ) {
 $leitstellen_has_police_signal_column = $pdo ? lsttraining_leitstellen_column_exists( $pdo, 'leitstellen', 'police_signal_lights_json' ) : false;
 $leitstellen_has_rescue_image_column = $pdo ? lsttraining_leitstellen_column_exists( $pdo, 'leitstellen', 'rescue_vehicle_image' ) : false;
 $leitstellen_has_rescue_signal_column = $pdo ? lsttraining_leitstellen_column_exists( $pdo, 'leitstellen', 'rescue_signal_lights_json' ) : false;
+$nebenleitstellen_options = [];
+if ( $pdo ) {
+    try {
+        lsttraining_leitstellen_ensure_neighbor_table( $pdo );
+        $nls_stmt = $pdo->query( 'SELECT id, name, gps, geojson FROM nebenleitstellen ORDER BY name ASC, id ASC' );
+        $nebenleitstellen_options = $nls_stmt ? $nls_stmt->fetchAll( PDO::FETCH_ASSOC ) : [];
+    } catch ( Throwable $e ) {
+        error_log( '[LSTtraining][leitstellen_editor] neighbor_table: ' . $e->getMessage() );
+    }
+}
 
 
 /* -------------------------------------------------------------------------
@@ -165,6 +261,11 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST'
     $stmt->execute( $create_params );
 	
    $new_id = (int)$pdo->lastInsertId();
+    lsttraining_leitstellen_save_neighbors(
+        $pdo,
+        $new_id,
+        array_map( 'intval', (array) ( $_POST['lst_neighbor_nebenleitstellen'] ?? [] ) )
+    );
     lsttraining_log_activity([
         'entity_type' => 'leitstelle',
         'action'      => 'create',
@@ -224,6 +325,11 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST'
     $update_sql .= ' WHERE id = ?';
     $update_params[] = intval( $_POST['lst_update_id'] );
     $pdo->prepare( $update_sql )->execute( $update_params );
+    lsttraining_leitstellen_save_neighbors(
+        $pdo,
+        intval( $_POST['lst_update_id'] ),
+        array_map( 'intval', (array) ( $_POST['lst_neighbor_nebenleitstellen'] ?? [] ) )
+    );
 	
    lsttraining_log_activity([
         'entity_type' => 'leitstelle',
@@ -284,6 +390,27 @@ if ( $pdo ) {
         );
     }
     $leitstellen = $stmt->fetchAll( PDO::FETCH_OBJ );
+    $neighbor_ids_by_leitstelle = [];
+    if ( $leitstellen && lsttraining_leitstellen_table_exists( $pdo, 'leitstelle_nebenleitstellen' ) ) {
+        $ids = array_map( static function ( $item ) {
+            return (int) $item->id;
+        }, $leitstellen );
+        if ( $ids ) {
+            $rel_stmt = $pdo->prepare(
+                'SELECT leitstelle_id, nebenleitstelle_id
+                   FROM leitstelle_nebenleitstellen
+                  WHERE leitstelle_id IN (' . implode( ',', array_fill( 0, count( $ids ), '?' ) ) . ')'
+            );
+            if ( $rel_stmt ) {
+                $rel_stmt->execute( $ids );
+                foreach ( $rel_stmt->fetchAll( PDO::FETCH_ASSOC ) ?: [] as $rel ) {
+                    $ls_id = (int) ( $rel['leitstelle_id'] ?? 0 );
+                    $neighbor_ids_by_leitstelle[ $ls_id ] = $neighbor_ids_by_leitstelle[ $ls_id ] ?? [];
+                    $neighbor_ids_by_leitstelle[ $ls_id ][] = (int) ( $rel['nebenleitstelle_id'] ?? 0 );
+                }
+            }
+        }
+    }
 }
 ?>
 
@@ -332,6 +459,7 @@ if ( $pdo ) {
                        data-police-signal-lights="<?php echo esc_attr( $l->police_signal_lights_json ?? '' ); ?>"
                        data-rescue-image="<?php echo esc_attr( $l->rescue_vehicle_image ?: 'img/fahrzeug/default.png' ); ?>"
                        data-rescue-signal-lights="<?php echo esc_attr( $l->rescue_signal_lights_json ?? '' ); ?>"
+                       data-neighbor-ids="<?php echo esc_attr( wp_json_encode( $neighbor_ids_by_leitstelle[ (int) $l->id ] ?? [] ) ); ?>"
                     >Bearbeiten</a>
                     <a href="<?php echo admin_url(
                         'admin.php?page=lsttraining_leitstellen&delete_id=' . $l->id ); ?>"
@@ -448,6 +576,32 @@ $zuo_url = admin_url( 'admin.php?page=lsttraining_zuordnung_modal'
         </section>
 
         <section class="lst-leitstelle-card">
+            <h3>Nachbarleitstellen</h3>
+            <div class="lst-neighbor-picker">
+                <div class="lst-neighbor-picker__list">
+                    <label for="lst_neighbor_nebenleitstellen">Angrenzende Leitstellen</label>
+                    <select id="lst_neighbor_nebenleitstellen" name="lst_neighbor_nebenleitstellen[]" multiple size="8" style="min-width:320px;width:100%;">
+                        <?php foreach ( $nebenleitstellen_options as $nls ) : ?>
+                            <option value="<?php echo esc_attr( (string) (int) $nls['id'] ); ?>">
+                                <?php echo esc_html( (string) $nls['name'] ); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="lst-neighbor-picker__map-wrap">
+                    <div id="lst_neighbor_map" class="lst-neighbor-map" aria-label="Nachbarleitstellen visuell auswählen"></div>
+                    <div class="lst-neighbor-map__empty" data-lst-neighbor-map-empty hidden>Keine Nebenleitstellen mit gültigen Koordinaten vorhanden.</div>
+                    <div class="lst-neighbor-legend" aria-hidden="true">
+                        <span><i class="is-home"></i> Leitstelle</span>
+                        <span><i class="is-selected"></i> ausgewählt</span>
+                        <span><i class="is-available"></i> weitere</span>
+                    </div>
+                </div>
+            </div>
+            <p class="description">Diese Nebenleitstellen können in laufenden Einsätzen per Unterstützungsanfrage kontaktiert werden.</p>
+        </section>
+
+        <section class="lst-leitstelle-card">
             <h3>Default-Fahrzeuge</h3>
             <div class="lst-default-vehicle-grid">
                 <article class="lst-default-vehicle-card">
@@ -518,6 +672,19 @@ $zuo_url = admin_url( 'admin.php?page=lsttraining_zuordnung_modal'
         </div>
     </form>
 </div>
+<script>
+window.lstNeighborLeitstellenData = <?php echo wp_json_encode( array_map(
+    static function ( array $nls ): array {
+        return [
+            'id'      => (int) ( $nls['id'] ?? 0 ),
+            'name'    => (string) ( $nls['name'] ?? '' ),
+            'gps'     => (string) ( $nls['gps'] ?? '' ),
+            'geojson' => (string) ( $nls['geojson'] ?? '' ),
+        ];
+    },
+    $nebenleitstellen_options
+), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ); ?>;
+</script>
 <!-- Krankenhäuser-Modal -->
 <div id="leitstellen-hospitals-modal" class="hidden">
   <div class="modal-overlay"></div>

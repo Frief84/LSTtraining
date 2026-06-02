@@ -6,7 +6,7 @@ function lsttraining_frontend_enqueue_style(): void {
         'lsttraining-frontend',
         LSTTRAINING_URL . 'css/frontend.css',
         [],
-        '1.0.13'
+        '1.0.14'
     );
 }
 

@@ -10,10 +10,24 @@ function lsttraining_workspace_enqueue_assets(): void {
     );
 
     wp_enqueue_style(
+        'lst-fontawesome-core',
+        LSTTRAINING_URL . 'vendor/fontawesome/css/fontawesome.min.css',
+        [],
+        '6.7.2'
+    );
+
+    wp_enqueue_style(
+        'lst-fontawesome-solid',
+        LSTTRAINING_URL . 'vendor/fontawesome/css/solid.min.css',
+        ['lst-fontawesome-core'],
+        '6.7.2'
+    );
+
+    wp_enqueue_style(
         'lsttraining-simulation-workspace',
         LSTTRAINING_URL . 'css/simulation-workspace.css',
-        ['lst-openlayers-css'],
-        '1.0.17'
+        ['lst-openlayers-css', 'lst-fontawesome-solid'],
+        '1.0.21'
     );
 
     wp_enqueue_script(
@@ -28,7 +42,7 @@ function lsttraining_workspace_enqueue_assets(): void {
         'lsttraining-simulation-workspace',
         LSTTRAINING_URL . 'js/simulation-workspace.js',
         ['jquery', 'lst-openlayers'],
-        '1.0.18',
+        '1.0.23',
         true
     );
 
@@ -73,6 +87,9 @@ function lsttraining_workspace_panel(string $id, string $title, string $count_at
                     <b <?php echo $count_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>0</b>
                 <?php endif; ?>
             </div>
+            <?php if ($id === 'radio'): ?>
+                <div class="lstw-head-tasks" data-lstw-pending-communications aria-label="Offene Kommunikation" hidden></div>
+            <?php endif; ?>
             <nav class="lstw-panel__actions" aria-label="<?php echo esc_attr($title); ?> Fensteraktionen">
                 <?php if ($id === 'details'): ?>
                     <button type="button" data-lstw-close-details title="Schließen">Schließen</button>
@@ -132,6 +149,12 @@ function lsttraining_workspace_render_instance_view(int $instanz_id): string {
                 <div class="lstw-clock" aria-label="Simulationszeit">
                     <span>Simulationszeit</span>
                     <strong data-lstw-sim-time><?php echo esc_html(wp_date('H:i:s')); ?></strong>
+                </div>
+
+                <div class="lstw-weather" data-lstw-weather aria-label="Wetterlage">
+                    <span>Wetter</span>
+                    <strong data-lstw-weather-label>--</strong>
+                    <small data-lstw-weather-next></small>
                 </div>
 
                 <div class="lstw-controls">

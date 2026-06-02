@@ -126,13 +126,42 @@ add_action('admin_enqueue_scripts', function ($hook) {
 
     // Admin UI
     wp_enqueue_style('lst-admin-css', $root_url . 'css/admin-ui.css', [], $asset_version('css/admin-ui.css'));
-    wp_enqueue_script('lst-admin-ui', $root_url . 'js/admin-ui.js', ['jquery'], '1.0.2', true);
+    wp_enqueue_script('lst-admin-ui', $root_url . 'js/admin-ui.js', ['jquery', 'lst-openlayers'], $asset_version('js/admin-ui.js'), true);
 
     // ───────────────────────────────────────────
     // Leitstellen (Top-Level)
     // ───────────────────────────────────────────
     if ($page === 'lsttraining_leitstellen' || $hook === 'toplevel_page_lsttraining_leitstellen') {
         wp_enqueue_media();
+
+        $neighbor_leitstellen = [];
+        try {
+            $pdo = lsttraining_get_connection();
+            if ($pdo instanceof PDO) {
+                $stmt = $pdo->query('SELECT id, name, gps, geojson FROM nebenleitstellen ORDER BY name');
+                if ($stmt) {
+                    $neighbor_leitstellen = array_map(
+                        static function (array $row): array {
+                            return [
+                                'id'      => (int)($row['id'] ?? 0),
+                                'name'    => (string)($row['name'] ?? ''),
+                                'gps'     => (string)($row['gps'] ?? ''),
+                                'geojson' => (string)($row['geojson'] ?? ''),
+                            ];
+                        },
+                        $stmt->fetchAll(PDO::FETCH_ASSOC)
+                    );
+                }
+            }
+        } catch (Throwable $e) {
+            $neighbor_leitstellen = [];
+        }
+
+        wp_add_inline_script(
+            'lst-admin-ui',
+            'window.lstNeighborLeitstellenData = ' . wp_json_encode($neighbor_leitstellen, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) . ';',
+            'before'
+        );
 
         wp_enqueue_script(
             'lst-leitstellen-editor',

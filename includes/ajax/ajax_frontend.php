@@ -2,6 +2,7 @@
 if (!defined('ABSPATH')) { exit(); }
 
 require_once dirname(__DIR__) . '/db.php';
+require_once dirname(__DIR__) . '/simulation/weather.php';
 
 function lsttraining_frontend_table_exists(PDO $pdo, string $table): bool {
     try {
@@ -34,9 +35,26 @@ function lsttraining_frontend_column_exists(PDO $pdo, string $table, string $col
     }
 }
 
+function lsttraining_frontend_column_type(PDO $pdo, string $table, string $column): string {
+    try {
+        $stmt = $pdo->prepare('
+            SELECT DATA_TYPE
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = ?
+              AND COLUMN_NAME = ?
+            LIMIT 1
+        ');
+        $stmt->execute([$table, $column]);
+        return strtolower((string) $stmt->fetchColumn());
+    } catch (Throwable $e) {
+        return '';
+    }
+}
+
 function lsttraining_frontend_ensure_instance_columns(PDO $pdo): void {
     $instance_columns = [
-        'settings_json' => 'ALTER TABLE spielinstanzen ADD COLUMN settings_json TEXT NULL AFTER ist_aktiv',
+        'settings_json' => 'ALTER TABLE spielinstanzen ADD COLUMN settings_json LONGTEXT NULL AFTER ist_aktiv',
         'started_at'    => 'ALTER TABLE spielinstanzen ADD COLUMN started_at DATETIME NULL AFTER settings_json',
         'sim_state'     => "ALTER TABLE spielinstanzen ADD COLUMN sim_state ENUM('created','running','paused','ended') NOT NULL DEFAULT 'created' AFTER started_at",
     ];
@@ -45,6 +63,10 @@ function lsttraining_frontend_ensure_instance_columns(PDO $pdo): void {
         if (!lsttraining_frontend_column_exists($pdo, 'spielinstanzen', $column)) {
             $pdo->exec($alter_sql);
         }
+    }
+
+    if (lsttraining_frontend_column_type($pdo, 'spielinstanzen', 'settings_json') !== 'longtext') {
+        $pdo->exec('ALTER TABLE spielinstanzen MODIFY COLUMN settings_json LONGTEXT NULL');
     }
 
     // Ältere Installationen haben diese Spalte ggf. noch nicht; die Frontend-Join-Logik nutzt sie.
@@ -614,7 +636,7 @@ add_action('wp_ajax_lsttraining_frontend_create_instance', function () {
 
         $debug_step = 'fetch_leitstelle';
         $leitstelle_stmt = $pdo->prepare('
-            SELECT id, name, ort, bundesland
+            SELECT id, name, ort, bundesland, latitude, longitude
             FROM leitstellen
             WHERE id = ?
             LIMIT 1
@@ -625,6 +647,13 @@ add_action('wp_ajax_lsttraining_frontend_create_instance', function () {
             wp_send_json_error(['message' => 'Die gewählte Leitstelle existiert nicht.'], 404);
         }
 
+        $debug_step = 'capture_weather_forecast';
+        $settings['weather_forecast'] = lsttraining_sim_capture_weather_forecast($leitstelle, $settings);
+        $settings['weather_snapshot'] = lsttraining_sim_weather_point_for_timestamp(
+            $settings,
+            lsttraining_sim_weather_ts((string) $settings['started_at'])
+        );
+
         $debug_step = 'encode_settings';
         $settings_json = wp_json_encode([
             'mode'                 => $settings['mode'],
@@ -633,6 +662,8 @@ add_action('wp_ajax_lsttraining_frontend_create_instance', function () {
             'season'               => $settings['season'],
             'season_mode'          => $settings['season_mode'],
             'weather'              => $settings['weather'],
+            'weather_forecast'      => $settings['weather_forecast'],
+            'weather_snapshot'      => $settings['weather_snapshot'],
             'demo_mode'            => $settings['demo_mode'],
             'auto_spawn'           => $settings['auto_spawn'],
             'max_active_einsaetze' => $settings['max_active_einsaetze'],

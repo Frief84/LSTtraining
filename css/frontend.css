@@ -969,9 +969,15 @@
 }
 
 .lsttraining-fms-badge--s5,
-.lsttraining-fms-badge--s6 {
+.lsttraining-fms-badge--s6,
+.lsttraining-fms-badge--s7 {
     color: #ffffff;
     background: #ef3c35;
+}
+
+.lsttraining-fms-badge--s8 {
+    color: #ffffff;
+    background: #0891b2;
 }
 
 .lsttraining-mini-btn {
@@ -1661,6 +1667,11 @@ body.lsttraining-sim-body {
 .lsttraining-sim-shell .lsttraining-fms-badge--s7 {
     color: #ffffff;
     background: var(--lst-red-bright);
+}
+
+.lsttraining-sim-shell .lsttraining-fms-badge--s8 {
+    color: #ffffff;
+    background: #0891b2;
 }
 
 .lsttraining-sim-shell .lsttraining-open-card__status {

@@ -124,6 +124,18 @@ CREATE TABLE IF NOT EXISTS `wache_nebenleitstellen` (
     FOREIGN KEY (`nebenleitstelle_id`) REFERENCES `nebenleitstellen`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+CREATE TABLE IF NOT EXISTS `leitstelle_nebenleitstellen` (
+  `leitstelle_id`      INT NOT NULL,
+  `nebenleitstelle_id` INT NOT NULL,
+  PRIMARY KEY (`leitstelle_id`, `nebenleitstelle_id`),
+  KEY `idx_ln_nebenleitstelle` (`nebenleitstelle_id`),
+
+  CONSTRAINT `fk_ln_leitstelle`
+    FOREIGN KEY (`leitstelle_id`) REFERENCES `leitstellen`(`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_ln_nebenleitstelle`
+    FOREIGN KEY (`nebenleitstelle_id`) REFERENCES `nebenleitstellen`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 -- -------------------------------------------------------------------
 -- 3) Fahrzeuge + instanzbezogene Fahrzeug-Baseline/Deltas
 -- -------------------------------------------------------------------
@@ -160,7 +172,7 @@ CREATE TABLE IF NOT EXISTS `spielinstanzen` (
   `name`          VARCHAR(255) COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   `erstellt_am`   TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
   `ist_aktiv`     TINYINT(1) NULL DEFAULT 1,
-  `settings_json` TEXT COLLATE utf8mb4_general_ci NULL,
+  `settings_json` LONGTEXT COLLATE utf8mb4_general_ci NULL,
   `started_at`    DATETIME NULL DEFAULT NULL,
   `sim_state`     ENUM('created','running','paused','ended')
                   COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'created',

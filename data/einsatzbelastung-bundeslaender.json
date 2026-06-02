@@ -1,0 +1,18 @@
+[
+  {"bundesland":"Baden-Württemberg","feuerwehr_einsaetze_gesamt":128385,"rettungsdienst_einsaetze_gesamt":1600000,"quelle_status":"amtlich"},
+  {"bundesland":"Bayern","feuerwehr_einsaetze_gesamt":315000,"rettungsdienst_einsaetze_gesamt":1900000,"quelle_status":"geschaetzt"},
+  {"bundesland":"Berlin","feuerwehr_einsaetze_gesamt":532157,"rettungsdienst_einsaetze_gesamt":460465,"quelle_status":"amtlich"},
+  {"bundesland":"Brandenburg","feuerwehr_einsaetze_gesamt":45000,"rettungsdienst_einsaetze_gesamt":420000,"quelle_status":"geschaetzt"},
+  {"bundesland":"Bremen","feuerwehr_einsaetze_gesamt":105000,"rettungsdienst_einsaetze_gesamt":85000,"quelle_status":"geschaetzt"},
+  {"bundesland":"Hamburg","feuerwehr_einsaetze_gesamt":332695,"rettungsdienst_einsaetze_gesamt":295314,"quelle_status":"amtlich"},
+  {"bundesland":"Hessen","feuerwehr_einsaetze_gesamt":75000,"rettungsdienst_einsaetze_gesamt":1100000,"quelle_status":"geschaetzt"},
+  {"bundesland":"Mecklenburg-Vorpommern","feuerwehr_einsaetze_gesamt":28000,"rettungsdienst_einsaetze_gesamt":290000,"quelle_status":"geschaetzt"},
+  {"bundesland":"Niedersachsen","feuerwehr_einsaetze_gesamt":115000,"rettungsdienst_einsaetze_gesamt":1450000,"quelle_status":"geschaetzt"},
+  {"bundesland":"Nordrhein-Westfalen","feuerwehr_einsaetze_gesamt":420000,"rettungsdienst_einsaetze_gesamt":2300000,"quelle_status":"geschaetzt"},
+  {"bundesland":"Rheinland-Pfalz","feuerwehr_einsaetze_gesamt":62000,"rettungsdienst_einsaetze_gesamt":780000,"quelle_status":"geschaetzt"},
+  {"bundesland":"Saarland","feuerwehr_einsaetze_gesamt":16000,"rettungsdienst_einsaetze_gesamt":160000,"quelle_status":"geschaetzt"},
+  {"bundesland":"Sachsen","feuerwehr_einsaetze_gesamt":52000,"rettungsdienst_einsaetze_gesamt":680000,"quelle_status":"geschaetzt"},
+  {"bundesland":"Sachsen-Anhalt","feuerwehr_einsaetze_gesamt":35000,"rettungsdienst_einsaetze_gesamt":390000,"quelle_status":"geschaetzt"},
+  {"bundesland":"Schleswig-Holstein","feuerwehr_einsaetze_gesamt":48000,"rettungsdienst_einsaetze_gesamt":410000,"quelle_status":"geschaetzt"},
+  {"bundesland":"Thüringen","feuerwehr_einsaetze_gesamt":38000,"rettungsdienst_einsaetze_gesamt":360000,"quelle_status":"geschaetzt"}
+]

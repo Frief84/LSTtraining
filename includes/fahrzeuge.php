@@ -124,6 +124,31 @@ if (!$default_thumb) {
     $default_thumb = plugins_url('img/fahrzeug/default.png', dirname(__FILE__));
 }
 
+if ( ! function_exists('lsttraining_fahrzeug_thumb_url') ) {
+    function lsttraining_fahrzeug_thumb_url($image) {
+        $image = trim((string) $image);
+        if ($image === '') {
+            return '';
+        }
+
+        $site_scheme = (string) wp_parse_url(home_url('/'), PHP_URL_SCHEME);
+        $target_scheme = (is_ssl() || $site_scheme === 'https') ? 'https' : null;
+
+        if (preg_match('#^https?://#i', $image)) {
+            return $target_scheme ? set_url_scheme($image, $target_scheme) : $image;
+        }
+        if (strpos($image, '//') === 0) {
+            return is_ssl() ? 'https:' . $image : 'http:' . $image;
+        }
+        if ($image[0] === '/') {
+            $url = site_url($image);
+            return $target_scheme ? set_url_scheme($url, $target_scheme) : $url;
+        }
+        $url = plugins_url(ltrim($image, '/'), dirname(__FILE__));
+        return $target_scheme ? set_url_scheme($url, $target_scheme) : $url;
+    }
+}
+
 /* -----------------------------------------------------------
  * Sortierung
  * ----------------------------------------------------------- */
@@ -239,7 +264,11 @@ $offset = ($paged - 1) * $per_page;
 
 /* -----------------------------------------------------------
  * Thumbnail-Spalte erkennen
- * Erwartet entweder:
+ * Das aktuelle Editor-Feld bild_datei wird vom Fahrzeug-Modal direkt
+ * gelesen und geschrieben und gehört zum Stammdatenschema. Ältere
+ * Installationen können zusätzlich noch image_url oder image_id enthalten.
+ * Unterstützt:
+ * - fahrzeuge.bild_datei (URL oder plugin-relativer Pfad)
  * - fahrzeuge.image_url (direkte URL)
  * - fahrzeuge.image_id  (WP Attachment ID)
  * ----------------------------------------------------------- */
@@ -253,7 +282,8 @@ $sql = "SELECT
             f.id,
             f.rufname,
             f.fahrzeugtyp,
-            f.fms_status," .
+            f.fms_status,
+            f.bild_datei," .
             ($has_fahrzeuge_image_url ? " f.image_url," : "") .
             ($has_fahrzeuge_image_id  ? " f.image_id,"  : "") . "
             w.name AS wache_name" . ($has_wachen_bundesland ? ", w.bundesland" : "") . "
@@ -274,16 +304,17 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 /* -----------------------------------------------------------
  * Rows: Thumb URL ableiten
+ * - bild_datei -> gespeichertes aktuelles Fahrzeugbild
  * - image_id -> wp_get_attachment_image_url(..., 'thumbnail')
  * - image_url direkt nutzen
  * - sonst Default
  * ----------------------------------------------------------- */
 foreach ($rows as &$r) {
-    $thumb = '';
+    $thumb = lsttraining_fahrzeug_thumb_url($r['bild_datei'] ?? '');
 
     if ($has_fahrzeuge_image_id) {
         $img_id = isset($r['image_id']) ? (int)$r['image_id'] : 0;
-        if ($img_id > 0) {
+        if ($thumb === '' && $img_id > 0) {
             $u = wp_get_attachment_image_url($img_id, 'thumbnail');
             if ($u) $thumb = $u;
         }

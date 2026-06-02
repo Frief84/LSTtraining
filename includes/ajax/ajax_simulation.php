@@ -501,6 +501,62 @@ function lsttraining_sim_parse_wp_time(?string $value): int {
     return $timestamp > 0 ? $timestamp : 0;
 }
 
+function lsttraining_sim_radio_delay_seconds(): int {
+    try {
+        return random_int(1, 5);
+    } catch (Throwable $e) {
+        return mt_rand(1, 5);
+    }
+}
+
+function lsttraining_sim_meta_with_radio_delay(array $meta, $base_time = null): array {
+    if (!empty($meta['radio_delay_disabled']) || !empty($meta['radio_visible_at'])) {
+        unset($meta['radio_base_at']);
+        return $meta;
+    }
+
+    $delay = lsttraining_sim_radio_delay_seconds();
+    $base_ts = 0;
+    if (is_int($base_time) || is_float($base_time)) {
+        $base_ts = (int) $base_time;
+    } elseif (is_string($base_time) && trim($base_time) !== '') {
+        $base_ts = lsttraining_sim_parse_wp_time($base_time);
+    }
+    if ($base_ts <= 0 && !empty($meta['radio_base_at'])) {
+        $base_ts = lsttraining_sim_parse_wp_time((string) $meta['radio_base_at']);
+    }
+    if ($base_ts <= 0 && !empty($meta['opened_at'])) {
+        $base_ts = lsttraining_sim_parse_wp_time((string) $meta['opened_at']);
+    }
+    if ($base_ts <= 0 && !empty($meta['alarmiert_at'])) {
+        $base_ts = lsttraining_sim_parse_wp_time((string) $meta['alarmiert_at']);
+    }
+    if ($base_ts <= 0) {
+        $base_ts = time();
+    }
+
+    unset($meta['radio_base_at']);
+    $meta['radio_delay_sec'] = $delay;
+    $meta['radio_visible_at'] = lsttraining_sim_time_string($base_ts + $delay);
+    return $meta;
+}
+
+function lsttraining_sim_event_radio_visible(array $event, int $now): bool {
+    $visible_at = lsttraining_sim_event_radio_visible_timestamp($event);
+    return $visible_at <= 0 || $visible_at <= $now;
+}
+
+function lsttraining_sim_event_radio_visible_timestamp(array $event): int {
+    $meta = is_array($event['meta'] ?? null) ? $event['meta'] : lsttraining_sim_decode_meta((string) ($event['meta_json'] ?? ''));
+    return lsttraining_sim_parse_wp_time((string) ($meta['radio_visible_at'] ?? ''));
+}
+
+function lsttraining_sim_event_radio_time(array $event): string {
+    $meta = is_array($event['meta'] ?? null) ? $event['meta'] : lsttraining_sim_decode_meta((string) ($event['meta_json'] ?? ''));
+    $visible_at = trim((string) ($meta['radio_visible_at'] ?? ''));
+    return $visible_at !== '' ? $visible_at : (string) ($event['ts'] ?? '');
+}
+
 function lsttraining_sim_distance_m(float $lat1, float $lon1, float $lat2, float $lon2): float {
     $earth = 6371000.0;
     $lat1 = deg2rad($lat1);
@@ -924,6 +980,34 @@ function lsttraining_sim_route_segments_for_signal(array $segments, bool $sonder
     return $segments;
 }
 
+function lsttraining_sim_route_segments_scaled_to_duration(array $segments, int $target_duration): array {
+    $segments = lsttraining_sim_normalize_route_segments($segments);
+    if (!$segments) {
+        return [];
+    }
+    $current_duration = lsttraining_sim_route_segments_total_duration($segments);
+    $target_duration = max(count($segments), $target_duration);
+    if ($current_duration <= 0 || $target_duration <= 0 || $current_duration === $target_duration) {
+        return $segments;
+    }
+
+    $scaled = [];
+    $assigned = 0;
+    foreach ($segments as $index => $segment) {
+        $duration = max(1, (int) ($segment['duration_sec'] ?? 1));
+        if ($index === count($segments) - 1) {
+            $next_duration = max(1, $target_duration - $assigned);
+        } else {
+            $next_duration = max(1, (int) round(($duration / $current_duration) * $target_duration));
+            $assigned += $next_duration;
+        }
+        $segment['duration_sec'] = $next_duration;
+        $scaled[] = $segment;
+    }
+
+    return $scaled;
+}
+
 function lsttraining_sim_flatten_route_segments(array $segments): array {
     $route = [];
     foreach ($segments as $segment) {
@@ -1192,6 +1276,7 @@ function lsttraining_sim_ground_route_with_connector(float $from_lat, float $fro
 }
 
 function lsttraining_sim_insert_unit_event(PDO $pdo, int $einsatz_id, string $text, array $meta): int {
+    $meta = lsttraining_sim_meta_with_radio_delay($meta);
     $stmt = $pdo->prepare('
         INSERT INTO instanz_einsatz_events (instanz_einsatz_id, kind, text, meta_json)
         VALUES (?, ?, ?, ?)
@@ -1203,6 +1288,172 @@ function lsttraining_sim_insert_unit_event(PDO $pdo, int $einsatz_id, string $te
         lsttraining_sim_encode_meta($meta),
     ]);
     return (int) $pdo->lastInsertId();
+}
+
+function lsttraining_sim_insert_dispatch_event(PDO $pdo, int $einsatz_id, string $text, array $meta): int {
+    $stmt = $pdo->prepare('
+        INSERT INTO instanz_einsatz_events (instanz_einsatz_id, kind, text, meta_json)
+        VALUES (?, ?, ?, ?)
+    ');
+    $stmt->execute([
+        $einsatz_id,
+        'dispatcher_question',
+        $text,
+        lsttraining_sim_encode_meta($meta),
+    ]);
+    return (int) $pdo->lastInsertId();
+}
+
+function lsttraining_sim_handover_window(PDO $pdo, int $instanz_id, array $meta, int $now): array {
+    $triage = strtoupper((string) ($meta['transport_triage_category'] ?? 'III'));
+    $ranges = [
+        'I' => [10, 20],
+        'II' => [15, 30],
+        'III' => [20, 45],
+        'IV' => [30, 60],
+    ];
+    $range = $ranges[$triage] ?? $ranges['III'];
+    $base_minutes = mt_rand($range[0], $range[1]);
+    $hospital_id = (int) ($meta['transport_hospital_id'] ?? 0);
+    $occupied = 0;
+
+    if ($hospital_id > 0) {
+        $stmt = $pdo->prepare('
+            SELECT ev.meta_json
+            FROM instanz_einsatz_events ev
+            INNER JOIN instanz_einsaetze ie ON ie.id = ev.instanz_einsatz_id
+            WHERE ie.instanz_id = ? AND ev.kind = ?
+            ORDER BY ev.id DESC
+            LIMIT 500
+        ');
+        $stmt->execute([$instanz_id, 'unit_report']);
+        foreach (($stmt->fetchAll(PDO::FETCH_COLUMN) ?: []) as $raw_meta) {
+            $other = lsttraining_sim_decode_meta($raw_meta);
+            if (($other['event_type'] ?? '') !== 'vehicle_alarm' || !empty($other['cancelled_at'])) {
+                continue;
+            }
+            if ((string) ($other['mission_phase'] ?? '') === 'handover' && (int) ($other['transport_hospital_id'] ?? 0) === $hospital_id) {
+                $occupied++;
+            }
+        }
+    }
+
+    $occupancy_minutes = min(30, $occupied * 5);
+    $fallback_minutes = !empty($meta['transport_department_fallback']) ? 10 : 0;
+    $local_time = (new DateTimeImmutable('@' . $now))->setTimezone(wp_timezone());
+    $hour = (int) $local_time->format('G');
+    $night_minutes = ($hour >= 22 || $hour < 6) ? -2 : 0;
+    $duration_minutes = max(5, $base_minutes + $occupancy_minutes + $fallback_minutes + $night_minutes);
+
+    return [
+        'triage_category' => $triage,
+        'base_minutes' => $base_minutes,
+        'occupancy_minutes' => $occupancy_minutes,
+        'department_fallback_minutes' => $fallback_minutes,
+        'night_minutes' => $night_minutes,
+        'duration_sec' => $duration_minutes * 60,
+        'release_at' => lsttraining_sim_time_string($now + ($duration_minutes * 60)),
+    ];
+}
+
+function lsttraining_sim_incident_close_blockers(PDO $pdo, int $einsatz_id): array {
+    $blockers = [];
+    $stmt = $pdo->prepare('SELECT meta_json FROM instanz_einsaetze WHERE id = ? LIMIT 1');
+    $stmt->execute([$einsatz_id]);
+    $incident_meta = lsttraining_sim_decode_meta($stmt->fetchColumn() ?: '');
+    foreach ((array) ($incident_meta['patients'] ?? []) as $patient) {
+        if (!is_array($patient)) {
+            continue;
+        }
+        if (in_array((string) ($patient['transport_status'] ?? ''), ['ready', 'to_hospital', 'handover'], true)) {
+            $blockers['patient_transport'] = 'Patiententransport ist noch nicht abgeschlossen.';
+        }
+    }
+    if (!empty($incident_meta['pending_resource_request'])) {
+        $required = is_array($incident_meta['required_resources'] ?? null) ? $incident_meta['required_resources'] : [];
+        if (lsttraining_sim_missing_resources_for_incident($pdo, $einsatz_id, $required)) {
+            $blockers['resources'] = 'Eine Nachforderung ist noch offen.';
+        }
+    }
+
+    $events = $pdo->prepare('SELECT meta_json FROM instanz_einsatz_events WHERE instanz_einsatz_id = ? AND kind = ?');
+    $events->execute([$einsatz_id, 'unit_report']);
+    foreach (($events->fetchAll(PDO::FETCH_COLUMN) ?: []) as $raw_meta) {
+        $meta = lsttraining_sim_decode_meta($raw_meta);
+        if (($meta['event_type'] ?? '') === 'vehicle_alarm' && empty($meta['cancelled_at']) && (string) ($meta['mission_phase'] ?? '') !== 'available') {
+            $blockers['vehicle'] = 'Dem Einsatz sind noch Fahrzeuge zugeordnet.';
+        }
+        if (($meta['event_type'] ?? '') === 'situation_report' && !empty($meta['requires_ack']) && empty($meta['acknowledged_at'])) {
+            $blockers['radio'] = 'Es gibt noch einen offenen Sprechwunsch.';
+        }
+    }
+
+    return array_values($blockers);
+}
+
+function lsttraining_sim_fire_phase_followups(PDO $pdo, int $einsatz_id, array &$assignment_meta, int $now, string $trigger_mode, string $command_code = '', int $reply_to_event_id = 0): bool {
+    $emitted = is_array($assignment_meta['phase_followups_emitted'] ?? null) ? $assignment_meta['phase_followups_emitted'] : [];
+    $emitted_key = $command_code !== '' ? $trigger_mode . ':' . $command_code : $trigger_mode;
+    if ($trigger_mode !== 'on_dispatcher_question' && !empty($emitted[$emitted_key])) {
+        return false;
+    }
+
+    $incident_stmt = $pdo->prepare('SELECT source_id FROM instanz_einsaetze WHERE id = ? LIMIT 1');
+    $incident_stmt->execute([$einsatz_id]);
+    $source_id = (int) $incident_stmt->fetchColumn();
+    if ($source_id <= 0) {
+        return false;
+    }
+
+    $stmt = $pdo->prepare('
+        SELECT id, text, effect_json, speaker_type
+        FROM einsatz_followups
+        WHERE einsatz_id = ? AND kind = ? AND trigger_mode = ?
+        ORDER BY step_no ASC, id ASC
+    ');
+    $stmt->execute([$source_id, 'unit_report', $trigger_mode]);
+    $followups = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    $did_emit = false;
+    foreach ($followups as $followup) {
+        $effect = lsttraining_sim_decode_meta($followup['effect_json'] ?? '');
+        $configured_command = (string) ($effect['command_code'] ?? '');
+        if ($command_code !== '' && $configured_command !== '' && $configured_command !== $command_code) {
+            continue;
+        }
+        $text = trim((string) ($followup['text'] ?? ''));
+        if ($text === '') {
+            continue;
+        }
+        $rufname = (string) ($assignment_meta['rufname'] ?? 'Fahrzeug');
+        $event_meta = [
+            'event_type' => 'phase_followup',
+            'radio_message_type' => $trigger_mode,
+            'sender_type' => 'vehicle',
+            'recipient_type' => 'dispatch',
+            'followup_id' => (int) ($followup['id'] ?? 0),
+            'trigger_mode' => $trigger_mode,
+            'command_code' => $command_code,
+            'status_id' => (int) ($assignment_meta['status_id'] ?? 0),
+            'fahrzeug_id' => (int) ($assignment_meta['fahrzeug_id'] ?? 0),
+            'rufname' => $rufname,
+            'requires_ack' => false,
+            'radio_base_at' => lsttraining_sim_time_string($now),
+        ];
+        if ($reply_to_event_id > 0) {
+            $event_meta['reply_to_event_id'] = $reply_to_event_id;
+        }
+        lsttraining_sim_insert_unit_event($pdo, $einsatz_id, 'Leitstelle von ' . $rufname . ': ' . $text . ', Ende.', $event_meta);
+        $did_emit = true;
+        if ($command_code !== '') {
+            break;
+        }
+    }
+
+    if ($did_emit && $trigger_mode !== 'on_dispatcher_question') {
+        $emitted[$emitted_key] = lsttraining_sim_time_string($now);
+        $assignment_meta['phase_followups_emitted'] = $emitted;
+    }
+    return $did_emit;
 }
 
 function lsttraining_sim_police_vehicle_image_path(PDO $pdo, int $leitstelle_id): string {
@@ -1842,6 +2093,7 @@ function lsttraining_sim_ensure_police_support(PDO $pdo, int $instanz_id, int $e
         'sondersignal' => $signal_allowed ? 1 : 0,
         'route_coordinates' => lsttraining_sim_flatten_route_segments($route_segments),
         'route_segments' => $route_segments,
+        'route_segments_normal' => $normal_segments,
         'route_distance_m' => (int) ($route['distance_m'] ?? 0),
         'route_duration_sec' => $duration,
         'route_duration_normal_sec' => $normal_duration,
@@ -2069,15 +2321,19 @@ function lsttraining_sim_missing_resources_for_incident(PDO $pdo, int $einsatz_i
         if (($meta['event_type'] ?? '') !== 'vehicle_alarm') {
             continue;
         }
-        if (!empty($meta['cancelled_at'])) {
-            continue;
-        }
         $status_id = (int) ($meta['status_id'] ?? 0);
         if ($status_id > 0) {
             if (!empty($seen_status[$status_id])) {
                 continue;
             }
             $seen_status[$status_id] = true;
+        }
+        if (!empty($meta['cancelled_at'])) {
+            continue;
+        }
+        $mission_phase = (string) ($meta['mission_phase'] ?? '');
+        if (in_array($mission_phase, ['available', 'returning'], true)) {
+            continue;
         }
         $class = trim((string) ($meta['resource_class'] ?? ''));
         if ($class === '') {
@@ -2440,6 +2696,10 @@ function lsttraining_sim_fire_arrival_followups(PDO $pdo, int $instanz_id, array
 
         lsttraining_sim_insert_unit_event($pdo, $einsatz_id, 'Sprechwunsch', [
             'event_type' => 'situation_report',
+            'radio_message_type' => 'speak_request',
+            'sender_type' => 'vehicle',
+            'recipient_type' => 'dispatch',
+            'status_transition' => '5',
             'followup_id' => $followup_id,
             'followup_step_no' => (int) ($followup['step_no'] ?? 0),
             'followup_label' => (string) ($followup['label'] ?? ''),
@@ -2460,6 +2720,7 @@ function lsttraining_sim_fire_arrival_followups(PDO $pdo, int $instanz_id, array
             'resource_request_text' => $resource_request_text,
             'default_arrival_report' => $is_default_arrival,
             'replaced_lagemeldung' => $replaced_lagemeldung,
+            'radio_base_at' => lsttraining_sim_time_string($now),
         ]);
         lsttraining_sim_reset_runtime_speed($pdo, $instanz_id);
         $decisions[$key]['emitted'] = true;
@@ -2565,13 +2826,14 @@ function lsttraining_sim_advance_vehicle_movements(PDO $pdo, int $instanz_id, in
 
     foreach ($events as $event) {
         $meta = lsttraining_sim_decode_meta($event['meta_json'] ?? '');
-        if (($meta['event_type'] ?? '') === 'support_vehicle_alarm' && ($meta['support_type'] ?? '') === 'police') {
+        if (($meta['event_type'] ?? '') === 'support_vehicle_alarm' && in_array((string) ($meta['support_type'] ?? ''), ['police', 'neighbor'], true)) {
             if (!empty($meta['cancelled_at'])) {
                 continue;
             }
 
+            $support_type = (string) ($meta['support_type'] ?? '');
             $phase = (string) ($meta['mission_phase'] ?? 'to_scene');
-            if ($phase === 'at_scene' || !empty($meta['arrived_at'])) {
+            if ($phase === 'at_scene' || ($phase !== 'returning' && !empty($meta['arrived_at']))) {
                 continue;
             }
 
@@ -2581,10 +2843,17 @@ function lsttraining_sim_advance_vehicle_movements(PDO $pdo, int $instanz_id, in
                 continue;
             }
 
-            $started_at = lsttraining_sim_parse_wp_time($meta['movement_started_at'] ?? ($meta['alarmiert_at'] ?? ''));
+            $started_at = $phase === 'returning'
+                ? lsttraining_sim_parse_wp_time($meta['return_started_at'] ?? ($meta['phase_started_at'] ?? ''))
+                : lsttraining_sim_parse_wp_time($meta['movement_started_at'] ?? ($meta['alarmiert_at'] ?? ''));
             if ($started_at <= 0) {
                 $started_at = $now;
-                $meta['movement_started_at'] = lsttraining_sim_time_string($now);
+                if ($phase === 'returning') {
+                    $meta['return_started_at'] = lsttraining_sim_time_string($now);
+                    $meta['phase_started_at'] = lsttraining_sim_time_string($now);
+                } else {
+                    $meta['movement_started_at'] = lsttraining_sim_time_string($now);
+                }
             }
 
             $motion = lsttraining_sim_route_movement_state($meta, $now - $started_at);
@@ -2601,21 +2870,77 @@ function lsttraining_sim_advance_vehicle_movements(PDO $pdo, int $instanz_id, in
                 'latitude' => round((float) $position['latitude'], 6),
                 'longitude' => round((float) $position['longitude'], 6),
             ];
-            $meta['fms_status'] = $progress >= 1.0 ? '4' : '3';
+            $meta['fms_status'] = $phase === 'returning'
+                ? ($progress >= 1.0 ? '2' : '1')
+                : ($progress >= 1.0 ? '4' : '3');
             $meta['sondersignal'] = ($progress >= 1.0 || empty($meta['sondersignal_allowed'])) ? 0 : 1;
 
-            if ($progress >= 1.0 && empty($meta['arrived_event_logged'])) {
-                $meta['arrived_at'] = lsttraining_sim_time_string($now);
-                $meta['mission_phase'] = 'at_scene';
-                $meta['arrived_event_logged'] = true;
-                lsttraining_sim_insert_unit_event($pdo, $einsatz_id, (string) ($meta['rufname'] ?? 'Polizei') . ': S4', [
-                    'event_type' => 'support_vehicle_status',
-                    'support_type' => 'police',
-                    'support_id' => (string) ($meta['support_id'] ?? ''),
-                    'rufname' => (string) ($meta['rufname'] ?? 'Polizei'),
-                    'fms_status' => '4',
+            if (
+                $support_type === 'neighbor'
+                && $phase === 'to_scene'
+                && empty($meta['entry_speak_request_event_id'])
+                && lsttraining_sim_neighbor_inside_instance_area($pdo, $instanz_id, $meta['last_position'], $progress)
+            ) {
+                $rufname = (string) ($meta['rufname'] ?? 'Fremdfahrzeug');
+                $home = trim((string) ($meta['home_nebenleitstelle_name'] ?? 'Nachbarleitstelle'));
+                $report = 'Leitstelle von ' . $rufname . ': Fremdfahrzeug aus ' . $home . ' im Bereich, Sprechwunsch, Ende.';
+                $speak_event_id = lsttraining_sim_insert_unit_event($pdo, $einsatz_id, 'Sprechwunsch', [
+                    'event_type' => 'situation_report',
+                    'radio_message_type' => 'foreign_unit_entry',
+                    'sender_type' => 'vehicle',
+                    'recipient_type' => 'dispatch',
+                    'support_type' => 'neighbor',
+                    'foreign_unit' => true,
+                    'source_event_id' => (int) ($event['id'] ?? 0),
+                    'status_transition' => '5',
+                    'status_id' => 0,
+                    'fahrzeug_id' => (int) ($meta['fahrzeug_id'] ?? 0),
+                    'rufname' => $rufname,
+                    'fms_status' => '5',
+                    'previous_fms_status' => '3',
+                    'requires_ack' => true,
+                    'acknowledged_at' => null,
                     'direction' => 'down',
+                    'report_text' => $report,
+                    'visible_text_pending' => true,
+                    'home_nebenleitstelle_id' => (int) ($meta['home_nebenleitstelle_id'] ?? 0),
+                    'home_nebenleitstelle_name' => $home,
+                    'radio_base_at' => lsttraining_sim_time_string($now),
                 ]);
+                $meta['entry_speak_request_event_id'] = $speak_event_id;
+                $meta['contact_established_at'] = lsttraining_sim_time_string($now);
+            }
+
+            if ($progress >= 1.0 && (($phase === 'returning' && empty($meta['return_completed_at'])) || empty($meta['arrived_event_logged']))) {
+                if ($phase === 'returning') {
+                    $meta['mission_phase'] = 'available';
+                    $meta['return_completed_at'] = lsttraining_sim_time_string($now);
+                    $meta['sondersignal'] = 0;
+                    lsttraining_sim_insert_unit_event($pdo, $einsatz_id, 'Leitstelle von ' . (string) ($meta['rufname'] ?? 'Fremdfahrzeug') . ': Zurück an der Heimatleitstelle, abgemeldet, Ende.', [
+                        'event_type' => 'support_vehicle_return_completed',
+                        'support_type' => $support_type,
+                        'support_id' => (string) ($meta['support_id'] ?? ''),
+                        'foreign_unit' => $support_type === 'neighbor',
+                        'rufname' => (string) ($meta['rufname'] ?? 'Fremdfahrzeug'),
+                        'fahrzeug_id' => (int) ($meta['fahrzeug_id'] ?? 0),
+                        'fms_status' => '2',
+                        'direction' => 'down',
+                    ]);
+                } else {
+                    $meta['arrived_at'] = lsttraining_sim_time_string($now);
+                    $meta['arrived_event_logged'] = true;
+                    $meta['mission_phase'] = 'at_scene';
+                    lsttraining_sim_insert_unit_event($pdo, $einsatz_id, 'Leitstelle von ' . (string) ($meta['rufname'] ?? 'Unterstützung') . ': An Einsatzstelle, Status 4, Ende.', [
+                        'event_type' => 'support_vehicle_status',
+                        'support_type' => $support_type,
+                        'support_id' => (string) ($meta['support_id'] ?? ''),
+                        'foreign_unit' => $support_type === 'neighbor',
+                        'rufname' => (string) ($meta['rufname'] ?? 'Unterstützung'),
+                        'fahrzeug_id' => (int) ($meta['fahrzeug_id'] ?? 0),
+                        'fms_status' => '4',
+                        'direction' => 'down',
+                    ]);
+                }
             }
 
             $event_update->execute([lsttraining_sim_encode_meta($meta), (int) $event['id']]);
@@ -2636,7 +2961,11 @@ function lsttraining_sim_advance_vehicle_movements(PDO $pdo, int $instanz_id, in
 
         if ($phase === 'handover') {
             $arrived_ts = lsttraining_sim_parse_wp_time($meta['hospital_arrived_at'] ?? '');
-            if ($arrived_ts > 0 && $now >= $arrived_ts + 120 && empty($meta['handover_completed_at'])) {
+            $release_ts = lsttraining_sim_parse_wp_time($meta['handover_release_at'] ?? '');
+            if ($release_ts <= 0 && $arrived_ts > 0) {
+                $release_ts = $arrived_ts + max(300, (int) ($meta['handover_duration_sec'] ?? 120));
+            }
+            if ($release_ts > 0 && $now >= $release_ts && empty($meta['handover_completed_at'])) {
                 $status_id = (int) ($meta['status_id'] ?? 0);
                 $einsatz_id = (int) ($event['instanz_einsatz_id'] ?? 0);
                 $rufname = (string) ($meta['rufname'] ?? 'Fahrzeug');
@@ -2705,8 +3034,13 @@ function lsttraining_sim_advance_vehicle_movements(PDO $pdo, int $instanz_id, in
                         'sondersignal' => 0,
                         'bemerkung' => 'Rückfahrt zur Wache.',
                     ]);
-                    lsttraining_sim_insert_unit_event($pdo, $einsatz_id, $rufname . ': Übergabe abgeschlossen, Rückfahrt.', [
+                    lsttraining_sim_insert_unit_event($pdo, $einsatz_id, 'Leitstelle von ' . $rufname . ': Übergabe abgeschlossen, frei auf Funk, Rückfahrt zur Wache, Status 1, Ende.', [
                         'event_type' => 'patient_handover_completed',
+                        'radio_message_type' => 'handover_completed',
+                        'sender_type' => 'vehicle',
+                        'recipient_type' => 'dispatch',
+                        'status_transition' => '1',
+                        'fms_status' => '1',
                         'status_id' => $status_id,
                         'fahrzeug_id' => (int) ($meta['fahrzeug_id'] ?? 0),
                         'rufname' => $rufname,
@@ -2764,7 +3098,7 @@ function lsttraining_sim_advance_vehicle_movements(PDO $pdo, int $instanz_id, in
             $position = $motion['position'];
 
             $rufname = (string) ($meta['rufname'] ?? 'Fahrzeug');
-            $fms_status = $progress >= 1.0 ? ($phase === 'returning' ? '2' : '4') : ($phase === 'returning' ? '1' : '3');
+            $fms_status = $progress >= 1.0 ? ($phase === 'returning' ? '2' : '8') : ($phase === 'returning' ? '1' : '7');
             $bemerkung = $phase === 'returning'
                 ? ($progress >= 1.0 ? 'Frei an der Wache.' : 'Rückfahrt zur Wache.')
                 : ($progress >= 1.0 ? 'Am Krankenhaus.' : 'Transport zum Krankenhaus.');
@@ -2789,23 +3123,37 @@ function lsttraining_sim_advance_vehicle_movements(PDO $pdo, int $instanz_id, in
 
             if ($progress >= 1.0 && $phase === 'to_hospital' && empty($meta['hospital_arrived_at'])) {
                 $arrived_at = lsttraining_sim_time_string($now);
+                $handover = lsttraining_sim_handover_window($pdo, $instanz_id, $meta, $now);
                 $meta['mission_phase'] = 'handover';
                 $meta['transport_status'] = 'handover';
                 $meta['hospital_arrived_at'] = $arrived_at;
+                $meta['handover_duration_sec'] = (int) $handover['duration_sec'];
+                $meta['handover_release_at'] = (string) $handover['release_at'];
+                $meta['handover_calculation'] = $handover;
                 lsttraining_sim_update_patient_transport($pdo, $instanz_id, $einsatz_id, (string) ($meta['transport_patient_id'] ?? ''), [
                     'transport_status' => 'handover',
                     'transport_arrived_at' => $arrived_at,
+                    'handover_duration_sec' => (int) $handover['duration_sec'],
+                    'handover_release_at' => (string) $handover['release_at'],
                     'transport_note' => 'Ankunft im Krankenhaus, Übergabe läuft.',
                 ]);
-                lsttraining_sim_insert_unit_event($pdo, $einsatz_id, $rufname . ': Ankunft ' . (string) ($meta['transport_hospital_name'] ?? 'Krankenhaus'), [
+                lsttraining_sim_insert_unit_event($pdo, $einsatz_id, 'Leitstelle von ' . $rufname . ': Am Krankenhaus ' . (string) ($meta['transport_hospital_name'] ?? 'Krankenhaus') . ', Status 8, Ende.', [
                     'event_type' => 'patient_transport_arrived',
+                    'radio_message_type' => 'hospital_arrival',
+                    'sender_type' => 'vehicle',
+                    'recipient_type' => 'dispatch',
+                    'status_transition' => '8',
                     'status_id' => $status_id,
                     'fahrzeug_id' => (int) ($meta['fahrzeug_id'] ?? 0),
                     'rufname' => $rufname,
                     'patient_id' => (string) ($meta['transport_patient_id'] ?? ''),
                     'hospital_id' => (int) ($meta['transport_hospital_id'] ?? 0),
                     'hospital_name' => (string) ($meta['transport_hospital_name'] ?? ''),
+                    'handover_duration_sec' => (int) $handover['duration_sec'],
+                    'handover_release_at' => (string) $handover['release_at'],
+                    'fms_status' => '8',
                 ]);
+                lsttraining_sim_fire_phase_followups($pdo, $einsatz_id, $meta, $now, 'on_hospital_arrival');
             } elseif ($progress >= 1.0 && $phase === 'returning' && empty($meta['return_completed_at'])) {
                 $completed_at = lsttraining_sim_time_string($now);
                 $meta['mission_phase'] = 'available';
@@ -2817,14 +3165,19 @@ function lsttraining_sim_advance_vehicle_movements(PDO $pdo, int $instanz_id, in
                     'ziel_latitude' => null,
                     'ziel_longitude' => null,
                 ]);
-                lsttraining_sim_insert_unit_event($pdo, $einsatz_id, $rufname . ': S2', [
+                lsttraining_sim_insert_unit_event($pdo, $einsatz_id, 'Leitstelle von ' . $rufname . ': Einsatzbereit auf Wache, Status 2, Ende.', [
                     'event_type' => 'fms_update',
+                    'radio_message_type' => 'available_at_station',
+                    'sender_type' => 'vehicle',
+                    'recipient_type' => 'dispatch',
+                    'status_transition' => '2',
                     'fahrzeug_id' => (int) ($meta['fahrzeug_id'] ?? 0),
                     'status_id' => $status_id,
                     'rufname' => $rufname,
                     'fms_status' => '2',
                     'direction' => 'down',
                 ]);
+                lsttraining_sim_fire_phase_followups($pdo, $einsatz_id, $meta, $now, 'on_vehicle_available');
             }
 
             $event_update->execute([lsttraining_sim_encode_meta($meta), (int) $event['id']]);
@@ -2885,8 +3238,12 @@ function lsttraining_sim_advance_vehicle_movements(PDO $pdo, int $instanz_id, in
 
         if (empty($meta['started_event_logged'])) {
             $meta['started_event_logged'] = true;
-            lsttraining_sim_insert_unit_event($pdo, $einsatz_id, $rufname . ': S3', [
+            lsttraining_sim_insert_unit_event($pdo, $einsatz_id, 'Leitstelle von ' . $rufname . ': Ausgerückt, Status 3, Ende.', [
                 'event_type' => 'fms_update',
+                'radio_message_type' => 'turnout',
+                'sender_type' => 'vehicle',
+                'recipient_type' => 'dispatch',
+                'status_transition' => '3',
                 'fahrzeug_id' => (int) ($meta['fahrzeug_id'] ?? 0),
                 'status_id' => $status_id,
                 'rufname' => $rufname,
@@ -2899,8 +3256,12 @@ function lsttraining_sim_advance_vehicle_movements(PDO $pdo, int $instanz_id, in
             $meta['arrived_at'] = lsttraining_sim_time_string($now);
             $meta['mission_phase'] = 'at_scene';
             $meta['arrived_event_logged'] = true;
-            lsttraining_sim_insert_unit_event($pdo, $einsatz_id, $rufname . ': S4', [
+            lsttraining_sim_insert_unit_event($pdo, $einsatz_id, 'Leitstelle von ' . $rufname . ': An Einsatzstelle, Status 4, Ende.', [
                 'event_type' => 'fms_update',
+                'radio_message_type' => 'scene_arrival',
+                'sender_type' => 'vehicle',
+                'recipient_type' => 'dispatch',
+                'status_transition' => '4',
                 'fahrzeug_id' => (int) ($meta['fahrzeug_id'] ?? 0),
                 'status_id' => $status_id,
                 'rufname' => $rufname,
@@ -3044,6 +3405,33 @@ function lsttraining_sim_display_address_for_incident(array $incident): string {
     return $leitstelle !== '' ? 'im Einsatzgebiet ' . $leitstelle : 'im Einsatzgebiet';
 }
 
+function lsttraining_sim_alarm_location_text(array $incident): string {
+    $location = trim(lsttraining_sim_display_address_for_incident($incident));
+    if ($location !== '' && $location !== 'im Einsatzgebiet' && strpos($location, 'im Einsatzgebiet ') !== 0) {
+        return $location;
+    }
+
+    $meta = is_array($incident['meta'] ?? null) ? $incident['meta'] : [];
+    foreach ([
+        $meta['generated_address'] ?? '',
+        $meta['caller']['generated_address'] ?? '',
+        $incident['poi_name_snapshot'] ?? '',
+    ] as $candidate) {
+        $candidate = trim((string) $candidate);
+        if ($candidate !== '' && !lsttraining_sim_is_visible_location_fallback($candidate)) {
+            return $candidate;
+        }
+    }
+
+    $lat = is_numeric($incident['latitude'] ?? null) ? (float) $incident['latitude'] : null;
+    $lon = is_numeric($incident['longitude'] ?? null) ? (float) $incident['longitude'] : null;
+    if ($lat !== null && $lon !== null) {
+        return 'Einsatzort laut Karte ' . number_format($lat, 5, ',', '') . ', ' . number_format($lon, 5, ',', '');
+    }
+
+    return $location !== '' ? $location : 'Einsatzort laut Karte';
+}
+
 function lsttraining_sim_contains_raw_gps_text(string $text): bool {
     return preg_match('/\bGPS\s+-?\d+(?:[.,]\d+)?\s*,\s*-?\d+(?:[.,]\d+)?\b/i', $text) === 1;
 }
@@ -3149,6 +3537,8 @@ function lsttraining_sim_fetch_instance_context(PDO $pdo, int $instanz_id, int $
     $instance['sim_timestamp'] = $runtime['game_now_ts'];
     $instance['speed'] = $runtime['speed'];
     $instance['paused'] = $runtime['paused'];
+    $instance['weather_current'] = lsttraining_sim_weather_point_for_timestamp($instance['settings'], (int) $runtime['game_now_ts']);
+    $instance['weather_forecast_summary'] = lsttraining_sim_weather_forecast_summary($instance['settings'], (int) $runtime['game_now_ts']);
     $instance['police_vehicle_image_url'] = lsttraining_sim_police_vehicle_image_url($pdo, (int) ($instance['leitstelle_id'] ?? 0));
     $instance['rescue_vehicle_image_url'] = lsttraining_sim_public_vehicle_image_url(
         lsttraining_sim_rescue_vehicle_image_path($pdo, (int) ($instance['leitstelle_id'] ?? 0)),
@@ -3234,6 +3624,424 @@ function lsttraining_sim_fetch_bootstrap_vehicles(PDO $pdo, int $instanz_id, int
     return $vehicles;
 }
 
+function lsttraining_sim_ensure_neighbor_schema(PDO $pdo): void {
+    static $ready = false;
+    if ($ready) {
+        return;
+    }
+    if (!lsttraining_sim_table_exists($pdo, 'leitstelle_nebenleitstellen')) {
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS `leitstelle_nebenleitstellen` (
+              `leitstelle_id` INT NOT NULL,
+              `nebenleitstelle_id` INT NOT NULL,
+              PRIMARY KEY (`leitstelle_id`, `nebenleitstelle_id`),
+              KEY `idx_ln_nebenleitstelle` (`nebenleitstelle_id`),
+              CONSTRAINT `fk_ln_leitstelle`
+                FOREIGN KEY (`leitstelle_id`) REFERENCES `leitstellen`(`id`) ON DELETE CASCADE,
+              CONSTRAINT `fk_ln_nebenleitstelle`
+                FOREIGN KEY (`nebenleitstelle_id`) REFERENCES `nebenleitstellen`(`id`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+        ");
+    }
+    $ready = true;
+}
+
+function lsttraining_sim_fetch_neighbor_dispatch_centers(PDO $pdo, int $leitstelle_id): array {
+    if ($leitstelle_id <= 0) {
+        return [];
+    }
+    lsttraining_sim_ensure_neighbor_schema($pdo);
+
+    $stmt = $pdo->prepare('
+        SELECT
+            n.id,
+            n.name,
+            n.zustandigkeit,
+            n.gps,
+            n.geojson
+        FROM leitstelle_nebenleitstellen ln
+        INNER JOIN leitstellen l ON l.id = ln.leitstelle_id
+        INNER JOIN nebenleitstellen n ON n.id = ln.nebenleitstelle_id
+        WHERE ln.leitstelle_id = ?
+          AND ln.nebenleitstelle_id <> ln.leitstelle_id
+          AND LOWER(CONVERT(TRIM(n.name) USING utf8mb4)) COLLATE utf8mb4_unicode_ci <> LOWER(CONVERT(TRIM(l.name) USING utf8mb4)) COLLATE utf8mb4_unicode_ci
+        ORDER BY n.name ASC, n.id ASC
+    ');
+    $stmt->execute([$leitstelle_id]);
+    $items = [];
+    foreach (($stmt->fetchAll(PDO::FETCH_ASSOC) ?: []) as $row) {
+        $lat = null;
+        $lon = null;
+        $gps = trim((string) ($row['gps'] ?? ''));
+        if ($gps !== '' && preg_match('/(-?\d+(?:[.,]\d+)?)\s*[,;]\s*(-?\d+(?:[.,]\d+)?)/', $gps, $match)) {
+            $lat = (float) str_replace(',', '.', $match[1]);
+            $lon = (float) str_replace(',', '.', $match[2]);
+        }
+        $items[] = [
+            'id' => (int) ($row['id'] ?? 0),
+            'name' => (string) ($row['name'] ?? ''),
+            'zustandigkeit' => (string) ($row['zustandigkeit'] ?? ''),
+            'latitude' => $lat,
+            'longitude' => $lon,
+        ];
+    }
+    return $items;
+}
+
+function lsttraining_sim_fetch_neighbor_stations(PDO $pdo, int $leitstelle_id): array {
+    if ($leitstelle_id <= 0) {
+        return [];
+    }
+    lsttraining_sim_ensure_neighbor_schema($pdo);
+
+    $stmt = $pdo->prepare('
+        SELECT
+            w.id,
+            w.name,
+            w.typ,
+            w.latitude,
+            w.longitude,
+            w.bild_datei,
+            n.id AS nebenleitstelle_id,
+            n.name AS nebenleitstelle_name
+        FROM leitstelle_nebenleitstellen ln
+        INNER JOIN leitstellen l ON l.id = ln.leitstelle_id
+        INNER JOIN nebenleitstellen n ON n.id = ln.nebenleitstelle_id
+        INNER JOIN wache_nebenleitstellen wn ON wn.nebenleitstelle_id = n.id
+        INNER JOIN wachen w ON w.id = wn.wache_id
+        WHERE ln.leitstelle_id = ?
+          AND ln.nebenleitstelle_id <> ln.leitstelle_id
+          AND LOWER(CONVERT(TRIM(n.name) USING utf8mb4)) COLLATE utf8mb4_unicode_ci <> LOWER(CONVERT(TRIM(l.name) USING utf8mb4)) COLLATE utf8mb4_unicode_ci
+        ORDER BY n.name ASC, w.name ASC, w.id ASC
+    ');
+    $stmt->execute([$leitstelle_id]);
+    $stations = [];
+    foreach (($stmt->fetchAll(PDO::FETCH_ASSOC) ?: []) as $station) {
+        $stations[] = [
+            'id' => (int) ($station['id'] ?? 0),
+            'name' => (string) ($station['name'] ?? ''),
+            'typ' => (string) ($station['typ'] ?? ''),
+            'latitude' => $station['latitude'] !== null ? (float) $station['latitude'] : null,
+            'longitude' => $station['longitude'] !== null ? (float) $station['longitude'] : null,
+            'kind' => lsttraining_sim_station_kind((string) ($station['typ'] ?? '')),
+            'image_url' => lsttraining_sim_public_vehicle_image_url($station['bild_datei'] ?? ''),
+            'is_neighbor' => true,
+            'nebenleitstelle_id' => (int) ($station['nebenleitstelle_id'] ?? 0),
+            'nebenleitstelle_name' => (string) ($station['nebenleitstelle_name'] ?? ''),
+        ];
+    }
+    return $stations;
+}
+
+function lsttraining_sim_neighbor_support_states(PDO $pdo, int $instanz_id): array {
+    $stmt = $pdo->prepare('
+        SELECT ev.meta_json
+        FROM instanz_einsatz_events ev
+        INNER JOIN instanz_einsaetze ie ON ie.id = ev.instanz_einsatz_id
+        WHERE ie.instanz_id = ? AND ev.kind = ?
+        ORDER BY ev.id DESC
+        LIMIT 800
+    ');
+    $stmt->execute([$instanz_id, 'unit_report']);
+    $states = [];
+    foreach (($stmt->fetchAll(PDO::FETCH_COLUMN) ?: []) as $raw_meta) {
+        $meta = lsttraining_sim_decode_meta($raw_meta);
+        if (($meta['event_type'] ?? '') !== 'support_vehicle_alarm' || ($meta['support_type'] ?? '') !== 'neighbor') {
+            continue;
+        }
+        if (!empty($meta['cancelled_at'])) {
+            continue;
+        }
+        $fahrzeug_id = (int) ($meta['fahrzeug_id'] ?? 0);
+        if ($fahrzeug_id <= 0 || isset($states[$fahrzeug_id])) {
+            continue;
+        }
+        $phase = (string) ($meta['mission_phase'] ?? 'to_scene');
+        if ($phase === 'available') {
+            continue;
+        }
+        $states[$fahrzeug_id] = [
+            'state' => $phase === 'returning'
+                ? 'Rückfahrt zur Heimatleitstelle'
+                : ($phase === 'at_scene' ? 'im Fremdeinsatz' : 'unterwegs zur spielbaren Leitstelle'),
+            'phase' => $phase,
+            'einsatz_id' => (int) ($meta['einsatz_id'] ?? 0),
+        ];
+    }
+    return $states;
+}
+
+function lsttraining_sim_neighbor_vehicle_roll(int $instanz_id, int $fahrzeug_id, int $sim_now_ts): int {
+    $hour_bucket = wp_date('Y-m-d-H', $sim_now_ts);
+    $hash = crc32($instanz_id . ':' . $fahrzeug_id . ':' . $hour_bucket . ':neighbor-availability');
+    return (int) ($hash % 100);
+}
+
+function lsttraining_sim_load_bundesland_stats(): array {
+    static $stats = null;
+    if (is_array($stats)) {
+        return $stats;
+    }
+    $stats = [];
+    $path = dirname(__DIR__, 2) . '/data/einsatzbelastung-bundeslaender.json';
+    if (is_readable($path)) {
+        $rows = json_decode((string) file_get_contents($path), true);
+        if (is_array($rows)) {
+            foreach ($rows as $row) {
+                if (is_array($row) && !empty($row['bundesland'])) {
+                    $stats[(string) $row['bundesland']] = $row;
+                }
+            }
+        }
+    }
+    return $stats;
+}
+
+function lsttraining_sim_neighbor_time_curve(int $hour, string $domain): float {
+    if ($domain === 'fw') {
+        if ($hour < 6) return 0.55;
+        if ($hour < 12) return 0.95;
+        if ($hour < 18) return 1.25;
+        return 1.15;
+    }
+    if ($hour < 6) return 0.62;
+    if ($hour < 12) return 1.10;
+    if ($hour < 18) return 1.30;
+    return 0.96;
+}
+
+function lsttraining_sim_neighbor_load_profile(array $vehicle, int $instanz_id, int $sim_now_ts, array $weather): array {
+    $population = max(10000, (int) ($vehicle['neben_einwohner'] ?? 0));
+    $area = max(50.0, (float) ($vehicle['neben_flaeche_km2'] ?? 0));
+    $bundesland = trim((string) (($vehicle['wache_bundesland'] ?? '') ?: ($vehicle['leitstelle_bundesland'] ?? '')));
+    $stats = lsttraining_sim_load_bundesland_stats();
+    $row = $stats[$bundesland] ?? [];
+    $rd_year = max(120000, (int) ($row['rettungsdienst_einsaetze_gesamt'] ?? 650000));
+    $fw_year = max(12000, (int) ($row['feuerwehr_einsaetze_gesamt'] ?? 80000));
+    $state_pop = [
+        'Baden-Württemberg' => 11280000, 'Bayern' => 13430000, 'Berlin' => 3878000, 'Brandenburg' => 2573000,
+        'Bremen' => 684000, 'Hamburg' => 1960000, 'Hessen' => 6390000, 'Mecklenburg-Vorpommern' => 1630000,
+        'Niedersachsen' => 8140000, 'Nordrhein-Westfalen' => 18190000, 'Rheinland-Pfalz' => 4160000, 'Saarland' => 1000000,
+        'Sachsen' => 4090000, 'Sachsen-Anhalt' => 2190000, 'Schleswig-Holstein' => 2960000, 'Thüringen' => 2130000,
+    ][$bundesland] ?? 5000000;
+    $rd_per_person_day = ($rd_year / max(1, $state_pop)) / 365.0;
+    $fw_per_person_day = ($fw_year / max(1, $state_pop)) / 365.0;
+    $hour = (int) wp_date('G', $sim_now_ts);
+    $season = (string) wp_date('n', $sim_now_ts);
+    $season_rd = in_array((int) $season, [12, 1, 2], true) ? 1.08 : (in_array((int) $season, [6, 7, 8], true) ? 0.98 : 1.02);
+    $season_fw = in_array((int) $season, [6, 7, 8, 9, 10], true) ? 1.10 : (in_array((int) $season, [12, 1, 2], true) ? 1.06 : 1.0);
+    $area_duration_factor = max(0.85, min(1.35, 0.95 + sqrt($area) / 90.0));
+    $rd_parallel = $population * $rd_per_person_day * lsttraining_sim_neighbor_time_curve($hour, 'rd') * $season_rd * $area_duration_factor * lsttraining_sim_weather_factor($weather, 'rd');
+    $fw_parallel = $population * $fw_per_person_day * lsttraining_sim_neighbor_time_curve($hour, 'fw') * $season_fw * $area_duration_factor * lsttraining_sim_weather_factor($weather, 'fw');
+    return [
+        'bundesland' => $bundesland,
+        'population' => $population,
+        'area_km2' => round($area, 2),
+        'rd_parallel_estimate' => round($rd_parallel, 2),
+        'fw_parallel_estimate' => round($fw_parallel, 2),
+        'weather_primary' => (string) ($weather['primary'] ?? 'clear'),
+        'weather_tags' => is_array($weather['tags'] ?? null) ? $weather['tags'] : [],
+        'source_status' => (string) ($row['quelle_status'] ?? 'fallback'),
+    ];
+}
+
+function lsttraining_sim_weight_neighbor_vehicle_binding(array $vehicle, array $load_profile): float {
+    $class = (string) ($vehicle['resource_class'] ?? lsttraining_sim_resource_class_from_type((string) ($vehicle['fahrzeugtyp'] ?? '')));
+    $rd = (float) ($load_profile['rd_parallel_estimate'] ?? 0);
+    $fw = (float) ($load_profile['fw_parallel_estimate'] ?? 0);
+    $tags = is_array($load_profile['weather_tags'] ?? null) ? $load_profile['weather_tags'] : [];
+    $vehicle_pool_hint = max(3.0, min(90.0, sqrt((float) ($load_profile['population'] ?? 100000)) / 45.0));
+    $prob = 6.0;
+    if (in_array($class, ['rettungswagen', 'krankentransport', 'notarzt'], true)) {
+        $prob += min(42.0, ($rd / $vehicle_pool_hint) * 26.0);
+        if ($class === 'krankentransport') $prob += 5.0;
+        if ($class === 'notarzt') $prob += 6.0;
+    } elseif (in_array($class, ['loeschfahrzeug', 'ruestung', 'hubrettung', 'fuehrung'], true)) {
+        $prob += min(34.0, ($fw / $vehicle_pool_hint) * 34.0);
+        if (array_intersect($tags, ['storm', 'windy', 'rain', 'snow'])) $prob += 8.0;
+        if (in_array($class, ['ruestung', 'hubrettung', 'fuehrung'], true)) $prob += 4.0;
+    } else {
+        $prob += min(22.0, (($rd + $fw) / $vehicle_pool_hint) * 14.0);
+        if (array_intersect($tags, ['storm', 'windy'])) $prob += 6.0;
+    }
+    return max(3.0, min(68.0, $prob));
+}
+
+function lsttraining_sim_neighbor_vehicle_availability(array $vehicle, int $instanz_id, int $sim_now_ts, array $support_states, array $weather, array $load_profile): array {
+    $fahrzeug_id = (int) ($vehicle['fahrzeug_id'] ?? ($vehicle['id'] ?? 0));
+    if ($fahrzeug_id > 0 && isset($support_states[$fahrzeug_id])) {
+        return [
+            'availability_state' => (string) ($support_states[$fahrzeug_id]['state'] ?? 'bereits angefordert'),
+            'available' => false,
+            'load_profile' => $load_profile,
+        ];
+    }
+
+    $status = (string) ($vehicle['status'] ?? 'frei');
+    $fms = (string) ($vehicle['fms_status'] ?? '2');
+    if ($status === 'nicht einsatzbereit' || $fms === '6') {
+        return ['availability_state' => 'nicht dienstbereit', 'available' => false, 'load_profile' => $load_profile];
+    }
+    if (!in_array($status, ['frei', 'einsatzbereit', ''], true) || !in_array($fms, ['1', '2', ''], true)) {
+        return ['availability_state' => 'im Einsatz der Heimatleitstelle', 'available' => false, 'load_profile' => $load_profile];
+    }
+
+    $out_of_service_threshold = 5;
+    $hour = (int) wp_date('G', $sim_now_ts);
+    if ($hour >= 22 || $hour < 6) {
+        $out_of_service_threshold += 3;
+    }
+
+    $roll = lsttraining_sim_neighbor_vehicle_roll($instanz_id, $fahrzeug_id, $sim_now_ts);
+    if ($roll < $out_of_service_threshold) {
+        return ['availability_state' => 'nicht dienstbereit', 'available' => false, 'load_profile' => $load_profile];
+    }
+    $busy_probability = lsttraining_sim_weight_neighbor_vehicle_binding($vehicle, $load_profile);
+    if ($roll < $out_of_service_threshold + $busy_probability) {
+        return ['availability_state' => 'im Einsatz der Heimatleitstelle', 'available' => false, 'load_profile' => $load_profile];
+    }
+    return ['availability_state' => 'verfügbar', 'available' => true, 'load_profile' => $load_profile];
+}
+
+function lsttraining_sim_fetch_neighbor_vehicle_availability(PDO $pdo, int $instanz_id, int $leitstelle_id, int $sim_now_ts): array {
+    if ($instanz_id <= 0 || $leitstelle_id <= 0) {
+        return [];
+    }
+    lsttraining_sim_ensure_neighbor_schema($pdo);
+    $settings = [];
+    try {
+        $settings_stmt = $pdo->prepare('SELECT settings_json FROM spielinstanzen WHERE id = ? LIMIT 1');
+        $settings_stmt->execute([$instanz_id]);
+        $settings = lsttraining_sim_decode_meta((string) $settings_stmt->fetchColumn());
+    } catch (Throwable $e) {
+        $settings = [];
+    }
+    $weather_current = lsttraining_sim_weather_point_for_timestamp($settings, $sim_now_ts);
+
+    $fahrzeuge_columns = lsttraining_sim_workspace_table_columns($pdo, 'fahrzeuge');
+    $signal_lights_select = !empty($fahrzeuge_columns['signal_lights_json'])
+        ? 'f.signal_lights_json'
+        : 'NULL AS signal_lights_json';
+    $stmt = $pdo->prepare('
+        SELECT
+            f.id AS fahrzeug_id,
+            f.wache_id,
+            f.rufname,
+            f.fahrzeugtyp,
+            f.status,
+            f.fms_status,
+            f.sondersignal,
+            f.dienstzeiten,
+            f.bild_datei,
+            ' . $signal_lights_select . ',
+            w.name AS wache_name,
+            w.bundesland AS wache_bundesland,
+            w.latitude AS wache_latitude,
+            w.longitude AS wache_longitude,
+            COALESCE(f.latitude, w.latitude) AS latitude,
+            COALESCE(f.longitude, w.longitude) AS longitude,
+            n.id AS nebenleitstelle_id,
+            n.name AS nebenleitstelle_name,
+            n.einwohner AS neben_einwohner,
+            n.flaeche_km2 AS neben_flaeche_km2,
+            l.bundesland AS leitstelle_bundesland
+        FROM leitstelle_nebenleitstellen ln
+        INNER JOIN leitstellen l ON l.id = ln.leitstelle_id
+        INNER JOIN nebenleitstellen n ON n.id = ln.nebenleitstelle_id
+        INNER JOIN wache_nebenleitstellen wn ON wn.nebenleitstelle_id = n.id
+        INNER JOIN wachen w ON w.id = wn.wache_id
+        INNER JOIN fahrzeuge f ON f.wache_id = w.id
+        WHERE ln.leitstelle_id = ?
+          AND ln.nebenleitstelle_id <> ln.leitstelle_id
+          AND LOWER(CONVERT(TRIM(n.name) USING utf8mb4)) COLLATE utf8mb4_unicode_ci <> LOWER(CONVERT(TRIM(l.name) USING utf8mb4)) COLLATE utf8mb4_unicode_ci
+        ORDER BY n.name ASC, w.name ASC, f.rufname ASC, f.id ASC
+    ');
+    $stmt->execute([$leitstelle_id]);
+    $support_states = lsttraining_sim_neighbor_support_states($pdo, $instanz_id);
+    $vehicles = [];
+    foreach (($stmt->fetchAll(PDO::FETCH_ASSOC) ?: []) as $vehicle) {
+        $vehicle['status_id'] = 0;
+        $vehicle['fahrzeug_id'] = (int) ($vehicle['fahrzeug_id'] ?? 0);
+        $vehicle['wache_id'] = (int) ($vehicle['wache_id'] ?? 0);
+        $vehicle['nebenleitstelle_id'] = (int) ($vehicle['nebenleitstelle_id'] ?? 0);
+        $vehicle['sondersignal'] = (int) ($vehicle['sondersignal'] ?? 0);
+        $vehicle['latitude'] = $vehicle['latitude'] !== null ? (float) $vehicle['latitude'] : null;
+        $vehicle['longitude'] = $vehicle['longitude'] !== null ? (float) $vehicle['longitude'] : null;
+        $vehicle['wache_latitude'] = $vehicle['wache_latitude'] !== null ? (float) $vehicle['wache_latitude'] : null;
+        $vehicle['wache_longitude'] = $vehicle['wache_longitude'] !== null ? (float) $vehicle['wache_longitude'] : null;
+        $vehicle['resource_class'] = lsttraining_sim_resource_class_from_type((string) ($vehicle['fahrzeugtyp'] ?? ''));
+        $vehicle['resource_class_label'] = lsttraining_sim_resource_class_label((string) ($vehicle['resource_class'] ?? ''));
+        $load_profile = lsttraining_sim_neighbor_load_profile($vehicle, $instanz_id, $sim_now_ts, $weather_current);
+        $availability = lsttraining_sim_neighbor_vehicle_availability($vehicle, $instanz_id, $sim_now_ts, $support_states, $weather_current, $load_profile);
+        $vehicle['image_url'] = lsttraining_sim_public_vehicle_image_url($vehicle['bild_datei'] ?? '', 'img/fahrzeug/default.png');
+        $vehicle['signal_lights'] = lsttraining_sim_signal_lights_for_vehicle(
+            (string) ($vehicle['signal_lights_json'] ?? ''),
+            (string) ($vehicle['fahrzeugtyp'] ?? ''),
+            (string) ($vehicle['rufname'] ?? '')
+        );
+        $vehicle['availability_state'] = $availability['availability_state'];
+        $vehicle['available'] = !empty($availability['available']);
+        $vehicle['load_profile'] = is_array($availability['load_profile'] ?? null) ? $availability['load_profile'] : $load_profile;
+        $vehicle['weather_primary'] = (string) ($weather_current['primary'] ?? 'clear');
+        $vehicle['weather_tags'] = is_array($weather_current['tags'] ?? null) ? $weather_current['tags'] : [];
+        $vehicle['dispatch_available'] = false;
+        $vehicle['is_neighbor'] = true;
+        unset($vehicle['signal_lights_json'], $vehicle['bild_datei'], $vehicle['neben_einwohner'], $vehicle['neben_flaeche_km2'], $vehicle['leitstelle_bundesland']);
+        $vehicles[] = $vehicle;
+    }
+    return $vehicles;
+}
+
+function lsttraining_sim_neighbor_offer_from_vehicle(array $vehicle): array {
+    return [
+        'fahrzeug_id' => (int) ($vehicle['fahrzeug_id'] ?? 0),
+        'wache_id' => (int) ($vehicle['wache_id'] ?? 0),
+        'home_wache_id' => (int) ($vehicle['wache_id'] ?? 0),
+        'home_wache_name' => (string) ($vehicle['wache_name'] ?? ''),
+        'nebenleitstelle_id' => (int) ($vehicle['nebenleitstelle_id'] ?? 0),
+        'nebenleitstelle_name' => (string) ($vehicle['nebenleitstelle_name'] ?? ''),
+        'rufname' => (string) ($vehicle['rufname'] ?? ''),
+        'fahrzeugtyp' => (string) ($vehicle['fahrzeugtyp'] ?? ''),
+        'resource_class' => (string) ($vehicle['resource_class'] ?? ''),
+        'resource_class_label' => (string) ($vehicle['resource_class_label'] ?? ''),
+        'latitude' => $vehicle['latitude'],
+        'longitude' => $vehicle['longitude'],
+        'home_latitude' => $vehicle['wache_latitude'] ?? $vehicle['latitude'],
+        'home_longitude' => $vehicle['wache_longitude'] ?? $vehicle['longitude'],
+        'image_url' => (string) ($vehicle['image_url'] ?? ''),
+        'signal_lights' => is_array($vehicle['signal_lights'] ?? null) ? $vehicle['signal_lights'] : [],
+        'available' => !empty($vehicle['available']),
+        'availability_state' => (string) ($vehicle['availability_state'] ?? 'nicht dienstbereit'),
+        'load_profile' => is_array($vehicle['load_profile'] ?? null) ? $vehicle['load_profile'] : [],
+        'weather_primary' => (string) ($vehicle['weather_primary'] ?? ''),
+        'weather_tags' => is_array($vehicle['weather_tags'] ?? null) ? $vehicle['weather_tags'] : [],
+    ];
+}
+
+function lsttraining_sim_neighbor_inside_instance_area(PDO $pdo, int $instanz_id, array $position, float $progress): bool {
+    if ($progress >= 0.35) {
+        return true;
+    }
+    if (!is_numeric($position['latitude'] ?? null) || !is_numeric($position['longitude'] ?? null)) {
+        return false;
+    }
+    try {
+        $stmt = $pdo->prepare('SELECT leitstelle_id FROM spielinstanzen WHERE id = ? LIMIT 1');
+        $stmt->execute([$instanz_id]);
+        $leitstelle_id = (int) $stmt->fetchColumn();
+        if ($leitstelle_id <= 0) {
+            return false;
+        }
+        $area = lsttraining_sim_load_area($pdo, $leitstelle_id);
+        return lsttraining_sim_point_inside_area([
+            (float) $position['longitude'],
+            (float) $position['latitude'],
+        ], $area);
+    } catch (Throwable $e) {
+        return false;
+    }
+}
+
 function lsttraining_sim_fetch_bootstrap(PDO $pdo, int $instanz_id, int $user_id): array {
     $instance = lsttraining_sim_fetch_instance_context($pdo, $instanz_id, $user_id);
 
@@ -3244,7 +4052,11 @@ function lsttraining_sim_fetch_bootstrap(PDO $pdo, int $instanz_id, int $user_id
             'vehicle_marker_mode' => lsttraining_sim_vehicle_marker_mode($user_id),
         ],
         'stations' => lsttraining_sim_fetch_bootstrap_stations($pdo, (int) $instance['leitstelle_id']),
+        'neighbor_dispatch_centers' => lsttraining_sim_fetch_neighbor_dispatch_centers($pdo, (int) $instance['leitstelle_id']),
+        'neighbor_stations' => lsttraining_sim_fetch_neighbor_stations($pdo, (int) $instance['leitstelle_id']),
         'base_vehicles' => lsttraining_sim_fetch_bootstrap_vehicles($pdo, $instanz_id, (int) $instance['leitstelle_id']),
+        'weather_current' => $instance['weather_current'],
+        'weather_forecast_summary' => $instance['weather_forecast_summary'],
     ];
 }
 
@@ -3399,10 +4211,11 @@ function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id)
         LEFT JOIN leitstellen l ON l.id = ie.leitstelle_id
         WHERE ie.instanz_id = ?
         ORDER BY ev.ts DESC, ev.id DESC
-        LIMIT 80
+        LIMIT 160
     ');
     $event_stmt->execute([$instanz_id]);
     $events = $event_stmt->fetchAll(PDO::FETCH_ASSOC);
+    $next_radio_refresh_ts = 0;
     foreach ($events as &$event) {
         $meta = json_decode((string) ($event['meta_json'] ?? ''), true);
         $event['meta'] = is_array($meta) ? $meta : [];
@@ -3410,8 +4223,27 @@ function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id)
         $event['einsatz_meta'] = is_array($einsatz_meta) ? $einsatz_meta : [];
         unset($event['meta_json']);
         unset($event['einsatz_meta_json']);
+        $visible_ts = lsttraining_sim_event_radio_visible_timestamp($event);
+        if ($visible_ts > $sim_now_ts && ($next_radio_refresh_ts <= 0 || $visible_ts < $next_radio_refresh_ts)) {
+            $next_radio_refresh_ts = $visible_ts;
+        }
     }
     unset($event);
+    $events = array_values(array_filter($events, static function (array $event) use ($sim_now_ts): bool {
+        return lsttraining_sim_event_radio_visible($event, $sim_now_ts);
+    }));
+    foreach ($events as &$event) {
+        $event['ts'] = lsttraining_sim_event_radio_time($event);
+    }
+    unset($event);
+    usort($events, static function (array $a, array $b): int {
+        $time_compare = strcmp((string) ($b['ts'] ?? ''), (string) ($a['ts'] ?? ''));
+        if ($time_compare !== 0) {
+            return $time_compare;
+        }
+        return ((int) ($b['id'] ?? 0)) <=> ((int) ($a['id'] ?? 0));
+    });
+    $events = array_slice($events, 0, 80);
 
     $pending_stmt = $pdo->prepare('
         SELECT ev.id, ev.instanz_einsatz_id, ev.ts, ev.text, ev.meta_json
@@ -3426,6 +4258,12 @@ function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id)
     $radio_requests = [];
     foreach (($pending_stmt->fetchAll(PDO::FETCH_ASSOC) ?: []) as $event) {
         $meta = lsttraining_sim_decode_meta($event['meta_json'] ?? '');
+        if (!lsttraining_sim_event_radio_visible([
+            'ts' => (string) ($event['ts'] ?? ''),
+            'meta' => $meta,
+        ], $sim_now_ts)) {
+            continue;
+        }
         if (($meta['event_type'] ?? '') !== 'situation_report' || empty($meta['requires_ack']) || !empty($meta['acknowledged_at'])) {
             continue;
         }
@@ -3434,6 +4272,10 @@ function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id)
             continue;
         }
         $opened_at = (string) ($meta['opened_at'] ?? '');
+        $event_ts = lsttraining_sim_event_radio_time([
+            'ts' => (string) ($event['ts'] ?? ''),
+            'meta' => $meta,
+        ]);
         $visible_text = (string) ($event['text'] ?? '');
         if ($opened_at !== '' && trim($visible_text) === 'Sprechwunsch' && trim((string) ($meta['report_text'] ?? '')) !== '') {
             $visible_text = (string) $meta['report_text'];
@@ -3441,7 +4283,7 @@ function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id)
         $radio_request = [
             'event_id' => (int) ($event['id'] ?? 0),
             'einsatz_id' => $einsatz_id,
-            'ts' => (string) ($event['ts'] ?? ''),
+            'ts' => $event_ts,
             'text' => $visible_text,
             'status_id' => (int) ($meta['status_id'] ?? 0),
             'fahrzeug_id' => (int) ($meta['fahrzeug_id'] ?? 0),
@@ -3453,11 +4295,11 @@ function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id)
             'requires_ack' => true,
         ];
         $radio_requests[] = $radio_request;
+        $pending_reports_by_incident[$einsatz_id] = $pending_reports_by_incident[$einsatz_id] ?? [];
+        $pending_reports_by_incident[$einsatz_id][] = $radio_request;
         if (empty($radio_request['opened_at'])) {
             continue;
         }
-        $pending_reports_by_incident[$einsatz_id] = $pending_reports_by_incident[$einsatz_id] ?? [];
-        $pending_reports_by_incident[$einsatz_id][] = $radio_request;
     }
 
     $assignment_stmt = $pdo->prepare('
@@ -3544,10 +4386,16 @@ function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id)
             'event_id' => (int) ($event['id'] ?? 0),
             'einsatz_id' => $einsatz_id,
             'status_id' => $is_support ? 0 : (int) ($meta['status_id'] ?? 0),
-            'fahrzeug_id' => $is_support ? 0 : (int) ($meta['fahrzeug_id'] ?? 0),
+            'fahrzeug_id' => $is_support ? (int) ($meta['fahrzeug_id'] ?? 0) : (int) ($meta['fahrzeug_id'] ?? 0),
             'unit_key' => $support_key,
             'support_type' => $support_type,
             'is_support' => $is_support,
+            'foreign_unit' => !empty($meta['foreign_unit']),
+            'home_nebenleitstelle_id' => (int) ($meta['home_nebenleitstelle_id'] ?? 0),
+            'home_nebenleitstelle_name' => (string) ($meta['home_nebenleitstelle_name'] ?? ''),
+            'home_wache_id' => (int) ($meta['home_wache_id'] ?? 0),
+            'home_wache_name' => (string) ($meta['home_wache_name'] ?? ''),
+            'contact_established' => !empty($meta['contact_established_at']) || !empty($meta['entry_speak_request_event_id']),
             'rufname' => (string) ($meta['rufname'] ?? ($is_support ? 'Polizei' : '')),
             'fahrzeugtyp' => (string) ($meta['fahrzeugtyp'] ?? ''),
             'alarmiert_at' => $alarmiert_at,
@@ -3561,6 +4409,9 @@ function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id)
             'transport_hospital_id' => (int) ($meta['transport_hospital_id'] ?? 0),
             'transport_hospital_name' => (string) ($meta['transport_hospital_name'] ?? ''),
             'transport_department' => (string) ($meta['transport_department'] ?? ''),
+            'transport_triage_category' => (string) ($meta['transport_triage_category'] ?? ''),
+            'handover_duration_sec' => (int) ($meta['handover_duration_sec'] ?? 0),
+            'handover_release_at' => (string) ($meta['handover_release_at'] ?? ''),
             'assignment_status' => $assignment_status,
             'route_distance_m' => (int) ($meta['route_distance_m'] ?? 0),
             'route_duration_sec' => (int) ($meta['route_duration_sec'] ?? 0),
@@ -3647,6 +4498,10 @@ function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id)
         $dispatch_block_reason = '';
         if ($assigned) {
             $dispatch_block_reason = 'bereits zugeordnet';
+        } elseif ($fms === '8') {
+            $dispatch_block_reason = 'im Krankenhaus';
+        } elseif ($fms === '7') {
+            $dispatch_block_reason = 'Patiententransport';
         } elseif ($fms === '6') {
             $dispatch_block_reason = 'nicht verfügbar';
         } elseif ($fms === '5') {
@@ -3698,12 +4553,15 @@ function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id)
     }
 
     foreach ($assignments as $assignment) {
-        if (empty($assignment['is_support']) || (string) ($assignment['support_type'] ?? '') !== 'police') {
+        if (empty($assignment['is_support']) || !in_array((string) ($assignment['support_type'] ?? ''), ['police', 'neighbor'], true)) {
             continue;
         }
         if (
-            (string) ($assignment['mission_phase'] ?? '') === 'at_scene' ||
-            (string) ($assignment['assignment_status'] ?? '') === 'vor_ort'
+            (string) ($assignment['support_type'] ?? '') === 'police' &&
+            (
+                (string) ($assignment['mission_phase'] ?? '') === 'at_scene' ||
+                (string) ($assignment['assignment_status'] ?? '') === 'vor_ort'
+            )
         ) {
             continue;
         }
@@ -3711,15 +4569,26 @@ function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id)
         if (!$last_position || !is_numeric($last_position['latitude'] ?? null) || !is_numeric($last_position['longitude'] ?? null)) {
             continue;
         }
+        $is_neighbor_support = (string) ($assignment['support_type'] ?? '') === 'neighbor';
+        $fahrzeugtyp = $is_neighbor_support ? (string) ($assignment['fahrzeugtyp'] ?? 'Fremdfahrzeug') : 'Streifenwagen';
+        $resource_class = $is_neighbor_support ? (string) ($assignment['resource_class'] ?? '') : 'police';
+        $resource_label = $is_neighbor_support
+            ? ((string) ($assignment['resource_class_label'] ?? '') ?: 'Fremdfahrzeug')
+            : 'Polizei';
         $support_vehicle = [
             'unit_key' => (string) ($assignment['unit_key'] ?? ''),
-            'support_type' => 'police',
+            'support_type' => (string) ($assignment['support_type'] ?? ''),
+            'foreign_unit' => !empty($assignment['foreign_unit']),
+            'home_nebenleitstelle_id' => (int) ($assignment['home_nebenleitstelle_id'] ?? 0),
+            'home_nebenleitstelle_name' => (string) ($assignment['home_nebenleitstelle_name'] ?? ''),
+            'home_wache_id' => (int) ($assignment['home_wache_id'] ?? 0),
+            'home_wache_name' => (string) ($assignment['home_wache_name'] ?? ''),
             'status_id' => 0,
-            'fahrzeug_id' => 0,
+            'fahrzeug_id' => (int) ($assignment['fahrzeug_id'] ?? 0),
             'rufname' => (string) ($assignment['rufname'] ?? 'Polizei'),
-            'fahrzeugtyp' => 'Streifenwagen',
-            'resource_class' => 'police',
-            'resource_class_label' => 'Polizei',
+            'fahrzeugtyp' => $fahrzeugtyp,
+            'resource_class' => $resource_class,
+            'resource_class_label' => $resource_label,
             'latitude' => (float) $last_position['latitude'],
             'longitude' => (float) $last_position['longitude'],
             'status' => (string) ($assignment['assignment_status'] ?? ''),
@@ -3731,7 +4600,14 @@ function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id)
             'einsatz_id' => (int) ($assignment['einsatz_id'] ?? 0),
         ];
         $status_label = (string) ($assignment['assignment_status'] ?? 'alarmiert');
-        $support_vehicle['bemerkung'] = $status_label === 'vor_ort' ? 'Polizei vor Ort.' : 'Polizei auf Anfahrt.';
+        if ($is_neighbor_support) {
+            $home = trim((string) ($assignment['home_nebenleitstelle_name'] ?? ''));
+            $support_vehicle['bemerkung'] = $status_label === 'rueckfahrt'
+                ? 'Rückfahrt zur Heimatleitstelle' . ($home !== '' ? ' ' . $home : '') . '.'
+                : ($status_label === 'vor_ort' ? 'Fremdfahrzeug vor Ort.' : 'Fremdfahrzeug auf Anfahrt.');
+        } else {
+            $support_vehicle['bemerkung'] = $status_label === 'vor_ort' ? 'Polizei vor Ort.' : 'Polizei auf Anfahrt.';
+        }
         $live_vehicles[] = $support_vehicle;
         $vehicle_statuses[] = $support_vehicle;
     }
@@ -3748,6 +4624,9 @@ function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id)
                 continue;
             }
             $incident_assignments[] = $assignment;
+            if ((string) ($assignment['assignment_status'] ?? '') === 'rueckfahrt') {
+                continue;
+            }
             $class = (string) ($assignment['resource_class'] ?? '');
             if ($class === '') {
                 continue;
@@ -3895,6 +4774,24 @@ function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id)
         $incident['feedback'] = array_slice($feedback, 0, 5);
         $incident['pending_unit_reports'] = $pending_reports_by_incident[(int) ($incident['id'] ?? 0)] ?? [];
         $incident['first_arrival_report_opened'] = !empty($first_arrival_report_opened_by_incident[(int) ($incident['id'] ?? 0)]);
+        $close_blockers = [];
+        if ($incident_assignments) {
+            $close_blockers[] = 'Dem Einsatz sind noch Fahrzeuge zugeordnet.';
+        }
+        if (!empty($incident['pending_unit_reports'])) {
+            $close_blockers[] = 'Es gibt noch einen offenen Sprechwunsch.';
+        }
+        if (!empty($incident['has_missing_resources']) && !empty($incident['meta']['pending_resource_request'])) {
+            $close_blockers[] = 'Erforderliche Ressourcen fehlen noch.';
+        }
+        foreach ((array) $incident['patients'] as $patient) {
+            if (in_array((string) ($patient['transport_status'] ?? ''), ['ready', 'to_hospital', 'handover'], true)) {
+                $close_blockers[] = 'Patiententransport ist noch nicht abgeschlossen.';
+                break;
+            }
+        }
+        $incident['close_blockers'] = array_values(array_unique($close_blockers));
+        $incident['can_close'] = !$incident['close_blockers'];
     }
     unset($incident);
 
@@ -4031,17 +4928,66 @@ function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id)
     });
     $fms_log = array_slice($fms_log, 0, 80);
 
+    $neighbor_support_requests = [];
+    $support_stmt = $pdo->prepare('
+        SELECT ev.id, ev.instanz_einsatz_id, ev.ts, ev.text, ev.meta_json
+        FROM instanz_einsatz_events ev
+        INNER JOIN instanz_einsaetze ie ON ie.id = ev.instanz_einsatz_id
+        WHERE ie.instanz_id = ? AND ev.kind = ?
+        ORDER BY ev.id DESC
+        LIMIT 100
+    ');
+    $support_stmt->execute([$instanz_id, 'dispatcher_question']);
+    foreach (($support_stmt->fetchAll(PDO::FETCH_ASSOC) ?: []) as $event) {
+        $meta = lsttraining_sim_decode_meta($event['meta_json'] ?? '');
+        if (($meta['event_type'] ?? '') !== 'neighbor_support_request') {
+            continue;
+        }
+        $einsatz_id = (int) ($event['instanz_einsatz_id'] ?? 0);
+        if ($einsatz_id <= 0 || !isset($incidents_by_id[$einsatz_id])) {
+            continue;
+        }
+        $accepted_ids = is_array($meta['accepted_vehicle_ids'] ?? null)
+            ? array_values(array_map('intval', $meta['accepted_vehicle_ids']))
+            : [];
+        $neighbor_support_requests[] = [
+            'event_id' => (int) ($event['id'] ?? 0),
+            'einsatz_id' => $einsatz_id,
+            'ts' => (string) ($event['ts'] ?? ''),
+            'text' => (string) ($event['text'] ?? ''),
+            'nebenleitstelle_id' => (int) ($meta['nebenleitstelle_id'] ?? 0),
+            'nebenleitstelle_name' => (string) ($meta['nebenleitstelle_name'] ?? ''),
+            'offer' => is_array($meta['offer'] ?? null) ? $meta['offer'] : [],
+            'offer_generated_at' => (string) ($meta['offer_generated_at'] ?? ($meta['requested_at'] ?? '')),
+            'offer_session_id' => (string) ($meta['offer_session_id'] ?? ''),
+            'weather_primary' => (string) ($meta['weather_primary'] ?? ''),
+            'weather_tags' => is_array($meta['weather_tags'] ?? null) ? $meta['weather_tags'] : [],
+            'load_profile' => is_array($meta['load_profile'] ?? null) ? $meta['load_profile'] : [],
+            'accepted_vehicle_ids' => $accepted_ids,
+            'available_count' => (int) ($meta['available_count'] ?? 0),
+            'total_count' => (int) ($meta['total_count'] ?? 0),
+        ];
+    }
+
     return [
         'schema_version' => 2,
         'sim_now' => $sim_now,
         'sim_timestamp' => $sim_now_ts,
+        'next_radio_refresh_at' => $next_radio_refresh_ts > 0 ? lsttraining_sim_time_string($next_radio_refresh_ts) : '',
         'speed' => (int) ($instance['speed'] ?? 1),
         'paused' => (bool) ($instance['paused'] ?? false),
+        'weather_current' => $instance['weather_current'],
+        'weather_forecast_summary' => $instance['weather_forecast_summary'],
+        'weather_next_change_at' => is_array($instance['weather_forecast_summary']['next_change'] ?? null)
+            ? (string) ($instance['weather_forecast_summary']['next_change']['time'] ?? '')
+            : '',
         'vehicles' => $live_vehicles,
         'vehicle_statuses' => $vehicle_statuses,
         'incidents' => $incidents,
         'events' => $events,
         'assignments' => $assignments,
+        'neighbor_vehicle_availability' => lsttraining_sim_fetch_neighbor_vehicle_availability($pdo, $instanz_id, (int) ($instance['leitstelle_id'] ?? 0), $sim_now_ts),
+        'neighbor_support_requests' => $neighbor_support_requests,
         'radio_requests' => $radio_requests,
         'fms_log' => $fms_log,
         'call_log' => $call_log,
@@ -4256,6 +5202,342 @@ add_action('wp_ajax_lsttraining_sim_get_bootstrap', function () {
     }
 });
 
+add_action('wp_ajax_lsttraining_sim_request_neighbor_support', function () {
+    lsttraining_sim_check_nonce();
+
+    if (!is_user_logged_in()) {
+        wp_send_json_error(['message' => 'Nicht angemeldet.'], 401);
+    }
+
+    $instanz_id = isset($_POST['instanz_id']) ? absint($_POST['instanz_id']) : 0;
+    $einsatz_id = isset($_POST['einsatz_id']) ? absint($_POST['einsatz_id']) : 0;
+    $nebenleitstelle_id = isset($_POST['nebenleitstelle_id']) ? absint($_POST['nebenleitstelle_id']) : 0;
+    if ($instanz_id <= 0 || $einsatz_id <= 0 || $nebenleitstelle_id <= 0) {
+        wp_send_json_error(['message' => 'Unterstützungsanfrage unvollständig.'], 400);
+    }
+
+    $pdo = lsttraining_get_connection();
+    if (!$pdo) {
+        wp_send_json_error(['message' => 'Datenbankverbindung fehlgeschlagen.'], 500);
+    }
+
+    try {
+        if (!lsttraining_sim_user_can_access_instance($pdo, $instanz_id, (int) get_current_user_id())) {
+            wp_send_json_error(['message' => 'Kein Zugriff auf diese Simulation.'], 403);
+        }
+        lsttraining_sim_guard_not_paused($pdo, $instanz_id);
+
+        $incident_stmt = $pdo->prepare('
+            SELECT id, instanz_id, leitstelle_id, einsatztyp, latitude, longitude, state, meta_json
+            FROM instanz_einsaetze
+            WHERE id = ? AND instanz_id = ? AND state IN (?, ?)
+            LIMIT 1
+        ');
+        $incident_stmt->execute([$einsatz_id, $instanz_id, 'new', 'active']);
+        $incident = $incident_stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$incident) {
+            wp_send_json_error(['message' => 'Einsatz nicht gefunden oder bereits abgeschlossen.'], 404);
+        }
+
+        lsttraining_sim_ensure_neighbor_schema($pdo);
+        $neighbor_stmt = $pdo->prepare('
+            SELECT n.id, n.name
+            FROM leitstelle_nebenleitstellen ln
+            INNER JOIN leitstellen l ON l.id = ln.leitstelle_id
+            INNER JOIN nebenleitstellen n ON n.id = ln.nebenleitstelle_id
+            WHERE ln.leitstelle_id = ? AND ln.nebenleitstelle_id = ?
+              AND ln.nebenleitstelle_id <> ln.leitstelle_id
+              AND LOWER(CONVERT(TRIM(n.name) USING utf8mb4)) COLLATE utf8mb4_unicode_ci <> LOWER(CONVERT(TRIM(l.name) USING utf8mb4)) COLLATE utf8mb4_unicode_ci
+            LIMIT 1
+        ');
+        $neighbor_stmt->execute([(int) $incident['leitstelle_id'], $nebenleitstelle_id]);
+        $neighbor = $neighbor_stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$neighbor) {
+            wp_send_json_error(['message' => 'Diese Nebenleitstelle ist für die aktive Leitstelle nicht als Nachbar hinterlegt.'], 409);
+        }
+
+        $runtime = lsttraining_sim_current_game_runtime($pdo, $instanz_id);
+        $now_ts = (int) ($runtime['game_now_ts'] ?? time());
+        $now = (string) ($runtime['sim_now'] ?? wp_date('Y-m-d H:i:s', $now_ts));
+        $vehicles = array_values(array_filter(
+            lsttraining_sim_fetch_neighbor_vehicle_availability($pdo, $instanz_id, (int) $incident['leitstelle_id'], $now_ts),
+            static function (array $vehicle) use ($nebenleitstelle_id): bool {
+                return (int) ($vehicle['nebenleitstelle_id'] ?? 0) === $nebenleitstelle_id;
+            }
+        ));
+        $offer = array_map('lsttraining_sim_neighbor_offer_from_vehicle', $vehicles);
+        $available_count = count(array_filter($offer, static function (array $vehicle): bool {
+            return !empty($vehicle['available']);
+        }));
+        $settings_stmt = $pdo->prepare('SELECT settings_json FROM spielinstanzen WHERE id = ? LIMIT 1');
+        $settings_stmt->execute([$instanz_id]);
+        $weather_current = lsttraining_sim_weather_point_for_timestamp(
+            lsttraining_sim_decode_meta((string) ($settings_stmt->fetchColumn() ?: '')),
+            $now_ts
+        );
+        $load_profile = [];
+        foreach ($offer as $offer_vehicle) {
+            if (is_array($offer_vehicle['load_profile'] ?? null) && $offer_vehicle['load_profile']) {
+                $load_profile = $offer_vehicle['load_profile'];
+                break;
+            }
+        }
+        $offer_session_id = 'neighbor-offer-' . $instanz_id . '-' . $einsatz_id . '-' . $nebenleitstelle_id . '-' . $now_ts . '-' . wp_generate_uuid4();
+
+        $pdo->beginTransaction();
+        $event_id = lsttraining_sim_insert_dispatch_event(
+            $pdo,
+            $einsatz_id,
+            'Leitstelle von Leitstelle: Unterstützungsanfrage an ' . (string) ($neighbor['name'] ?? 'Nachbarleitstelle') . ', kommen.',
+            [
+                'event_type' => 'neighbor_support_request',
+                'radio_message_type' => 'neighbor_support_request',
+                'sender_type' => 'dispatch',
+                'recipient_type' => 'neighbor_dispatch',
+                'nebenleitstelle_id' => $nebenleitstelle_id,
+                'nebenleitstelle_name' => (string) ($neighbor['name'] ?? ''),
+                'offer' => $offer,
+                'offer_generated_at' => $now,
+                'offer_session_id' => $offer_session_id,
+                'weather_primary' => (string) ($weather_current['primary'] ?? 'clear'),
+                'weather_tags' => is_array($weather_current['tags'] ?? null) ? $weather_current['tags'] : [],
+                'load_profile' => $load_profile,
+                'requested_at' => $now,
+                'requested_by' => (int) get_current_user_id(),
+                'available_count' => $available_count,
+                'total_count' => count($offer),
+            ]
+        );
+        lsttraining_sim_insert_unit_event(
+            $pdo,
+            $einsatz_id,
+            (string) ($neighbor['name'] ?? 'Nachbarleitstelle') . ': ' . ($available_count > 0 ? $available_count . ' Fahrzeug(e) verfügbar.' : 'Aktuell keine Fahrzeuge verfügbar.'),
+            [
+                'event_type' => 'neighbor_support_response',
+                'radio_message_type' => 'neighbor_support_response',
+                'sender_type' => 'neighbor_dispatch',
+                'recipient_type' => 'dispatch',
+                'source_event_id' => $event_id,
+                'nebenleitstelle_id' => $nebenleitstelle_id,
+                'nebenleitstelle_name' => (string) ($neighbor['name'] ?? ''),
+                'available_count' => $available_count,
+                'requires_ack' => false,
+                'radio_base_at' => $now,
+            ]
+        );
+        $pdo->commit();
+        lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
+
+        wp_send_json_success([
+            'event_id' => $event_id,
+            'einsatz_id' => $einsatz_id,
+            'nebenleitstelle_id' => $nebenleitstelle_id,
+            'nebenleitstelle_name' => (string) ($neighbor['name'] ?? ''),
+            'offer' => $offer,
+            'offer_generated_at' => $now,
+            'offer_session_id' => $offer_session_id,
+            'available_count' => $available_count,
+            'message' => $available_count > 0 ? 'Nachbarleitstelle hat verfügbare Fahrzeuge gemeldet.' : 'Nachbarleitstelle hat keine verfügbaren Fahrzeuge gemeldet.',
+        ]);
+    } catch (Throwable $e) {
+        if ($pdo instanceof PDO && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        error_log('[LSTtraining][sim_request_neighbor_support] ' . $e->getMessage());
+        wp_send_json_error(['message' => 'Unterstützungsanfrage konnte nicht gestellt werden: ' . $e->getMessage()], 500);
+    }
+});
+
+add_action('wp_ajax_lsttraining_sim_accept_neighbor_support', function () {
+    lsttraining_sim_check_nonce();
+
+    if (!is_user_logged_in()) {
+        wp_send_json_error(['message' => 'Nicht angemeldet.'], 401);
+    }
+
+    $instanz_id = isset($_POST['instanz_id']) ? absint($_POST['instanz_id']) : 0;
+    $request_event_id = isset($_POST['request_event_id']) ? absint($_POST['request_event_id']) : 0;
+    $raw_vehicle_ids = $_POST['vehicle_ids'] ?? [];
+    if (!is_array($raw_vehicle_ids)) {
+        $raw_vehicle_ids = explode(',', (string) wp_unslash($raw_vehicle_ids));
+    }
+    $vehicle_ids = array_values(array_unique(array_filter(array_map('absint', $raw_vehicle_ids))));
+    if ($instanz_id <= 0 || $request_event_id <= 0 || !$vehicle_ids) {
+        wp_send_json_error(['message' => 'Auswahl für Nachbarunterstützung unvollständig.'], 400);
+    }
+
+    $pdo = lsttraining_get_connection();
+    if (!$pdo) {
+        wp_send_json_error(['message' => 'Datenbankverbindung fehlgeschlagen.'], 500);
+    }
+
+    try {
+        if (!lsttraining_sim_user_can_access_instance($pdo, $instanz_id, (int) get_current_user_id())) {
+            wp_send_json_error(['message' => 'Kein Zugriff auf diese Simulation.'], 403);
+        }
+        lsttraining_sim_guard_not_paused($pdo, $instanz_id);
+
+        $stmt = $pdo->prepare('
+            SELECT ev.id, ev.instanz_einsatz_id, ev.meta_json, ie.instanz_id, ie.leitstelle_id,
+                   ie.latitude, ie.longitude, ie.einsatztyp, ie.meta_json AS incident_meta_json
+            FROM instanz_einsatz_events ev
+            INNER JOIN instanz_einsaetze ie ON ie.id = ev.instanz_einsatz_id
+            WHERE ev.id = ? AND ie.instanz_id = ? AND ev.kind = ?
+            LIMIT 1
+        ');
+        $stmt->execute([$request_event_id, $instanz_id, 'dispatcher_question']);
+        $event = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$event) {
+            wp_send_json_error(['message' => 'Unterstützungsangebot nicht gefunden.'], 404);
+        }
+        $meta = lsttraining_sim_decode_meta($event['meta_json'] ?? '');
+        if (($meta['event_type'] ?? '') !== 'neighbor_support_request') {
+            wp_send_json_error(['message' => 'Dieses Ereignis ist kein Nachbarleitstellen-Angebot.'], 400);
+        }
+        $offer_by_id = [];
+        foreach ((array) ($meta['offer'] ?? []) as $offer) {
+            if (!is_array($offer)) {
+                continue;
+            }
+            $offer_by_id[(int) ($offer['fahrzeug_id'] ?? 0)] = $offer;
+        }
+
+        $active_states = lsttraining_sim_neighbor_support_states($pdo, $instanz_id);
+        $runtime = lsttraining_sim_current_game_runtime($pdo, $instanz_id);
+        $now_ts = (int) ($runtime['game_now_ts'] ?? time());
+        $now = (string) ($runtime['sim_now'] ?? wp_date('Y-m-d H:i:s', $now_ts));
+        $created = [];
+        $failed = [];
+
+        $pdo->beginTransaction();
+        $event_update = $pdo->prepare('UPDATE instanz_einsatz_events SET meta_json = ? WHERE id = ?');
+
+        foreach ($vehicle_ids as $vehicle_id) {
+            $offer = $offer_by_id[$vehicle_id] ?? null;
+            if (!$offer || empty($offer['available'])) {
+                $failed[] = ['fahrzeug_id' => $vehicle_id, 'message' => 'Fahrzeug ist in diesem Angebot nicht verfügbar.'];
+                continue;
+            }
+            if (isset($active_states[$vehicle_id])) {
+                $failed[] = ['fahrzeug_id' => $vehicle_id, 'message' => 'Fahrzeug ist bereits angefordert.'];
+                continue;
+            }
+            if (!is_numeric($offer['latitude'] ?? null) || !is_numeric($offer['longitude'] ?? null)) {
+                $failed[] = ['fahrzeug_id' => $vehicle_id, 'message' => 'Startposition fehlt.'];
+                continue;
+            }
+
+            $route = lsttraining_sim_transport_route(
+                (float) $offer['latitude'],
+                (float) $offer['longitude'],
+                (float) $event['latitude'],
+                (float) $event['longitude'],
+                lsttraining_sim_transport_is_air_unit($offer)
+            );
+            if (count($route['coordinates'] ?? []) < 2) {
+                $failed[] = ['fahrzeug_id' => $vehicle_id, 'message' => 'Keine Route zum Einsatzort gefunden.'];
+                continue;
+            }
+
+            $rufname = (string) ($offer['rufname'] ?? ('Fremdfahrzeug ' . $vehicle_id));
+            $support_id = 'neighbor-' . (int) ($offer['nebenleitstelle_id'] ?? 0) . '-' . $vehicle_id . '-' . $request_event_id;
+            $alarm_meta = [
+                'event_type' => 'support_vehicle_alarm',
+                'support_type' => 'neighbor',
+                'support_id' => $support_id,
+                'foreign_unit' => true,
+                'home_nebenleitstelle_id' => (int) ($offer['nebenleitstelle_id'] ?? 0),
+                'home_nebenleitstelle_name' => (string) ($offer['nebenleitstelle_name'] ?? ''),
+                'home_wache_id' => (int) ($offer['home_wache_id'] ?? ($offer['wache_id'] ?? 0)),
+                'home_wache_name' => (string) ($offer['home_wache_name'] ?? ''),
+                'home_position' => [
+                    'latitude' => (float) ($offer['home_latitude'] ?? $offer['latitude']),
+                    'longitude' => (float) ($offer['home_longitude'] ?? $offer['longitude']),
+                ],
+                'radio_message_type' => 'neighbor_support_dispatched',
+                'sender_type' => 'neighbor_dispatch',
+                'recipient_type' => 'dispatch',
+                'status_transition' => '3',
+                'status_id' => 0,
+                'fahrzeug_id' => $vehicle_id,
+                'fahrzeugtyp' => (string) ($offer['fahrzeugtyp'] ?? ''),
+                'resource_class' => (string) ($offer['resource_class'] ?? ''),
+                'resource_class_label' => (string) ($offer['resource_class_label'] ?? ''),
+                'einsatz_id' => (int) ($event['instanz_einsatz_id'] ?? 0),
+                'rufname' => $rufname,
+                'alarmiert_at' => $now,
+                'ausrueckzeit_sec' => 0,
+                'movement_started_at' => $now,
+                'sondersignal_allowed' => true,
+                'sondersignal' => 1,
+                'route_status' => 'ready',
+                'route_coordinates' => $route['coordinates'],
+                'route_segments' => is_array($route['route_segments'] ?? null) ? $route['route_segments'] : [],
+                'route_distance_m' => (int) ($route['distance_m'] ?? 0),
+                'route_duration_sec' => (int) ($route['duration_sec'] ?? 0),
+                'route_duration_normal_sec' => (int) ($route['duration_sec'] ?? 0),
+                'route_source' => (string) ($route['route_source'] ?? ''),
+                'mission_phase' => 'to_scene',
+                'current_progress' => 0,
+                'current_segment_index' => 0,
+                'current_segment_progress' => 0,
+                'last_position' => [
+                    'latitude' => (float) $offer['latitude'],
+                    'longitude' => (float) $offer['longitude'],
+                ],
+                'image_url' => (string) ($offer['image_url'] ?? ''),
+                'signal_lights' => is_array($offer['signal_lights'] ?? null) ? $offer['signal_lights'] : [],
+                'source_request_event_id' => $request_event_id,
+                'fms_status' => '3',
+                'radio_base_at' => $now,
+            ];
+            $support_event_id = lsttraining_sim_insert_unit_event(
+                $pdo,
+                (int) $event['instanz_einsatz_id'],
+                (string) ($offer['nebenleitstelle_name'] ?? 'Nachbarleitstelle') . ': ' . $rufname . ' fährt zur Unterstützung an.',
+                $alarm_meta
+            );
+            $created[] = [
+                'event_id' => $support_event_id,
+                'fahrzeug_id' => $vehicle_id,
+                'rufname' => $rufname,
+            ];
+            $active_states[$vehicle_id] = ['state' => 'unterwegs zur spielbaren Leitstelle', 'phase' => 'to_scene'];
+        }
+
+        $accepted = is_array($meta['accepted_vehicle_ids'] ?? null) ? $meta['accepted_vehicle_ids'] : [];
+        foreach ($created as $created_row) {
+            $accepted[] = (int) ($created_row['fahrzeug_id'] ?? 0);
+        }
+        $meta['accepted_vehicle_ids'] = array_values(array_unique(array_filter($accepted)));
+        $meta['accepted_at'] = $created ? $now : ($meta['accepted_at'] ?? '');
+        $meta['accepted_by'] = $created ? (int) get_current_user_id() : ($meta['accepted_by'] ?? 0);
+        $event_update->execute([lsttraining_sim_encode_meta($meta), $request_event_id]);
+        $pdo->commit();
+        lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
+
+        if (!$created) {
+            wp_send_json_error([
+                'message' => 'Kein Fahrzeug konnte angefordert werden.',
+                'failed' => $failed,
+            ], 409);
+        }
+
+        wp_send_json_success([
+            'einsatz_id' => (int) $event['instanz_einsatz_id'],
+            'created' => $created,
+            'failed' => $failed,
+            'message' => count($created) . ' Fremdfahrzeug(e) angefordert.',
+        ]);
+    } catch (Throwable $e) {
+        if ($pdo instanceof PDO && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        error_log('[LSTtraining][sim_accept_neighbor_support] ' . $e->getMessage());
+        wp_send_json_error(['message' => 'Fremdfahrzeuge konnten nicht angefordert werden: ' . $e->getMessage()], 500);
+    }
+});
+
 add_action('wp_ajax_lsttraining_sim_accept_call', function () {
     lsttraining_sim_check_nonce();
 
@@ -4365,6 +5647,141 @@ add_action('wp_ajax_lsttraining_sim_accept_call', function () {
     }
 });
 
+function lsttraining_sim_sync_signal_for_assigned_units(PDO $pdo, int $instanz_id, int $einsatz_id, string $game_now, bool $target_signal_allowed): int {
+    $stmt = $pdo->prepare('
+        SELECT id, text, meta_json
+        FROM instanz_einsatz_events
+        WHERE instanz_einsatz_id = ? AND kind = ?
+        ORDER BY id DESC
+        LIMIT 500
+    ');
+    $stmt->execute([$einsatz_id, 'unit_report']);
+    $events = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    $update_event = $pdo->prepare('UPDATE instanz_einsatz_events SET meta_json = ? WHERE id = ?');
+    $notified = 0;
+
+    foreach ($events as $event) {
+        $meta = lsttraining_sim_decode_meta($event['meta_json'] ?? '');
+        $event_type = (string) ($meta['event_type'] ?? '');
+        $is_vehicle = $event_type === 'vehicle_alarm';
+        $support_type = $event_type === 'support_vehicle_alarm' ? (string) ($meta['support_type'] ?? '') : '';
+        $is_support = in_array($support_type, ['police', 'neighbor'], true);
+        $is_police = $support_type === 'police';
+        if ((!$is_vehicle && !$is_support) || !empty($meta['cancelled_at'])) {
+            continue;
+        }
+        if ($support_type === 'neighbor' && empty($meta['contact_established_at']) && empty($meta['entry_speak_request_event_id'])) {
+            continue;
+        }
+        if ((string) ($meta['mission_phase'] ?? 'to_scene') !== 'to_scene' || !empty($meta['arrived_at'])) {
+            continue;
+        }
+        if (!empty($meta['sondersignal_allowed']) === $target_signal_allowed) {
+            continue;
+        }
+
+        $status_id = (int) ($meta['status_id'] ?? 0);
+        $rufname = (string) ($meta['rufname'] ?? 'Fahrzeug');
+        if ($is_police && $rufname === 'Fahrzeug') {
+            $rufname = 'Polizei';
+        }
+        $route_segments = lsttraining_sim_normalize_route_segments($meta['route_segments'] ?? []);
+        $normal_segments = lsttraining_sim_normalize_route_segments($meta['route_segments_normal'] ?? []);
+        $normal_duration = max(0, (int) ($meta['route_duration_normal_sec'] ?? 0));
+        if (!$normal_segments && $route_segments) {
+            $normal_segments = $route_segments;
+            if ($normal_duration > 0) {
+                $normal_segments = lsttraining_sim_route_segments_scaled_to_duration($normal_segments, $normal_duration);
+            }
+        }
+        if (!$normal_segments && is_array($meta['route_coordinates'] ?? null) && count($meta['route_coordinates']) >= 2) {
+            $normal_segments = [
+                lsttraining_sim_route_segment(
+                    (string) ($meta['route_source'] ?? '') === 'air' ? 'air' : 'road',
+                    (array) $meta['route_coordinates'],
+                    $normal_duration > 0 ? $normal_duration : max(1, (int) ($meta['route_duration_sec'] ?? 1)),
+                    (int) ($meta['route_distance_m'] ?? 0)
+                ),
+            ];
+        }
+        if (!$normal_duration) {
+            $normal_duration = lsttraining_sim_route_segments_total_duration($normal_segments);
+        }
+        if (!$normal_duration) {
+            $normal_duration = max(0, (int) ($meta['route_duration_sec'] ?? 0));
+        }
+
+        $active_segments = $target_signal_allowed
+            ? lsttraining_sim_route_segments_for_signal($normal_segments, true)
+            : $normal_segments;
+        if ($active_segments) {
+            $meta['route_segments_normal'] = $normal_segments;
+            $meta['route_segments'] = $active_segments;
+            $meta['route_coordinates'] = lsttraining_sim_flatten_route_segments($active_segments);
+            $meta['route_duration_sec'] = lsttraining_sim_route_segments_total_duration($active_segments);
+        } elseif ($normal_duration > 0) {
+            $meta['route_duration_sec'] = $target_signal_allowed
+                ? lsttraining_sim_route_duration_for_signal($normal_duration, true)
+                : $normal_duration;
+        }
+        if ($normal_duration > 0) {
+            $meta['route_duration_normal_sec'] = $normal_duration;
+        }
+
+        $meta['sondersignal_allowed'] = $target_signal_allowed;
+        $meta['sondersignal'] = $target_signal_allowed ? 1 : 0;
+        $meta['sondersignal_changed_at'] = $game_now;
+        $meta['sondersignal_changed_by'] = (int) get_current_user_id();
+        $update_event->execute([lsttraining_sim_encode_meta($meta), (int) $event['id']]);
+
+        if ($is_vehicle && $status_id > 0) {
+            lsttraining_sim_update_vehicle_state($pdo, $instanz_id, $status_id, [
+                'sondersignal' => $target_signal_allowed ? 1 : 0,
+                'bemerkung' => $target_signal_allowed
+                    ? 'Mit Sondersignal auf Anfahrt zum Einsatz.'
+                    : 'Ohne Sondersignal auf Anfahrt zum Einsatz.',
+            ]);
+        }
+
+        $dispatch_text = $target_signal_allowed
+            ? $rufname . ' von Leitstelle: Sondersignale erlaubt, fahren Sie mit Sondersignal weiter, kommen.'
+            : $rufname . ' von Leitstelle: Sondersignale zurücknehmen, ohne Sondersignal weiterfahren, kommen.';
+        $ack_text = $target_signal_allowed
+            ? 'Leitstelle von ' . $rufname . ': Verstanden, fahren mit Sondersignal weiter, Ende.'
+            : 'Leitstelle von ' . $rufname . ': Verstanden, fahren ohne Sondersignal weiter, Ende.';
+        $radio_type = $target_signal_allowed ? 'signal_allowed' : 'signal_cancelled';
+
+        lsttraining_sim_insert_dispatch_event($pdo, $einsatz_id, $dispatch_text, [
+            'event_type' => $is_police ? 'police_signal_order' : ($is_support ? 'support_signal_order' : 'signal_order'),
+            'radio_message_type' => $radio_type,
+            'sender_type' => 'dispatch',
+            'recipient_type' => 'vehicle',
+            'status_id' => $status_id,
+            'fahrzeug_id' => (int) ($meta['fahrzeug_id'] ?? 0),
+            'rufname' => $rufname,
+            'support_type' => $support_type,
+            'source_event_id' => (int) $event['id'],
+            'sondersignal_allowed' => $target_signal_allowed,
+        ]);
+        lsttraining_sim_insert_unit_event($pdo, $einsatz_id, $ack_text, [
+            'event_type' => $is_police ? 'police_signal_order_ack' : ($is_support ? 'support_signal_order_ack' : 'signal_order_ack'),
+            'radio_message_type' => $radio_type . '_ack',
+            'sender_type' => 'vehicle',
+            'recipient_type' => 'dispatch',
+            'status_id' => $status_id,
+            'fahrzeug_id' => (int) ($meta['fahrzeug_id'] ?? 0),
+            'rufname' => $rufname,
+            'support_type' => $support_type,
+            'source_event_id' => (int) $event['id'],
+            'sondersignal_allowed' => $target_signal_allowed,
+            'radio_base_at' => $game_now,
+        ]);
+        $notified++;
+    }
+
+    return $notified;
+}
+
 add_action('wp_ajax_lsttraining_sim_save_dispatch', function () {
     lsttraining_sim_check_nonce();
 
@@ -4424,11 +5841,13 @@ add_action('wp_ajax_lsttraining_sim_save_dispatch', function () {
         if (!empty($meta['polizei_verstaendigen'])) {
             lsttraining_sim_ensure_police_support($pdo, $instanz_id, $einsatz_id, $game_now);
         }
+        $signal_notifications = lsttraining_sim_sync_signal_for_assigned_units($pdo, $instanz_id, $einsatz_id, $game_now, !empty($meta['signal_allowed']));
 
         lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
         wp_send_json_success([
             'einsatz_id' => $einsatz_id,
             'signal_allowed' => (bool) $meta['signal_allowed'],
+            'signal_notifications' => $signal_notifications,
             'message' => 'Einsatzdaten gespeichert.',
         ]);
     } catch (Throwable $e) {
@@ -4464,7 +5883,7 @@ add_action('wp_ajax_lsttraining_sim_alarm_vehicle', function () {
         lsttraining_sim_guard_not_paused($pdo, $instanz_id);
 
         $incident_stmt = $pdo->prepare('
-            SELECT id, instanz_id, latitude, longitude, state, meta_json
+            SELECT id, instanz_id, latitude, longitude, einsatztyp, poi_name_snapshot, state, meta_json
             FROM instanz_einsaetze
             WHERE id = ? AND instanz_id = ?
             LIMIT 1
@@ -4476,6 +5895,7 @@ add_action('wp_ajax_lsttraining_sim_alarm_vehicle', function () {
         }
 
         $incident_meta = lsttraining_sim_decode_meta($incident['meta_json'] ?? '');
+        $incident['meta'] = $incident_meta;
         $sondersignal_allowed = $request_signal !== null
             ? $request_signal
             : !empty($incident_meta['signal_allowed']);
@@ -4513,12 +5933,14 @@ add_action('wp_ajax_lsttraining_sim_alarm_vehicle', function () {
             wp_send_json_error(['message' => 'Fahrzeug nicht gefunden.'], 404);
         }
         $vehicle_fms = trim((string) ($vehicle['fms_status'] ?? ''));
-        if (in_array($vehicle_fms, ['3', '4', '5', '6'], true)) {
+        if (in_array($vehicle_fms, ['3', '4', '5', '6', '7', '8'], true)) {
             $reason = [
                 '3' => 'auf Anfahrt',
                 '4' => 'vor Ort',
                 '5' => 'im Sprechwunsch',
                 '6' => 'nicht verfügbar',
+                '7' => 'im Patiententransport',
+                '8' => 'im Krankenhaus',
             ][$vehicle_fms];
             wp_send_json_error(['message' => 'Dieses Fahrzeug kann nicht alarmiert werden: ' . $reason . '.'], 409);
         }
@@ -4569,6 +5991,10 @@ add_action('wp_ajax_lsttraining_sim_alarm_vehicle', function () {
         $alarmiert_at = (string) ($game_runtime['sim_now'] ?? wp_date('Y-m-d H:i:s'));
         $meta = [
             'event_type' => 'vehicle_alarm',
+            'radio_message_type' => 'alarm_acknowledgement',
+            'sender_type' => 'vehicle',
+            'recipient_type' => 'dispatch',
+            'status_transition' => '3',
             'status_id' => $status_id,
             'fahrzeug_id' => (int) ($vehicle['fahrzeug_id'] ?? 0),
             'fahrzeugtyp' => $fahrzeugtyp,
@@ -4609,10 +6035,31 @@ add_action('wp_ajax_lsttraining_sim_alarm_vehicle', function () {
         ];
 
         $pdo->beginTransaction();
+        $alarm_location = lsttraining_sim_alarm_location_text($incident);
+        $alarm_subject = trim((string) ($incident['einsatztyp'] ?? 'Einsatz'));
+        $alarm_parts = array_values(array_filter([$alarm_subject !== '' ? $alarm_subject : 'Einsatz', $alarm_location], static function (string $part): bool {
+            return trim($part) !== '';
+        }));
+        lsttraining_sim_insert_dispatch_event(
+            $pdo,
+            $einsatz_id,
+            $rufname . ' von Leitstelle: Einsatz für Sie, ' . implode(', ', $alarm_parts) . ', kommen.',
+            [
+                'event_type' => 'vehicle_alarm_dispatch',
+                'radio_message_type' => 'alarm_order',
+                'sender_type' => 'dispatch',
+                'recipient_type' => 'vehicle',
+                'status_id' => $status_id,
+                'fahrzeug_id' => (int) ($vehicle['fahrzeug_id'] ?? 0),
+                'rufname' => $rufname,
+                'status_transition' => '3',
+                'alarm_location' => $alarm_location,
+            ]
+        );
         $event_id = lsttraining_sim_insert_unit_event(
             $pdo,
             $einsatz_id,
-            $rufname . ' alarmiert.',
+            'Leitstelle von ' . $rufname . ': Verstanden, Einsatz übernommen, Ende.',
             $meta
         );
 
@@ -4842,6 +6289,7 @@ add_action('wp_ajax_lsttraining_sim_resolve_vehicle_route', function () {
         $meta['route_resolved_at'] = $now;
         $meta['route_coordinates'] = $coordinates;
         $meta['route_segments'] = $route_segments;
+        $meta['route_segments_normal'] = $normal_segments;
         $meta['route_distance_m'] = (int) ($route['distance_m'] ?? lsttraining_sim_route_length_m($coordinates));
         $meta['route_duration_sec'] = $route_duration;
         $meta['route_duration_normal_sec'] = $normal_duration;
@@ -4872,6 +6320,252 @@ add_action('wp_ajax_lsttraining_sim_resolve_vehicle_route', function () {
     } catch (Throwable $e) {
         error_log('[LSTtraining][sim_resolve_vehicle_route] ' . $e->getMessage());
         wp_send_json_error(['message' => 'Route konnte nicht berechnet werden: ' . $e->getMessage()], 500);
+    }
+});
+
+add_action('wp_ajax_lsttraining_sim_send_vehicle_radio_command', function () {
+    lsttraining_sim_check_nonce();
+
+    if (!is_user_logged_in()) {
+        wp_send_json_error(['message' => 'Nicht angemeldet.'], 401);
+    }
+
+    $instanz_id = isset($_POST['instanz_id']) ? absint($_POST['instanz_id']) : 0;
+    $event_id = isset($_POST['event_id']) ? absint($_POST['event_id']) : 0;
+    $command_code = isset($_POST['command_code']) ? sanitize_key(wp_unslash($_POST['command_code'])) : '';
+    $commands = [
+        'request_situation' => 'Geben Sie Lagemeldung',
+        'request_additional_resources' => 'Benötigen Sie weitere Kräfte',
+        'request_transport_destination' => 'Transportziel bekannt',
+        'request_notarzt_requirement' => 'Ist ein Notarzt erforderlich',
+    ];
+    if ($instanz_id <= 0 || $event_id <= 0 || !isset($commands[$command_code])) {
+        wp_send_json_error(['message' => 'Funkbefehl unvollständig oder ungültig.'], 400);
+    }
+
+    $pdo = lsttraining_get_connection();
+    if (!$pdo) {
+        wp_send_json_error(['message' => 'Datenbankverbindung fehlgeschlagen.'], 500);
+    }
+
+    try {
+        if (!lsttraining_sim_user_can_access_instance($pdo, $instanz_id, (int) get_current_user_id())) {
+            wp_send_json_error(['message' => 'Kein Zugriff auf diese Simulation.'], 403);
+        }
+        lsttraining_sim_guard_not_paused($pdo, $instanz_id);
+        $stmt = $pdo->prepare('
+            SELECT ev.instanz_einsatz_id, ev.meta_json, ie.lagemeldung, ie.meta_json AS incident_meta_json
+            FROM instanz_einsatz_events ev
+            INNER JOIN instanz_einsaetze ie ON ie.id = ev.instanz_einsatz_id
+            WHERE ev.id = ? AND ie.instanz_id = ? AND ev.kind = ?
+            LIMIT 1
+        ');
+        $stmt->execute([$event_id, $instanz_id, 'unit_report']);
+        $event = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$event) {
+            wp_send_json_error(['message' => 'Fahrzeugzuordnung nicht gefunden.'], 404);
+        }
+        $meta = lsttraining_sim_decode_meta($event['meta_json'] ?? '');
+        $is_neighbor_support = ($meta['event_type'] ?? '') === 'support_vehicle_alarm' && ($meta['support_type'] ?? '') === 'neighbor';
+        if ((($meta['event_type'] ?? '') !== 'vehicle_alarm' && !$is_neighbor_support) || !empty($meta['cancelled_at'])) {
+            wp_send_json_error(['message' => 'Für dieses Fahrzeug ist kein Funkbefehl verfügbar.'], 409);
+        }
+        $phase = (string) ($meta['mission_phase'] ?? '');
+        if ($is_neighbor_support && empty($meta['contact_established_at']) && empty($meta['entry_speak_request_event_id'])) {
+            wp_send_json_error(['message' => 'Das Fremdfahrzeug muss sich erst per Sprechwunsch melden.'], 409);
+        }
+        $allowed = ($phase === 'at_scene' || ($is_neighbor_support && in_array($phase, ['to_scene', 'at_scene'], true)))
+            ? array_keys($commands)
+            : (in_array($phase, ['to_hospital', 'handover'], true) ? ['request_transport_destination'] : []);
+        if (!in_array($command_code, $allowed, true)) {
+            wp_send_json_error(['message' => 'Dieser Funkbefehl passt nicht zur aktuellen Fahrzeugphase.'], 409);
+        }
+
+        $einsatz_id = (int) ($event['instanz_einsatz_id'] ?? 0);
+        $rufname = (string) ($meta['rufname'] ?? 'Fahrzeug');
+        $game_runtime = lsttraining_sim_current_game_runtime($pdo, $instanz_id);
+        $now = (int) ($game_runtime['game_now_ts'] ?? time());
+        $question = $rufname . ' von Leitstelle: ' . $commands[$command_code] . ', kommen.';
+        $incident_meta = lsttraining_sim_decode_meta($event['incident_meta_json'] ?? '');
+        $response = [
+            'request_situation' => trim((string) ($event['lagemeldung'] ?? '')) !== ''
+                ? 'Aktuelle Lage: ' . trim((string) $event['lagemeldung'])
+                : 'Lage unverändert',
+            'request_additional_resources' => !empty($incident_meta['pending_resource_request'])
+                ? (string) ($incident_meta['pending_resource_request']['text'] ?? 'Weitere Kräfte erforderlich')
+                : 'Derzeit keine weiteren Kräfte erforderlich',
+            'request_transport_destination' => trim((string) ($meta['transport_hospital_name'] ?? '')) !== ''
+                ? 'Transportziel ' . (string) $meta['transport_hospital_name']
+                : 'Transportziel noch nicht bekannt',
+            'request_notarzt_requirement' => !empty($incident_meta['notarzt_benoetigt'])
+                ? 'Notarzt erforderlich'
+                : 'Derzeit kein Notarzt erforderlich',
+        ][$command_code];
+
+        $pdo->beginTransaction();
+        $question_id = lsttraining_sim_insert_dispatch_event($pdo, $einsatz_id, $question, [
+            'event_type' => 'vehicle_radio_command',
+            'radio_message_type' => 'dispatcher_question',
+            'sender_type' => 'dispatch',
+            'recipient_type' => 'vehicle',
+            'command_code' => $command_code,
+            'source_event_id' => $event_id,
+            'status_id' => (int) ($meta['status_id'] ?? 0),
+            'fahrzeug_id' => (int) ($meta['fahrzeug_id'] ?? 0),
+            'rufname' => $rufname,
+        ]);
+        if (!lsttraining_sim_fire_phase_followups($pdo, $einsatz_id, $meta, $now, 'on_dispatcher_question', $command_code, $question_id)) {
+            lsttraining_sim_insert_unit_event($pdo, $einsatz_id, 'Leitstelle von ' . $rufname . ': ' . $response . ', Ende.', [
+                'event_type' => 'vehicle_radio_response',
+                'radio_message_type' => 'vehicle_response',
+                'sender_type' => 'vehicle',
+                'recipient_type' => 'dispatch',
+                'reply_to_event_id' => $question_id,
+                'command_code' => $command_code,
+                'source_event_id' => $event_id,
+                'status_id' => (int) ($meta['status_id'] ?? 0),
+                'fahrzeug_id' => (int) ($meta['fahrzeug_id'] ?? 0),
+                'rufname' => $rufname,
+                'requires_ack' => false,
+                'radio_base_at' => lsttraining_sim_time_string($now),
+            ]);
+        }
+        $pdo->commit();
+        lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
+        wp_send_json_success(['message' => 'Funkspruch gesendet.', 'einsatz_id' => $einsatz_id]);
+    } catch (Throwable $e) {
+        if ($pdo instanceof PDO && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        error_log('[LSTtraining][sim_vehicle_radio_command] ' . $e->getMessage());
+        wp_send_json_error(['message' => 'Funkspruch konnte nicht gesendet werden: ' . $e->getMessage()], 500);
+    }
+});
+
+add_action('wp_ajax_lsttraining_sim_recall_vehicle', function () {
+    lsttraining_sim_check_nonce();
+
+    if (!is_user_logged_in()) {
+        wp_send_json_error(['message' => 'Nicht angemeldet.'], 401);
+    }
+
+    $instanz_id = isset($_POST['instanz_id']) ? absint($_POST['instanz_id']) : 0;
+    $event_id = isset($_POST['event_id']) ? absint($_POST['event_id']) : 0;
+    if ($instanz_id <= 0 || $event_id <= 0) {
+        wp_send_json_error(['message' => 'Rückrufdaten unvollständig.'], 400);
+    }
+
+    $pdo = lsttraining_get_connection();
+    if (!$pdo) {
+        wp_send_json_error(['message' => 'Datenbankverbindung fehlgeschlagen.'], 500);
+    }
+
+    try {
+        if (!lsttraining_sim_user_can_access_instance($pdo, $instanz_id, (int) get_current_user_id())) {
+            wp_send_json_error(['message' => 'Kein Zugriff auf diese Simulation.'], 403);
+        }
+        lsttraining_sim_guard_not_paused($pdo, $instanz_id);
+        lsttraining_sim_require_vehicle_delta_model($pdo, $instanz_id);
+
+        $stmt = $pdo->prepare('
+            SELECT ev.id, ev.instanz_einsatz_id, ev.meta_json, ie.instanz_id
+            FROM instanz_einsatz_events ev
+            INNER JOIN instanz_einsaetze ie ON ie.id = ev.instanz_einsatz_id
+            WHERE ev.id = ? AND ie.instanz_id = ? AND ev.kind = ?
+            LIMIT 1
+        ');
+        $stmt->execute([$event_id, $instanz_id, 'unit_report']);
+        $event = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$event) {
+            wp_send_json_error(['message' => 'Fahrzeugzuordnung nicht gefunden.'], 404);
+        }
+
+        $meta = lsttraining_sim_decode_meta($event['meta_json'] ?? '');
+        if (($meta['event_type'] ?? '') !== 'vehicle_alarm' || !empty($meta['cancelled_at'])) {
+            wp_send_json_error(['message' => 'Dieses Fahrzeug kann nicht zurückgerufen werden.'], 409);
+        }
+        $phase = (string) ($meta['mission_phase'] ?? 'to_scene');
+        if ($phase !== 'to_scene' || !empty($meta['arrived_at'])) {
+            wp_send_json_error(['message' => 'Anfahrt kann nur vor dem Eintreffen abgebrochen werden.'], 409);
+        }
+
+        $status_id = (int) ($meta['status_id'] ?? 0);
+        $einsatz_id = (int) ($event['instanz_einsatz_id'] ?? 0);
+        $rufname = (string) ($meta['rufname'] ?? 'Fahrzeug');
+        $vehicle_state = $status_id > 0 ? lsttraining_sim_fetch_effective_vehicle_state($pdo, $instanz_id, $status_id) : null;
+        $last = is_array($meta['last_position'] ?? null) ? $meta['last_position'] : [];
+        $from_lat = is_numeric($vehicle_state['latitude'] ?? null) ? (float) $vehicle_state['latitude'] : (is_numeric($last['latitude'] ?? null) ? (float) $last['latitude'] : null);
+        $from_lon = is_numeric($vehicle_state['longitude'] ?? null) ? (float) $vehicle_state['longitude'] : (is_numeric($last['longitude'] ?? null) ? (float) $last['longitude'] : null);
+        if ($status_id <= 0 || $einsatz_id <= 0 || $from_lat === null || $from_lon === null) {
+            wp_send_json_error(['message' => 'Fahrzeugposition fehlt für den Abbruch der Anfahrt.'], 409);
+        }
+
+        $game_runtime = lsttraining_sim_current_game_runtime($pdo, $instanz_id);
+        $now = (string) ($game_runtime['sim_now'] ?? wp_date('Y-m-d H:i:s'));
+        $meta['cancelled_at'] = $now;
+        $meta['cancelled_by'] = (int) get_current_user_id();
+        $meta['recall_requested_at'] = $now;
+        $meta['return_completed_at'] = $now;
+        $meta['mission_phase'] = 'available';
+        $meta['assignment_status'] = 'cancelled';
+        $meta['route_status'] = 'cancelled';
+        $meta['route_coordinates'] = [];
+        $meta['route_segments'] = [];
+        $meta['route_distance_m'] = 0;
+        $meta['route_duration_sec'] = 0;
+        $meta['route_duration_normal_sec'] = 0;
+        $meta['current_progress'] = 1;
+        $meta['current_segment_index'] = 0;
+        $meta['current_segment_progress'] = 1;
+        $meta['last_position'] = [
+            'latitude' => round($from_lat, 6),
+            'longitude' => round($from_lon, 6),
+        ];
+        $meta['sondersignal_allowed'] = false;
+
+        $pdo->beginTransaction();
+        $event_update = $pdo->prepare('UPDATE instanz_einsatz_events SET meta_json = ? WHERE id = ?');
+        $event_update->execute([lsttraining_sim_encode_meta($meta), $event_id]);
+        lsttraining_sim_update_vehicle_state($pdo, $instanz_id, $status_id, [
+            'latitude' => $from_lat,
+            'longitude' => $from_lon,
+            'ziel_latitude' => null,
+            'ziel_longitude' => null,
+            'status' => 'einsatzbereit',
+            'fms_status' => '1',
+            'sondersignal' => 0,
+            'bemerkung' => 'Anfahrt abgebrochen, Status 1, Zuordnung aufgehoben.',
+        ]);
+        lsttraining_sim_insert_unit_event($pdo, $einsatz_id, 'Leitstelle von ' . $rufname . ': Anfahrt abgebrochen, Zuordnung aufgehoben, Status 1, Ende.', [
+            'event_type' => 'vehicle_recall_cancelled_assignment',
+            'radio_message_type' => 'recall_confirmed',
+            'sender_type' => 'vehicle',
+            'recipient_type' => 'dispatch',
+            'status_transition' => '1',
+            'status_id' => $status_id,
+            'fahrzeug_id' => (int) ($meta['fahrzeug_id'] ?? 0),
+            'rufname' => $rufname,
+            'fms_status' => '1',
+            'source_event_id' => $event_id,
+            'assignment_status' => 'cancelled',
+        ]);
+        $pdo->commit();
+        lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
+
+        wp_send_json_success([
+            'einsatz_id' => $einsatz_id,
+            'status_id' => $status_id,
+            'event_id' => $event_id,
+            'assignment_status' => 'cancelled',
+            'fms_status' => '1',
+            'message' => $rufname . ': Anfahrt abgebrochen, Zuordnung aufgehoben, Status 1.',
+        ]);
+    } catch (Throwable $e) {
+        if ($pdo instanceof PDO && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        error_log('[LSTtraining][sim_recall_vehicle] ' . $e->getMessage());
+        wp_send_json_error(['message' => 'Rückruf konnte nicht gefunkt werden: ' . $e->getMessage()], 500);
     }
 });
 
@@ -4931,7 +6625,78 @@ add_action('wp_ajax_lsttraining_sim_unassign_vehicle', function () {
             $rufname = (string) (($meta['support_type'] ?? '') === 'police' ? 'Polizei' : 'Unterstützung');
         }
         $game_runtime = lsttraining_sim_current_game_runtime($pdo, $instanz_id);
-        $meta['cancelled_at'] = (string) ($game_runtime['sim_now'] ?? wp_date('Y-m-d H:i:s'));
+        $now = (string) ($game_runtime['sim_now'] ?? wp_date('Y-m-d H:i:s'));
+
+        if ($is_support && (string) ($meta['support_type'] ?? '') === 'neighbor') {
+            $phase = (string) ($meta['mission_phase'] ?? 'to_scene');
+            if (in_array($phase, ['available', 'returning'], true)) {
+                lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
+                wp_send_json_success([
+                    'einsatz_id' => (int) $event['instanz_einsatz_id'],
+                    'status_id' => 0,
+                    'message' => $rufname . ' ist bereits auf Rückfahrt oder abgemeldet.',
+                ]);
+            }
+            $last = is_array($meta['last_position'] ?? null) ? $meta['last_position'] : [];
+            $home = is_array($meta['home_position'] ?? null) ? $meta['home_position'] : [];
+            $from_lat = is_numeric($last['latitude'] ?? null) ? (float) $last['latitude'] : null;
+            $from_lon = is_numeric($last['longitude'] ?? null) ? (float) $last['longitude'] : null;
+            $to_lat = is_numeric($home['latitude'] ?? null) ? (float) $home['latitude'] : null;
+            $to_lon = is_numeric($home['longitude'] ?? null) ? (float) $home['longitude'] : null;
+            if ($from_lat === null || $from_lon === null || $to_lat === null || $to_lon === null) {
+                wp_send_json_error(['message' => 'Heimat- oder Fahrzeugposition fehlt für die Rückfahrt.'], 409);
+            }
+
+            $route = lsttraining_sim_transport_route(
+                $from_lat,
+                $from_lon,
+                $to_lat,
+                $to_lon,
+                lsttraining_sim_transport_is_air_unit($meta)
+            );
+            if (count($route['coordinates'] ?? []) < 2) {
+                wp_send_json_error(['message' => 'Rückfahrt zur Heimatleitstelle konnte nicht geroutet werden.'], 409);
+            }
+
+            $meta['mission_phase'] = 'returning';
+            $meta['assignment_status'] = 'returning';
+            $meta['return_started_at'] = $now;
+            $meta['phase_started_at'] = $now;
+            $meta['route_coordinates'] = $route['coordinates'];
+            $meta['route_segments'] = is_array($route['route_segments'] ?? null) ? $route['route_segments'] : [];
+            $meta['route_distance_m'] = (int) ($route['distance_m'] ?? 0);
+            $meta['route_duration_sec'] = (int) ($route['duration_sec'] ?? 0);
+            $meta['route_duration_normal_sec'] = (int) ($route['duration_sec'] ?? 0);
+            $meta['route_source'] = (string) ($route['route_source'] ?? '');
+            $meta['current_progress'] = 0;
+            $meta['current_segment_index'] = 0;
+            $meta['current_segment_progress'] = 0;
+            $meta['fms_status'] = '1';
+            $meta['sondersignal'] = 0;
+
+            $pdo->beginTransaction();
+            $update_event = $pdo->prepare('UPDATE instanz_einsatz_events SET meta_json = ? WHERE id = ?');
+            $update_event->execute([lsttraining_sim_encode_meta($meta), $event_id]);
+            lsttraining_sim_insert_unit_event($pdo, (int) $event['instanz_einsatz_id'], 'Leitstelle von ' . $rufname . ': Fremdfahrzeug meldet sich ab und fährt zur Heimatleitstelle zurück, Status 1, Ende.', [
+                'event_type' => 'support_vehicle_returning_home',
+                'support_type' => 'neighbor',
+                'support_id' => (string) ($meta['support_id'] ?? ''),
+                'foreign_unit' => true,
+                'fahrzeug_id' => (int) ($meta['fahrzeug_id'] ?? 0),
+                'rufname' => $rufname,
+                'fms_status' => '1',
+                'source_event_id' => $event_id,
+            ]);
+            $pdo->commit();
+            lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
+            wp_send_json_success([
+                'einsatz_id' => (int) $event['instanz_einsatz_id'],
+                'status_id' => 0,
+                'message' => $rufname . ' fährt zur Heimatleitstelle zurück.',
+            ]);
+        }
+
+        $meta['cancelled_at'] = $now;
         $meta['cancelled_by'] = (int) get_current_user_id();
         $meta['assignment_status'] = 'cancelled';
 
@@ -5019,7 +6784,11 @@ add_action('wp_ajax_lsttraining_sim_ack_unit_report', function () {
         }
         if (!empty($meta['acknowledged_at'])) {
             lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
-            wp_send_json_success(['message' => 'Rückmeldung war bereits bestätigt.']);
+            wp_send_json_success([
+                'message' => 'Rückmeldung war bereits bestätigt.',
+                'einsatz_id' => (int) ($event['instanz_einsatz_id'] ?? 0),
+                'event_id' => $event_id,
+            ]);
         }
 
         $status_id = (int) ($meta['status_id'] ?? 0);
@@ -5042,8 +6811,12 @@ add_action('wp_ajax_lsttraining_sim_ack_unit_report', function () {
             ]);
         }
 
-        lsttraining_sim_insert_unit_event($pdo, (int) $event['instanz_einsatz_id'], $rufname . ': S4', [
+        lsttraining_sim_insert_unit_event($pdo, (int) $event['instanz_einsatz_id'], 'Leitstelle von ' . $rufname . ': Lagemeldung übermittelt, Status 4, Ende.', [
             'event_type' => 'fms_update',
+            'radio_message_type' => 'situation_acknowledged',
+            'sender_type' => 'vehicle',
+            'recipient_type' => 'dispatch',
+            'status_transition' => '4',
             'fahrzeug_id' => (int) ($meta['fahrzeug_id'] ?? 0),
             'status_id' => $status_id,
             'rufname' => $rufname,
@@ -5055,7 +6828,11 @@ add_action('wp_ajax_lsttraining_sim_ack_unit_report', function () {
         $pdo->commit();
         lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
 
-        wp_send_json_success(['message' => 'Lagemeldung bestätigt.']);
+        wp_send_json_success([
+            'message' => 'Lagemeldung bestätigt.',
+            'einsatz_id' => (int) ($event['instanz_einsatz_id'] ?? 0),
+            'event_id' => $event_id,
+        ]);
     } catch (Throwable $e) {
         if ($pdo instanceof PDO && $pdo->inTransaction()) {
             $pdo->rollBack();
@@ -5106,8 +6883,8 @@ add_action('wp_ajax_lsttraining_sim_open_unit_report', function () {
         if (($meta['event_type'] ?? '') !== 'situation_report' || empty($meta['requires_ack'])) {
             wp_send_json_error(['message' => 'Diese Rückmeldung ist kein Sprechwunsch.'], 400);
         }
+        $einsatz_id = (int) ($event['instanz_einsatz_id'] ?? 0);
         if (empty($meta['opened_at'])) {
-            $einsatz_id = (int) ($event['instanz_einsatz_id'] ?? 0);
             $rufname = trim((string) ($meta['rufname'] ?? 'Fahrzeug'));
             $report_text = trim((string) ($meta['report_text'] ?? ''));
             if ($report_text === '') {
@@ -5121,6 +6898,8 @@ add_action('wp_ajax_lsttraining_sim_open_unit_report', function () {
             $meta['opened_at'] = (string) ($game_runtime['sim_now'] ?? wp_date('Y-m-d H:i:s'));
             $meta['opened_by'] = (int) get_current_user_id();
             $meta['visible_text_pending'] = false;
+            unset($meta['radio_visible_at'], $meta['radio_delay_sec']);
+            $meta = lsttraining_sim_meta_with_radio_delay($meta, $meta['opened_at']);
 
             $pdo->beginTransaction();
             $update = $pdo->prepare('UPDATE instanz_einsatz_events SET text = ?, meta_json = ? WHERE id = ?');
@@ -5133,9 +6912,12 @@ add_action('wp_ajax_lsttraining_sim_open_unit_report', function () {
             $dispatch->execute([
                 $einsatz_id,
                 'dispatcher_question',
-                'Leitstelle an ' . $rufname . ', kommen.',
+                $rufname . ' von Leitstelle: Kommen.',
                 lsttraining_sim_encode_meta([
                     'event_type' => 'unit_report_opened',
+                    'radio_message_type' => 'speak_request_opened',
+                    'sender_type' => 'dispatch',
+                    'recipient_type' => 'vehicle',
                     'source_event_id' => $event_id,
                     'status_id' => (int) ($meta['status_id'] ?? 0),
                     'fahrzeug_id' => (int) ($meta['fahrzeug_id'] ?? 0),
@@ -5147,7 +6929,11 @@ add_action('wp_ajax_lsttraining_sim_open_unit_report', function () {
         }
 
         lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
-        wp_send_json_success(['message' => 'Sprechwunsch geöffnet.']);
+        wp_send_json_success([
+            'message' => 'Sprechwunsch geöffnet.',
+            'einsatz_id' => $einsatz_id,
+            'event_id' => $event_id,
+        ]);
     } catch (Throwable $e) {
         if ($pdo instanceof PDO && $pdo->inTransaction()) {
             $pdo->rollBack();
@@ -5184,6 +6970,15 @@ add_action('wp_ajax_lsttraining_sim_update_einsatz_state', function () {
             wp_send_json_error(['message' => 'Kein Zugriff auf diesen Einsatz.'], 403);
         }
         lsttraining_sim_guard_not_paused($pdo, $instanz_id);
+        if ($state === 'closed') {
+            $close_blockers = lsttraining_sim_incident_close_blockers($pdo, $einsatz_id);
+            if ($close_blockers) {
+                wp_send_json_error([
+                    'message' => 'Einsatz kann noch nicht abgeschlossen werden: ' . implode(' ', $close_blockers),
+                    'close_blockers' => $close_blockers,
+                ], 409);
+            }
+        }
 
         $update = $pdo->prepare('UPDATE instanz_einsaetze SET state = ?, updated_at = NOW() WHERE id = ?');
         $update->execute([$state, $einsatz_id]);

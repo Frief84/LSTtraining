@@ -581,7 +581,10 @@ jQuery(function ($) {
             on_missing_resources: 'Wenn Kräfte fehlen',
             random: 'Zufällig',
             manual: 'Manuell',
-            on_dispatcher_question: 'Auf Nachfrage'
+            on_dispatcher_question: 'Auf Nachfrage',
+            on_transport_started: 'Bei Transportbeginn',
+            on_hospital_arrival: 'Bei Klinikankunft',
+            on_vehicle_available: 'Bei Freimeldung'
         };
         return labels[value] || 'Nach Eintreffen';
     }
@@ -1159,6 +1162,9 @@ jQuery(function ($) {
                                 <option value="random" ${triggerMode === 'random' ? 'selected' : ''}>Zufällig im Zeitfenster</option>
                                 <option value="manual" ${triggerMode === 'manual' ? 'selected' : ''}>Manuell</option>
                                 <option value="on_dispatcher_question" ${triggerMode === 'on_dispatcher_question' ? 'selected' : ''}>Auf Nachfrage des Disponenten</option>
+                                <option value="on_transport_started" ${triggerMode === 'on_transport_started' ? 'selected' : ''}>Bei Transportbeginn</option>
+                                <option value="on_hospital_arrival" ${triggerMode === 'on_hospital_arrival' ? 'selected' : ''}>Bei Klinikankunft</option>
+                                <option value="on_vehicle_available" ${triggerMode === 'on_vehicle_available' ? 'selected' : ''}>Bei Freimeldung</option>
                             </select>
                         </div>
                         <div class="lst-field">

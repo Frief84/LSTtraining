@@ -617,6 +617,9 @@ if (is_readable($poi_json)) {
                                             <option value="random" <# if (!row.trigger_mode || row.trigger_mode === 'random') { #>selected<# } #>>Zufällig im Zeitfenster</option>
                                             <option value="manual" <# if (row.trigger_mode === 'manual') { #>selected<# } #>>Manuell</option>
                                             <option value="on_dispatcher_question" <# if (row.trigger_mode === 'on_dispatcher_question') { #>selected<# } #>>Auf Nachfrage des Disponenten</option>
+                                            <option value="on_transport_started" <# if (row.trigger_mode === 'on_transport_started') { #>selected<# } #>>Bei Transportbeginn</option>
+                                            <option value="on_hospital_arrival" <# if (row.trigger_mode === 'on_hospital_arrival') { #>selected<# } #>>Bei Klinikankunft</option>
+                                            <option value="on_vehicle_available" <# if (row.trigger_mode === 'on_vehicle_available') { #>selected<# } #>>Bei Freimeldung</option>
                                         </select>
                                     </div>
                                     <div class="lst-field">

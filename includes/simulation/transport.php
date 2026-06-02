@@ -259,6 +259,7 @@ function lsttraining_sim_transport_find_hospital(PDO $pdo, int $leitstelle_id, a
 
     $hospital = $best['hospital'];
     $hospital['matched_department'] = $best['department'];
+    $hospital['department_fallback'] = !empty($preferred) && (string) $best['department'] !== (string) $preferred[0];
     $hospital['distance_m'] = (int) round($best['distance_m']);
     return $hospital;
 }
@@ -316,11 +317,13 @@ function lsttraining_sim_transport_start(PDO $pdo, int $instanz_id, array $incid
 
     $meta['mission_phase'] = 'to_hospital';
     $meta['transport_patient_id'] = (string) ($patient['patient_id'] ?? '');
+    $meta['transport_triage_category'] = strtoupper((string) ($patient['triage_category'] ?? 'III'));
     $meta['transport_status'] = 'to_hospital';
     $meta['transport_started_at'] = $started_at;
     $meta['transport_hospital_id'] = (int) ($hospital['id'] ?? 0);
     $meta['transport_hospital_name'] = (string) ($hospital['name'] ?? '');
     $meta['transport_department'] = (string) ($hospital['matched_department'] ?? '');
+    $meta['transport_department_fallback'] = !empty($hospital['department_fallback']);
     $meta['route_coordinates'] = $route['coordinates'];
     $meta['route_distance_m'] = $route['distance_m'];
     $meta['route_duration_sec'] = $route['duration_sec'];
@@ -337,6 +340,9 @@ function lsttraining_sim_transport_start(PDO $pdo, int $instanz_id, array $incid
     $meta['return_completed_at'] = '';
     $meta['sondersignal_allowed'] = false;
 
+    if (function_exists('lsttraining_sim_fire_phase_followups')) {
+        lsttraining_sim_fire_phase_followups($pdo, (int) ($incident['id'] ?? 0), $meta, $sim_now_ts, 'on_transport_started');
+    }
     $update_event = $pdo->prepare('UPDATE instanz_einsatz_events SET meta_json = ? WHERE id = ?');
     $update_event->execute([lsttraining_sim_encode_meta($meta), $event_id]);
 
@@ -344,7 +350,7 @@ function lsttraining_sim_transport_start(PDO $pdo, int $instanz_id, array $incid
         'ziel_latitude' => (float) $hospital['latitude'],
         'ziel_longitude' => (float) $hospital['longitude'],
         'status' => 'besetzt',
-        'fms_status' => '3',
+        'fms_status' => '7',
         'sondersignal' => 0,
         'bemerkung' => 'Transport zum Krankenhaus.',
     ]);
@@ -360,8 +366,12 @@ function lsttraining_sim_transport_start(PDO $pdo, int $instanz_id, array $incid
     $patient['transport_started_at'] = $started_at;
     $patient['transport_note'] = '';
 
-    lsttraining_sim_insert_unit_event($pdo, (int) ($incident['id'] ?? 0), (string) ($assignment['rufname'] ?? 'Fahrzeug') . ': Transport nach ' . (string) ($hospital['name'] ?? 'Krankenhaus'), [
+    lsttraining_sim_insert_unit_event($pdo, (int) ($incident['id'] ?? 0), 'Leitstelle von ' . (string) ($assignment['rufname'] ?? 'Fahrzeug') . ': Transport mit Patient nach ' . (string) ($hospital['name'] ?? 'Krankenhaus') . ', Status 7, Ende.', [
         'event_type' => 'patient_transport_started',
+        'radio_message_type' => 'transport_destination',
+        'sender_type' => 'vehicle',
+        'recipient_type' => 'dispatch',
+        'status_transition' => '7',
         'status_id' => $status_id,
         'fahrzeug_id' => (int) ($assignment['fahrzeug_id'] ?? 0),
         'rufname' => (string) ($assignment['rufname'] ?? ''),
@@ -369,6 +379,8 @@ function lsttraining_sim_transport_start(PDO $pdo, int $instanz_id, array $incid
         'hospital_id' => (int) ($hospital['id'] ?? 0),
         'hospital_name' => (string) ($hospital['name'] ?? ''),
         'department' => (string) ($hospital['matched_department'] ?? ''),
+        'department_fallback' => !empty($hospital['department_fallback']),
+        'fms_status' => '7',
     ]);
 
     return true;

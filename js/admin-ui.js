@@ -181,7 +181,308 @@ window.openCreateForm = function () {
 /* ---------------------------------------------------------- */
 /* Open the “edit” popup                                      */
 /* ---------------------------------------------------------- */
-window.editLeitstelle = function (id, name, ort, bl, land, lat, lon, policeImage, policeSignals, rescueImage, rescueSignals) {
+function setLeitstelleNeighborSelection(rawIds) {
+  const select = document.getElementById('lst_neighbor_nebenleitstellen');
+  if (!select) return;
+  const ownId = currentEditedLeitstelleId();
+  let ids = [];
+  if (Array.isArray(rawIds)) {
+    ids = rawIds.map(String);
+  } else if (typeof rawIds === 'string' && rawIds.trim()) {
+    try {
+      const parsed = JSON.parse(rawIds);
+      ids = Array.isArray(parsed) ? parsed.map(String) : String(rawIds).split(',').map((v) => v.trim());
+    } catch (e) {
+      ids = String(rawIds).split(',').map((v) => v.trim());
+    }
+  }
+  Array.from(select.options).forEach((option) => {
+    const isOwn = ownId && String(option.value) === ownId;
+    option.selected = !isOwn && ids.indexOf(String(option.value)) !== -1;
+  });
+  updateNeighborSelfOptionState();
+  if (typeof window.refreshNeighborLeitstellenMapSelection === 'function') {
+    window.refreshNeighborLeitstellenMapSelection();
+  }
+}
+
+function currentEditedLeitstelleId() {
+  const id = (document.getElementById('lst_update_id') || {}).value || '';
+  return String(id).trim();
+}
+
+function normalizedNeighborName(value) {
+  return String(value || '').trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+function currentEditedLeitstelleName() {
+  return normalizedNeighborName((document.getElementById('lst_update_name') || {}).value || '');
+}
+
+function isOwnNeighborCandidate(id, name) {
+  const ownId = currentEditedLeitstelleId();
+  const ownName = currentEditedLeitstelleName();
+  if (ownId && String(id) === ownId) return true;
+  return !!ownName && normalizedNeighborName(name) === ownName;
+}
+
+function updateNeighborSelfOptionState() {
+  const select = document.getElementById('lst_neighbor_nebenleitstellen');
+  if (!select) return;
+  Array.from(select.options).forEach((option) => {
+    const isOwn = isOwnNeighborCandidate(option.value, option.textContent || '');
+    option.disabled = isOwn;
+    option.hidden = isOwn;
+    if (isOwn) option.selected = false;
+  });
+}
+
+function neighborSelectedIds() {
+  const select = document.getElementById('lst_neighbor_nebenleitstellen');
+  const selected = {};
+  if (!select) return selected;
+  Array.from(select.selectedOptions || []).forEach((option) => {
+    selected[String(option.value)] = true;
+  });
+  return selected;
+}
+
+function parseNeighborGps(gps) {
+  const match = String(gps || '').match(/(-?\d+(?:[.,]\d+)?)\s*[,;]\s*(-?\d+(?:[.,]\d+)?)/);
+  if (!match) return null;
+  const lat = parseFloat(match[1].replace(',', '.'));
+  const lon = parseFloat(match[2].replace(',', '.'));
+  if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
+    return null;
+  }
+  return { lat, lon };
+}
+
+function normalizeGeoJson(raw) {
+  if (!raw) return null;
+  let data = raw;
+  if (typeof raw === 'string') {
+    try { data = JSON.parse(raw); } catch (e) { return null; }
+  }
+  if (Array.isArray(data)) {
+    data = { type: 'FeatureCollection', features: data };
+  } else if (data && data.type === 'Feature') {
+    data = { type: 'FeatureCollection', features: [data] };
+  }
+  return data && data.type === 'FeatureCollection' ? data : null;
+}
+
+function neighborMapStyle(feature) {
+  const selected = !!neighborSelectedIds()[String(feature.get('neighborId') || '')];
+  const kind = feature.get('kind');
+  if (kind === 'home-area') {
+    return new ol.style.Style({
+      stroke: new ol.style.Stroke({ color: 'rgba(37, 99, 235, 0.8)', width: 2 }),
+      fill: new ol.style.Fill({ color: 'rgba(37, 99, 235, 0.08)' })
+    });
+  }
+  if (kind === 'neighbor-area') {
+    return new ol.style.Style({
+      stroke: new ol.style.Stroke({ color: selected ? 'rgba(22, 163, 74, 0.9)' : 'rgba(100, 116, 139, 0.45)', width: selected ? 2 : 1 }),
+      fill: new ol.style.Fill({ color: selected ? 'rgba(22, 163, 74, 0.14)' : 'rgba(100, 116, 139, 0.06)' })
+    });
+  }
+  if (kind === 'home-marker') {
+    return new ol.style.Style({
+      image: new ol.style.Circle({
+        radius: 8,
+        fill: new ol.style.Fill({ color: '#2563eb' }),
+        stroke: new ol.style.Stroke({ color: '#ffffff', width: 2 })
+      })
+    });
+  }
+  return new ol.style.Style({
+    image: new ol.style.Circle({
+      radius: selected ? 8 : 6,
+      fill: new ol.style.Fill({ color: selected ? '#16a34a' : '#94a3b8' }),
+      stroke: new ol.style.Stroke({ color: selected ? '#ffffff' : '#e2e8f0', width: selected ? 2 : 1 })
+    }),
+    text: selected ? new ol.style.Text({
+      text: String(feature.get('label') || ''),
+      offsetY: -18,
+      font: '600 12px sans-serif',
+      fill: new ol.style.Fill({ color: '#14532d' }),
+      stroke: new ol.style.Stroke({ color: '#ffffff', width: 3 })
+    }) : null
+  });
+}
+
+function ensureNeighborMapShell() {
+  const existing = document.getElementById('lst_neighbor_map');
+  if (existing) return existing;
+
+  const select = document.getElementById('lst_neighbor_nebenleitstellen');
+  if (!select) return null;
+
+  const card = select.closest('.lst-leitstelle-card') || select.parentElement;
+  if (!card) return null;
+
+  const picker = document.createElement('div');
+  picker.className = 'lst-neighbor-picker lst-neighbor-picker--injected';
+
+  const list = document.createElement('div');
+  list.className = 'lst-neighbor-picker__list';
+
+  const label = card.querySelector('label[for="lst_neighbor_nebenleitstellen"]');
+  if (label) list.appendChild(label);
+  list.appendChild(select);
+
+  const mapWrap = document.createElement('div');
+  mapWrap.className = 'lst-neighbor-picker__map-wrap';
+  mapWrap.innerHTML = [
+    '<div id="lst_neighbor_map" class="lst-neighbor-map" aria-label="Nachbarleitstellen visuell auswählen"></div>',
+    '<div class="lst-neighbor-map__empty" data-lst-neighbor-map-empty hidden>Keine Nebenleitstellen mit gültigen Koordinaten vorhanden.</div>',
+    '<div class="lst-neighbor-legend" aria-hidden="true">',
+    '<span><i class="is-home"></i> Leitstelle</span>',
+    '<span><i class="is-selected"></i> ausgewählt</span>',
+    '<span><i class="is-available"></i> weitere</span>',
+    '</div>'
+  ].join('');
+
+  picker.appendChild(list);
+  picker.appendChild(mapWrap);
+
+  const heading = card.querySelector('h3');
+  if (heading && heading.nextSibling) {
+    card.insertBefore(picker, heading.nextSibling);
+  } else {
+    card.insertBefore(picker, card.firstChild);
+  }
+
+  return document.getElementById('lst_neighbor_map');
+}
+
+window.refreshNeighborLeitstellenMapSelection = function () {
+  if (window.lstNeighborMapSource) {
+    window.lstNeighborMapSource.changed();
+  }
+};
+
+window.initNeighborLeitstellenMap = function (homeGeoJson) {
+  const target = ensureNeighborMapShell();
+  if (!target) return;
+  updateNeighborSelfOptionState();
+  if (typeof ol === 'undefined') {
+    const empty = document.querySelector('[data-lst-neighbor-map-empty]');
+    if (empty) {
+      empty.hidden = false;
+      empty.textContent = 'Karte konnte nicht geladen werden: OpenLayers fehlt.';
+    }
+    return;
+  }
+
+  if (window.lstNeighborMap) {
+    window.lstNeighborMap.setTarget(null);
+    window.lstNeighborMap = null;
+  }
+  target.innerHTML = '';
+
+  const source = new ol.source.Vector();
+  window.lstNeighborMapSource = source;
+  const vectorLayer = new ol.layer.Vector({ source, style: neighborMapStyle });
+  const map = new ol.Map({
+    target: target,
+    layers: [
+      new ol.layer.Tile({ source: new ol.source.OSM() }),
+      vectorLayer
+    ],
+    view: new ol.View({ center: ol.proj.fromLonLat([9.0, 51.0]), zoom: 6 })
+  });
+  window.lstNeighborMap = map;
+
+  const format = new ol.format.GeoJSON();
+  const homeArea = normalizeGeoJson(homeGeoJson || (document.getElementById('geojson_edit') || {}).value || '');
+  if (homeArea) {
+    try {
+      format.readFeatures(homeArea, {
+        dataProjection: 'EPSG:4326',
+        featureProjection: map.getView().getProjection()
+      }).forEach((feature) => {
+        feature.set('kind', 'home-area');
+        source.addFeature(feature);
+      });
+    } catch (e) {}
+  }
+
+  const lat = parseFloat((document.getElementById('lst_update_lat') || {}).value || '');
+  const lon = parseFloat((document.getElementById('lst_update_lon') || {}).value || '');
+  if (Number.isFinite(lat) && Number.isFinite(lon)) {
+    const home = new ol.Feature({ geometry: new ol.geom.Point(ol.proj.fromLonLat([lon, lat])) });
+    home.set('kind', 'home-marker');
+    home.set('label', 'Leitstelle');
+    source.addFeature(home);
+  }
+
+  let visibleNeighborCount = 0;
+  (window.lstNeighborLeitstellenData || []).forEach((neighbor) => {
+    if (isOwnNeighborCandidate(neighbor.id, neighbor.name || '')) return;
+    const coords = parseNeighborGps(neighbor.gps);
+    if (!coords) return;
+    visibleNeighborCount += 1;
+
+    const area = normalizeGeoJson(neighbor.geojson);
+    if (area) {
+      try {
+        format.readFeatures(area, {
+          dataProjection: 'EPSG:4326',
+          featureProjection: map.getView().getProjection()
+        }).forEach((feature) => {
+          feature.set('kind', 'neighbor-area');
+          feature.set('neighborId', String(neighbor.id));
+          feature.set('label', neighbor.name || '');
+          source.addFeature(feature);
+        });
+      } catch (e) {}
+    }
+
+    const marker = new ol.Feature({
+      geometry: new ol.geom.Point(ol.proj.fromLonLat([coords.lon, coords.lat]))
+    });
+    marker.set('kind', 'neighbor-marker');
+    marker.set('neighborId', String(neighbor.id));
+    marker.set('label', neighbor.name || ('Nebenleitstelle ' + neighbor.id));
+    source.addFeature(marker);
+  });
+
+  const empty = document.querySelector('[data-lst-neighbor-map-empty]');
+  if (empty) empty.hidden = visibleNeighborCount > 0;
+
+  map.on('click', function (event) {
+    let handled = false;
+    map.forEachFeatureAtPixel(event.pixel, function (feature) {
+      const id = String(feature.get('neighborId') || '');
+      if (!id || handled) return false;
+      const select = document.getElementById('lst_neighbor_nebenleitstellen');
+      const option = select ? Array.from(select.options).find((item) => String(item.value) === id) : null;
+      if (option) {
+        option.selected = !option.selected;
+        option.parentElement.dispatchEvent(new Event('change', { bubbles: true }));
+        handled = true;
+      }
+      return true;
+    });
+  });
+
+  map.on('pointermove', function (event) {
+    const hit = map.hasFeatureAtPixel(event.pixel, {
+      layerFilter: function (layer) { return layer === vectorLayer; }
+    });
+    target.style.cursor = hit ? 'pointer' : '';
+  });
+
+  const extent = source.getExtent();
+  if (!ol.extent.isEmpty(extent)) {
+    map.getView().fit(extent, { padding: [24, 24, 24, 24], maxZoom: 11, duration: 150 });
+  }
+  setTimeout(function () { map.updateSize(); }, 0);
+};
+
+window.editLeitstelle = function (id, name, ort, bl, land, lat, lon, policeImage, policeSignals, rescueImage, rescueSignals, neighborIds) {
   const createFrm = document.getElementById('neue-leitstelle-formular');
   const editFrm   = document.getElementById('edit-leitstelle-formular');
 
@@ -199,6 +500,7 @@ window.editLeitstelle = function (id, name, ort, bl, land, lat, lon, policeImage
     const el = document.getElementById(`lst_update_${k}`);
     if (el) el.value = values[k];
   });
+  updateNeighborSelfOptionState();
   const policeImageEl = document.getElementById('lst_update_police_vehicle_image');
   if (policeImageEl) policeImageEl.value = policeImage || 'img/fahrzeug/default_pol.png';
   const policeSignalsEl = document.getElementById('lst_update_police_signal_lights_json');
@@ -207,6 +509,7 @@ window.editLeitstelle = function (id, name, ort, bl, land, lat, lon, policeImage
   if (rescueImageEl) rescueImageEl.value = rescueImage || 'img/fahrzeug/default.png';
   const rescueSignalsEl = document.getElementById('lst_update_rescue_signal_lights_json');
   if (rescueSignalsEl) rescueSignalsEl.value = rescueSignals || '';
+  setLeitstelleNeighborSelection(neighborIds || []);
   const mode = document.getElementById('lst_form_mode');
   if (mode) mode.value = 'update';
   if (typeof window.updateAllDefaultVehiclePreviews === 'function') {
@@ -256,6 +559,9 @@ window.editLeitstelle = function (id, name, ort, bl, land, lat, lon, policeImage
 	  'dragInteractionEdit',
 	  JSON.stringify(poly)
 	);
+    if (typeof window.initNeighborLeitstellenMap === 'function') {
+      window.initNeighborLeitstellenMap(JSON.stringify(poly));
+    }
     });
 
 };
@@ -278,7 +584,8 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.dataset.policeImage,
         btn.dataset.policeSignalLights,
         btn.dataset.rescueImage,
-        btn.dataset.rescueSignalLights
+        btn.dataset.rescueSignalLights,
+        btn.dataset.neighborIds
       );
     });
   });
@@ -340,6 +647,7 @@ function openLeitstellePopupForCreate() {
   if (rescueImageEl) rescueImageEl.value = 'img/fahrzeug/default.png';
   const rescueSignalsEl = document.getElementById('lst_update_rescue_signal_lights_json');
   if (rescueSignalsEl) rescueSignalsEl.value = '';
+  setLeitstelleNeighborSelection([]);
   if (typeof window.updateAllDefaultVehiclePreviews === 'function') {
     window.updateAllDefaultVehiclePreviews();
   }
@@ -358,6 +666,9 @@ function openLeitstellePopupForCreate() {
 
   const popup = document.getElementById('edit-leitstelle-formular');
   if (popup)  popup.style.display = 'block';
+  if (typeof window.initNeighborLeitstellenMap === 'function') {
+    window.initNeighborLeitstellenMap('');
+  }
 
 	if (typeof window.syncWachenZuordButton === 'function') {
 	  window.syncWachenZuordButton();
@@ -386,6 +697,20 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     openLeitstellePopupForCreate();
   });
+
+  const neighbors = document.getElementById('lst_neighbor_nebenleitstellen');
+  if (neighbors && !neighbors._neighborMapBound) {
+    neighbors._neighborMapBound = true;
+    neighbors.addEventListener('change', function () {
+      updateNeighborSelfOptionState();
+      if (typeof window.refreshNeighborLeitstellenMapSelection === 'function') {
+        window.refreshNeighborLeitstellenMapSelection();
+      }
+    });
+  }
+  if (neighbors && typeof window.initNeighborLeitstellenMap === 'function') {
+    window.initNeighborLeitstellenMap((document.getElementById('geojson_edit') || {}).value || '');
+  }
 });
 
 /* helper: reset existing map (center Germany, clear polygon/marker) */

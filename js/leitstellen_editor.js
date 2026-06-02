@@ -79,6 +79,10 @@
         if (rescueImage) rescueImage.value = 'img/fahrzeug/default.png';
         const rescueSignals = document.getElementById('lst_update_rescue_signal_lights_json');
         if (rescueSignals) rescueSignals.value = '';
+        const neighbors = document.getElementById('lst_neighbor_nebenleitstellen');
+        if (neighbors) {
+            Array.from(neighbors.options).forEach(option => { option.selected = false; });
+        }
 
         const mode = document.getElementById('lst_form_mode');
         if (mode) mode.value = 'create';
@@ -113,6 +117,23 @@
     window.resetEditMaps = resetEditMaps;
 
     document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.edit-leitstelle').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const neighbors = document.getElementById('lst_neighbor_nebenleitstellen');
+                if (!neighbors) return;
+                let ids = [];
+                try {
+                    ids = JSON.parse(btn.dataset.neighborIds || '[]');
+                } catch (e) {
+                    ids = [];
+                }
+                ids = Array.isArray(ids) ? ids.map(String) : [];
+                Array.from(neighbors.options).forEach(option => {
+                    option.selected = ids.indexOf(String(option.value)) !== -1;
+                });
+            });
+        });
+
         const btn = document.getElementById('btn-new-leitstelle');
         if (btn) {
             btn.addEventListener('click', e => {

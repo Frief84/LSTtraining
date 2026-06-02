@@ -165,29 +165,60 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['neben_create'] ) &&
      style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:9998;"></div>
 
 <!-- Edit-Popup -->
-<div id="edit-nebenstelle-formular"
-     style="display:none; position:fixed; top:5%; left:50%; transform:translateX(-50%);
-            background:#fff; padding:20px; border:1px solid #ccc; z-index:9999;
-            max-width:750px; width:95%; box-shadow:0 0 12px rgba(0,0,0,.3)">
+<div id="edit-nebenstelle-formular" class="lst-nebenstelle-modal" style="display:none;">
+    <form method="post" class="lst-nebenstelle-modal__form">
+        <div class="lst-nebenstelle-modal__header">
+            <div>
+                <h2>Nebenleitstelle bearbeiten</h2>
+            </div>
+            <button type="button" class="button lst-nebenstelle-modal__close" onclick="closeNebenstellePopup()">Abbrechen</button>
+        </div>
 
-    <h2>Nebenleitstelle bearbeiten</h2>
-
-    <form method="post">
+        <div class="lst-nebenstelle-modal__body">
         <input type="hidden" name="neben_update_id" id="neben_update_id">
 		<input type="hidden" name="neben_create" id="neben_create" value="0">
-        <table class="form-table">
-            <tr><td>Name</td>          <td><input type="text"  name="neben_update_name"          id="neben_update_name" required></td></tr>
-            <tr><td>Zuständigkeit</td> <td><input type="text"  name="neben_update_zustandigkeit" id="neben_update_zustandigkeit"></td></tr>
-            <tr><td>Einwohner</td>     <td><input type="number"name="neben_update_einwohner"     id="neben_update_einwohner"></td></tr>
-            <tr><td>Fläche (km²)</td>  <td><input type="number" step="0.01" name="neben_update_flaeche" id="neben_update_flaeche"> <button type="button" id="calc-flaeche" class="button">Berechnen</button></td></tr>
-            <tr><td>Standort</td>      <td><input type="text"  name="neben_update_gps"           id="neben_update_gps" placeholder="z.B. 48.12345, 9.12345"></td></tr>
-            <tr><td colspan="2"><div id="nebenstelle_map" style="height:250px;"></div></td></tr>
-            <tr style="display:none"><td>Nachbarleitstelle</td><td><input type="number" name="neben_update_nachbar" id="neben_update_nachbar"></td></tr>
-        </table>
+        <input type="hidden" name="neben_update_nachbar" id="neben_update_nachbar">
+
+        <div class="lst-nebenstelle-grid">
+            <label class="lst-nebenstelle-field">
+                <span>Name</span>
+                <input type="text" name="neben_update_name" id="neben_update_name" required>
+            </label>
+
+            <label class="lst-nebenstelle-field">
+                <span>Zuständigkeit</span>
+                <input type="text" name="neben_update_zustandigkeit" id="neben_update_zustandigkeit">
+            </label>
+
+            <label class="lst-nebenstelle-field">
+                <span>Einwohner</span>
+                <input type="number" name="neben_update_einwohner" id="neben_update_einwohner">
+            </label>
+
+            <div class="lst-nebenstelle-field">
+                <span>Fläche (km²)</span>
+                <div class="lst-nebenstelle-inline-control">
+                    <input type="number" step="0.01" name="neben_update_flaeche" id="neben_update_flaeche">
+                    <button type="button" id="calc-flaeche" class="button">Berechnen</button>
+                </div>
+            </div>
+
+            <label class="lst-nebenstelle-field lst-nebenstelle-field--wide">
+                <span>Standort</span>
+                <input type="text" name="neben_update_gps" id="neben_update_gps" placeholder="z.B. 48.12345, 9.12345">
+            </label>
+        </div>
+
+        <div class="lst-nebenstelle-map-panel">
+            <div class="lst-nebenstelle-section-head">
+                <h3>Standortkarte</h3>
+            </div>
+            <div id="nebenstelle_map"></div>
+        </div>
 
         <input type="hidden" name="geojson_edit" id="geojson_edit" value="[]">
 
-        <div class="form-map" id="einsatzgebiet_container">
+        <div class="form-map lst-nebenstelle-actions-panel" id="einsatzgebiet_container">
             <div class="lst-nebenstellen-map-actions">
                 <button type="button" class="button open-einsatzgebiet-editor"
                         data-map-id="einsatzgebiet_edit"
@@ -216,11 +247,12 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['neben_create'] ) &&
                 </button>
             </div>
         </div>
+        </div>
 
-        <p style="margin-top:1rem;">
-            <button class="button button-primary" id="nebenstelle-save-button" >Speichern</button>
+        <div class="lst-nebenstelle-modal__footer">
+            <button class="button button-primary" id="nebenstelle-save-button">Speichern</button>
             <button type="button" class="button" onclick="closeNebenstellePopup()">Abbrechen</button>
-        </p>
+        </div>
     </form>
 </div>
 <!-- Copy-Leitstelle Modal (initial ausgeblendet) -->

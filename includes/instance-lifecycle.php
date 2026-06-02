@@ -18,6 +18,19 @@ function lsttraining_instance_lifecycle_column_exists(PDO $pdo, string $table, s
     return (int) $stmt->fetchColumn() > 0;
 }
 
+function lsttraining_instance_lifecycle_column_type(PDO $pdo, string $table, string $column): string {
+    $stmt = $pdo->prepare('
+        SELECT DATA_TYPE
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = ?
+          AND COLUMN_NAME = ?
+        LIMIT 1
+    ');
+    $stmt->execute([$table, $column]);
+    return strtolower((string) $stmt->fetchColumn());
+}
+
 function lsttraining_instance_lifecycle_table_exists(PDO $pdo, string $table): bool {
     $stmt = $pdo->prepare('
         SELECT COUNT(*)
@@ -61,6 +74,10 @@ function lsttraining_instance_lifecycle_ensure_schema(PDO $pdo): void {
         if (!lsttraining_instance_lifecycle_column_exists($pdo, 'spielinstanzen', $column)) {
             $pdo->exec($alter_sql);
         }
+    }
+
+    if (lsttraining_instance_lifecycle_column_type($pdo, 'spielinstanzen', 'settings_json') !== 'longtext') {
+        $pdo->exec('ALTER TABLE spielinstanzen MODIFY COLUMN settings_json LONGTEXT NULL');
     }
 
     $columns = [

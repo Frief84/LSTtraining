@@ -727,7 +727,7 @@ add_action('wp_ajax_lst_save_einsatz', function () {
     $allowedWeather = ['clear', 'cloudy', 'rain', 'snow', 'storm', 'windy', 'fog', 'cold', 'hot'];
     $allowedFollowupKinds = ['dispatcher_question', 'caller_answer', 'update', 'unit_report'];
     $allowedFollowupSpeakers = ['caller', 'fire_unit', 'ems_unit', 'police', 'dispatch', 'system'];
-    $allowedFollowupTriggers = ['random', 'on_unit_arrival', 'on_missing_resources', 'on_dispatcher_question', 'manual'];
+    $allowedFollowupTriggers = ['random', 'on_unit_arrival', 'on_missing_resources', 'on_dispatcher_question', 'on_transport_started', 'on_hospital_arrival', 'on_vehicle_available', 'manual'];
 
     $callerWho = lsttraining_einsatzeditor_first_enabled_text($caller_parts['person'] ?? []);
     $callerWhere = lsttraining_einsatzeditor_first_enabled_text($caller_parts['location'] ?? []);
