@@ -59,6 +59,28 @@ function lsttraining_sim_user_can_force_spawn(PDO $pdo, int $instanz_id, int $us
     return (int) $stmt->fetchColumn() > 0;
 }
 
+function lsttraining_sim_acquire_tick_lock(PDO $pdo, int $instanz_id): string {
+    $lock_name = 'lst_tick_' . max(0, $instanz_id);
+    $stmt = $pdo->prepare('SELECT GET_LOCK(?, 0)');
+    $stmt->execute([$lock_name]);
+    if ((int) $stmt->fetchColumn() !== 1) {
+        throw new RuntimeException('Die Simulation wird bereits von einem anderen Tick aktualisiert.');
+    }
+    return $lock_name;
+}
+
+function lsttraining_sim_release_tick_lock(PDO $pdo, string $lock_name): void {
+    if ($lock_name === '') {
+        return;
+    }
+    try {
+        $stmt = $pdo->prepare('SELECT RELEASE_LOCK(?)');
+        $stmt->execute([$lock_name]);
+    } catch (Throwable $e) {
+        error_log('[LSTtraining][tick_lock_release] ' . $e->getMessage());
+    }
+}
+
 function lsttraining_sim_fetch_runtime(PDO $pdo, int $instanz_id): array {
     $stmt = $pdo->prepare('
         SELECT sim_state, settings_json, started_at
@@ -133,8 +155,8 @@ add_action('wp_ajax_lsttraining_sim_set_runtime', function () {
     }
 
     try {
-        if (!lsttraining_sim_user_can_access_instance($pdo, $instanz_id, (int) get_current_user_id())) {
-            wp_send_json_error(['message' => 'Kein Zugriff auf diese Simulation.'], 403);
+        if (!lsttraining_sim_user_can_force_spawn($pdo, $instanz_id, (int) get_current_user_id())) {
+            wp_send_json_error(['message' => 'Nur Admins oder Einsatzleiter dürfen Zeit und Pause steuern.'], 403);
         }
 
         $runtime = lsttraining_sim_fetch_runtime($pdo, $instanz_id);
@@ -190,18 +212,24 @@ add_action('wp_ajax_lsttraining_sim_tick', function () {
         wp_send_json_error(['message' => 'Datenbankverbindung fehlgeschlagen.'], 500);
     }
 
+    $tick_lock = '';
     try {
         if (!lsttraining_sim_user_can_access_instance($pdo, $instanz_id, (int) get_current_user_id())) {
             wp_send_json_error(['message' => 'Kein Zugriff auf diese Simulation.'], 403);
         }
         lsttraining_sim_guard_not_paused($pdo, $instanz_id);
 
+        $tick_lock = lsttraining_sim_acquire_tick_lock($pdo, $instanz_id);
+        lsttraining_sim_fetch_snapshot($pdo, $instanz_id, (int) get_current_user_id(), true);
         $result = lsttraining_sim_spawn_one($pdo, $instanz_id);
+        lsttraining_sim_release_tick_lock($pdo, $tick_lock);
+        $tick_lock = '';
         wp_send_json_success($result);
     } catch (Throwable $e) {
         if ($pdo instanceof PDO && $pdo->inTransaction()) {
             $pdo->rollBack();
         }
+        lsttraining_sim_release_tick_lock($pdo, $tick_lock);
         error_log('[LSTtraining][sim_tick] ' . $e->getMessage());
         wp_send_json_error(['message' => $e->getMessage()], 500);
     }
@@ -226,6 +254,7 @@ add_action('wp_ajax_lsttraining_sim_force_spawn', function () {
         wp_send_json_error(['message' => 'Datenbankverbindung fehlgeschlagen.'], 500);
     }
 
+    $tick_lock = '';
     try {
         if (!lsttraining_sim_user_can_force_spawn($pdo, $instanz_id, (int) get_current_user_id())) {
             wp_send_json_error(['message' => 'Nur Admins oder Einsatzleiter können Testeinsätze erzeugen.'], 403);
@@ -237,13 +266,17 @@ add_action('wp_ajax_lsttraining_sim_force_spawn', function () {
             $options['einsatz_id'] = $einsatz_id;
         }
 
+        $tick_lock = lsttraining_sim_acquire_tick_lock($pdo, $instanz_id);
         $result = lsttraining_sim_spawn_one($pdo, $instanz_id, $options);
         lsttraining_instance_lifecycle_touch($pdo, $instanz_id);
+        lsttraining_sim_release_tick_lock($pdo, $tick_lock);
+        $tick_lock = '';
         wp_send_json_success($result);
     } catch (Throwable $e) {
         if ($pdo instanceof PDO && $pdo->inTransaction()) {
             $pdo->rollBack();
         }
+        lsttraining_sim_release_tick_lock($pdo, $tick_lock);
         error_log('[LSTtraining][sim_force_spawn] ' . $e->getMessage());
         wp_send_json_error(['message' => $e->getMessage()], 500);
     }
@@ -1457,7 +1490,7 @@ function lsttraining_sim_fire_phase_followups(PDO $pdo, int $einsatz_id, array &
 }
 
 function lsttraining_sim_police_vehicle_image_path(PDO $pdo, int $leitstelle_id): string {
-    $fallback = 'img/fahrzeug/default_pol.png';
+    $fallback = 'img/fahrzeug/default.png';
     if ($leitstelle_id <= 0) {
         return $fallback;
     }
@@ -1483,7 +1516,7 @@ function lsttraining_sim_police_vehicle_image_path(PDO $pdo, int $leitstelle_id)
 function lsttraining_sim_police_vehicle_image_url(PDO $pdo, int $leitstelle_id): string {
     return lsttraining_sim_public_vehicle_image_url(
         lsttraining_sim_police_vehicle_image_path($pdo, $leitstelle_id),
-        'img/fahrzeug/default_pol.png'
+        'img/fahrzeug/default.png'
     );
 }
 
@@ -1495,7 +1528,7 @@ function lsttraining_sim_leitstelle_vehicle_defaults(PDO $pdo, int $leitstelle_i
     }
 
     $defaults = [
-        'police_vehicle_image' => 'img/fahrzeug/default_pol.png',
+        'police_vehicle_image' => 'img/fahrzeug/default.png',
         'police_signal_lights_json' => '',
         'rescue_vehicle_image' => 'img/fahrzeug/default.png',
         'rescue_signal_lights_json' => '',
@@ -3630,18 +3663,7 @@ function lsttraining_sim_ensure_neighbor_schema(PDO $pdo): void {
         return;
     }
     if (!lsttraining_sim_table_exists($pdo, 'leitstelle_nebenleitstellen')) {
-        $pdo->exec("
-            CREATE TABLE IF NOT EXISTS `leitstelle_nebenleitstellen` (
-              `leitstelle_id` INT NOT NULL,
-              `nebenleitstelle_id` INT NOT NULL,
-              PRIMARY KEY (`leitstelle_id`, `nebenleitstelle_id`),
-              KEY `idx_ln_nebenleitstelle` (`nebenleitstelle_id`),
-              CONSTRAINT `fk_ln_leitstelle`
-                FOREIGN KEY (`leitstelle_id`) REFERENCES `leitstellen`(`id`) ON DELETE CASCADE,
-              CONSTRAINT `fk_ln_nebenleitstelle`
-                FOREIGN KEY (`nebenleitstelle_id`) REFERENCES `nebenleitstellen`(`id`) ON DELETE CASCADE
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
-        ");
+        throw new RuntimeException('Datenbankschema ist nicht aktuell: leitstelle_nebenleitstellen fehlt.');
     }
     $ready = true;
 }
@@ -4060,14 +4082,14 @@ function lsttraining_sim_fetch_bootstrap(PDO $pdo, int $instanz_id, int $user_id
     ];
 }
 
-function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id): array {
+function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id, bool $advance_state = false): array {
     // Live-Snapshot: nur Simulations-Deltas und berechnete Anzeigezustände, keine stationären Stammdaten.
     $instance = lsttraining_sim_fetch_instance_context($pdo, $instanz_id, $user_id);
     $simulation_paused = lsttraining_sim_instance_is_paused($instance);
     $sim_now_ts = (int) ($instance['sim_timestamp'] ?? time());
     $sim_now = (string) ($instance['sim_now'] ?? wp_date('Y-m-d H:i:s', $sim_now_ts));
 
-    if (!$simulation_paused) {
+    if ($advance_state && !$simulation_paused) {
         lsttraining_sim_advance_vehicle_movements($pdo, $instanz_id, $sim_now_ts);
     }
 
@@ -4492,8 +4514,6 @@ function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id)
         $fms = (string) ($vehicle['fms_status'] ?? '');
         $status = (string) ($vehicle['status'] ?? '');
         $assigned = $status_id > 0 && !empty($active_assignment_status_ids[$status_id]);
-        $special = !in_array($fms, ['1', '2', ''], true) || !empty($vehicle['sondersignal']);
-        $has_target = $vehicle['ziel_latitude'] !== null || $vehicle['ziel_longitude'] !== null;
         $status_delta = !in_array($status, ['frei', 'einsatzbereit', ''], true);
         $dispatch_block_reason = '';
         if ($assigned) {
@@ -4515,18 +4535,32 @@ function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id)
         }
         $vehicle['dispatch_available'] = $dispatch_block_reason === '';
         $vehicle['dispatch_block_reason'] = $dispatch_block_reason;
-        $outside_base = false;
+        $position_changed = false;
         if (
             $vehicle['latitude'] !== null &&
             $vehicle['longitude'] !== null &&
             $vehicle['base_latitude'] !== null &&
             $vehicle['base_longitude'] !== null
         ) {
-            $outside_base = lsttraining_sim_distance_m(
+            $position_changed = lsttraining_sim_distance_m(
                 (float) $vehicle['latitude'],
                 (float) $vehicle['longitude'],
                 (float) $vehicle['base_latitude'],
                 (float) $vehicle['base_longitude']
+            ) > 5;
+        }
+        $outside_wache = false;
+        if (
+            $vehicle['latitude'] !== null &&
+            $vehicle['longitude'] !== null &&
+            $vehicle['wache_latitude'] !== null &&
+            $vehicle['wache_longitude'] !== null
+        ) {
+            $outside_wache = lsttraining_sim_distance_m(
+                (float) $vehicle['latitude'],
+                (float) $vehicle['longitude'],
+                (float) $vehicle['wache_latitude'],
+                (float) $vehicle['wache_longitude']
             ) > 50;
         }
         $has_delta = !empty($vehicle['delta_id']);
@@ -4546,8 +4580,19 @@ function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id)
             $vehicle_statuses[] = $light;
         }
 
-        if ($has_delta && ($assigned || $special || $outside_base || $has_target)) {
-            unset($vehicle['delta_id'], $vehicle['base_latitude'], $vehicle['base_longitude'], $vehicle['wache_latitude'], $vehicle['wache_longitude'], $vehicle['bild_datei']);
+        // Der Positions-Snapshot ist kein Bewegungsprotokoll: Er enthält nur den
+        // aktuellen Ort, wenn dieser von Startposition oder Wache abweicht.
+        if ($has_delta && ($position_changed || $outside_wache)) {
+            unset(
+                $vehicle['delta_id'],
+                $vehicle['base_latitude'],
+                $vehicle['base_longitude'],
+                $vehicle['wache_latitude'],
+                $vehicle['wache_longitude'],
+                $vehicle['ziel_latitude'],
+                $vehicle['ziel_longitude'],
+                $vehicle['bild_datei']
+            );
             $live_vehicles[] = $vehicle;
         }
     }
@@ -4612,7 +4657,9 @@ function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id)
         $vehicle_statuses[] = $support_vehicle;
     }
 
-    $patient_update_stmt = $pdo->prepare('UPDATE instanz_einsaetze SET meta_json = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND instanz_id = ?');
+    $patient_update_stmt = $advance_state
+        ? $pdo->prepare('UPDATE instanz_einsaetze SET meta_json = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND instanz_id = ?')
+        : null;
 
     foreach ($incidents as &$incident) {
         $required = lsttraining_sim_normalize_required_resources($incident['meta']['required_resources'] ?? []);
@@ -4643,7 +4690,7 @@ function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id)
         $raw_patients = (string) ($incident['state'] ?? '') !== 'closed' && is_array($meta_for_patients['patients'] ?? null) ? $meta_for_patients['patients'] : [];
         $patient_dirty = false;
         $now_ts = $sim_now_ts;
-        if (!$simulation_paused) {
+        if ($advance_state && !$simulation_paused) {
             foreach ($raw_patients as &$patient) {
                 if (!is_array($patient)) {
                     continue;
@@ -4694,7 +4741,7 @@ function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id)
                 $patient_dirty = true;
             }
         }
-        if ($patient_dirty) {
+        if ($patient_dirty && $patient_update_stmt instanceof PDOStatement) {
             $meta_for_patients['patients'] = $raw_patients;
             $incident['meta'] = $meta_for_patients;
             $patient_update_stmt->execute([lsttraining_sim_encode_meta($meta_for_patients), (int) $incident['id'], $instanz_id]);

@@ -16,11 +16,11 @@
     var configured = window.lstFahrzeugeAjax && lstFahrzeugeAjax.signal_sprite_urls ? lstFahrzeugeAjax.signal_sprite_urls : {};
     var base = pluginBaseUrl();
     return {
-      beacon: configured.beacon || (base ? base + 'img/signal/beacon.png' : ''),
-      strobe: configured.strobe || (base ? base + 'img/signal/strobe.png' : ''),
-      bar: configured.bar || (base ? base + 'img/signal/lightbar.png' : ''),
-      glow: configured.glow || (base ? base + 'img/signal/glow.png' : ''),
-      editor_point: configured.editor_point || (base ? base + 'img/signal/editor-point.png' : '')
+      beacon: configured.beacon || (base ? base + 'img/signal/beacon.svg' : ''),
+      strobe: configured.strobe || (base ? base + 'img/signal/strobe.svg' : ''),
+      bar: configured.bar || (base ? base + 'img/signal/lightbar.svg' : ''),
+      glow: configured.glow || (base ? base + 'img/signal/glow.svg' : ''),
+      editor_point: configured.editor_point || (base ? base + 'img/signal/editor-point.svg' : '')
     };
   }
 

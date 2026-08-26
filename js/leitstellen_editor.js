@@ -72,7 +72,7 @@
             if (el) el.value = '';
         });
         const policeImage = document.getElementById('lst_update_police_vehicle_image');
-        if (policeImage) policeImage.value = 'img/fahrzeug/default_pol.png';
+        if (policeImage) policeImage.value = 'img/fahrzeug/default.png';
         const policeSignals = document.getElementById('lst_update_police_signal_lights_json');
         if (policeSignals) policeSignals.value = '';
         const rescueImage = document.getElementById('lst_update_rescue_vehicle_image');
@@ -162,11 +162,11 @@
         var configured = window.lstLeitstellenAjax && lstLeitstellenAjax.signal_sprite_urls ? lstLeitstellenAjax.signal_sprite_urls : {};
         var base = pluginBaseUrl();
         return {
-            beacon: configured.beacon || (base ? base + 'img/signal/beacon.png' : ''),
-            strobe: configured.strobe || (base ? base + 'img/signal/strobe.png' : ''),
-            bar: configured.bar || (base ? base + 'img/signal/lightbar.png' : ''),
-            glow: configured.glow || (base ? base + 'img/signal/glow.png' : ''),
-            editor_point: configured.editor_point || (base ? base + 'img/signal/editor-point.png' : '')
+            beacon: configured.beacon || (base ? base + 'img/signal/beacon.svg' : ''),
+            strobe: configured.strobe || (base ? base + 'img/signal/strobe.svg' : ''),
+            bar: configured.bar || (base ? base + 'img/signal/lightbar.svg' : ''),
+            glow: configured.glow || (base ? base + 'img/signal/glow.svg' : ''),
+            editor_point: configured.editor_point || (base ? base + 'img/signal/editor-point.svg' : '')
         };
     }
 
@@ -563,7 +563,8 @@ function updateWachenZuordButtonState() {
 
         $.getJSON(window.lstLeitstellenAjax.ajax_url, {
                 action: 'get_leitstelle_hospitals',
-                leitstelle_id: id
+                leitstelle_id: id,
+                nonce: window.lstLeitstellenAjax.nonce
             })
             .done(function(json) {
                 if (!json.success) {
@@ -789,6 +790,7 @@ function updateWachenZuordButtonState() {
                             data: {
                                 action: 'save_leitstelle_hospitals',
                                 leitstelle_id: id,
+                                nonce: window.lstLeitstellenAjax.nonce,
                                 hospitals: JSON.stringify(selected)
                             },
                             success: function(resp) {

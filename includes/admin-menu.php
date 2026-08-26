@@ -132,6 +132,16 @@ if ( $can['leitstellen'] ) {
         'lsttraining_render_anruferprofile'
     );
 }
+
+    // Hilfe ist für jeden Benutzer sichtbar, der Zugriff auf das Plugin-Menü hat.
+    add_submenu_page(
+        $parent_slug,
+        'Hilfe & Dokumentation',
+        'Hilfe & Dokumentation',
+        'read',
+        'lsttraining_hilfe',
+        'lsttraining_render_help'
+    );
 	
     /* ------------------------------------------------------------------ */
     /*   4. Admin-exklusive Punkte                                        */
@@ -170,4 +180,3 @@ if ( $can['leitstellen'] ) {
 
 
 } );
-

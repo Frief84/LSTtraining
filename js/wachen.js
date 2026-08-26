@@ -436,7 +436,10 @@ $('body').on('click', '#wache-fahrzeuge-toggle', function (e) {
         return Promise.resolve({ count: 0, wachen: [] });
       }
 
-      const params = new URLSearchParams({ action: 'lsttraining_get_wachen' });
+      const params = new URLSearchParams({
+        action: 'lsttraining_get_wachen',
+        nonce: (window.lstWachenAjax && window.lstWachenAjax.nonce) || ''
+      });
       if (ls) params.set('ls_id', String(ls));
       if (nls) params.set('nls_id', String(nls));
       if (bl) {
@@ -815,12 +818,32 @@ $('body').on('click', '#wache-fahrzeuge-toggle', function (e) {
       openNewWacheModal();
     });
 
+    $(document).on('click', '.delete-wache', function (e) {
+      e.preventDefault();
+      const id = Number($(this).data('id') || 0);
+      if (!id || !window.confirm('Wache wirklich löschen?')) return;
+      $.post((window.lstWachenAjax && window.lstWachenAjax.ajax_url) || AJAX_URL, {
+        action: 'lsttraining_delete_wache',
+        wache_id: id,
+        nonce: (window.lstWachenAjax && window.lstWachenAjax.nonce) || ''
+      }).done(function (res) {
+        if (!res || !res.success) {
+          alert('Löschen fehlgeschlagen: ' + ((res && res.data) || 'Unbekannter Fehler'));
+          return;
+        }
+        window.location.reload();
+      }).fail(function () {
+        alert('Löschen fehlgeschlagen.');
+      });
+    });
+
     $('body').on('click', '.edit-wache', function (e) {
       e.preventDefault();
       const id = $(this).data('id');
       $.get((window.lstWachenAjax && window.lstWachenAjax.ajax_url) || AJAX_URL, {
         action: 'lsttraining_get_wache',
-        wache_id: id
+        wache_id: id,
+        nonce: (window.lstWachenAjax && window.lstWachenAjax.nonce) || ''
       }).done(res => {
         if (!res || !res.success) return alert('Fehler: ' + (res && res.data ? res.data : 'Unbekannt'));
         openWacheModal(res.data);
@@ -836,7 +859,8 @@ $('body').on('click', '#wache-fahrzeuge-toggle', function (e) {
 
       $.get((window.lstWachenAjax && window.lstWachenAjax.ajax_url) || AJAX_URL, {
         action: 'lsttraining_get_wache',
-        wache_id: id
+        wache_id: id,
+        nonce: (window.lstWachenAjax && window.lstWachenAjax.nonce) || ''
       }).done(res => {
         if (!res || !res.success) return alert('Fehler: ' + (res && res.data ? res.data : 'Unbekannt'));
         openWacheModal(res.data);
@@ -871,6 +895,7 @@ $('body').on('click', '#wache-fahrzeuge-toggle', function (e) {
       if (!$('#mw-nebenleitstellen').val()) payload += '&nebenleitstellen=';
 
       payload += '&action=' + encodeURIComponent(mode === 'create' ? 'lsttraining_create_wache' : 'lsttraining_save_wache');
+      payload += '&nonce=' + encodeURIComponent((window.lstWachenAjax && window.lstWachenAjax.nonce) || '');
 
       $.post((window.lstWachenAjax && window.lstWachenAjax.ajax_url) || AJAX_URL, payload)
         .done(res => {
@@ -1017,7 +1042,8 @@ $('body').on('click', '#wache-fahrzeuge-toggle', function (e) {
 		// Modal öffnen: wir laden echte Daten per AJAX und rufen dann openWacheModal(res.data)
 		$.get((window.lstWachenAjax && window.lstWachenAjax.ajax_url) || AJAX_URL, {
 		  action: 'lsttraining_get_wache',
-		  wache_id: openId
+		  wache_id: openId,
+		  nonce: (window.lstWachenAjax && window.lstWachenAjax.nonce) || ''
 		}).done(res => {
 		  if (!res || !res.success) return;
 		  openWacheModal(res.data);

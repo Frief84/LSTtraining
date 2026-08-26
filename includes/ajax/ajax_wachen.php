@@ -27,6 +27,12 @@ function lsttraining_get_wachen() {
         ob_end_clean();
     }
 
+    lsttraining_ajax_guard([
+        'area' => 'wachen',
+        'nonce_action' => 'lsttraining_wachen',
+        'method' => 'GET',
+    ]);
+
     try {
         $pdo = lsttraining_get_connection();
         if (!$pdo instanceof PDO) {
@@ -101,6 +107,21 @@ function lsttraining_get_wachen() {
         $params[':nls'] = $nls;
     }
 
+    if ($ls && !lsttraining_user_can('wachen', $ls)) {
+        wp_send_json_error(['msg' => 'Keine Berechtigung für diese Leitstelle.'], 403);
+    }
+    if ($nls && !lsttraining_user_can_object($pdo, 'wachen', 'nebenstelle', $nls)) {
+        wp_send_json_error(['msg' => 'Keine Berechtigung für diese Nebenleitstelle.'], 403);
+    }
+    if (!current_user_can('manage_options')) {
+        $allowed_ids = lsttraining_user_leitstellen_ids();
+        if (!$allowed_ids) {
+            wp_send_json_error(['msg' => 'Keine Leitstelle freigegeben.'], 403);
+        }
+        $allowed_sql = implode(',', array_map('intval', $allowed_ids));
+        $where[] = "(EXISTS (SELECT 1 FROM wache_leitstellen awl WHERE awl.wache_id = w.id AND awl.leitstelle_id IN ($allowed_sql)) OR EXISTS (SELECT 1 FROM wache_nebenleitstellen awn JOIN leitstelle_nebenleitstellen aln ON aln.nebenleitstelle_id = awn.nebenleitstelle_id WHERE awn.wache_id = w.id AND aln.leitstelle_id IN ($allowed_sql)))";
+    }
+
     $sql .= $joins;
     if ($where) {
         $sql .= ' WHERE ' . implode(' AND ', $where);
@@ -134,6 +155,8 @@ add_action('wp_ajax_lsttraining_get_wache', function () {
         // Guard
     lsttraining_ajax_guard([
         'area' => 'wachen',
+        'nonce_action' => 'lsttraining_wachen',
+        'method' => 'GET',
     ]);
 
 $id = (int)($_GET['wache_id'] ?? 0);
@@ -147,6 +170,9 @@ $id = (int)($_GET['wache_id'] ?? 0);
     }
 
     try {
+        if (!lsttraining_user_can_object($pdo, 'wachen', 'wache', $id)) {
+            wp_send_json_error('Keine Berechtigung für diese Wache.', 403);
+        }
         $stmt = $pdo->prepare('
             SELECT id, name, typ, latitude, longitude,
                    arrival_pos, departure_pos,
@@ -184,6 +210,8 @@ add_action('wp_ajax_lsttraining_save_wache', function () {
         // Guard
     lsttraining_ajax_guard([
         'area' => 'wachen',
+        'nonce_action' => 'lsttraining_wachen',
+        'method' => 'POST',
     ]);
 
 $id         = (int)($_POST['id'] ?? 0);
@@ -207,6 +235,13 @@ $id         = (int)($_POST['id'] ?? 0);
     $pdo = lsttraining_get_connection();
 
     try {
+        if (!lsttraining_user_can_object($pdo, 'wachen', 'wache', $id)) {
+            wp_send_json_error('Keine Berechtigung für die bestehende Wache.', 403);
+        }
+        $target_scope = lsttraining_assignment_leitstellen_ids($pdo, $leit_ids, $neben_ids);
+        if (!lsttraining_user_can_all_leitstellen('wachen', $target_scope)) {
+            wp_send_json_error('Keine Berechtigung für die neue Zuordnung.', 403);
+        }
         $pdo->beginTransaction();
 
         $updated_by_user_id = get_current_user_id();
@@ -295,6 +330,8 @@ add_action('wp_ajax_lsttraining_delete_wache', function () {
         // Guard
     lsttraining_ajax_guard([
         'area' => 'wachen',
+        'nonce_action' => 'lsttraining_wachen',
+        'method' => 'POST',
     ]);
 
 $id = (int)($_POST['wache_id'] ?? 0);
@@ -305,6 +342,9 @@ $id = (int)($_POST['wache_id'] ?? 0);
     $pdo = lsttraining_get_connection();
 
     try {
+        if (!lsttraining_user_can_object($pdo, 'wachen', 'wache', $id)) {
+            wp_send_json_error('Keine Berechtigung für diese Wache.', 403);
+        }
         $pdo->beginTransaction();
 
         $pdo->prepare('DELETE FROM wache_leitstellen WHERE wache_id = ?')->execute([$id]);
@@ -342,6 +382,8 @@ add_action('wp_ajax_lsttraining_create_wache', function () {
         // Guard
     lsttraining_ajax_guard([
         'area' => 'wachen',
+        'nonce_action' => 'lsttraining_wachen',
+        'method' => 'POST',
     ]);
 
 $name       = sanitize_text_field($_POST['name'] ?? '');
@@ -364,6 +406,10 @@ $name       = sanitize_text_field($_POST['name'] ?? '');
     $pdo = lsttraining_get_connection();
 
     try {
+        $target_scope = lsttraining_assignment_leitstellen_ids($pdo, $ls_ids, $nls_ids);
+        if (!lsttraining_user_can_all_leitstellen('wachen', $target_scope)) {
+            wp_send_json_error('Keine Berechtigung für diese Zuordnung.', 403);
+        }
         $pdo->beginTransaction();
 
         $placed_by_user_id = get_current_user_id();
@@ -438,6 +484,12 @@ $name       = sanitize_text_field($_POST['name'] ?? '');
  * ---------------------------------------------------------------------- */
 
 function lst_z_check() {
+    if (strtoupper($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        wp_send_json_error(['msg' => 'Ungültige HTTP-Methode'], 405);
+    }
+    if (!is_user_logged_in()) {
+        wp_send_json_error(['msg' => 'Nicht angemeldet'], 401);
+    }
     $nonce = $_POST['_wpnonce'] ?? ($_POST['wpnonce'] ?? ($_POST['nonce'] ?? ''));
     if (!wp_verify_nonce($nonce, 'lst_zuordnung')) {
         wp_send_json_error(['msg' => 'Ungültiger Nonce'], 403);
@@ -448,7 +500,8 @@ function lst_z_check_entity(string $type, int $id): void {
     if ($type === 'leitstelle') {
         $allowed = lsttraining_user_can('leitstellen', $id);
     } elseif ($type === 'nebenleitstelle') {
-        $allowed = lsttraining_user_can('nebenstellen');
+        $pdo = lsttraining_get_connection();
+        $allowed = $pdo instanceof PDO && lsttraining_user_can_object($pdo, 'nebenstellen', 'nebenstelle', $id);
     } else {
         $allowed = false;
     }
@@ -812,12 +865,11 @@ add_action('wp_ajax_lsttraining_toggle_wache_assignment', function () {
  * @action wp_ajax_lsttraining_update_wache
  */
 add_action('wp_ajax_lsttraining_update_wache', function () {
-    if (!is_user_logged_in()) {
-        wp_send_json_error(['message' => 'Nicht angemeldet'], 401);
-    }
-    if (!function_exists('lsttraining_user_can') || !lsttraining_user_can('wachen')) {
-        wp_send_json_error(['message' => 'Keine Berechtigung'], 403);
-    }
+    lsttraining_ajax_guard([
+        'area' => 'wachen',
+        'nonce_action' => 'lsttraining_wachen',
+        'method' => 'POST',
+    ]);
 
     if (!function_exists('lsttraining_get_connection')) {
         require_once plugin_dir_path(__FILE__) . 'db.php';
@@ -841,6 +893,9 @@ add_action('wp_ajax_lsttraining_update_wache', function () {
 
     if ($id <= 0) {
         wp_send_json_error(['message' => 'Ungültige ID'], 400);
+    }
+    if (!lsttraining_user_can_object($pdo, 'wachen', 'wache', $id)) {
+        wp_send_json_error(['message' => 'Keine Berechtigung für diese Wache'], 403);
     }
 
     $updated_by_user_id = get_current_user_id();

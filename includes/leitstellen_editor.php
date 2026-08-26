@@ -55,22 +55,9 @@ if ( ! function_exists( 'lsttraining_leitstellen_table_exists' ) ) {
 
 if ( ! function_exists( 'lsttraining_leitstellen_ensure_neighbor_table' ) ) {
     function lsttraining_leitstellen_ensure_neighbor_table( PDO $pdo ): void {
-        if ( lsttraining_leitstellen_table_exists( $pdo, 'leitstelle_nebenleitstellen' ) ) {
-            return;
+        if ( ! lsttraining_leitstellen_table_exists( $pdo, 'leitstelle_nebenleitstellen' ) ) {
+            throw new RuntimeException( 'Datenbankschema ist nicht aktuell. Bitte die Migration ausführen.' );
         }
-
-        $pdo->exec(
-            "CREATE TABLE IF NOT EXISTS `leitstelle_nebenleitstellen` (
-              `leitstelle_id` INT NOT NULL,
-              `nebenleitstelle_id` INT NOT NULL,
-              PRIMARY KEY (`leitstelle_id`, `nebenleitstelle_id`),
-              KEY `idx_ln_nebenleitstelle` (`nebenleitstelle_id`),
-              CONSTRAINT `fk_ln_leitstelle`
-                FOREIGN KEY (`leitstelle_id`) REFERENCES `leitstellen`(`id`) ON DELETE CASCADE,
-              CONSTRAINT `fk_ln_nebenleitstelle`
-                FOREIGN KEY (`nebenleitstelle_id`) REFERENCES `nebenleitstellen`(`id`) ON DELETE CASCADE
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci"
-        );
     }
 }
 
@@ -160,31 +147,7 @@ if ( ! lsttraining_user_can( 'leitstellen', $leitstelle_id ) ) {
     wp_die( 'Keine Berechtigung.' );
 }
 
-if ( $pdo && ! lsttraining_leitstellen_column_exists( $pdo, 'leitstellen', 'police_vehicle_image' ) ) {
-    try {
-        $pdo->exec( "ALTER TABLE leitstellen ADD COLUMN police_vehicle_image VARCHAR(255) NULL DEFAULT 'img/fahrzeug/default_pol.png' AFTER geojson" );
-    } catch ( Throwable $e ) {
-        error_log( '[LSTtraining][leitstellen_editor] police_vehicle_image: ' . $e->getMessage() );
-    }
-}
 $leitstellen_has_police_image_column = $pdo ? lsttraining_leitstellen_column_exists( $pdo, 'leitstellen', 'police_vehicle_image' ) : false;
-
-$lsttraining_leitstellen_default_columns = [
-    'police_signal_lights_json' => "ALTER TABLE leitstellen ADD COLUMN police_signal_lights_json LONGTEXT NULL AFTER police_vehicle_image",
-    'rescue_vehicle_image' => "ALTER TABLE leitstellen ADD COLUMN rescue_vehicle_image VARCHAR(255) NULL DEFAULT 'img/fahrzeug/default.png' AFTER police_signal_lights_json",
-    'rescue_signal_lights_json' => "ALTER TABLE leitstellen ADD COLUMN rescue_signal_lights_json LONGTEXT NULL AFTER rescue_vehicle_image",
-];
-if ( $pdo ) {
-    foreach ( $lsttraining_leitstellen_default_columns as $lst_col => $lst_sql ) {
-        if ( ! lsttraining_leitstellen_column_exists( $pdo, 'leitstellen', $lst_col ) ) {
-            try {
-                $pdo->exec( $lst_sql );
-            } catch ( Throwable $e ) {
-                error_log( '[LSTtraining][leitstellen_editor] ' . $lst_col . ': ' . $e->getMessage() );
-            }
-        }
-    }
-}
 $leitstellen_has_police_signal_column = $pdo ? lsttraining_leitstellen_column_exists( $pdo, 'leitstellen', 'police_signal_lights_json' ) : false;
 $leitstellen_has_rescue_image_column = $pdo ? lsttraining_leitstellen_column_exists( $pdo, 'leitstellen', 'rescue_vehicle_image' ) : false;
 $leitstellen_has_rescue_signal_column = $pdo ? lsttraining_leitstellen_column_exists( $pdo, 'leitstellen', 'rescue_signal_lights_json' ) : false;
@@ -203,14 +166,21 @@ if ( $pdo ) {
 /* -------------------------------------------------------------------------
  * DELETE
  * ---------------------------------------------------------------------- */
-if ( isset( $_GET['delete_id'] ) && $pdo ) {
+if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['lst_delete_id'] ) && $pdo ) {
+    $delete_id = absint( $_POST['lst_delete_id'] );
+    if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['lst_delete_nonce'] ?? '' ) ), 'lsttraining_delete_leitstelle_' . $delete_id ) ) {
+        wp_die( 'Ungültiger Sicherheits-Token.', 403 );
+    }
+    if ( ! lsttraining_user_can( 'leitstellen', $delete_id ) ) {
+        wp_die( 'Keine Berechtigung.', 403 );
+    }
     $pdo->prepare( 'DELETE FROM leitstellen WHERE id = ?' )
-        ->execute( [ intval( $_GET['delete_id'] ) ] );
+        ->execute( [ $delete_id ] );
 	    // Log: Leitstelle gelöscht
     lsttraining_log_activity([
         'entity_type' => 'leitstelle',
         'action'      => 'delete',
-        'entity_id'   => (int)$_GET['delete_id'],
+        'entity_id'   => $delete_id,
         'meta'        => ['page' => 'leitstellen_editor.php']
     ]);
     add_settings_error( 'lsttraining_msg', 'deleted',
@@ -225,9 +195,13 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST'
      && $_POST['lst_form_mode'] === 'create'
      && $pdo ) {
 
+    if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['lsttraining_nonce'] ?? '' ) ), 'lsttraining_leitstelle_form' ) ) {
+        wp_die( 'Ungültiger Sicherheits-Token.', 403 );
+    }
+
     // Neue Leitstelle schreiben
-    $create_columns = 'name, ort, bundesland, land, latitude, longitude, geojson';
-    $create_values = '?,?,?,?,?,?,?';
+    $create_columns = 'name, ort, bundesland, land, latitude, longitude, geojson, available_hospitals';
+    $create_values = '?,?,?,?,?,?,?,?';
     $create_params = [
         sanitize_text_field( $_POST['lst_update_name'] ),
         sanitize_text_field( $_POST['lst_update_ort'] ),
@@ -236,11 +210,12 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST'
         floatval( $_POST['lst_update_lat'] ),
         floatval( $_POST['lst_update_lon'] ),
         wp_unslash( $_POST['geojson_edit'] ?? '' ),
+        '[]',
     ];
     if ( $leitstellen_has_police_image_column ) {
         $create_columns .= ', police_vehicle_image';
         $create_values .= ',?';
-        $create_params[] = sanitize_text_field( wp_unslash( $_POST['lst_update_police_vehicle_image'] ?? 'img/fahrzeug/default_pol.png' ) );
+        $create_params[] = sanitize_text_field( wp_unslash( $_POST['lst_update_police_vehicle_image'] ?? 'img/fahrzeug/default.png' ) );
     }
     if ( $leitstellen_has_police_signal_column ) {
         $create_columns .= ', police_signal_lights_json';
@@ -290,6 +265,14 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST'
      && ( $_POST['lst_form_mode'] ?? '' ) !== 'create'
      && $pdo ) {
 
+    $update_id = absint( $_POST['lst_update_id'] );
+    if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['lsttraining_nonce'] ?? '' ) ), 'lsttraining_leitstelle_form' ) ) {
+        wp_die( 'Ungültiger Sicherheits-Token.', 403 );
+    }
+    if ( ! lsttraining_user_can( 'leitstellen', $update_id ) ) {
+        wp_die( 'Keine Berechtigung.', 403 );
+    }
+
     /* basic data */
     $update_sql = 'UPDATE leitstellen
             SET name = ?,
@@ -308,7 +291,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST'
     ];
     if ( $leitstellen_has_police_image_column ) {
         $update_sql .= ', police_vehicle_image = ?';
-        $update_params[] = sanitize_text_field( wp_unslash( $_POST['lst_update_police_vehicle_image'] ?? 'img/fahrzeug/default_pol.png' ) );
+        $update_params[] = sanitize_text_field( wp_unslash( $_POST['lst_update_police_vehicle_image'] ?? 'img/fahrzeug/default.png' ) );
     }
     if ( $leitstellen_has_police_signal_column ) {
         $update_sql .= ', police_signal_lights_json = ?';
@@ -323,18 +306,18 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST'
         $update_params[] = lsttraining_leitstellen_normalize_signal_lights_json( $_POST['lst_update_rescue_signal_lights_json'] ?? '' );
     }
     $update_sql .= ' WHERE id = ?';
-    $update_params[] = intval( $_POST['lst_update_id'] );
+    $update_params[] = $update_id;
     $pdo->prepare( $update_sql )->execute( $update_params );
     lsttraining_leitstellen_save_neighbors(
         $pdo,
-        intval( $_POST['lst_update_id'] ),
+        $update_id,
         array_map( 'intval', (array) ( $_POST['lst_neighbor_nebenleitstellen'] ?? [] ) )
     );
 	
    lsttraining_log_activity([
         'entity_type' => 'leitstelle',
         'action'      => 'update',
-        'entity_id'   => (int)$leitstelle_id,
+        'entity_id'   => $update_id,
         'meta'        => ['page' => 'leitstellen_editor.php']
     ]);
 
@@ -362,7 +345,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST'
 if ( $pdo ) {
     $police_image_select = $leitstellen_has_police_image_column
         ? 'police_vehicle_image'
-        : "'img/fahrzeug/default_pol.png' AS police_vehicle_image";
+        : "'img/fahrzeug/default.png' AS police_vehicle_image";
     $police_signal_select = $leitstellen_has_police_signal_column
         ? 'police_signal_lights_json'
         : "'' AS police_signal_lights_json";
@@ -373,22 +356,29 @@ if ( $pdo ) {
         ? 'rescue_signal_lights_json'
         : "'' AS rescue_signal_lights_json";
     $default_selects = implode( ',', [ $police_image_select, $police_signal_select, $rescue_image_select, $rescue_signal_select ] );
+    $list_where = [];
+    $list_params = [];
     if ( $suchbegriff !== '' ) {
-        $stmt = $pdo->prepare(
-            'SELECT id,name,ort,bundesland,land,latitude,longitude,' . $default_selects . '
-               FROM leitstellen
-              WHERE name LIKE ?
-                 OR id = ?
-           ORDER BY name ASC'
-        );
-        $stmt->execute( [ '%' . $suchbegriff . '%', $suchbegriff ] );
-    } else {
-        $stmt = $pdo->query(
-            'SELECT id,name,ort,bundesland,land,latitude,longitude,' . $default_selects . '
-               FROM leitstellen
-           ORDER BY name ASC'
-        );
+        $list_where[] = '(name LIKE ? OR id = ?)';
+        $list_params[] = '%' . $suchbegriff . '%';
+        $list_params[] = $suchbegriff;
     }
+    if ( ! current_user_can( 'manage_options' ) ) {
+        $allowed_ids = lsttraining_user_leitstellen_ids();
+        if ( $allowed_ids ) {
+            $list_where[] = 'id IN (' . implode( ',', array_fill( 0, count( $allowed_ids ), '?' ) ) . ')';
+            $list_params = array_merge( $list_params, $allowed_ids );
+        } else {
+            $list_where[] = '1 = 0';
+        }
+    }
+    $list_sql = 'SELECT id,name,ort,bundesland,land,latitude,longitude,' . $default_selects . ' FROM leitstellen';
+    if ( $list_where ) {
+        $list_sql .= ' WHERE ' . implode( ' AND ', $list_where );
+    }
+    $list_sql .= ' ORDER BY name ASC';
+    $stmt = $pdo->prepare( $list_sql );
+    $stmt->execute( $list_params );
     $leitstellen = $stmt->fetchAll( PDO::FETCH_OBJ );
     $neighbor_ids_by_leitstelle = [];
     if ( $leitstellen && lsttraining_leitstellen_table_exists( $pdo, 'leitstelle_nebenleitstellen' ) ) {
@@ -455,17 +445,17 @@ if ( $pdo ) {
                        data-land="<?php echo esc_attr( $l->land ); ?>"
                        data-lat="<?php echo esc_attr( $l->latitude ); ?>"
                        data-lon="<?php echo esc_attr( $l->longitude ); ?>"
-                       data-police-image="<?php echo esc_attr( $l->police_vehicle_image ?: 'img/fahrzeug/default_pol.png' ); ?>"
+                       data-police-image="<?php echo esc_attr( $l->police_vehicle_image ?: 'img/fahrzeug/default.png' ); ?>"
                        data-police-signal-lights="<?php echo esc_attr( $l->police_signal_lights_json ?? '' ); ?>"
                        data-rescue-image="<?php echo esc_attr( $l->rescue_vehicle_image ?: 'img/fahrzeug/default.png' ); ?>"
                        data-rescue-signal-lights="<?php echo esc_attr( $l->rescue_signal_lights_json ?? '' ); ?>"
                        data-neighbor-ids="<?php echo esc_attr( wp_json_encode( $neighbor_ids_by_leitstelle[ (int) $l->id ] ?? [] ) ); ?>"
                     >Bearbeiten</a>
-                    <a href="<?php echo admin_url(
-                        'admin.php?page=lsttraining_leitstellen&delete_id=' . $l->id ); ?>"
-                       class="button button-link-delete"
-                       onclick="return confirm('Wirklich löschen?');"
-                    >Löschen</a>
+                    <form method="post" style="display:inline" onsubmit="return confirm('Wirklich löschen?');">
+                        <input type="hidden" name="lst_delete_id" value="<?php echo esc_attr( $l->id ); ?>">
+                        <?php wp_nonce_field( 'lsttraining_delete_leitstelle_' . $l->id, 'lst_delete_nonce' ); ?>
+                        <button type="submit" class="button button-link-delete">Löschen</button>
+                    </form>
                 </td>
             </tr>
         <?php endforeach; ?>
@@ -487,6 +477,7 @@ if ( $pdo ) {
     </div>
 
     <form method="post" class="lst-leitstelle-form">
+            <?php wp_nonce_field( 'lsttraining_leitstelle_form', 'lsttraining_nonce' ); ?>
             <input type="hidden" name="lst_form_mode" id="lst_form_mode" value="update">
             <input type="hidden" name="lst_update_id" id="lst_update_id">
         <div class="lst-leitstelle-grid">
@@ -612,14 +603,14 @@ $zuo_url = admin_url( 'admin.php?page=lsttraining_zuordnung_modal'
                     <div class="lst-default-vehicle-card__body">
                         <strong>Polizei-Fahrzeugbild</strong>
                         <label>Bildpfad oder URL
-                            <input type="text" name="lst_update_police_vehicle_image" id="lst_update_police_vehicle_image" value="img/fahrzeug/default_pol.png" list="lst-vehicle-image-options" data-lst-default-image-input>
+                            <input type="text" name="lst_update_police_vehicle_image" id="lst_update_police_vehicle_image" value="img/fahrzeug/default.png" list="lst-vehicle-image-options" data-lst-default-image-input>
                         </label>
                         <div class="lst-default-vehicle-actions">
                             <button type="button" class="button lst-default-image-upload" data-target="lst_update_police_vehicle_image">Bild auswählen</button>
                             <button type="button" class="button lst-default-signal-editor-open" data-image-field="lst_update_police_vehicle_image" data-json-field="lst_update_police_signal_lights_json" data-preset="pol" data-title="Blaulichter Polizei">Blaulichter bearbeiten</button>
                         </div>
                         <input type="hidden" name="lst_update_police_signal_lights_json" id="lst_update_police_signal_lights_json" value="">
-                        <p class="description">Standard: img/fahrzeug/default_pol.png</p>
+                        <p class="description">Standard: img/fahrzeug/default.png</p>
                         <small class="lst-default-vehicle-path" data-lst-default-image-status-for="lst_update_police_vehicle_image"></small>
                     </div>
                 </article>
@@ -645,7 +636,7 @@ $zuo_url = admin_url( 'admin.php?page=lsttraining_zuordnung_modal'
                 </article>
             </div>
             <datalist id="lst-vehicle-image-options">
-                <option value="img/fahrzeug/default_pol.png">
+                <option value="img/fahrzeug/default.png">
                 <option value="img/fahrzeug/default.png">
                 <?php
                 $lst_police_vehicle_images = [];

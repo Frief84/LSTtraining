@@ -32,32 +32,26 @@
    ```
 2. Plugin im WordPress-Adminbereich unter **Plugins** aktivieren.
 3. Schreibrechte für AJAX-Endpunkte (`admin-ajax.php`) sicherstellen.
-4. Datenbanktabellen importieren beziehungsweise bei bestehenden Installationen die aktualisierte Struktur ausführen (siehe `database/schema.sql`).
+4. Die Datenbankmigration läuft bei Aktivierung beziehungsweise beim ersten Admin-Aufruf nach einem Upgrade automatisch. Vor produktiven Upgrades immer ein Datenbank-Backup erstellen; der aktuelle Stand kann unter **LST Training → Einstellungen** erneut geprüft werden.
+
+Eine Bedienhilfe steht im WordPress-Adminbereich unter **LST Training → Hilfe & Dokumentation** bereit. Sicherheits-, Migrations- und Abnahmedetails enthält [`docs/sicherheit-migration-multiplayer.md`](docs/sicherheit-migration-multiplayer.md).
 
 ## 🧱 Datenbank
 
-Das Schema in `database/schema.sql` definiert acht Tabellen:
-
-1. **leitstellen**: Dispositionszentren mit Polygon-GeoJSON und Metadaten  
-2. **wachen**: Feuerwachen/Rettungswachen mit Name, Koordinaten, Typ und optionalem Bild  
-3. **fahrzeuge**: Zuweisung zu Wachen, Typ (ENUM), letzte bekannte Position  
-4. **fahrzeug_status**: unveränderliche Fahrzeug-Baseline pro Spielinstanz
-5. **instanz_fahrzeug_status**: laufende Abweichungen der Fahrzeuge von ihrer Baseline
-6. **spielinstanzen**, **instanz_wachen**, **instanz_user**: gespeicherte Trainingsinstanzen, Teilnehmer, Verantwortlichkeit und Aufbewahrung
-7. **einsatzvorlagen**: Vorlagen für wiederkehrende Übungen
+`database/schema.sql` enthält das idempotente Basisschema für Leitstellen, Wachen, Fahrzeuge, Krankenhäuser, Einsatzvorlagen, Anruferprofile und Spielinstanzen. Versionierte Ergänzungen und Datenmigrationen liegen in `includes/migrations.php`; die aktuelle Schema-Version wird pro verwendeter Datenbank in einer WordPress-Option gespeichert. Normale Seiten- und AJAX-Aufrufe führen kein Laufzeit-DDL aus.
 
 ## Simulationsdaten: DB-Basis, Bootstrap, Snapshot
 
 Die Datenbank bleibt die Wahrheit für Stammdaten und gespeicherte Simulationsänderungen. Der Browser bekommt diese Daten zweistufig:
 
 * **Bootstrap (`lsttraining_sim_get_bootstrap`)**: wird beim Öffnen einer Instanz einmal geladen und enthält stabile Basisdaten wie Instanz, Leitstelle, Wachen, Fahrzeug-Stammdaten, Ressourcenklasse, Fahrzeugbild und Anzeigepräferenzen. Wachenkoordinaten liegen nur hier; laufende Ziele und Routen liegen nicht im Bootstrap.
-* **Live-Snapshot (`lsttraining_sim_get_snapshot`)**: wird regelmäßig aktualisiert und enthält nur dynamische Simulationsdaten: offene Einsätze, aktive Fahrzeugpositionen, Fahrzeugstatus-Deltas, Assignments, FMS-/Anrufer-Logs und berechnete Einsatzstatus.
+* **Live-Snapshot (`lsttraining_sim_get_snapshot`)**: wird regelmäßig gelesen und enthält dynamische Simulationsdaten, verändert selbst aber weder Fahrzeuge noch Patienten- oder Transportzustände. Zustandsfortschritte erfolgen ausschließlich im autorisierten Tick.
 * **`fahrzeug_status`** ist die unveränderliche instanzbezogene Fahrzeug-Baseline: Beim Start einer Simulation werden Status, FMS, Sondersignal und Startposition aus den Fahrzeug-Stammdaten kopiert.
 * **`instanz_fahrzeug_status`** enthält nur spielinterne Abweichungen einer Instanz von dieser Baseline. Eine Delta-Zeile hält den vollständigen aktuellen Fahrzeugzustand und wird entfernt, sobald Position, Ziel, Status, FMS und Sondersignal wieder der Baseline entsprechen.
-* Fahrzeuge ohne Delta-Zeile werden nicht im Live-Snapshot übertragen. Die UI rekonstruiert sie aus den Bootstrap-Fahrzeugdaten; textliche Verlaufsmeldungen bleiben in den Einsatz-Events erhalten.
+* Das Positionsfeld enthält nur Fahrzeuge, deren aktuelle Position mehr als 5 Meter von der instanzbezogenen Startposition oder mehr als 50 Meter von ihrer Wache abweicht. Ziel-, Basis- und Wachenkoordinaten sowie frühere Bewegungen werden dort nicht übertragen. Kehrt ein Fahrzeug zurück, verschwindet es wieder aus der Positionsliste. Reine Statusänderungen bleiben davon getrennt in `vehicle_statuses` möglich.
 * `instanz_einsaetze` und `instanz_einsatz_events` halten die dynamischen Einsatzänderungen. `unit_report`-Events mit `event_type = vehicle_alarm` sind die stabile Quelle für Zuordnung, Route (`route_coordinates`), Fortschritt und Rückmeldungen.
 
-Mehrere parallele Spielinstanzen besitzen getrennte Baselines und Deltas; Änderungen in einer Instanz beeinflussen keine andere. Der Snapshot ist damit kein vollständiger Spielstand, sondern ein kompaktes Transportformat für aktuelle Änderungen gegenüber der instanzbezogenen Bootstrap-Basis.
+Mehrere parallele Spielinstanzen besitzen getrennte Baselines und Deltas; Änderungen in einer Instanz beeinflussen keine andere. Pro Instanz serialisiert ein MySQL-Advisory-Lock den autorisierten Tick einschließlich automatischem Spawn. Mehrere pollende Browser können dadurch nicht gleichzeitig denselben Simulationsschritt oder doppelten Spawn ausführen. Der Snapshot ist ein rein lesendes, kompaktes Transportformat und kein Bewegungsverlauf.
 Lange laufende Simulationsseiten erneuern ihre AJAX-/REST-Nonces automatisch, ohne den Spielstand zu verändern.
 
 ## Gespeicherte Spielinstanzen
@@ -79,7 +73,7 @@ Lange laufende Simulationsseiten erneuern ihre AJAX-/REST-Nonces automatisch, oh
 * Der tägliche WordPress-Cron-Job `lsttraining_instance_retention_daily` übernimmt Erinnerungen und die endgültige Löschung fälliger Instanzen.
 * Bestehende Einzelspieler- und Einsatzleiter-Instanzen werden beim Einführen der Funktion anhand ihrer Teilnehmerzuordnung einem Verantwortlichen zugeordnet und erhalten eine neue volle Inaktivitätsfrist.
 
-Bei bestehenden Installationen ergänzt die Schema-Ensure-Logik die neuen Spalten und den Index beim ersten relevanten Aufruf automatisch. `database/schema.sql` enthält die Struktur für Neuinstallationen beziehungsweise eine kontrollierte Aktualisierung der Datenbank.
+Bei bestehenden Installationen ergänzt die versionierte Migration neue Spalten und Indizes bei Aktivierung oder beim ersten berechtigten Admin-Aufruf nach einem Upgrade. Die Versionsnummer wird erst nach erfolgreichem Abschluss gespeichert. Da MySQL-DDL implizite Commits ausführt, ist ein Datenbank-Backup die dokumentierte Rollback-Strategie.
 
 ## Anruftexte: Profile, Einsatzbausteine, Adresse
 
@@ -192,8 +186,10 @@ Jedes Array-Element ist ein Objekt mit folgenden Feldern:
 Lädt alle Module und initialisiert das Plugin.
 
 ### 2. Datenbank-Layer
-- **includes/schema_import.php**: Importiert `database/schema.sql`  
 - **includes/db.php**: Helper `lsttraining_get_connection()`
+- **includes/migrations.php**: versionierte, idempotente Schema- und Datenmigrationen
+- **includes/schema_import.php**: geschützter manueller Auslöser der Migration
+- **database/schema.sql**: wiederholt ausführbares Basisschema für Neuinstallationen
 
 ### 3. Einstellungen & Admin-Menü
 - **includes/settings.php**: Plugin-Optionen (DB-Modus, API-Key)  
@@ -223,8 +219,11 @@ Im Ordner `includes/` befinden sich alle zentralen PHP-Komponenten des Plugins:
 - **db.php**  
   Stellt die Funktion `lsttraining_get_connection()` bereit, die je nach Einstellung entweder die interne WordPress-Datenbank oder eine externe Datenbankverbindung aufbaut.
 
+- **migrations.php**
+  Verwaltet die Schema-Version pro Datenbank und führt idempotente Schema- und Datenmigrationen bei Aktivierung beziehungsweise Upgrade aus.
+
 - **schema_import.php**  
-  Liest beim Plugin-Aktivieren die Datei `database/schema.sql` ein und legt die erforderlichen Tabellen (`leitstellen`, `wachen`, `fahrzeuge` u. a.) in der Datenbank an.
+  Stellt die durch Administratorrecht, POST und Nonce geschützte manuelle Schema-Prüfung bereit.
 
 - **settings.php**  
   Registriert und verwaltet alle Plugin-Einstellungen (`lsttraining_map_page`, `lsttraining_db_mode`, ORS-API-Key etc.) im WordPress-Options-System.

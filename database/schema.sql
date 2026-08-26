@@ -25,6 +25,10 @@ CREATE TABLE IF NOT EXISTS `leitstellen` (
   `geojson`             LONGTEXT COLLATE utf8mb4_general_ci NULL,
   `available_hospitals` TEXT COLLATE utf8mb4_general_ci NOT NULL
     COMMENT 'JSON-Array mit IDs der freigeschalteten Krankenhäuser',
+  `police_vehicle_image` VARCHAR(255) NULL DEFAULT 'img/fahrzeug/default.png',
+  `police_signal_lights_json` LONGTEXT NULL,
+  `rescue_vehicle_image` VARCHAR(255) NULL DEFAULT 'img/fahrzeug/default.png',
+  `rescue_signal_lights_json` LONGTEXT NULL,
   `created_at`          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -156,6 +160,7 @@ CREATE TABLE IF NOT EXISTS `fahrzeuge` (
   `latitude`           DOUBLE NULL DEFAULT NULL,
   `longitude`          DOUBLE NULL DEFAULT NULL,
   `bild_datei`         VARCHAR(255) COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `signal_lights_json` LONGTEXT COLLATE utf8mb4_general_ci NULL,
   `created_at`         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   PRIMARY KEY (`id`),
@@ -280,6 +285,7 @@ CREATE TABLE IF NOT EXISTS `krankenhaeuser` (
   `helipad`          TINYINT(1) NOT NULL DEFAULT 0,
   `departments`      JSON NOT NULL,
   `last_update`      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `last_editor`      BIGINT UNSIGNED NULL DEFAULT NULL,
   `created_at`       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   PRIMARY KEY (`id`)
@@ -368,6 +374,7 @@ CREATE TABLE IF NOT EXISTS `einsaetze` (
   -- optionale Meta-Felder
   `patientenzahl` INT NULL DEFAULT 0,
   `patient_anforderung` VARCHAR(255) NULL,
+  `patient_profile_json` LONGTEXT NULL,
   `notarzt_benoetigt` TINYINT(1) NULL DEFAULT 0,
   `feuerwehr_benoetigt` TINYINT(1) NULL DEFAULT 0,
   `poi_tag` VARCHAR(50) NULL,
@@ -386,9 +393,25 @@ CREATE TABLE IF NOT EXISTS `einsaetze` (
   KEY `idx_einsaetze_poi_type` (`poi_type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `einsatz_caller_parts` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `einsatz_id` INT NOT NULL,
+  `part_key` VARCHAR(32) NOT NULL,
+  `text` TEXT NOT NULL,
+  `sort_order` INT NOT NULL DEFAULT 0,
+  `enabled` TINYINT(1) NOT NULL DEFAULT 1,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_ecp_einsatz` (`einsatz_id`),
+  KEY `idx_ecp_part` (`part_key`),
+  CONSTRAINT `fk_ecp_einsatz`
+    FOREIGN KEY (`einsatz_id`) REFERENCES `einsaetze`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Jahreszeiten pro Einsatz.
 -- Keine Zeile = ganzjährig zulässig.
-CREATE TABLE `einsatz_seasons` (
+CREATE TABLE IF NOT EXISTS `einsatz_seasons` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `einsatz_id` INT NOT NULL,
 
@@ -406,7 +429,7 @@ CREATE TABLE `einsatz_seasons` (
 
 -- Wetterbedingungen pro Einsatz.
 -- Keine Zeile = bei jedem Wetter zulässig.
-CREATE TABLE `einsatz_weather_conditions` (
+CREATE TABLE IF NOT EXISTS `einsatz_weather_conditions` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `einsatz_id` INT NOT NULL,
 
@@ -433,7 +456,7 @@ CREATE TABLE `einsatz_weather_conditions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- pro Einsatz können Leitstellen ausgeschlossen werden
-CREATE TABLE `einsatz_excluded_leitstellen` (
+CREATE TABLE IF NOT EXISTS `einsatz_excluded_leitstellen` (
   `einsatz_id` INT NOT NULL,
   `leitstelle_id` INT NOT NULL,
 
@@ -447,7 +470,7 @@ CREATE TABLE `einsatz_excluded_leitstellen` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Folgekommunikation pro Vorlage
-CREATE TABLE `einsatz_followups` (
+CREATE TABLE IF NOT EXISTS `einsatz_followups` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `einsatz_id` INT NOT NULL,
 
@@ -539,7 +562,7 @@ CREATE TABLE IF NOT EXISTS `einsatz_rules` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Konkrete Einsätze pro Spielinstanz
-CREATE TABLE `instanz_einsaetze` (
+CREATE TABLE IF NOT EXISTS `instanz_einsaetze` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 
   `instanz_id` INT NOT NULL,
@@ -582,7 +605,7 @@ CREATE TABLE `instanz_einsaetze` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Ereignisse/Kommunikation zu einem konkreten Instanz-Einsatz
-CREATE TABLE `instanz_einsatz_events` (
+CREATE TABLE IF NOT EXISTS `instanz_einsatz_events` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `instanz_einsatz_id` BIGINT UNSIGNED NOT NULL,
 
@@ -804,10 +827,11 @@ CREATE TABLE IF NOT EXISTS `anrufer_name_pool` (
   `sort_order` INT NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `idx_anp_gender` (`gender_key`),
-  KEY `idx_anp_enabled` (`enabled`)
+  KEY `idx_anp_enabled` (`enabled`),
+  UNIQUE KEY `uk_anp_name` (`gender_key`,`first_name`,`last_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO anrufer_name_pool (gender_key, first_name, last_name, enabled, sort_order) VALUES
+INSERT IGNORE INTO anrufer_name_pool (gender_key, first_name, last_name, enabled, sort_order) VALUES
 
 -- FEMALE
 ('female','Anna','Müller',1,10),
@@ -892,4 +916,3 @@ CREATE TABLE IF NOT EXISTS `einsatz_lagebausteine` (
   CONSTRAINT `fk_elb_einsatz`
     FOREIGN KEY (`einsatz_id`) REFERENCES `einsaetze`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-

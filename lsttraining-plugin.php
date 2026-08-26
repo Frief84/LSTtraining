@@ -32,6 +32,7 @@ if (!defined('LSTTRAINING_URL')) {
 }
 
 require_once LSTTRAINING_PATH . 'includes/db.php';
+require_once LSTTRAINING_PATH . 'includes/migrations.php';
 require_once LSTTRAINING_PATH . 'includes/instance-lifecycle.php';
 require_once LSTTRAINING_PATH . 'includes/permissions.php';
 require_once LSTTRAINING_PATH . 'includes/settings.php';
@@ -45,3 +46,5 @@ require_once LSTTRAINING_PATH . 'includes/frontend.php';
 require_once LSTTRAINING_PATH . 'includes/admin-menu.php';
 require_once LSTTRAINING_PATH . 'includes/admin-ui.php';
 require_once LSTTRAINING_PATH . 'includes/map-override.php';
+
+register_activation_hook(LSTTRAINING_PLUGIN_FILE, 'lsttraining_run_migrations');

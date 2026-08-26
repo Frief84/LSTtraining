@@ -502,7 +502,7 @@ window.editLeitstelle = function (id, name, ort, bl, land, lat, lon, policeImage
   });
   updateNeighborSelfOptionState();
   const policeImageEl = document.getElementById('lst_update_police_vehicle_image');
-  if (policeImageEl) policeImageEl.value = policeImage || 'img/fahrzeug/default_pol.png';
+  if (policeImageEl) policeImageEl.value = policeImage || 'img/fahrzeug/default.png';
   const policeSignalsEl = document.getElementById('lst_update_police_signal_lights_json');
   if (policeSignalsEl) policeSignalsEl.value = policeSignals || '';
   const rescueImageEl = document.getElementById('lst_update_rescue_vehicle_image');
@@ -640,7 +640,7 @@ function openLeitstellePopupForCreate() {
     if (el) el.value = '';
   });
   const policeImageEl = document.getElementById('lst_update_police_vehicle_image');
-  if (policeImageEl) policeImageEl.value = 'img/fahrzeug/default_pol.png';
+  if (policeImageEl) policeImageEl.value = 'img/fahrzeug/default.png';
   const policeSignalsEl = document.getElementById('lst_update_police_signal_lights_json');
   if (policeSignalsEl) policeSignalsEl.value = '';
   const rescueImageEl = document.getElementById('lst_update_rescue_vehicle_image');

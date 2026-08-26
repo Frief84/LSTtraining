@@ -53,6 +53,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['lsttraining_nonce']
                    leitstellen_ids        = ?
              WHERE user_id = ?
         " );
+        $valid_leitstellen_ids = array_map('intval', $pdo->query('SELECT id FROM leitstellen')->fetchAll(PDO::FETCH_COLUMN) ?: []);
 
         $all_user_ids = array_map( 'intval', $_POST['user_ids'] ?? [] );
         try {
@@ -63,10 +64,14 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['lsttraining_nonce']
                 $can_hospital     = isset( $_POST["hospitals_$user_id"] )    ? 1 : 0;
                 $can_wache        = isset( $_POST["wachen_$user_id"] )       ? 1 : 0;
                 $can_fahrzeug     = isset( $_POST["fahrzeuge_$user_id"] )    ? 1 : 0;
-                $leitstellen_ids_raw = sanitize_text_field( $_POST["leitstellen_ids_$user_id"] ?? '' );
-                $ids_array = array_filter( array_map( 'trim', explode( ',', $leitstellen_ids_raw ) ), function( $v ) {
-                    return ( $v !== '' && ctype_digit( $v ) );
-                } );
+                $ids_input = $_POST["leitstellen_ids_$user_id"] ?? [];
+                if (!is_array($ids_input)) {
+                    $ids_input = explode(',', sanitize_text_field((string) $ids_input));
+                }
+                $ids_array = array_values(array_unique(array_intersect(
+                    array_map('intval', $ids_input),
+                    $valid_leitstellen_ids
+                )));
                 $leitstellen_ids = implode( ',', $ids_array );
 
                 // Existenz prüfen
@@ -119,11 +124,13 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['lsttraining_nonce']
 // 2) Daten laden: alle WP‐Benutzer und ihre gespeicherten Rechte
 $users = get_users( [ 'fields' => [ 'ID', 'user_login', 'display_name' ] ] );
 $permissions = [];
+$all_leitstellen = [];
 if ( ! empty( $users ) ) {
     $user_ids = wp_list_pluck( $users, 'ID' );
     $placeholders = implode( ',', array_fill( 0, count( $user_ids ), '?' ) );
     $pdo = lsttraining_get_connection();
     if ( $pdo ) {
+        $all_leitstellen = $pdo->query('SELECT id, name FROM leitstellen ORDER BY name, id')->fetchAll(PDO::FETCH_ASSOC) ?: [];
         $sql = "SELECT * FROM {$table_name} WHERE user_id IN ($placeholders)";
         $stmt = $pdo->prepare( $sql );
         $stmt->execute( $user_ids );
@@ -157,7 +164,7 @@ if ( ! empty( $users ) ) {
                     <th style="text-align:center;"><?php esc_html_e( 'Krankenhäuser', 'lsttraining' ); ?></th>
                     <th style="text-align:center;"><?php esc_html_e( 'Wachen', 'lsttraining' ); ?></th>
                     <th style="text-align:center;"><?php esc_html_e( 'Fahrzeuge', 'lsttraining' ); ?></th>
-                    <th><?php esc_html_e( 'Leitstellen‐IDs (CSV)', 'lsttraining' ); ?></th>
+                    <th><?php esc_html_e( 'Freigegebene Leitstellen', 'lsttraining' ); ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -201,14 +208,14 @@ if ( ! empty( $users ) ) {
                         <input type="checkbox" name="fahrzeuge_<?php echo esc_attr( $uid ); ?>" value="1" <?php checked( $perm['fahrzeuge'], 1 ); ?>>
                     </td>
                     <td>
-                        <input
-                            type="text"
-                            name="leitstellen_ids_<?php echo esc_attr( $uid ); ?>"
-                            value="<?php echo esc_attr( $perm['leitstellen_ids'] ); ?>"
-                            class="regular-text"
-                            placeholder="<?php esc_attr_e( 'z. B. 3,5,12', 'lsttraining' ); ?>"
-                            title="<?php esc_attr_e( 'Kommagetrennte Liste von Leitstellen‐IDs', 'lsttraining' ); ?>"
-                        >
+                        <?php $selected_ids = array_map('intval', array_filter(explode(',', (string) $perm['leitstellen_ids']))); ?>
+                        <select name="leitstellen_ids_<?php echo esc_attr( $uid ); ?>[]" multiple size="5" style="min-width:220px;">
+                            <?php foreach ($all_leitstellen as $leitstelle) : ?>
+                                <option value="<?php echo esc_attr($leitstelle['id']); ?>" <?php selected(in_array((int) $leitstelle['id'], $selected_ids, true)); ?>>
+                                    <?php echo esc_html($leitstelle['name'] . ' (#' . $leitstelle['id'] . ')'); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
                     </td>
                 </tr>
                 <?php endforeach; ?>

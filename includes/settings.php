@@ -124,7 +124,8 @@ function lsttraining_settings_page() {
 
         <h2>Tabellen initialisieren</h2>
         <form method="post">
-            <input type="submit" name="lsttraining_install_schema" class="button button-secondary" value="Datenbankstruktur aus schema.sql installieren" />
+            <?php wp_nonce_field('lsttraining_install_schema', 'lsttraining_schema_nonce'); ?>
+            <input type="submit" name="lsttraining_install_schema" class="button button-secondary" value="Datenbankschema prüfen und aktualisieren" />
         </form>
     </div>
 

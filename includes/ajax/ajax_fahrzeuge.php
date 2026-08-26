@@ -1,6 +1,12 @@
 <?php
 if (!defined('ABSPATH')) { exit; }
 
+function lsttraining_fahrzeuge_require_method(string $method): void {
+    if (strtoupper($_SERVER['REQUEST_METHOD'] ?? '') !== strtoupper($method)) {
+        wp_send_json_error(['msg' => 'Ungültige HTTP-Methode.'], 405);
+    }
+}
+
 if (!function_exists('lsttraining_fahrzeuge_column_exists')) {
     function lsttraining_fahrzeuge_column_exists(PDO $pdo, string $table, string $column): bool {
         try {
@@ -14,17 +20,8 @@ if (!function_exists('lsttraining_fahrzeuge_column_exists')) {
 }
 
 if (!function_exists('lsttraining_fahrzeuge_ensure_signal_lights_column')) {
-    function lsttraining_fahrzeuge_ensure_signal_lights_column(PDO $pdo): bool {
-        if (lsttraining_fahrzeuge_column_exists($pdo, 'fahrzeuge', 'signal_lights_json')) {
-            return true;
-        }
-        try {
-            $pdo->exec('ALTER TABLE fahrzeuge ADD COLUMN signal_lights_json LONGTEXT NULL AFTER bild_datei');
-            return true;
-        } catch (Throwable $e) {
-            error_log('[LSTtraining][fahrzeuge_signal_lights_column] ' . $e->getMessage());
-            return false;
-        }
+function lsttraining_fahrzeuge_ensure_signal_lights_column(PDO $pdo): bool {
+        return lsttraining_fahrzeuge_column_exists($pdo, 'fahrzeuge', 'signal_lights_json');
     }
 }
 
@@ -70,7 +67,9 @@ if (!function_exists('lsttraining_fahrzeuge_normalize_signal_lights_json')) {
  * =============================== */
 add_action('wp_ajax_lsttraining_get_fahrzeug', function () {
 
-    if (!current_user_can('read')) {
+    lsttraining_fahrzeuge_require_method('GET');
+
+    if (!is_user_logged_in()) {
         status_header(403);
         wp_send_json(['success' => false, 'data' => ['msg' => 'Keine Berechtigung.']]);
     }
@@ -96,6 +95,10 @@ add_action('wp_ajax_lsttraining_get_fahrzeug', function () {
     }
 
     try {
+        if (!lsttraining_user_can_object($pdo, 'fahrzeuge', 'fahrzeug', $id)) {
+            status_header(403);
+            wp_send_json(['success' => false, 'data' => ['msg' => 'Keine Berechtigung für dieses Fahrzeug.']]);
+        }
         $has_signal_lights = lsttraining_fahrzeuge_ensure_signal_lights_column($pdo);
 $st = $pdo->prepare("
   SELECT
@@ -141,7 +144,9 @@ $st = $pdo->prepare("
  * =============================== */
 add_action('wp_ajax_lsttraining_list_fahrzeuge_by_wache', function () {
 
-    if (!current_user_can('read')) {
+    lsttraining_fahrzeuge_require_method('GET');
+
+    if (!is_user_logged_in()) {
         status_header(403);
         wp_send_json(['success' => false, 'data' => ['msg' => 'Keine Berechtigung.']]);
     }
@@ -164,6 +169,10 @@ add_action('wp_ajax_lsttraining_list_fahrzeuge_by_wache', function () {
     }
 
     try {
+        if (!lsttraining_user_can_object($pdo, 'fahrzeuge', 'wache', $wache_id)) {
+            status_header(403);
+            wp_send_json(['success' => false, 'data' => ['msg' => 'Keine Berechtigung für diese Wache.']]);
+        }
         $st = $pdo->prepare("
            SELECT id, wache_id, TRIM(rufname) AS rufname, fahrzeugtyp, fms_status, is_first_responder
 FROM fahrzeuge
@@ -192,7 +201,9 @@ ORDER BY TRIM(rufname) ASC
  * =============================== */
 add_action('wp_ajax_lsttraining_save_fahrzeug', function () {
 
-    if (!current_user_can('read')) {
+    lsttraining_fahrzeuge_require_method('POST');
+
+    if (!is_user_logged_in()) {
         status_header(403);
         wp_send_json(['success' => false, 'data' => ['msg' => 'Keine Berechtigung.']]);
     }
@@ -228,6 +239,14 @@ add_action('wp_ajax_lsttraining_save_fahrzeug', function () {
     }
 
     try {
+        if (!lsttraining_user_can_object($pdo, 'fahrzeuge', 'wache', $wache_id)) {
+            status_header(403);
+            wp_send_json(['success' => false, 'data' => ['msg' => 'Keine Berechtigung für die Zielwache.']]);
+        }
+        if ($id > 0 && !lsttraining_user_can_object($pdo, 'fahrzeuge', 'fahrzeug', $id)) {
+            status_header(403);
+            wp_send_json(['success' => false, 'data' => ['msg' => 'Keine Berechtigung für das bestehende Fahrzeug.']]);
+        }
         // Duplicate-Check: beim Update eigenes Fahrzeug ausnehmen
         if ($id > 0) {
             $st = $pdo->prepare("
@@ -301,7 +320,9 @@ add_action('wp_ajax_lsttraining_save_fahrzeug', function () {
 });
 add_action('wp_ajax_lsttraining_delete_fahrzeug', function () {
 
-    if (!current_user_can('read')) {
+    lsttraining_fahrzeuge_require_method('POST');
+
+    if (!is_user_logged_in()) {
         status_header(403);
         wp_send_json(['success' => false, 'data' => ['msg' => 'Keine Berechtigung.']]);
     }
@@ -324,6 +345,10 @@ add_action('wp_ajax_lsttraining_delete_fahrzeug', function () {
     }
 
     try {
+        if (!lsttraining_user_can_object($pdo, 'fahrzeuge', 'fahrzeug', $id)) {
+            status_header(403);
+            wp_send_json(['success' => false, 'data' => ['msg' => 'Keine Berechtigung für dieses Fahrzeug.']]);
+        }
         $st = $pdo->prepare("DELETE FROM fahrzeuge WHERE id = ?");
         $st->execute([$id]);
         wp_send_json(['success' => true]);
@@ -332,4 +357,3 @@ add_action('wp_ajax_lsttraining_delete_fahrzeug', function () {
         wp_send_json(['success' => false, 'data' => ['msg' => $e->getMessage()]]);
     }
 });
-
