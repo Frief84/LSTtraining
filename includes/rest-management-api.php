@@ -29,11 +29,11 @@ function lst_manage_resource_configs(): array {
                 'land' => ['type' => 'string', 'nullable' => true, 'max' => 100, 'default' => 'Deutschland'],
                 'latitude' => ['type' => 'latitude', 'nullable' => true],
                 'longitude' => ['type' => 'longitude', 'nullable' => true],
-                'geojson' => ['type' => 'json', 'nullable' => true],
+                'geojson' => ['type' => 'geojson', 'nullable' => true],
                 'available_hospitals' => ['type' => 'id_list_json', 'default' => []],
-                'police_vehicle_image' => ['type' => 'string', 'nullable' => true, 'max' => 255, 'default' => 'img/fahrzeug/default.png'],
+                'police_vehicle_image' => ['type' => 'image', 'nullable' => true, 'max' => 255, 'default' => 'img/fahrzeug/default.png'],
                 'police_signal_lights_json' => ['type' => 'signal_json', 'nullable' => true],
-                'rescue_vehicle_image' => ['type' => 'string', 'nullable' => true, 'max' => 255, 'default' => 'img/fahrzeug/default.png'],
+                'rescue_vehicle_image' => ['type' => 'image', 'nullable' => true, 'max' => 255, 'default' => 'img/fahrzeug/default.png'],
                 'rescue_signal_lights_json' => ['type' => 'signal_json', 'nullable' => true],
             ],
             'relations' => [
@@ -51,14 +51,14 @@ function lst_manage_resource_configs(): array {
             'list_fields' => ['id', 'name', 'zustandigkeit', 'einwohner', 'flaeche_km2', 'gps', 'nachbarleitstelle', 'created_at'],
             'fields' => [
                 'name' => ['type' => 'string', 'required' => true, 'max' => 255],
-                'aufgaben' => ['type' => 'text', 'nullable' => true],
-                'zustandigkeit' => ['type' => 'text', 'nullable' => true],
-                'standorte' => ['type' => 'text', 'nullable' => true],
+                'aufgaben' => ['type' => 'text', 'nullable' => true, 'max' => 4000],
+                'zustandigkeit' => ['type' => 'text', 'nullable' => true, 'max' => 4000],
+                'standorte' => ['type' => 'text', 'nullable' => true, 'max' => 4000],
                 'einwohner' => ['type' => 'int', 'nullable' => true, 'min' => 0],
                 'flaeche_km2' => ['type' => 'float', 'nullable' => true, 'min' => 0],
-                'gps' => ['type' => 'string', 'nullable' => true, 'max' => 255],
+                'gps' => ['type' => 'coordinate_pair', 'nullable' => true],
                 'nachbarleitstelle' => ['type' => 'bool', 'nullable' => true],
-                'geojson' => ['type' => 'json', 'nullable' => true],
+                'geojson' => ['type' => 'geojson', 'nullable' => true],
             ],
             'relations' => [
                 'leitstellen' => ['table' => 'leitstelle_nebenleitstellen', 'source_col' => 'nebenleitstelle_id', 'target_col' => 'leitstelle_id', 'target_table' => 'leitstellen'],
@@ -80,9 +80,9 @@ function lst_manage_resource_configs(): array {
                 'latitude' => ['type' => 'latitude', 'required' => true],
                 'longitude' => ['type' => 'longitude', 'required' => true],
                 'land' => ['type' => 'string', 'nullable' => true, 'max' => 64, 'default' => 'Deutschland'],
-                'arrival_pos' => ['type' => 'string', 'nullable' => true, 'max' => 50],
-                'departure_pos' => ['type' => 'string', 'nullable' => true, 'max' => 50],
-                'bild_datei' => ['type' => 'string', 'max' => 255, 'default' => ''],
+                'arrival_pos' => ['type' => 'coordinate_pair', 'nullable' => true],
+                'departure_pos' => ['type' => 'coordinate_pair', 'nullable' => true],
+                'bild_datei' => ['type' => 'image', 'max' => 255, 'default' => '', 'allow_empty' => true],
                 'exists_in_reality' => ['type' => 'bool', 'default' => true],
                 'source_note' => ['type' => 'string', 'nullable' => true, 'max' => 255],
             ],
@@ -111,7 +111,7 @@ function lst_manage_resource_configs(): array {
                 'dienstzeiten' => ['type' => 'string', 'nullable' => true, 'max' => 255],
                 'latitude' => ['type' => 'latitude', 'nullable' => true],
                 'longitude' => ['type' => 'longitude', 'nullable' => true],
-                'bild_datei' => ['type' => 'string', 'nullable' => true, 'max' => 255],
+                'bild_datei' => ['type' => 'image', 'nullable' => true, 'max' => 255],
                 'signal_lights_json' => ['type' => 'signal_json', 'nullable' => true],
             ],
             'relations' => [],
@@ -125,14 +125,14 @@ function lst_manage_resource_configs(): array {
             'order' => 'name ASC, id ASC',
             'list_fields' => ['id', 'poi_id', 'name', 'latitude', 'longitude', 'versorgungsstufe', 'trauma_level', 'helipad', 'last_update', 'created_at'],
             'fields' => [
-                'poi_id' => ['type' => 'string', 'max' => 50],
+                'poi_id' => ['type' => 'identifier', 'max' => 50],
                 'name' => ['type' => 'string', 'required' => true, 'max' => 255],
                 'latitude' => ['type' => 'latitude', 'required' => true],
                 'longitude' => ['type' => 'longitude', 'required' => true],
                 'versorgungsstufe' => ['type' => 'enum', 'allowed' => ['Grundversorgung', 'Schwerpunktversorger', 'Maximalversorger'], 'default' => 'Grundversorgung'],
                 'trauma_level' => ['type' => 'int', 'default' => 0, 'min' => 0, 'max' => 9],
                 'helipad' => ['type' => 'bool', 'default' => false],
-                'departments' => ['type' => 'json', 'default' => []],
+                'departments' => ['type' => 'departments', 'default' => []],
             ],
             'relations' => [],
         ],
@@ -183,7 +183,7 @@ add_action('rest_api_init', static function (): void {
             'callback' => 'lst_manage_delete_resource',
             'permission_callback' => 'lst_manage_can_access_resource',
             'args' => [
-                'confirm' => ['required' => true, 'validate_callback' => static fn($value): bool => filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) === true],
+                'confirm' => ['required' => true, 'validate_callback' => static fn($value): bool => in_array($value, [true, 1, '1', 'true'], true)],
             ],
         ],
     ]);
@@ -225,137 +225,97 @@ function lst_manage_connection() {
 }
 
 function lst_manage_clean_ids($value): array {
-    if (!is_array($value)) {
-        return [];
-    }
-    return array_values(array_unique(array_filter(array_map('absint', $value))));
+    return lsttraining_rest_id_list('Zuordnungen', $value);
 }
 
 function lst_manage_normalize_signal_json($value): ?string {
     if ($value === null || $value === '') {
         return null;
     }
-    if (is_string($value)) {
-        $decoded = json_decode(wp_unslash($value), true);
-    } else {
-        $decoded = $value;
-    }
-    if (!is_array($decoded)) {
-        throw new InvalidArgumentException('Ungueltige Signallicht-Konfiguration.');
-    }
-    $lights = is_array($decoded['lights'] ?? null) ? $decoded['lights'] : (array_values($decoded) === $decoded ? $decoded : []);
-    $normalized = [];
-    foreach ($lights as $light) {
-        if (!is_array($light) || !is_numeric($light['x'] ?? null) || !is_numeric($light['y'] ?? null)) {
-            continue;
-        }
-        $type = sanitize_key((string) ($light['type'] ?? 'beacon'));
-        if (!in_array($type, ['beacon', 'strobe', 'bar', 'glow'], true)) {
-            $type = 'beacon';
-        }
-        $normalized[] = [
-            'x' => max(0.0, min(1.0, (float) $light['x'])),
-            'y' => max(0.0, min(1.0, (float) $light['y'])),
-            'type' => $type,
-            'interval' => max(120, min(2000, (int) ($light['interval'] ?? 420))),
-            'phase' => max(0, min(5000, (int) ($light['phase'] ?? 0))),
-            'size' => max(0.4, min(2.5, (float) ($light['size'] ?? 1))),
-        ];
-    }
-    return $normalized ? (string) wp_json_encode(['version' => 1, 'lights' => $normalized]) : null;
+    $normalized = lsttraining_rest_signal_lights('signal_lights_json', $value);
+    return $normalized ? (string) wp_json_encode($normalized, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null;
 }
 
 function lst_manage_normalize_field(string $name, $value, array $definition) {
     $nullable = !empty($definition['nullable']);
     if ($value === null || ($value === '' && $nullable)) {
+        if (!$nullable) {
+            throw new InvalidArgumentException($name . ' darf nicht null sein.');
+        }
         return null;
     }
 
     $type = (string) ($definition['type'] ?? 'string');
     switch ($type) {
         case 'string':
-            $normalized = sanitize_text_field((string) $value);
-            if (isset($definition['max']) && strlen($normalized) > (int) $definition['max']) {
-                throw new InvalidArgumentException($name . ' ist zu lang.');
-            }
-            return $normalized;
+            return lsttraining_rest_assert_safe_string($name, $value, (int) ($definition['max'] ?? 255));
 
         case 'text':
-            return sanitize_textarea_field((string) $value);
+            return lsttraining_rest_assert_safe_string($name, $value, (int) ($definition['max'] ?? 4000), true);
 
         case 'int':
         case 'id':
-            if (!is_numeric($value)) {
-                throw new InvalidArgumentException($name . ' muss eine Ganzzahl sein.');
-            }
-            $normalized = (int) $value;
-            if ($type === 'id' && $normalized <= 0) {
-                throw new InvalidArgumentException($name . ' muss groesser als 0 sein.');
-            }
-            if (isset($definition['min']) && $normalized < (int) $definition['min']) {
-                throw new InvalidArgumentException($name . ' ist zu klein.');
-            }
-            if (isset($definition['max']) && $normalized > (int) $definition['max']) {
-                throw new InvalidArgumentException($name . ' ist zu gross.');
-            }
-            return $normalized;
+            return lsttraining_rest_strict_integer(
+                $name,
+                $value,
+                $type === 'id' ? 1 : (isset($definition['min']) ? (int) $definition['min'] : null),
+                isset($definition['max']) ? (int) $definition['max'] : null
+            );
 
         case 'float':
         case 'latitude':
         case 'longitude':
-            if (!is_numeric($value) || !is_finite((float) $value)) {
-                throw new InvalidArgumentException($name . ' muss eine Zahl sein.');
-            }
-            $normalized = (float) $value;
-            if ($type === 'latitude' && ($normalized < -90 || $normalized > 90)) {
-                throw new InvalidArgumentException('latitude liegt ausserhalb des gueltigen Bereichs.');
-            }
-            if ($type === 'longitude' && ($normalized < -180 || $normalized > 180)) {
-                throw new InvalidArgumentException('longitude liegt ausserhalb des gueltigen Bereichs.');
-            }
-            if (isset($definition['min']) && $normalized < (float) $definition['min']) {
-                throw new InvalidArgumentException($name . ' ist zu klein.');
-            }
-            return $normalized;
+            $min = $type === 'latitude' ? -90.0 : ($type === 'longitude' ? -180.0 : (isset($definition['min']) ? (float) $definition['min'] : null));
+            $max = $type === 'latitude' ? 90.0 : ($type === 'longitude' ? 180.0 : (isset($definition['max']) ? (float) $definition['max'] : null));
+            return lsttraining_rest_strict_number($name, $value, $min, $max);
 
         case 'bool':
-            $normalized = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-            if ($normalized === null) {
-                throw new InvalidArgumentException($name . ' muss true oder false sein.');
-            }
-            return $normalized ? 1 : 0;
+            return lsttraining_rest_strict_boolean($name, $value) ? 1 : 0;
 
         case 'enum':
-            $normalized = sanitize_text_field((string) $value);
+            $normalized = lsttraining_rest_assert_safe_string($name, $value, 100);
             if (!in_array($normalized, (array) ($definition['allowed'] ?? []), true)) {
                 throw new InvalidArgumentException('Ungueltiger Wert fuer ' . $name . '.');
             }
             return $normalized;
 
         case 'json':
-            if (is_string($value)) {
-                $decoded = json_decode(wp_unslash($value), true);
-                if (json_last_error() !== JSON_ERROR_NONE) {
-                    throw new InvalidArgumentException($name . ' enthaelt ungueltiges JSON.');
-                }
-            } elseif (is_array($value) || is_object($value)) {
-                $decoded = $value;
-            } else {
-                throw new InvalidArgumentException($name . ' muss JSON enthalten.');
-            }
+            $decoded = lsttraining_rest_json_input($name, $value);
+            $decoded = lsttraining_rest_safe_json_value($name, $decoded);
             return (string) wp_json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         case 'id_list_json':
-            return (string) wp_json_encode(lst_manage_clean_ids($value));
+            return (string) wp_json_encode(lsttraining_rest_id_list($name, $value));
 
         case 'signal_json':
-            return lst_manage_normalize_signal_json($value);
+            $normalized = lsttraining_rest_signal_lights($name, $value);
+            return $normalized ? (string) wp_json_encode($normalized, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null;
+
+        case 'geojson':
+            return (string) wp_json_encode(lsttraining_rest_geojson($name, $value), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        case 'departments':
+            return (string) wp_json_encode(lsttraining_rest_departments($name, $value), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        case 'coordinate_pair':
+            return lsttraining_rest_coordinate_pair($name, $value);
+
+        case 'identifier':
+            return lsttraining_rest_identifier($name, $value, (int) ($definition['max'] ?? 50));
+
+        case 'image':
+            return lsttraining_rest_image_input($name, $value, (int) ($definition['max'] ?? 255));
     }
 
     throw new InvalidArgumentException('Unbekannter Feldtyp fuer ' . $name . '.');
 }
 
 function lst_manage_normalize_payload(array $config, array $payload, bool $creating): array {
+    $allowed_fields = array_merge(array_keys((array) ($config['fields'] ?? [])), array_keys((array) ($config['relations'] ?? [])));
+    $unknown_fields = array_values(array_diff(array_keys($payload), $allowed_fields));
+    if ($unknown_fields) {
+        throw new InvalidArgumentException('Unbekannte Felder: ' . implode(', ', $unknown_fields) . '.');
+    }
     $data = [];
     foreach ((array) $config['fields'] as $field => $definition) {
         if (array_key_exists($field, $payload)) {
@@ -372,6 +332,39 @@ function lst_manage_normalize_payload(array $config, array $payload, bool $creat
     return $data;
 }
 
+function lst_manage_request_payload(WP_REST_Request $request, array $config): array {
+    $allowed_fields = array_merge(
+        array_keys((array) ($config['fields'] ?? [])),
+        array_keys((array) ($config['relations'] ?? []))
+    );
+    $payload = lsttraining_rest_json_object($request, $allowed_fields, 16777216);
+    foreach (array_keys((array) ($config['relations'] ?? [])) as $relation) {
+        if (array_key_exists($relation, $payload)) {
+            $payload[$relation] = lsttraining_rest_id_list($relation, $payload[$relation]);
+        }
+    }
+    return $payload;
+}
+
+function lst_manage_materialize_images(array $config, array &$data, array &$created_paths): void {
+    foreach ((array) ($config['fields'] ?? []) as $field => $definition) {
+        if (($definition['type'] ?? '') !== 'image' || !isset($data[$field]) || !is_array($data[$field])) {
+            continue;
+        }
+        $stored = lsttraining_rest_store_sanitized_image($field, $data[$field]);
+        $data[$field] = $stored['reference'];
+        $created_paths[] = $stored['path'];
+    }
+}
+
+function lst_manage_cleanup_created_images(array $paths): void {
+    foreach ($paths as $path) {
+        if (is_string($path) && $path !== '' && is_file($path)) {
+            wp_delete_file($path);
+        }
+    }
+}
+
 function lst_manage_decode_row(array $config, array $row): array {
     foreach ((array) $config['fields'] as $field => $definition) {
         if (!array_key_exists($field, $row)) {
@@ -384,7 +377,7 @@ function lst_manage_decode_row(array $config, array $row): array {
             $row[$field] = (float) $row[$field];
         } elseif ($type === 'bool' && $row[$field] !== null) {
             $row[$field] = (bool) $row[$field];
-        } elseif (in_array($type, ['json', 'id_list_json', 'signal_json'], true) && $row[$field] !== null && $row[$field] !== '') {
+        } elseif (in_array($type, ['json', 'geojson', 'departments', 'id_list_json', 'signal_json'], true) && $row[$field] !== null && $row[$field] !== '') {
             $decoded = json_decode((string) $row[$field], true);
             if (json_last_error() === JSON_ERROR_NONE) {
                 $row[$field] = $decoded;
@@ -690,25 +683,32 @@ function lst_manage_validate_hospital_ids(PDO $pdo, array $data): void {
 function lst_manage_create_resource(WP_REST_Request $request) {
     $resource = (string) $request->get_param('resource');
     $config = lst_manage_get_config($resource);
-    $payload = $request->get_json_params();
-    if (!$config || !is_array($payload)) {
+    if (!$config) {
         return lst_manage_error('invalid_json', 'Ein JSON-Objekt ist erforderlich.', 400);
+    }
+    try {
+        $payload = lst_manage_request_payload($request, $config);
+    } catch (InvalidArgumentException $e) {
+        return lst_manage_error('validation_failed', $e->getMessage(), 400);
     }
     $pdo = lst_manage_connection();
     if (!$pdo instanceof PDO) {
         return lst_manage_error('db_connection_failed', 'Datenbankverbindung fehlgeschlagen.', 500);
     }
 
+    $created_image_paths = [];
     try {
-        $scope = lst_manage_validate_write_scope($pdo, $resource, 0, $payload, true);
-        if ($scope instanceof WP_REST_Response) { return $scope; }
         $data = lst_manage_normalize_payload($config, $payload, true);
+        $scope = lst_manage_validate_write_scope($pdo, $resource, 0, array_replace($payload, $data), true);
+        if ($scope instanceof WP_REST_Response) { return $scope; }
         lst_manage_validate_hospital_ids($pdo, $data);
         if ($resource === 'krankenhaeuser' && empty($data['poi_id'])) {
             $data['poi_id'] = 'manual-' . wp_generate_uuid4();
         }
         $conflict = lst_manage_check_unique($pdo, $resource, $data);
         if ($conflict) { return $conflict; }
+
+        lst_manage_materialize_images($config, $data, $created_image_paths);
 
         if ($resource === 'wachen') {
             $data['placed_by_user_id'] = (int) get_current_user_id();
@@ -733,9 +733,11 @@ function lst_manage_create_resource(WP_REST_Request $request) {
         return lst_manage_success(lst_manage_fetch_one($pdo, $resource, $id), 201);
     } catch (InvalidArgumentException $e) {
         if ($pdo->inTransaction()) { $pdo->rollBack(); }
+        lst_manage_cleanup_created_images($created_image_paths);
         return lst_manage_error('validation_failed', $e->getMessage(), 400);
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) { $pdo->rollBack(); }
+        lst_manage_cleanup_created_images($created_image_paths);
         error_log('[LSTtraining][REST management create] ' . $e->getMessage());
         $status = $e instanceof PDOException && (string) $e->getCode() === '23000' ? 409 : 500;
         return lst_manage_error($status === 409 ? 'conflict' : 'db_write_failed', $status === 409 ? 'Datensatz kollidiert mit vorhandenen Daten.' : 'Datensatz konnte nicht angelegt werden.', $status);
@@ -746,22 +748,29 @@ function lst_manage_update_resource(WP_REST_Request $request) {
     $resource = (string) $request->get_param('resource');
     $id = absint($request->get_param('id'));
     $config = lst_manage_get_config($resource);
-    $payload = $request->get_json_params();
-    if (!$config || !is_array($payload)) {
+    if (!$config) {
         return lst_manage_error('invalid_json', 'Ein JSON-Objekt ist erforderlich.', 400);
+    }
+    try {
+        $payload = lst_manage_request_payload($request, $config);
+    } catch (InvalidArgumentException $e) {
+        return lst_manage_error('validation_failed', $e->getMessage(), 400);
     }
     $pdo = lst_manage_connection();
     if (!$pdo instanceof PDO) {
         return lst_manage_error('db_connection_failed', 'Datenbankverbindung fehlgeschlagen.', 500);
     }
 
+    $created_image_paths = [];
     try {
         if (!lst_manage_fetch_one($pdo, $resource, $id)) {
             return lst_manage_error('not_found', 'Datensatz nicht gefunden.', 404);
         }
-        $scope = lst_manage_validate_write_scope($pdo, $resource, $id, $payload, false);
-        if ($scope instanceof WP_REST_Response) { return $scope; }
+        $object_scope = lst_manage_validate_write_scope($pdo, $resource, $id, [], false);
+        if ($object_scope instanceof WP_REST_Response) { return $object_scope; }
         $data = lst_manage_normalize_payload($config, $payload, false);
+        $scope = lst_manage_validate_write_scope($pdo, $resource, $id, array_replace($payload, $data), false);
+        if ($scope instanceof WP_REST_Response) { return $scope; }
         lst_manage_validate_hospital_ids($pdo, $data);
 
         if ($resource === 'fahrzeuge' && (isset($data['rufname']) || isset($data['wache_id']))) {
@@ -775,6 +784,8 @@ function lst_manage_update_resource(WP_REST_Request $request) {
             $conflict = lst_manage_check_unique($pdo, $resource, $data, $id);
         }
         if ($conflict) { return $conflict; }
+
+        lst_manage_materialize_images($config, $data, $created_image_paths);
 
         if ($resource === 'wachen') {
             $data['updated_by_user_id'] = (int) get_current_user_id();
@@ -805,9 +816,11 @@ function lst_manage_update_resource(WP_REST_Request $request) {
         return lst_manage_success(lst_manage_fetch_one($pdo, $resource, $id));
     } catch (InvalidArgumentException $e) {
         if ($pdo->inTransaction()) { $pdo->rollBack(); }
+        lst_manage_cleanup_created_images($created_image_paths);
         return lst_manage_error('validation_failed', $e->getMessage(), 400);
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) { $pdo->rollBack(); }
+        lst_manage_cleanup_created_images($created_image_paths);
         error_log('[LSTtraining][REST management update] ' . $e->getMessage());
         $status = $e instanceof PDOException && (string) $e->getCode() === '23000' ? 409 : 500;
         return lst_manage_error($status === 409 ? 'conflict' : 'db_write_failed', $status === 409 ? 'Aenderung kollidiert mit vorhandenen Daten.' : 'Datensatz konnte nicht gespeichert werden.', $status);

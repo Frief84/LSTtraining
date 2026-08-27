@@ -40,6 +40,7 @@ require_once LSTTRAINING_PATH . 'includes/schema_import.php';
 require_once LSTTRAINING_PATH . 'includes/ajax-handlers.php';
 require_once LSTTRAINING_PATH . 'includes/ajax/ajax_index.php';
 require_once LSTTRAINING_PATH . 'includes/ajax/ajax_simulation.php';
+require_once LSTTRAINING_PATH . 'includes/rest-validation.php';
 require_once LSTTRAINING_PATH . 'includes/rest-api.php';
 require_once LSTTRAINING_PATH . 'includes/rest-management-api.php';
 require_once LSTTRAINING_PATH . 'includes/simulation-workspace.php';

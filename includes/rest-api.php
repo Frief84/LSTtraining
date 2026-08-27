@@ -92,6 +92,16 @@ add_action('rest_api_init', function () {
     ]);
 });
 
+function lst_rest_validation_response(InvalidArgumentException $error): WP_REST_Response {
+    $response = new WP_REST_Response([
+        'ok' => false,
+        'error' => 'validation_failed',
+        'message' => $error->getMessage(),
+    ], 400);
+    $response->header('Cache-Control', 'no-store, private');
+    return $response;
+}
+
 /**
  * Permission: Wachen lesen
  * Nutzt dein Rechtesystem plus optional Leitstellen-Scope.
@@ -465,16 +475,11 @@ function lst_rest_get_instance_status( WP_REST_Request $request ) {
 }
 
 function lst_rest_update_instance_status( WP_REST_Request $request ) {
-    require_once plugin_dir_path(__FILE__) . 'db.php';
-    $pdo = lsttraining_get_connection();
-    if ( ! $pdo instanceof PDO ) {
-        return new WP_REST_Response(['ok' => false, 'error' => 'db_connection_failed'], 500);
-    }
-
     $instanz_id = absint($request->get_param('instanz_id'));
-    $body = $request->get_json_params();
-    if ( ! is_array($body) ) {
-        return new WP_REST_Response(['ok' => false, 'error' => 'invalid_json'], 400);
+    try {
+        $body = lsttraining_rest_json_object($request, ['state', 'paused', 'speed'], 16384);
+    } catch (InvalidArgumentException $e) {
+        return lst_rest_validation_response($e);
     }
 
     $has_state = array_key_exists('state', $body) || array_key_exists('paused', $body);
@@ -483,23 +488,31 @@ function lst_rest_update_instance_status( WP_REST_Request $request ) {
         return new WP_REST_Response(['ok' => false, 'error' => 'no_changes'], 400);
     }
 
+    require_once plugin_dir_path(__FILE__) . 'db.php';
+    $pdo = lsttraining_get_connection();
+    if ( ! $pdo instanceof PDO ) {
+        return new WP_REST_Response(['ok' => false, 'error' => 'db_connection_failed'], 500);
+    }
+
     try {
         $runtime = lsttraining_sim_fetch_runtime($pdo, $instanz_id);
-        $state = isset($body['state']) ? sanitize_key((string) $body['state']) : (string) ($runtime['sim_state'] ?? 'created');
+        $state = array_key_exists('state', $body)
+            ? lsttraining_rest_assert_safe_string('state', $body['state'], 16)
+            : (string) ($runtime['sim_state'] ?? 'created');
+        if ( ! in_array($state, ['created', 'running', 'paused'], true) ) {
+            throw new InvalidArgumentException('state ist ungueltig.');
+        }
         if ( array_key_exists('paused', $body) ) {
-            $paused_value = filter_var($body['paused'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-            if ( $paused_value === null ) {
-                return new WP_REST_Response(['ok' => false, 'error' => 'invalid_paused'], 400);
+            $paused_value = lsttraining_rest_strict_boolean('paused', $body['paused']);
+            if ( array_key_exists('state', $body) && (($paused_value && $state !== 'paused') || (!$paused_value && $state !== 'running')) ) {
+                throw new InvalidArgumentException('state und paused widersprechen sich.');
             }
             $state = $paused_value ? 'paused' : 'running';
         }
-        if ( ! in_array($state, ['created', 'running', 'paused'], true) ) {
-            return new WP_REST_Response(['ok' => false, 'error' => 'invalid_state'], 400);
-        }
 
-        $speed = $has_speed ? (int) $body['speed'] : null;
+        $speed = $has_speed ? lsttraining_rest_strict_integer('speed', $body['speed']) : null;
         if ( $has_speed && ! in_array($speed, [1, 2, 5], true) ) {
-            return new WP_REST_Response(['ok' => false, 'error' => 'invalid_speed'], 400);
+            throw new InvalidArgumentException('speed erlaubt nur 1, 2 oder 5.');
         }
         $paused = $state === 'paused';
         $settings = lsttraining_sim_materialize_runtime_settings(
@@ -520,6 +533,8 @@ function lst_rest_update_instance_status( WP_REST_Request $request ) {
             ]);
         }
         return lst_rest_get_instance_status($request);
+    } catch (InvalidArgumentException $e) {
+        return lst_rest_validation_response($e);
     } catch (Throwable $e) {
         error_log('[LSTtraining][REST update instance status] ' . $e->getMessage());
         return new WP_REST_Response(['ok' => false, 'error' => 'db_write_failed'], 500);
@@ -527,6 +542,17 @@ function lst_rest_update_instance_status( WP_REST_Request $request ) {
 }
 
 function lst_rest_update_instance_vehicle( WP_REST_Request $request ) {
+    $instanz_id = absint($request->get_param('instanz_id'));
+    $status_id = absint($request->get_param('status_id'));
+    try {
+        $body = lsttraining_rest_json_object($request, [
+            'latitude', 'longitude', 'ziel_latitude', 'ziel_longitude',
+            'status', 'fms_status', 'sondersignal', 'bemerkung',
+        ], 65536);
+    } catch (InvalidArgumentException $e) {
+        return lst_rest_validation_response($e);
+    }
+
     require_once plugin_dir_path(__FILE__) . 'db.php';
     require_once plugin_dir_path(__FILE__) . 'simulation/vehicle-state.php';
     $pdo = lsttraining_get_connection();
@@ -534,56 +560,42 @@ function lst_rest_update_instance_vehicle( WP_REST_Request $request ) {
         return new WP_REST_Response(['ok' => false, 'error' => 'db_connection_failed'], 500);
     }
 
-    $instanz_id = absint($request->get_param('instanz_id'));
-    $status_id = absint($request->get_param('status_id'));
-    $body = $request->get_json_params();
-    if ( ! is_array($body) ) {
-        return new WP_REST_Response(['ok' => false, 'error' => 'invalid_json'], 400);
-    }
-
     $updates = [];
     try {
         foreach (['latitude', 'longitude', 'ziel_latitude', 'ziel_longitude'] as $field) {
             if ( ! array_key_exists($field, $body) ) { continue; }
             if ( $body[$field] === null || $body[$field] === '' ) {
+                if ($body[$field] === '') {
+                    throw new InvalidArgumentException($field . ' muss eine Zahl oder null sein.');
+                }
                 $updates[$field] = null;
                 continue;
             }
-            if ( ! is_numeric($body[$field]) || ! is_finite((float) $body[$field]) ) {
-                return new WP_REST_Response(['ok' => false, 'error' => 'invalid_' . $field], 400);
-            }
-            $number = (float) $body[$field];
             $is_latitude = str_contains($field, 'latitude');
-            if ( ($is_latitude && ($number < -90 || $number > 90)) || (!$is_latitude && ($number < -180 || $number > 180)) ) {
-                return new WP_REST_Response(['ok' => false, 'error' => 'invalid_' . $field], 400);
-            }
-            $updates[$field] = $number;
+            $updates[$field] = lsttraining_rest_strict_number($field, $body[$field], $is_latitude ? -90 : -180, $is_latitude ? 90 : 180);
         }
         if ( array_key_exists('status', $body) ) {
-            $status = sanitize_text_field((string) $body['status']);
+            $status = lsttraining_rest_assert_safe_string('status', $body['status'], 32);
             if ( ! in_array($status, ['frei', 'besetzt', 'einsatzbereit', 'nicht einsatzbereit'], true) ) {
-                return new WP_REST_Response(['ok' => false, 'error' => 'invalid_status'], 400);
+                throw new InvalidArgumentException('status ist ungueltig.');
             }
             $updates['status'] = $status;
         }
         if ( array_key_exists('fms_status', $body) ) {
-            $fms = sanitize_key((string) $body['fms_status']);
+            $fms = lsttraining_rest_assert_safe_string('fms_status', $body['fms_status'], 1);
             if ( ! in_array($fms, ['1', '2', '3', '4', '5', '6'], true) ) {
-                return new WP_REST_Response(['ok' => false, 'error' => 'invalid_fms_status'], 400);
+                throw new InvalidArgumentException('fms_status ist ungueltig.');
             }
             $updates['fms_status'] = $fms;
         }
         if ( array_key_exists('sondersignal', $body) ) {
-            $signal = filter_var($body['sondersignal'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-            if ( $signal === null ) {
-                return new WP_REST_Response(['ok' => false, 'error' => 'invalid_sondersignal'], 400);
-            }
+            $signal = lsttraining_rest_strict_boolean('sondersignal', $body['sondersignal']);
             $updates['sondersignal'] = $signal ? 1 : 0;
         }
         if ( array_key_exists('bemerkung', $body) ) {
             $updates['bemerkung'] = $body['bemerkung'] === null
                 ? null
-                : sanitize_textarea_field((string) $body['bemerkung']);
+                : lsttraining_rest_assert_safe_string('bemerkung', $body['bemerkung'], 2000, true);
         }
         if ( ! $updates ) {
             return new WP_REST_Response(['ok' => false, 'error' => 'no_changes'], 400);
@@ -608,6 +620,8 @@ function lst_rest_update_instance_vehicle( WP_REST_Request $request ) {
         }
         $vehicles = lst_rest_fetch_instance_vehicles($pdo, $instanz_id, ['status_id' => $status_id]);
         return lst_rest_live_response($vehicles[0] ?? ['status_id' => $status_id]);
+    } catch (InvalidArgumentException $e) {
+        return lst_rest_validation_response($e);
     } catch (Throwable $e) {
         error_log('[LSTtraining][REST update instance vehicle] ' . $e->getMessage());
         $legacy_model = strpos($e->getMessage(), 'altes Fahrzeugstatusmodell') !== false;
@@ -676,21 +690,42 @@ function lst_rest_get_wachen( WP_REST_Request $request ) {
 }
 
 function lst_rest_post_route( WP_REST_Request $request ) {
+    try {
+        $body = lsttraining_rest_json_object($request, ['coordinates', 'preference', 'leitstelle_id', 'instanz_id'], 16384);
+        $coordinates = $body['coordinates'] ?? null;
+        if (!is_array($coordinates) || !lsttraining_rest_is_list($coordinates) || count($coordinates) !== 2) {
+            throw new InvalidArgumentException('coordinates muss genau Start und Ziel enthalten.');
+        }
+        $normalized_coordinates = [];
+        foreach ($coordinates as $index => $point) {
+            if (!is_array($point) || !lsttraining_rest_is_list($point) || count($point) !== 2) {
+                throw new InvalidArgumentException('coordinates[' . $index . '] muss [Laengengrad, Breitengrad] enthalten.');
+            }
+            $normalized_coordinates[] = [
+                lsttraining_rest_strict_number('coordinates[' . $index . '][0]', $point[0], -180, 180),
+                lsttraining_rest_strict_number('coordinates[' . $index . '][1]', $point[1], -90, 90),
+            ];
+        }
+        $coordinates = $normalized_coordinates;
+        foreach (['leitstelle_id', 'instanz_id'] as $id_field) {
+            if (array_key_exists($id_field, $body)) {
+                lsttraining_rest_strict_integer($id_field, $body[$id_field], 1);
+            }
+        }
+        $preference = array_key_exists('preference', $body)
+            ? lsttraining_rest_assert_safe_string('preference', $body['preference'], 16)
+            : 'fastest';
+        if (!in_array($preference, ['fastest', 'recommended', 'shortest'], true)) {
+            throw new InvalidArgumentException('preference ist ungueltig.');
+        }
+    } catch (InvalidArgumentException $e) {
+        return lst_rest_validation_response($e);
+    }
 
     $apiKey = get_option('lsttraining_ors_key', '');
     $apiKey = is_string($apiKey) ? trim($apiKey) : '';
     if ( $apiKey === '' ) {
         return new WP_REST_Response(['ok' => false, 'error' => 'ors_key_missing'], 500);
-    }
-
-    $body = $request->get_json_params();
-    if ( ! is_array($body) ) {
-        return new WP_REST_Response(['ok' => false, 'error' => 'invalid_json'], 400);
-    }
-
-    $coordinates = $body['coordinates'] ?? null;
-    if ( ! is_array($coordinates) || count($coordinates) !== 2 ) {
-        return new WP_REST_Response(['ok' => false, 'error' => 'invalid_coordinates'], 400);
     }
 
     // Rate-Limit: 60 / 10 Minuten pro User (wie in deiner Plugin-Logik üblich)
@@ -701,11 +736,6 @@ function lst_rest_post_route( WP_REST_Request $request ) {
         return new WP_REST_Response(['ok' => false, 'error' => 'rate_limited'], 429);
     }
     set_transient($rl_key, $count + 1, 10 * MINUTE_IN_SECONDS);
-
-    $preference = isset($body['preference']) ? sanitize_key((string) $body['preference']) : 'fastest';
-    if ( ! in_array($preference, ['fastest', 'recommended', 'shortest'], true) ) {
-        $preference = 'fastest';
-    }
 
     // Cache: identische Anfrage kurz cachen
     $cache_key = 'lst_route_' . md5(wp_json_encode([

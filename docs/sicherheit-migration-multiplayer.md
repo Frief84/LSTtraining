@@ -185,7 +185,9 @@ Sie prüfen derzeit:
 14. Benutzerrechte pro Bereich und Leitstelle;
 15. die integrierte, rollenabhängige Backend-Hilfe;
 16. Vollständigkeit und interne Links der Wiki-Dokumentation;
-17. den rollenbasierten WordPress-Dokumentationsviewer.
+17. den rollenbasierten WordPress-Dokumentationsviewer;
+18. die strikte REST-Eingabevalidierung sowie die Bereinigung uebertragener
+    Raster- und SVG-Bilder.
 
 Diese Prüfungen ersetzen keinen echten Integrationslauf mit WordPress, PHP, MySQL und Browsern.
 

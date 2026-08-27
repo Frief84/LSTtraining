@@ -34,7 +34,7 @@ check('PHP-Struktur und Bootstrap-Abhängigkeiten', () => {
     'includes/fahrzeuge.php', 'includes/help.php',
     'includes/instance-lifecycle.php', 'includes/leitstellen_editor.php', 'includes/migrations.php',
     'includes/nebenstellen_editor.php', 'includes/permissions.php', 'includes/schema_import.php',
-    'includes/rest-api.php', 'includes/rest-management-api.php', 'includes/settings.php', 'includes/simulation-workspace.php', 'includes/wachen.php',
+    'includes/rest-api.php', 'includes/rest-management-api.php', 'includes/rest-validation.php', 'includes/settings.php', 'includes/simulation-workspace.php', 'includes/wachen.php',
     'includes/ajax/ajax_einsaetze.php', 'includes/ajax/ajax_fahrzeuge.php', 'includes/ajax/ajax_frontend.php',
     'includes/ajax/ajax_hospitals.php', 'includes/ajax/ajax_nebenstellen.php', 'includes/ajax/ajax_simulation.php',
     'includes/ajax/ajax_users.php', 'includes/ajax/ajax_wachen.php', 'includes/simulation/vehicle-state.php'
@@ -203,6 +203,51 @@ check('Geschuetzte REST-Verwaltungs-API', () => {
   assert.match(managementDocs, /Vollstaendige Feldreferenz/);
   assert.match(managementDocs, /HTTP-Statuscodes und Fehlerwerte/);
   assert.match(statusDocs, /Live-Zustand schreiben/);
+});
+
+check('Strikte REST-Eingabe- und Bildvalidierung', () => {
+  const validation = read('includes/rest-validation.php');
+  const management = read('includes/rest-management-api.php');
+  const statusApi = read('includes/rest-api.php');
+  const docs = read('docs/rest-management-api.md');
+  const help = read('includes/help.php');
+
+  for (const helper of [
+    'lsttraining_rest_json_object',
+    'lsttraining_rest_assert_safe_string',
+    'lsttraining_rest_strict_integer',
+    'lsttraining_rest_strict_number',
+    'lsttraining_rest_strict_boolean',
+    'lsttraining_rest_id_list',
+    'lsttraining_rest_geojson',
+    'lsttraining_rest_departments',
+    'lsttraining_rest_signal_lights',
+    'lsttraining_rest_image_input',
+    'lsttraining_rest_trusted_image_reference',
+    'lsttraining_rest_sanitize_svg',
+    'lsttraining_rest_store_sanitized_image'
+  ]) {
+    assert.match(validation, new RegExp(`function ${helper}\\b`));
+  }
+  assert.match(validation, /imagecreatefromstring/);
+  assert.match(validation, /getimagesizefromstring/);
+  assert.match(validation, /base64_decode\(\$base64, true\)/);
+  assert.match(validation, /imagepng/);
+  assert.match(validation, /imagejpeg/);
+  assert.match(validation, /DOMDocument/);
+  assert.match(validation, /LIBXML_NONET/);
+  assert.match(validation, /foreignObject/);
+  assert.match(validation, /wp_unique_filename/);
+  assert.match(validation, /wp_delete_file/);
+  assert.match(validation, /muss Bilddaten mitsenden/);
+  assert.match(validation, /Unbekannte Felder/);
+  assert.match(management, /lst_manage_materialize_images/);
+  assert.match(management, /lst_manage_cleanup_created_images/);
+  assert.ok((statusApi.match(/lsttraining_rest_json_object\(/g) || []).length >= 3);
+  assert.match(read('lsttraining-plugin.php'), /includes\/rest-validation\.php/);
+  assert.match(docs, /vollstaendig decodiert/);
+  assert.match(docs, /data_base64/);
+  assert.match(help, /vollständig neu codiert/);
 });
 
 check('Benutzerrechte pro Bereich und Leitstelle', () => {

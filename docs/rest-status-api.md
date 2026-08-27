@@ -87,10 +87,19 @@ Live-Antworten werden mit `Cache-Control: no-store, private` ausgeliefert.
 Nur Einsatzleiter der Instanz und WordPress-Administratoren duerfen diese
 Endpunkte verwenden.
 
+Jeder Schreib-Body muss ein JSON-Objekt sein. Unbekannte Felder, falsche
+Datentypen, HTML-/Codebestandteile, Steuerzeichen und uebergrosse Inhalte werden
+vor dem Datenbankschreiben mit HTTP `400` und `validation_failed` abgelehnt.
+Booleans muessen echte JSON-Werte `true` oder `false` sein; Zahlen muessen
+endlich sein und innerhalb der dokumentierten Bereiche liegen. Texte wie
+`bemerkung` werden als reiner Text ohne HTML oder ausfuehrbare URI-Schemata
+akzeptiert und sind auf 2.000 Zeichen begrenzt.
+
 `PATCH /wp-json/lst/v1/instanzen/{instanz_id}/status`
 
 Akzeptiert `state` (`created`, `running`, `paused`), `paused` und `speed`
-(`1`, `2` oder `5`).
+(`1`, `2` oder `5`). Werden `state` und `paused` gemeinsam gesendet, muessen
+beide Angaben denselben Zustand beschreiben.
 
 ```json
 {"paused": true, "speed": 1}
@@ -101,7 +110,8 @@ Akzeptiert `state` (`created`, `running`, `paused`), `paused` und `speed`
 Akzeptiert die Felder `status`, `fms_status`, `sondersignal`, `bemerkung`,
 `latitude`, `longitude`, `ziel_latitude` und `ziel_longitude`. Die Aenderung
 wird als instanzbezogenes Delta gespeichert und veraendert nicht die
-Fahrzeug-Stammdaten.
+Fahrzeug-Stammdaten. Breiten- und Laengengrade werden gegen `-90..90`
+beziehungsweise `-180..180` validiert; `null` entfernt eine optionale Position.
 
 ```json
 {

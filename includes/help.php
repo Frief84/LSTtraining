@@ -180,6 +180,17 @@ $status_api_url = $docs_page_configured
                     <li><?php esc_html_e('Datenbank-Zugangsdaten werden niemals an den Client übertragen.', 'lsttraining'); ?></li>
                 </ul>
 
+                <h3><?php esc_html_e('Strikte Eingabevalidierung', 'lsttraining'); ?></h3>
+                <p><?php esc_html_e('Alle schreibenden REST-Routen prüfen den JSON-Body vor dem ersten Datenbankschreibzugriff. Unbekannte Felder, falsche Datentypen, ungültige Wertebereiche, Steuerzeichen sowie HTML-, Skript- und andere ausführbare Codebestandteile werden mit HTTP 400 und validation_failed abgelehnt.', 'lsttraining'); ?></p>
+                <ul>
+                    <li><?php esc_html_e('Texte sind reiner UTF-8-Text mit feldabhängiger Maximallänge; HTML und ausführbare URI-Schemata sind nicht erlaubt.', 'lsttraining'); ?></li>
+                    <li><?php esc_html_e('GeoJSON erlaubt ausschließlich Polygon- und MultiPolygon-Einsatzgebiete mit gültigen, geschlossenen Koordinatenringen.', 'lsttraining'); ?></li>
+                    <li><?php esc_html_e('Fachbereiche, Signallichter, ID-Listen, Koordinatenpaare und Bildreferenzen werden jeweils gegen ein festes Format geprüft.', 'lsttraining'); ?></li>
+                    <li><?php esc_html_e('Beliebige externe Bild-URLs werden nicht akzeptiert, da ihr Inhalt nicht sicher geprüft werden kann. Referenzen sind nur für vorhandene lokale Plugin-Bilder und zuvor von der API bereinigte Uploads erlaubt.', 'lsttraining'); ?></li>
+                    <li><?php esc_html_e('Bilddaten können als Base64-Objekt übertragen werden. Rasterbilder werden vollständig neu codiert; bei SVG werden aktive Inhalte, externe Referenzen, Stylesheets und unbekanntes Markup entfernt.', 'lsttraining'); ?></li>
+                    <li><?php esc_html_e('Datenbankwerte werden als gebundene Parameter geschrieben; Tabellen und Spalten stammen aus festen serverseitigen Listen.', 'lsttraining'); ?></li>
+                </ul>
+
                 <h3><?php esc_html_e('Verwaltungsrouten', 'lsttraining'); ?></h3>
                 <table class="widefat striped lst-help-api-table">
                     <thead><tr><th><?php esc_html_e('Methode', 'lsttraining'); ?></th><th><?php esc_html_e('Pfad', 'lsttraining'); ?></th><th><?php esc_html_e('Funktion', 'lsttraining'); ?></th></tr></thead>
@@ -251,9 +262,11 @@ $status_api_url = $docs_page_configured
                 <h3><?php esc_html_e('Anfragebeispiele', 'lsttraining'); ?></h3>
                 <pre><code><?php echo esc_html("// Wache anlegen\nfetch('/wp-json/lst/v1/verwaltung/wachen', {\n  method: 'POST',\n  credentials: 'same-origin',\n  headers: {\n    'Content-Type': 'application/json',\n    'X-WP-Nonce': restNonce\n  },\n  body: JSON.stringify({\n    name: 'Feuer- und Rettungswache Mitte',\n    typ: 'FRRD',\n    latitude: 52.52,\n    longitude: 13.405,\n    leitstellen: [3]\n  })\n});\n\n// Fahrzeugstatus in Instanz 42 aendern\nfetch('/wp-json/lst/v1/instanzen/42/fahrzeuge/91', {\n  method: 'PATCH',\n  credentials: 'same-origin',\n  headers: {\n    'Content-Type': 'application/json',\n    'X-WP-Nonce': restNonce\n  },\n  body: JSON.stringify({ fms_status: '3', sondersignal: true })\n});"); ?></code></pre>
 
+                <p><strong><?php esc_html_e('Bilddaten:', 'lsttraining'); ?></strong> <code>{"filename":"rtw.png","mime_type":"image/png","data_base64":"..."}</code>. <?php esc_html_e('PNG, JPEG, GIF und WebP werden aus den decodierten Pixeln ohne Originalmetadaten neu erzeugt. SVG wird auf eine Positivliste statischer Elemente und Attribute reduziert. Das Rasterbild darf höchstens 10 MiB und 4096 × 4096 Pixel groß sein.', 'lsttraining'); ?></p>
+
                 <h3><?php esc_html_e('Antworten und Fehler', 'lsttraining'); ?></h3>
                 <p><?php esc_html_e('Erfolgreiche Antworten enthalten ok: true und data. Fehler enthalten ok: false, error und – bei Verwaltungsrouten – message. Übliche Statuscodes sind 400 für ungültige Daten, 401 für fehlende Anmeldung, 403 für fehlende Rechte, 404 für unbekannte Datensätze, 409 für Konflikte oder pausierte Simulationen und 500 für Datenbankfehler.', 'lsttraining'); ?></p>
-                <p><?php esc_html_e('Unbekannte JSON-Felder werden nicht gespeichert. Mehrtabellenänderungen laufen in einer Transaktion, und alle Schreibvorgänge werden im Aktivitätsprotokoll erfasst.', 'lsttraining'); ?></p>
+                <p><?php esc_html_e('Unbekannte JSON-Felder werden vollständig abgelehnt. Mehrtabellenänderungen laufen in einer Transaktion, und alle Schreibvorgänge werden im Aktivitätsprotokoll erfasst.', 'lsttraining'); ?></p>
 
                 <p>
                     <a class="button button-secondary" href="<?php echo esc_url($management_api_url); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Verwaltungs-API öffnen', 'lsttraining'); ?></a>
