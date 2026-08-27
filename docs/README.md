@@ -10,7 +10,12 @@ Willkommen in der zentralen Dokumentation von LSTtraining. Diese Startseite ordn
 |---|---|
 | das Plugin installieren oder aktualisieren | [Erste Schritte](erste-schritte.md) |
 | als Spieler eine Simulation bedienen | [Spielerhandbuch](spielerhandbuch.md) |
-| Leitstellen, Wachen oder Fahrzeuge einrichten | [Administration und Stammdaten](administration.md) |
+| Leitstellen einrichten | [Leitstellen-Editor](leitstellen-editor.md) |
+| Nebenleitstellen einrichten | [Nebenleitstellen-Editor](nebenleitstellen-editor.md) |
+| Krankenhäuser einrichten | [Krankenhäuser-Editor](krankenhaeuser-editor.md) |
+| Wachen einrichten | [Wachen-Editor](wachen-editor.md) |
+| Fahrzeuge einrichten | [Fahrzeuge-Editor](fahrzeuge-editor.md) |
+| Polizei und Unterstützungsfahrzeuge konfigurieren | [Polizei und Unterstützungsfahrzeuge](polizei-und-unterstuetzungsfahrzeuge.md) |
 | Multiplayer, Einsatzbearbeitung und Fahrzeugbewegung verstehen | [Simulation und Multiplayer](simulation-und-multiplayer.md) |
 | Rechte sicher vergeben | [Sicherheit, Migration und Berechtigungen](sicherheit-migration-multiplayer.md) |
 | ein Problem nach einem Update untersuchen | [Betrieb und Fehlerbehebung](betrieb-und-fehlerbehebung.md) |
@@ -27,6 +32,12 @@ Willkommen in der zentralen Dokumentation von LSTtraining. Diese Startseite ordn
 
 - [Erste Schritte](erste-schritte.md): Grundeinrichtung, WordPress-Seiten, Shortcodes und Erstprüfung
 - [Administration und Stammdaten](administration.md): alle Backend-Menüpunkte und empfohlene Einrichtungsreihenfolge
+- [Leitstellen-Editor](leitstellen-editor.md): Leitstellen, Gebiet, Nachbarn, Krankenhäuser, POIs und Default-Fahrzeuge
+- [Nebenleitstellen-Editor](nebenleitstellen-editor.md): Nebenleitstellen, GeoJSON und Zuordnungen
+- [Krankenhäuser-Editor](krankenhaeuser-editor.md): Klinikdaten, Fachbereiche und Leitstellenfreigaben
+- [Wachen-Editor](wachen-editor.md): Standorte, Typen und Bereichszuordnungen
+- [Fahrzeuge-Editor](fahrzeuge-editor.md): Fahrzeugdaten, Wachenwechsel, Bilder und Signallichter
+- [Polizei und Unterstützungsfahrzeuge](polizei-und-unterstuetzungsfahrzeuge.md): Default-Konfiguration im Leitstellen-Editor
 - [Einsatz-Ortsbindung](einsatz-ortsbindung.md): Einsatzorte, Gebietstypen, Straßen- und Autobahnlayer
 - [Krankenhäuser im Simulations-Workspace](simulation-workspace-hospitals.md): Fachabteilungen und Patientenzuweisung
 - [Wetter und Nachbarleitstellen-Auslastung](wetter-und-nachbarleitstellen-auslastung.md)
@@ -51,6 +62,12 @@ Willkommen in der zentralen Dokumentation von LSTtraining. Diese Startseite ordn
 | [Erste Schritte](erste-schritte.md) | Installation, Update, Einstellungen, Shortcodes | Administratoren |
 | [Spielerhandbuch](spielerhandbuch.md) | tägliche Bedienung der Simulation | Spieler |
 | [Administration und Stammdaten](administration.md) | Leitstellen, Nebenstellen, Krankenhäuser, Wachen, Fahrzeuge, Einsätze, Anruferprofile | Bearbeiter/Ausbilder |
+| [Leitstellen-Editor](leitstellen-editor.md) | Leitstellenstammdaten und zugehörige Verwaltungsfunktionen | Bearbeiter/Ausbilder |
+| [Nebenleitstellen-Editor](nebenleitstellen-editor.md) | Nebenleitstellen und Zuordnungen | Bearbeiter/Ausbilder |
+| [Krankenhäuser-Editor](krankenhaeuser-editor.md) | Klinikstammdaten, Fachbereiche und Freigaben | Bearbeiter/Ausbilder |
+| [Wachen-Editor](wachen-editor.md) | Wachenstammdaten und Bereichswechsel | Bearbeiter/Ausbilder |
+| [Fahrzeuge-Editor](fahrzeuge-editor.md) | Fahrzeugstammdaten, Bilder und Signallichter | Bearbeiter/Ausbilder |
+| [Polizei und Unterstützungsfahrzeuge](polizei-und-unterstuetzungsfahrzeuge.md) | Polizei- und Rettungsdienst-Defaults | Bearbeiter/Ausbilder |
 | [Simulation und Multiplayer](simulation-und-multiplayer.md) | Spielablauf und technische Zustandsregeln | Spieler/Ausbilder |
 | [Sicherheit, Migration und Berechtigungen](sicherheit-migration-multiplayer.md) | serverseitige Rechte, CSRF, Schema und Abnahme | Administratoren/Entwickler |
 | [Betrieb und Fehlerbehebung](betrieb-und-fehlerbehebung.md) | Backups, Updates, Diagnose und Checklisten | Betreiber |

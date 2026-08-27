@@ -283,7 +283,10 @@ check('Vollstaendige Wiki-Dokumentation', () => {
   const requiredPages = [
     'docs/README.md', 'docs/_Sidebar.md', 'docs/erste-schritte.md', 'docs/spielerhandbuch.md',
     'docs/administration.md', 'docs/simulation-und-multiplayer.md',
-    'docs/betrieb-und-fehlerbehebung.md', 'docs/entwickleruebersicht.md'
+    'docs/betrieb-und-fehlerbehebung.md', 'docs/entwickleruebersicht.md',
+    'docs/leitstellen-editor.md', 'docs/nebenleitstellen-editor.md',
+    'docs/krankenhaeuser-editor.md', 'docs/wachen-editor.md',
+    'docs/fahrzeuge-editor.md', 'docs/polizei-und-unterstuetzungsfahrzeuge.md'
   ];
   for (const page of requiredPages) {
     assert.ok(existsSync(join(root, page)), `Wiki-Seite fehlt: ${page}`);
@@ -321,6 +324,17 @@ check('Rollenbasierter WordPress-Dokumentationsviewer', () => {
   assert.match(viewer, /'audience' => 'admin'/);
   assert.match(viewer, /lsttraining_documentation_can_view/);
   assert.match(viewer, /user_can\(\$user_id, 'manage_options'\)/);
+  const editorAreas = {
+    'leitstellen-editor': 'leitstellen',
+    'nebenleitstellen-editor': 'nebenstellen',
+    'krankenhaeuser-editor': 'hospitals',
+    'wachen-editor': 'wachen',
+    'fahrzeuge-editor': 'fahrzeuge'
+  };
+  for (const [slug, area] of Object.entries(editorAreas)) {
+    assert.match(viewer, new RegExp(`'${slug}'[\\s\\S]*?'areas' => \\['${area}'\\]`));
+  }
+  assert.match(viewer, /'polizei-und-unterstuetzungsfahrzeuge'[\s\S]*?'areas' => \['leitstellen', 'fahrzeuge'\]/);
   for (const page of walk('docs').filter((path) => extname(path) === '.md' && !['docs/README.md', 'docs/_Sidebar.md'].includes(path))) {
     assert.ok(viewer.includes(`'${page}'`), `Markdown-Seite fehlt im WordPress-Viewer: ${page}`);
   }
@@ -328,6 +342,8 @@ check('Rollenbasierter WordPress-Dokumentationsviewer', () => {
   assert.match(settings, /\[lsttraining_docs\]/);
   assert.match(viewer, /has_shortcode\(\(string\) \$post->post_content, 'lsttraining_docs'\)/);
   assert.match(help, /lsttraining_documentation_page_url/);
+  assert.match(help, /Backend-Editoren/);
+  assert.match(help, /lsttraining_documentation_can_view\(\$documentation_catalog\[\$editor_slug\]\)/);
   assert.ok(existsSync(join(root, 'css/documentation.css')), 'Stylesheet des Dokumentationsviewers fehlt');
 });
 

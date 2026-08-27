@@ -31,6 +31,25 @@ $management_api_url = $docs_page_configured
 $status_api_url = $docs_page_configured
     ? lsttraining_documentation_page_url('rest-status-api')
     : 'https://github.com/Frief84/LSTtraining/blob/main/docs/rest-status-api.md';
+$editor_documents = [];
+$documentation_catalog = lsttraining_documentation_catalog();
+foreach ([
+    'leitstellen-editor',
+    'nebenleitstellen-editor',
+    'krankenhaeuser-editor',
+    'wachen-editor',
+    'fahrzeuge-editor',
+    'polizei-und-unterstuetzungsfahrzeuge',
+] as $editor_slug) {
+    if (!isset($documentation_catalog[$editor_slug]) || !lsttraining_documentation_can_view($documentation_catalog[$editor_slug])) {
+        continue;
+    }
+    $editor_document = $documentation_catalog[$editor_slug];
+    $editor_document['url'] = $docs_page_configured
+        ? lsttraining_documentation_page_url($editor_slug)
+        : 'https://github.com/Frief84/LSTtraining/blob/main/' . ltrim((string) $editor_document['path'], '/');
+    $editor_documents[] = $editor_document;
+}
 ?>
 <div class="wrap lsttraining-help">
     <h1><?php esc_html_e('LST Training – Hilfe & Dokumentation', 'lsttraining'); ?></h1>
@@ -91,6 +110,22 @@ $status_api_url = $docs_page_configured
                 <h2><?php esc_html_e('Fahrzeuge und Wachen verschieben', 'lsttraining'); ?></h2>
                 <p><?php esc_html_e('Das Verschieben in einen anderen Leitstellenbereich ist erlaubt, wenn der Benutzer für den bisherigen und den vollständigen neuen Bereich berechtigt ist.', 'lsttraining'); ?></p>
                 <p><?php esc_html_e('Fehlt eine dieser Freigaben, lehnt der Server die Änderung ab – unabhängig davon, was die Oberfläche anzeigt.', 'lsttraining'); ?></p>
+            </section>
+        <?php endif; ?>
+
+        <?php if ($editor_documents) : ?>
+            <section class="lst-help-card lst-help-wide">
+                <h2><?php esc_html_e('Backend-Editoren', 'lsttraining'); ?></h2>
+                <p><?php esc_html_e('Hier erscheinen nur die Editor-Anleitungen, für deren Verwaltungsbereich dein Konto freigeschaltet ist.', 'lsttraining'); ?></p>
+                <div class="lst-help-grid">
+                    <?php foreach ($editor_documents as $editor_document) : ?>
+                        <article class="lst-help-card">
+                            <h3><?php echo esc_html((string) $editor_document['title']); ?></h3>
+                            <p><?php echo esc_html((string) $editor_document['description']); ?></p>
+                            <p><a class="button button-secondary" href="<?php echo esc_url((string) $editor_document['url']); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Anleitung öffnen', 'lsttraining'); ?></a></p>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
             </section>
         <?php endif; ?>
 

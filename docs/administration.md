@@ -4,6 +4,19 @@
 
 Diese Seite dokumentiert alle fachlichen Backend-Bereiche. Menüpunkte werden nur angezeigt, wenn der angemeldete Benutzer das jeweilige Bereichsrecht besitzt. Zusätzlich wird jedes Objekt serverseitig gegen die freigegebenen Leitstellen geprüft.
 
+## Anleitungen der einzelnen Backend-Editoren
+
+| Editor | Eigene Anleitung |
+|---|---|
+| Leitstellen | [Leitstellen-Editor](leitstellen-editor.md) |
+| Nebenleitstellen | [Nebenleitstellen-Editor](nebenleitstellen-editor.md) |
+| Krankenhäuser | [Krankenhäuser-Editor](krankenhaeuser-editor.md) |
+| Wachen | [Wachen-Editor](wachen-editor.md) |
+| Fahrzeuge | [Fahrzeuge-Editor](fahrzeuge-editor.md) |
+| Polizei- und Unterstützungsdefaults | [Polizei und Unterstützungsfahrzeuge](polizei-und-unterstuetzungsfahrzeuge.md) |
+
+Diese Seiten sind im WordPress-Dokumentationsviewer jeweils an das passende persönliche Bereichsrecht gebunden. Normale Spieler erhalten weder die Links noch den Inhalt der Editor-Anleitungen.
+
 ## Empfohlene Reihenfolge
 
 ```text
