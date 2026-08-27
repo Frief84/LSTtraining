@@ -88,7 +88,7 @@ function lsttraining_sim_update_vehicle_state(PDO $pdo, int $instanz_id, int $st
     $values['sondersignal'] = (int) ($values['sondersignal'] ?? 0);
 
     $has_delta = false;
-    foreach (['latitude', 'longitude', 'ziel_latitude', 'ziel_longitude', 'status', 'fms_status', 'sondersignal'] as $field) {
+    foreach (['latitude', 'longitude', 'ziel_latitude', 'ziel_longitude', 'status', 'fms_status', 'sondersignal', 'bemerkung'] as $field) {
         if (!lsttraining_sim_vehicle_state_values_equal($field, $values[$field], $state['baseline_' . $field] ?? null)) {
             $has_delta = true;
             break;

@@ -34,10 +34,10 @@ check('PHP-Struktur und Bootstrap-Abhängigkeiten', () => {
     'includes/help.php',
     'includes/instance-lifecycle.php', 'includes/leitstellen_editor.php', 'includes/migrations.php',
     'includes/nebenstellen_editor.php', 'includes/permissions.php', 'includes/schema_import.php',
-    'includes/settings.php', 'includes/simulation-workspace.php', 'includes/wachen.php',
+    'includes/rest-api.php', 'includes/rest-management-api.php', 'includes/settings.php', 'includes/simulation-workspace.php', 'includes/wachen.php',
     'includes/ajax/ajax_einsaetze.php', 'includes/ajax/ajax_fahrzeuge.php', 'includes/ajax/ajax_frontend.php',
     'includes/ajax/ajax_hospitals.php', 'includes/ajax/ajax_nebenstellen.php', 'includes/ajax/ajax_simulation.php',
-    'includes/ajax/ajax_users.php', 'includes/ajax/ajax_wachen.php'
+    'includes/ajax/ajax_users.php', 'includes/ajax/ajax_wachen.php', 'includes/simulation/vehicle-state.php'
   ];
   for (const file of changedPhp) {
     const phpBlocks = [...read(file).matchAll(/<\?php([\s\S]*?)(?:\?>|$)/g)].map((match) => match[1]);
@@ -162,6 +162,47 @@ check('Serialisierter Tick und lesender Snapshot', () => {
   assert.match(simulation, /\$position_changed \|\| \$outside_wache/);
   assert.match(simulation, /unset\([\s\S]*?\$vehicle\['ziel_latitude'\][\s\S]*?\$vehicle\['ziel_longitude'\]/);
   assert.match(simulation, /lsttraining_sim_fetch_snapshot\(\$pdo, \$instanz_id, \(int\) get_current_user_id\(\), true\)/);
+});
+
+check('Geschuetzte REST-Status-API', () => {
+  const api = read('includes/rest-api.php');
+  assert.match(api, /instanzen\/\(\?P<instanz_id>\\d\+\)\/status/);
+  assert.match(api, /instanzen\/\(\?P<instanz_id>\\d\+\)\/fahrzeuge/);
+  assert.ok((api.match(/permission_callback' => 'lst_rest_can_read_instance_status'/g) || []).length === 2);
+  assert.match(api, /instanz_user[\s\S]*connected = 1/);
+  assert.match(api, /CASE WHEN ifs\.id IS NULL THEN fs\.fms_status ELSE ifs\.fms_status END/);
+  assert.match(api, /Cache-Control', 'no-store, private'/);
+  assert.match(api, /lst_rest_update_instance_status/);
+  assert.match(api, /lst_rest_update_instance_vehicle/);
+  assert.match(api, /rolle = \?/);
+  assert.match(api, /lsttraining_sim_update_vehicle_state/);
+  assert.ok(existsSync(join(root, 'docs/rest-status-api.md')));
+});
+
+check('Geschuetzte REST-Verwaltungs-API', () => {
+  const api = read('includes/rest-management-api.php');
+  const help = read('includes/help.php');
+  const managementDocs = read('docs/rest-management-api.md');
+  const statusDocs = read('docs/rest-status-api.md');
+  for (const resource of ['leitstellen', 'nebenleitstellen', 'wachen', 'fahrzeuge', 'krankenhaeuser']) {
+    assert.match(api, new RegExp(`'${resource}'`));
+  }
+  for (const method of ['READABLE', 'CREATABLE', 'EDITABLE', 'DELETABLE']) {
+    assert.match(api, new RegExp(`WP_REST_Server::${method}`));
+  }
+  assert.match(api, /lsttraining_user_can_object/);
+  assert.match(api, /lsttraining_user_can_all_leitstellen/);
+  assert.match(api, /beginTransaction\(\)/);
+  assert.match(api, /rollBack\(\)/);
+  assert.match(api, /'confirm'.*'required' => true/);
+  assert.match(api, /lsttraining_log_activity/);
+  assert.match(read('lsttraining-plugin.php'), /includes\/rest-management-api\.php/);
+  assert.match(help, /REST-API – vollständige Referenz/);
+  assert.match(help, /\/verwaltung\/\{ressource\}\/\{id\}/);
+  assert.match(help, /\/instanzen\/\{instanz_id\}\/fahrzeuge\/\{status_id\}/);
+  assert.match(managementDocs, /Vollstaendige Feldreferenz/);
+  assert.match(managementDocs, /HTTP-Statuscodes und Fehlerwerte/);
+  assert.match(statusDocs, /Live-Zustand schreiben/);
 });
 
 check('Benutzerrechte pro Bereich und Leitstelle', () => {

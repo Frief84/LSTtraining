@@ -10,6 +10,8 @@ if (!current_user_can('read')) {
 
 $is_admin = current_user_can('manage_options');
 $github_docs_url = 'https://github.com/Frief84/LSTtraining/blob/main/docs/sicherheit-migration-multiplayer.md';
+$github_management_api_url = 'https://github.com/Frief84/LSTtraining/blob/main/docs/rest-management-api.md';
+$github_status_api_url = 'https://github.com/Frief84/LSTtraining/blob/main/docs/rest-status-api.md';
 ?>
 <div class="wrap lsttraining-help">
     <h1><?php esc_html_e('LST Training – Hilfe & Dokumentation', 'lsttraining'); ?></h1>
@@ -32,6 +34,12 @@ $github_docs_url = 'https://github.com/Frief84/LSTtraining/blob/main/docs/sicher
         .lsttraining-help .lst-help-wide { grid-column:1 / -1; }
         .lsttraining-help table { margin-top:12px; }
         .lsttraining-help code { white-space:normal; }
+        .lsttraining-help pre { overflow:auto; padding:14px; color:#f0f0f1; background:#1d2327; border-radius:4px; }
+        .lsttraining-help pre code { white-space:pre; color:inherit; }
+        .lsttraining-help details { margin:12px 0; padding:10px 12px; border:1px solid #dcdcde; border-radius:4px; background:#f6f7f7; }
+        .lsttraining-help details summary { cursor:pointer; font-weight:600; }
+        .lsttraining-help .lst-help-api-table th { white-space:nowrap; }
+        .lsttraining-help .lst-help-api-table td code { overflow-wrap:anywhere; }
     </style>
 
     <div class="lst-help-grid">
@@ -122,11 +130,105 @@ $github_docs_url = 'https://github.com/Frief84/LSTtraining/blob/main/docs/sicher
                     <li><?php esc_html_e('Kontrollieren, dass reines Snapshot-Polling keine Zustände verändert.', 'lsttraining'); ?></li>
                 </ol>
             </section>
+
+            <section class="lst-help-card lst-help-wide">
+                <h2><?php esc_html_e('REST-API – vollständige Referenz', 'lsttraining'); ?></h2>
+                <p><?php esc_html_e('Alle Routen beginnen mit /wp-json/lst/v1. Die Verwaltungs-API bearbeitet Stammdaten; die Instanz-Routen lesen und ändern ausschließlich den Zustand einer laufenden Simulation.', 'lsttraining'); ?></p>
+
+                <h3><?php esc_html_e('Authentifizierung und Rechte', 'lsttraining'); ?></h3>
+                <ul>
+                    <li><?php esc_html_e('Browser: angemeldete WordPress-Sitzung, credentials: same-origin und der Header X-WP-Nonce.', 'lsttraining'); ?></li>
+                    <li><?php esc_html_e('Externe Clients: WordPress Application Password über HTTPS.', 'lsttraining'); ?></li>
+                    <li><?php esc_html_e('Verwaltungsrouten prüfen Bereichsrecht, Leitstellen-Scope und die konkrete Objektzuordnung.', 'lsttraining'); ?></li>
+                    <li><?php esc_html_e('Live-Schreibzugriffe sind nur für Einsatzleiter der Instanz und Administratoren erlaubt.', 'lsttraining'); ?></li>
+                    <li><?php esc_html_e('Datenbank-Zugangsdaten werden niemals an den Client übertragen.', 'lsttraining'); ?></li>
+                </ul>
+
+                <h3><?php esc_html_e('Verwaltungsrouten', 'lsttraining'); ?></h3>
+                <table class="widefat striped lst-help-api-table">
+                    <thead><tr><th><?php esc_html_e('Methode', 'lsttraining'); ?></th><th><?php esc_html_e('Pfad', 'lsttraining'); ?></th><th><?php esc_html_e('Funktion', 'lsttraining'); ?></th></tr></thead>
+                    <tbody>
+                        <tr><td><code>GET</code></td><td><code>/verwaltung/{ressource}</code></td><td><?php esc_html_e('Liste; Filter search, page und per_page bis 200', 'lsttraining'); ?></td></tr>
+                        <tr><td><code>POST</code></td><td><code>/verwaltung/{ressource}</code></td><td><?php esc_html_e('Datensatz anlegen', 'lsttraining'); ?></td></tr>
+                        <tr><td><code>GET</code></td><td><code>/verwaltung/{ressource}/{id}</code></td><td><?php esc_html_e('Datensatz mit Beziehungen lesen', 'lsttraining'); ?></td></tr>
+                        <tr><td><code>PATCH</code></td><td><code>/verwaltung/{ressource}/{id}</code></td><td><?php esc_html_e('Übermittelte Felder und Beziehungen ändern', 'lsttraining'); ?></td></tr>
+                        <tr><td><code>DELETE</code></td><td><code>/verwaltung/{ressource}/{id}?confirm=true</code></td><td><?php esc_html_e('Datensatz und schemaabhängige Kinddaten löschen', 'lsttraining'); ?></td></tr>
+                    </tbody>
+                </table>
+
+                <details open>
+                    <summary><?php esc_html_e('Leitstellen', 'lsttraining'); ?></summary>
+                    <p><code>ressource = leitstellen</code></p>
+                    <p><strong><?php esc_html_e('Felder:', 'lsttraining'); ?></strong> <code>name</code>, <code>ort</code>, <code>bundesland</code>, <code>land</code>, <code>latitude</code>, <code>longitude</code>, <code>geojson</code>, <code>available_hospitals</code>, <code>police_vehicle_image</code>, <code>police_signal_lights_json</code>, <code>rescue_vehicle_image</code>, <code>rescue_signal_lights_json</code>.</p>
+                    <p><strong><?php esc_html_e('Beziehungen:', 'lsttraining'); ?></strong> <code>nebenleitstellen</code> und <code>wachen</code> als ID-Listen; <code>available_hospitals</code> ist die ID-Liste der freigegebenen Krankenhäuser.</p>
+                    <p><?php esc_html_e('Neue Leitstellen dürfen über die API nur Administratoren anlegen.', 'lsttraining'); ?></p>
+                </details>
+
+                <details>
+                    <summary><?php esc_html_e('Nebenleitstellen', 'lsttraining'); ?></summary>
+                    <p><code>ressource = nebenleitstellen</code></p>
+                    <p><strong><?php esc_html_e('Felder:', 'lsttraining'); ?></strong> <code>name</code>, <code>aufgaben</code>, <code>zustandigkeit</code>, <code>standorte</code>, <code>einwohner</code>, <code>flaeche_km2</code>, <code>gps</code>, <code>nachbarleitstelle</code>, <code>geojson</code>.</p>
+                    <p><strong><?php esc_html_e('Beziehungen:', 'lsttraining'); ?></strong> <code>leitstellen</code> und <code>wachen</code> als ID-Listen.</p>
+                </details>
+
+                <details>
+                    <summary><?php esc_html_e('Wachen', 'lsttraining'); ?></summary>
+                    <p><code>ressource = wachen</code></p>
+                    <p><strong><?php esc_html_e('Felder:', 'lsttraining'); ?></strong> <code>name</code>, <code>typ</code>, <code>bundesland</code>, <code>land</code>, <code>latitude</code>, <code>longitude</code>, <code>arrival_pos</code>, <code>departure_pos</code>, <code>bild_datei</code>, <code>exists_in_reality</code>, <code>source_note</code>.</p>
+                    <p><strong><?php esc_html_e('Beziehungen:', 'lsttraining'); ?></strong> <code>leitstellen</code> und <code>nebenleitstellen</code> als ID-Listen. Beim Lesen enthält <code>relations.fahrzeuge</code> zusätzlich die Fahrzeug-IDs.</p>
+                </details>
+
+                <details>
+                    <summary><?php esc_html_e('Fahrzeuge', 'lsttraining'); ?></summary>
+                    <p><code>ressource = fahrzeuge</code></p>
+                    <p><strong><?php esc_html_e('Felder:', 'lsttraining'); ?></strong> <code>wache_id</code>, <code>rufname</code>, <code>fahrzeugtyp</code>, <code>source_note</code>, <code>is_first_responder</code>, <code>status</code>, <code>fms_status</code>, <code>sondersignal</code>, <code>dienstzeiten</code>, <code>latitude</code>, <code>longitude</code>, <code>bild_datei</code>, <code>signal_lights_json</code>.</p>
+                    <p><?php esc_html_e('Rufnamen müssen innerhalb einer Wache eindeutig sein. Änderungen hier betreffen Stammdaten, nicht automatisch bereits laufende Instanzen.', 'lsttraining'); ?></p>
+                </details>
+
+                <details>
+                    <summary><?php esc_html_e('Krankenhäuser', 'lsttraining'); ?></summary>
+                    <p><code>ressource = krankenhaeuser</code></p>
+                    <p><strong><?php esc_html_e('Felder:', 'lsttraining'); ?></strong> <code>poi_id</code>, <code>name</code>, <code>latitude</code>, <code>longitude</code>, <code>versorgungsstufe</code>, <code>trauma_level</code>, <code>helipad</code>, <code>departments</code>.</p>
+                    <p><?php esc_html_e('Fehlt poi_id beim Anlegen, erzeugt der Server eine manual-UUID. Beim Löschen wird die Krankenhaus-ID aus allen Leitstellenfreigaben entfernt.', 'lsttraining'); ?></p>
+                </details>
+
+                <h3><?php esc_html_e('Live- und Statusrouten', 'lsttraining'); ?></h3>
+                <table class="widefat striped lst-help-api-table">
+                    <thead><tr><th><?php esc_html_e('Methode', 'lsttraining'); ?></th><th><?php esc_html_e('Pfad', 'lsttraining'); ?></th><th><?php esc_html_e('Funktion', 'lsttraining'); ?></th></tr></thead>
+                    <tbody>
+                        <tr><td><code>GET</code></td><td><code>/instanzen/{instanz_id}/status</code></td><td><?php esc_html_e('Leitstelle, Simulationszustand, Fahrzeuggruppen, offene Einsätze und Teilnehmer', 'lsttraining'); ?></td></tr>
+                        <tr><td><code>PATCH</code></td><td><code>/instanzen/{instanz_id}/status</code></td><td><?php esc_html_e('state, paused und Geschwindigkeit 1, 2 oder 5 schreiben', 'lsttraining'); ?></td></tr>
+                        <tr><td><code>GET</code></td><td><code>/instanzen/{instanz_id}/fahrzeuge</code></td><td><?php esc_html_e('Effektive Fahrzeugzustände; Filter wache_id, fahrzeug_id und fms_status', 'lsttraining'); ?></td></tr>
+                        <tr><td><code>PATCH</code></td><td><code>/instanzen/{instanz_id}/fahrzeuge/{status_id}</code></td><td><?php esc_html_e('Status, FMS, Sondersignal, Bemerkung, Position und Ziel instanzbezogen schreiben', 'lsttraining'); ?></td></tr>
+                    </tbody>
+                </table>
+                <p><?php esc_html_e('Live-Fahrzeugänderungen werden als Delta zur unveränderlichen Instanz-Baseline gespeichert. Eine pausierte Simulation lehnt Fahrzeugstatusänderungen mit HTTP 409 ab.', 'lsttraining'); ?></p>
+
+                <h3><?php esc_html_e('Weitere REST-Routen', 'lsttraining'); ?></h3>
+                <table class="widefat striped lst-help-api-table">
+                    <tbody>
+                        <tr><td><code>GET /wachen</code></td><td><?php esc_html_e('Kartendaten der Wachen; optional leitstelle_id oder nebenleitstelle_id', 'lsttraining'); ?></td></tr>
+                        <tr><td><code>POST /route</code></td><td><?php esc_html_e('Route über OpenRouteService berechnen; Body mit coordinates und optional preference', 'lsttraining'); ?></td></tr>
+                    </tbody>
+                </table>
+
+                <h3><?php esc_html_e('Anfragebeispiele', 'lsttraining'); ?></h3>
+                <pre><code><?php echo esc_html("// Wache anlegen\nfetch('/wp-json/lst/v1/verwaltung/wachen', {\n  method: 'POST',\n  credentials: 'same-origin',\n  headers: {\n    'Content-Type': 'application/json',\n    'X-WP-Nonce': restNonce\n  },\n  body: JSON.stringify({\n    name: 'Feuer- und Rettungswache Mitte',\n    typ: 'FRRD',\n    latitude: 52.52,\n    longitude: 13.405,\n    leitstellen: [3]\n  })\n});\n\n// Fahrzeugstatus in Instanz 42 aendern\nfetch('/wp-json/lst/v1/instanzen/42/fahrzeuge/91', {\n  method: 'PATCH',\n  credentials: 'same-origin',\n  headers: {\n    'Content-Type': 'application/json',\n    'X-WP-Nonce': restNonce\n  },\n  body: JSON.stringify({ fms_status: '3', sondersignal: true })\n});"); ?></code></pre>
+
+                <h3><?php esc_html_e('Antworten und Fehler', 'lsttraining'); ?></h3>
+                <p><?php esc_html_e('Erfolgreiche Antworten enthalten ok: true und data. Fehler enthalten ok: false, error und – bei Verwaltungsrouten – message. Übliche Statuscodes sind 400 für ungültige Daten, 401 für fehlende Anmeldung, 403 für fehlende Rechte, 404 für unbekannte Datensätze, 409 für Konflikte oder pausierte Simulationen und 500 für Datenbankfehler.', 'lsttraining'); ?></p>
+                <p><?php esc_html_e('Unbekannte JSON-Felder werden nicht gespeichert. Mehrtabellenänderungen laufen in einer Transaktion, und alle Schreibvorgänge werden im Aktivitätsprotokoll erfasst.', 'lsttraining'); ?></p>
+
+                <p>
+                    <a class="button button-secondary" href="<?php echo esc_url($github_management_api_url); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Verwaltungs-API auf GitHub', 'lsttraining'); ?></a>
+                    <a class="button button-secondary" href="<?php echo esc_url($github_status_api_url); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Status-API auf GitHub', 'lsttraining'); ?></a>
+                </p>
+            </section>
         <?php endif; ?>
 
         <section class="lst-help-card lst-help-wide">
             <h2><?php esc_html_e('Ausführliche Entwicklerdokumentation', 'lsttraining'); ?></h2>
-            <p><?php esc_html_e('Die vollständige Beschreibung der Endpunkt-Sicherung, Objekt-Scope-Ermittlung, Migrationen, Tick-Serialisierung, Snapshot-Regeln und Testfälle liegt im Repository.', 'lsttraining'); ?></p>
+            <p><?php esc_html_e('Die vollständige Beschreibung der REST-API, Endpunkt-Sicherung, Objekt-Scope-Ermittlung, Migrationen, Tick-Serialisierung, Snapshot-Regeln und Testfälle liegt im Repository.', 'lsttraining'); ?></p>
             <p><a class="button button-primary" href="<?php echo esc_url($github_docs_url); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Technische Dokumentation auf GitHub öffnen', 'lsttraining'); ?></a></p>
             <p><code>docs/sicherheit-migration-multiplayer.md</code></p>
         </section>

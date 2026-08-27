@@ -54,6 +54,15 @@ Die Datenbank bleibt die Wahrheit für Stammdaten und gespeicherte Simulationsä
 Mehrere parallele Spielinstanzen besitzen getrennte Baselines und Deltas; Änderungen in einer Instanz beeinflussen keine andere. Pro Instanz serialisiert ein MySQL-Advisory-Lock den autorisierten Tick einschließlich automatischem Spawn. Mehrere pollende Browser können dadurch nicht gleichzeitig denselben Simulationsschritt oder doppelten Spawn ausführen. Der Snapshot ist ein rein lesendes, kompaktes Transportformat und kein Bewegungsverlauf.
 Lange laufende Simulationsseiten erneuern ihre AJAX-/REST-Nonces automatisch, ohne den Spielstand zu verändern.
 
+Fuer externe Oberflaechen oder getrennte Frontends stellt das Plugin geschuetzte
+REST-Endpunkte fuer den Leitstellen-/Simulationsstatus und die vollstaendigen
+effektiven Fahrzeugzustaende bereit. Nutzung, Authentifizierung und Filter sind
+in [`docs/rest-status-api.md`](docs/rest-status-api.md) beschrieben.
+
+Die vollstaendige, schreibende Verwaltungs-API fuer Leitstellen,
+Nebenleitstellen, Wachen, Fahrzeuge, Krankenhaeuser und ihre Zuordnungen ist in
+[`docs/rest-management-api.md`](docs/rest-management-api.md) dokumentiert.
+
 ## Gespeicherte Spielinstanzen
 
 * **Simulation starten** erzeugt immer eine neue Spielinstanz. Ein bestehender Spielstand wird dadurch niemals stillschweigend wiederverwendet.

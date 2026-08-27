@@ -37,14 +37,15 @@ Die Zielberechtigung wird aus den in der Datenbank vorhandenen Wachen-, Leitstel
 
 Auch Listen und Bearbeitungsansichten werden nach den erlaubten Leitstellen gefiltert.
 
-## 2. CSRF-, Methoden- und Löschschutz
+## 2. CSRF-, REST-, Methoden- und Löschschutz
 
-Jeder schreibende Endpunkt kombiniert:
+Die klassischen Admin-/AJAX-Endpunkte kombinieren:
 
 1. einen angemeldeten WordPress-Benutzer;
 2. eine gültige, aktionsgebundene Nonce;
 3. die passende Bereichs- und Objektberechtigung einschließlich Leitstellen-Scope; und
-4. die HTTP-Methode `POST`.
+4. die jeweils festgelegte HTTP-Methode, bei klassischen Schreibwegen in der
+   Regel `POST`.
 
 Eine falsche HTTP-Methode wird mit Status `405` abgewiesen. Löschaktionen verwenden kein `GET` und keinen Link der Form `?delete_id=…` mehr.
 
@@ -60,6 +61,31 @@ Eine falsche HTTP-Methode wird mit Status `405` abgewiesen. Löschaktionen verwe
 | Schema-Aktualisierung | `lsttraining_install_schema` | `lsttraining_schema_nonce` |
 
 Die klassische Leitstellen-Löschung verwendet zusätzlich eine datensatzbezogene Nonce. Nonces schützen vor fremdausgelösten Requests, ersetzen aber niemals die Objektberechtigung.
+
+### REST-API
+
+Die REST-Routen liegen unter `/wp-json/lst/v1`. Browser senden die angemeldete
+WordPress-Sitzung und `X-WP-Nonce`; externe Clients verwenden WordPress
+Application Passwords ausschliesslich ueber HTTPS. REST-Nonces ersetzen weder
+Bereichs- noch Objektberechtigungen.
+
+Die Verwaltungs-API verwendet `GET`, `POST`, `PATCH` und `DELETE`. Sie schreibt
+nur Felder aus einer serverseitigen Whitelist, bindet alle Nutzwerte als
+SQL-Parameter und fuehrt Aenderungen ueber mehrere Tabellen in einer
+Transaktion aus. `DELETE` verlangt zusaetzlich `confirm=true`.
+
+Live-Schreibzugriffe auf eine Spielinstanz duerfen nur deren Einsatzleiter und
+WordPress-Administratoren ausfuehren. Fahrzeugaenderungen werden im
+Baseline-/Delta-Modell der konkreten Instanz gespeichert. Stammdaten und andere
+Spielinstanzen bleiben unveraendert.
+
+Die vollstaendige Routen-, Feld-, Beziehungs- und Fehlerreferenz steht in:
+
+- `docs/rest-management-api.md`
+- `docs/rest-status-api.md`
+
+Dieselbe Referenz ist fuer Administratoren unter **LST Training → Hilfe &
+Dokumentation** direkt in WordPress sichtbar.
 
 ## 3. Versionierte Datenbankmigrationen
 
