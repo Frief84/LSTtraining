@@ -9,7 +9,15 @@ if (!current_user_can('read')) {
 }
 
 $is_admin = current_user_can('manage_options');
-$github_docs_url = 'https://github.com/Frief84/LSTtraining/blob/main/docs/sicherheit-migration-multiplayer.md';
+$can_manage_content = $is_admin
+    || lsttraining_user_can('leitstellen')
+    || lsttraining_user_can('nebenstellen')
+    || lsttraining_user_can('hospitals')
+    || lsttraining_user_can('wachen')
+    || lsttraining_user_can('fahrzeuge');
+$github_player_docs_url = 'https://github.com/Frief84/LSTtraining/blob/main/docs/spielerhandbuch.md';
+$github_wiki_url = 'https://github.com/Frief84/LSTtraining/blob/main/docs/README.md';
+$github_security_docs_url = 'https://github.com/Frief84/LSTtraining/blob/main/docs/sicherheit-migration-multiplayer.md';
 $github_management_api_url = 'https://github.com/Frief84/LSTtraining/blob/main/docs/rest-management-api.md';
 $github_status_api_url = 'https://github.com/Frief84/LSTtraining/blob/main/docs/rest-status-api.md';
 ?>
@@ -21,7 +29,11 @@ $github_status_api_url = 'https://github.com/Frief84/LSTtraining/blob/main/docs/
 
     <div class="notice notice-info inline">
         <p><strong><?php esc_html_e('Grundregel:', 'lsttraining'); ?></strong>
-            <?php esc_html_e('Benutzer sehen und bearbeiten nur die Bereiche und Leitstellen, die ihnen ausdrücklich freigegeben wurden.', 'lsttraining'); ?>
+            <?php if ($can_manage_content) : ?>
+                <?php esc_html_e('Benutzer sehen und bearbeiten nur die Bereiche und Leitstellen, die ihnen ausdrücklich freigegeben wurden.', 'lsttraining'); ?>
+            <?php else : ?>
+                <?php esc_html_e('Diese Ansicht enthält nur die Spielerhilfe. Verwaltungs-, Datenbank-, Rechte- und API-Dokumentation ist Administratoren beziehungsweise berechtigten Bearbeitern vorbehalten.', 'lsttraining'); ?>
+            <?php endif; ?>
         </p>
     </div>
 
@@ -45,20 +57,31 @@ $github_status_api_url = 'https://github.com/Frief84/LSTtraining/blob/main/docs/
     <div class="lst-help-grid">
         <section class="lst-help-card">
             <h2><?php esc_html_e('Schnellstart', 'lsttraining'); ?></h2>
-            <ol>
-                <li><?php esc_html_e('Leitstelle und Einsatzgebiet anlegen.', 'lsttraining'); ?></li>
-                <li><?php esc_html_e('Wachen zuordnen und Fahrzeuge einrichten.', 'lsttraining'); ?></li>
-                <li><?php esc_html_e('Krankenhäuser und Einsatzvorlagen ergänzen.', 'lsttraining'); ?></li>
-                <li><?php esc_html_e('Simulation starten oder einen gespeicherten Spielstand fortsetzen.', 'lsttraining'); ?></li>
-            </ol>
-            <p><?php esc_html_e('Welche Menüpunkte sichtbar sind, hängt von den persönlichen Freigaben ab.', 'lsttraining'); ?></p>
+            <?php if ($can_manage_content) : ?>
+                <ol>
+                    <li><?php esc_html_e('Leitstelle und Einsatzgebiet anlegen.', 'lsttraining'); ?></li>
+                    <li><?php esc_html_e('Wachen zuordnen und Fahrzeuge einrichten.', 'lsttraining'); ?></li>
+                    <li><?php esc_html_e('Krankenhäuser, Einsatzvorlagen und Anruferprofile ergänzen.', 'lsttraining'); ?></li>
+                    <li><?php esc_html_e('Simulation starten oder einen gespeicherten Spielstand fortsetzen.', 'lsttraining'); ?></li>
+                </ol>
+                <p><?php esc_html_e('Welche Menüpunkte sichtbar sind, hängt von den persönlichen Freigaben ab.', 'lsttraining'); ?></p>
+            <?php else : ?>
+                <ol>
+                    <li><?php esc_html_e('Auf der Simulationsseite eine freigegebene Leitstelle auswählen.', 'lsttraining'); ?></li>
+                    <li><?php esc_html_e('Datum, Uhrzeit, Jahreszeit und Spielmodus festlegen.', 'lsttraining'); ?></li>
+                    <li><?php esc_html_e('Eine neue Simulation starten, ein Spiel fortsetzen oder einem offenen Multiplayer-Spiel beitreten.', 'lsttraining'); ?></li>
+                    <li><?php esc_html_e('Im Workspace Anrufe annehmen, Einsätze disponieren und Funkmeldungen bearbeiten.', 'lsttraining'); ?></li>
+                </ol>
+            <?php endif; ?>
         </section>
 
-        <section class="lst-help-card">
-            <h2><?php esc_html_e('Fahrzeuge und Wachen verschieben', 'lsttraining'); ?></h2>
-            <p><?php esc_html_e('Das Verschieben in einen anderen Leitstellenbereich ist erlaubt, wenn der Benutzer für den bisherigen und den vollständigen neuen Bereich berechtigt ist.', 'lsttraining'); ?></p>
-            <p><?php esc_html_e('Fehlt eine dieser Freigaben, lehnt der Server die Änderung ab – unabhängig davon, was die Oberfläche anzeigt.', 'lsttraining'); ?></p>
-        </section>
+        <?php if ($can_manage_content) : ?>
+            <section class="lst-help-card">
+                <h2><?php esc_html_e('Fahrzeuge und Wachen verschieben', 'lsttraining'); ?></h2>
+                <p><?php esc_html_e('Das Verschieben in einen anderen Leitstellenbereich ist erlaubt, wenn der Benutzer für den bisherigen und den vollständigen neuen Bereich berechtigt ist.', 'lsttraining'); ?></p>
+                <p><?php esc_html_e('Fehlt eine dieser Freigaben, lehnt der Server die Änderung ab – unabhängig davon, was die Oberfläche anzeigt.', 'lsttraining'); ?></p>
+            </section>
+        <?php endif; ?>
 
         <section class="lst-help-card">
             <h2><?php esc_html_e('Multiplayer', 'lsttraining'); ?></h2>
@@ -82,15 +105,17 @@ $github_status_api_url = 'https://github.com/Frief84/LSTtraining/blob/main/docs/
             </ul>
         </section>
 
-        <section class="lst-help-card">
-            <h2><?php esc_html_e('Sicherheitsregeln', 'lsttraining'); ?></h2>
-            <ul>
-                <li><?php esc_html_e('Änderungen und Löschungen werden ausschließlich als geschützte POST-Anfragen verarbeitet.', 'lsttraining'); ?></li>
-                <li><?php esc_html_e('Jede Aktion prüft Anmeldung, Sicherheits-Token und konkrete Objektberechtigung.', 'lsttraining'); ?></li>
-                <li><?php esc_html_e('Nicht zugeordnete Objekte sind für Nicht-Administratoren gesperrt.', 'lsttraining'); ?></li>
-                <li><?php esc_html_e('Gemeinsam zugeordnete Objekte benötigen die Freigabe für alle betroffenen Leitstellen.', 'lsttraining'); ?></li>
-            </ul>
-        </section>
+        <?php if ($can_manage_content) : ?>
+            <section class="lst-help-card">
+                <h2><?php esc_html_e('Sicherheitsregeln', 'lsttraining'); ?></h2>
+                <ul>
+                    <li><?php esc_html_e('Änderungen und Löschungen werden ausschließlich als geschützte POST-Anfragen verarbeitet.', 'lsttraining'); ?></li>
+                    <li><?php esc_html_e('Jede Aktion prüft Anmeldung, Sicherheits-Token und konkrete Objektberechtigung.', 'lsttraining'); ?></li>
+                    <li><?php esc_html_e('Nicht zugeordnete Objekte sind für Nicht-Administratoren gesperrt.', 'lsttraining'); ?></li>
+                    <li><?php esc_html_e('Gemeinsam zugeordnete Objekte benötigen die Freigabe für alle betroffenen Leitstellen.', 'lsttraining'); ?></li>
+                </ul>
+            </section>
+        <?php endif; ?>
 
         <?php if ($is_admin) : ?>
             <section class="lst-help-card lst-help-wide">
@@ -227,10 +252,22 @@ $github_status_api_url = 'https://github.com/Frief84/LSTtraining/blob/main/docs/
         <?php endif; ?>
 
         <section class="lst-help-card lst-help-wide">
-            <h2><?php esc_html_e('Ausführliche Entwicklerdokumentation', 'lsttraining'); ?></h2>
-            <p><?php esc_html_e('Die vollständige Beschreibung der REST-API, Endpunkt-Sicherung, Objekt-Scope-Ermittlung, Migrationen, Tick-Serialisierung, Snapshot-Regeln und Testfälle liegt im Repository.', 'lsttraining'); ?></p>
-            <p><a class="button button-primary" href="<?php echo esc_url($github_docs_url); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Technische Dokumentation auf GitHub öffnen', 'lsttraining'); ?></a></p>
-            <p><code>docs/sicherheit-migration-multiplayer.md</code></p>
+            <h2><?php esc_html_e('Spielerhandbuch', 'lsttraining'); ?></h2>
+            <p><?php esc_html_e('Das Spielerhandbuch beschreibt Profil, Spielstart, Spielmodi, Workspace, Anrufe, Einsätze, Fahrzeuge, Funk und gespeicherte Spiele.', 'lsttraining'); ?></p>
+            <p><a class="button button-primary" href="<?php echo esc_url($github_player_docs_url); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Spielerhandbuch öffnen', 'lsttraining'); ?></a></p>
+            <p><code>docs/spielerhandbuch.md</code></p>
         </section>
+
+        <?php if ($is_admin) : ?>
+            <section class="lst-help-card lst-help-wide">
+                <h2><?php esc_html_e('Administrations- und Entwickler-Wiki', 'lsttraining'); ?></h2>
+                <p><?php esc_html_e('Die Wiki-Startseite führt zu den vollständigen Kapiteln für Leitstellen, Nebenleitstellen, Krankenhäuser, Wachen, Fahrzeuge, Einsätze, Anrufe, Betrieb, Sicherheit und Entwicklung.', 'lsttraining'); ?></p>
+                <p>
+                    <a class="button button-primary" href="<?php echo esc_url($github_wiki_url); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Wiki-Startseite öffnen', 'lsttraining'); ?></a>
+                    <a class="button button-secondary" href="<?php echo esc_url($github_security_docs_url); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Sicherheitsdokumentation öffnen', 'lsttraining'); ?></a>
+                </p>
+                <p><code>docs/README.md</code></p>
+            </section>
+        <?php endif; ?>
     </div>
 </div>

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { extname, join, relative, resolve } from 'node:path';
+import { dirname, extname, join, relative, resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..');
 const read = (path) => readFileSync(join(root, path), 'utf8');
@@ -224,11 +224,41 @@ check('Integrierte Hilfe und technische Dokumentation', () => {
   assert.match(menu, /lsttraining_render_help/);
   assert.match(adminUi, /function lsttraining_render_help/);
   assert.match(help, /current_user_can\('read'\)/);
+  assert.match(help, /\$can_manage_content/);
+  assert.match(help, /Spielerhandbuch/);
+  assert.match(help, /Administrations- und Entwickler-Wiki/);
   assert.match(help, /lsttraining_schema_installed_version/);
   for (const heading of ['Berechtigungsmodell', 'CSRF-', 'Datenbankmigrationen', 'Multiplayer-Ticks', 'lesender Snapshot', 'Signallicht-Grafiken', 'Automatisierte Prüfungen']) {
     assert.ok(docs.includes(heading), `Dokumentationsabschnitt fehlt: ${heading}`);
   }
   assert.match(read('README.md'), /Hilfe & Dokumentation/);
+});
+
+check('Vollstaendige Wiki-Dokumentation', () => {
+  const requiredPages = [
+    'docs/README.md', 'docs/_Sidebar.md', 'docs/erste-schritte.md', 'docs/spielerhandbuch.md',
+    'docs/administration.md', 'docs/simulation-und-multiplayer.md',
+    'docs/betrieb-und-fehlerbehebung.md', 'docs/entwickleruebersicht.md'
+  ];
+  for (const page of requiredPages) {
+    assert.ok(existsSync(join(root, page)), `Wiki-Seite fehlt: ${page}`);
+  }
+
+  const administration = read('docs/administration.md');
+  for (const topic of ['Leitstellen', 'Nebenleitstellen', 'Krankenhäuser', 'Wachen', 'Fahrzeuge', 'Einsatzvorlagen', 'Anrufe und Anruferprofile']) {
+    assert.ok(administration.includes(topic), `Administrationskapitel fehlt: ${topic}`);
+  }
+
+  const markdownFiles = ['README.md', ...walk('docs').filter((path) => extname(path) === '.md')];
+  for (const file of markdownFiles) {
+    for (const match of read(file).matchAll(/\[[^\]]+\]\(([^)]+)\)/g)) {
+      const rawTarget = match[1].trim().replace(/^<|>$/g, '');
+      if (/^(?:https?:|mailto:|#)/i.test(rawTarget)) continue;
+      const target = decodeURIComponent(rawTarget.split('#')[0]);
+      if (!target) continue;
+      assert.ok(existsSync(resolve(root, dirname(file), target)), `Toter Doku-Link in ${file}: ${rawTarget}`);
+    }
+  }
 });
 
 console.log(`OK: ${checks.length} Prüfgruppen`);

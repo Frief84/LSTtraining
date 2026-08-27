@@ -24,9 +24,18 @@ add_action( 'admin_menu', function () {
     'einsaetze'    => lsttraining_user_can( 'einsaetze'    ),
 ];
 
-    // Hat der Benutzer weder Admin-Rechte noch irgendeine Ressource?
+    // Reine Spieler erhalten ausschließlich die rollenreduzierte Hilfeseite.
     if ( ! $is_admin && ! in_array( true, $can, true ) ) {
-        return;                       // → Menü gar nicht erst anlegen
+        add_menu_page(
+            'LST Training – Hilfe',
+            'LST Training',
+            'read',
+            'lsttraining_hilfe',
+            'lsttraining_render_help',
+            'dashicons-editor-help',
+            30
+        );
+        return;
     }
 
     /* ------------------------------------------------------------------ */

@@ -180,7 +180,11 @@ Sie prüfen derzeit:
 9. Nonces und POST-Methoden der Kern-Schreibwege;
 10. die versionierte Migration;
 11. Tick-Serialisierung und lesenden Snapshot;
-12. Benutzerrechte pro Bereich und Leitstelle.
+12. die geschützte REST-Status-API;
+13. die geschützte REST-Verwaltungs-API;
+14. Benutzerrechte pro Bereich und Leitstelle;
+15. die integrierte, rollenabhängige Backend-Hilfe;
+16. Vollständigkeit und interne Links der Wiki-Dokumentation.
 
 Diese Prüfungen ersetzen keinen echten Integrationslauf mit WordPress, PHP, MySQL und Browsern.
 
@@ -240,3 +244,5 @@ Für einen Testbenutzer ohne `manage_options` mindestens folgende Fälle prüfen
 | Tick und Snapshot | `includes/ajax/ajax_simulation.php`, `js/simulation-workspace.js` |
 | Admin-Hilfe | `includes/help.php`, `includes/admin-menu.php` |
 | Prüfungen | `tests/static-checks.mjs` |
+
+Die zentrale Dokumentationsnavigation beginnt unter [`docs/README.md`](README.md). Das [Spielerhandbuch](spielerhandbuch.md) ist von administrativen und technischen Kapiteln getrennt. In WordPress werden Datenbank-, Rechte-, API- und Entwicklerbereiche nur Administratoren angezeigt; das öffentliche Repository selbst ist keine Zugriffsschutzschicht.
