@@ -15,11 +15,22 @@ $can_manage_content = $is_admin
     || lsttraining_user_can('hospitals')
     || lsttraining_user_can('wachen')
     || lsttraining_user_can('fahrzeuge');
-$github_player_docs_url = 'https://github.com/Frief84/LSTtraining/blob/main/docs/spielerhandbuch.md';
-$github_wiki_url = 'https://github.com/Frief84/LSTtraining/blob/main/docs/README.md';
-$github_security_docs_url = 'https://github.com/Frief84/LSTtraining/blob/main/docs/sicherheit-migration-multiplayer.md';
-$github_management_api_url = 'https://github.com/Frief84/LSTtraining/blob/main/docs/rest-management-api.md';
-$github_status_api_url = 'https://github.com/Frief84/LSTtraining/blob/main/docs/rest-status-api.md';
+$docs_page_configured = absint(get_option('lsttraining_docs_page_id', 0)) > 0;
+$player_docs_url = $docs_page_configured
+    ? lsttraining_documentation_page_url('spielerhandbuch')
+    : 'https://github.com/Frief84/LSTtraining/blob/main/docs/spielerhandbuch.md';
+$wiki_url = $docs_page_configured
+    ? lsttraining_documentation_page_url()
+    : 'https://github.com/Frief84/LSTtraining/blob/main/docs/README.md';
+$security_docs_url = $docs_page_configured
+    ? lsttraining_documentation_page_url('sicherheit-migration-multiplayer')
+    : 'https://github.com/Frief84/LSTtraining/blob/main/docs/sicherheit-migration-multiplayer.md';
+$management_api_url = $docs_page_configured
+    ? lsttraining_documentation_page_url('rest-management-api')
+    : 'https://github.com/Frief84/LSTtraining/blob/main/docs/rest-management-api.md';
+$status_api_url = $docs_page_configured
+    ? lsttraining_documentation_page_url('rest-status-api')
+    : 'https://github.com/Frief84/LSTtraining/blob/main/docs/rest-status-api.md';
 ?>
 <div class="wrap lsttraining-help">
     <h1><?php esc_html_e('LST Training – Hilfe & Dokumentation', 'lsttraining'); ?></h1>
@@ -245,8 +256,8 @@ $github_status_api_url = 'https://github.com/Frief84/LSTtraining/blob/main/docs/
                 <p><?php esc_html_e('Unbekannte JSON-Felder werden nicht gespeichert. Mehrtabellenänderungen laufen in einer Transaktion, und alle Schreibvorgänge werden im Aktivitätsprotokoll erfasst.', 'lsttraining'); ?></p>
 
                 <p>
-                    <a class="button button-secondary" href="<?php echo esc_url($github_management_api_url); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Verwaltungs-API auf GitHub', 'lsttraining'); ?></a>
-                    <a class="button button-secondary" href="<?php echo esc_url($github_status_api_url); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Status-API auf GitHub', 'lsttraining'); ?></a>
+                    <a class="button button-secondary" href="<?php echo esc_url($management_api_url); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Verwaltungs-API öffnen', 'lsttraining'); ?></a>
+                    <a class="button button-secondary" href="<?php echo esc_url($status_api_url); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Status-API öffnen', 'lsttraining'); ?></a>
                 </p>
             </section>
         <?php endif; ?>
@@ -254,7 +265,7 @@ $github_status_api_url = 'https://github.com/Frief84/LSTtraining/blob/main/docs/
         <section class="lst-help-card lst-help-wide">
             <h2><?php esc_html_e('Spielerhandbuch', 'lsttraining'); ?></h2>
             <p><?php esc_html_e('Das Spielerhandbuch beschreibt Profil, Spielstart, Spielmodi, Workspace, Anrufe, Einsätze, Fahrzeuge, Funk und gespeicherte Spiele.', 'lsttraining'); ?></p>
-            <p><a class="button button-primary" href="<?php echo esc_url($github_player_docs_url); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Spielerhandbuch öffnen', 'lsttraining'); ?></a></p>
+            <p><a class="button button-primary" href="<?php echo esc_url($player_docs_url); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Spielerhandbuch öffnen', 'lsttraining'); ?></a></p>
             <p><code>docs/spielerhandbuch.md</code></p>
         </section>
 
@@ -263,8 +274,8 @@ $github_status_api_url = 'https://github.com/Frief84/LSTtraining/blob/main/docs/
                 <h2><?php esc_html_e('Administrations- und Entwickler-Wiki', 'lsttraining'); ?></h2>
                 <p><?php esc_html_e('Die Wiki-Startseite führt zu den vollständigen Kapiteln für Leitstellen, Nebenleitstellen, Krankenhäuser, Wachen, Fahrzeuge, Einsätze, Anrufe, Betrieb, Sicherheit und Entwicklung.', 'lsttraining'); ?></p>
                 <p>
-                    <a class="button button-primary" href="<?php echo esc_url($github_wiki_url); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Wiki-Startseite öffnen', 'lsttraining'); ?></a>
-                    <a class="button button-secondary" href="<?php echo esc_url($github_security_docs_url); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Sicherheitsdokumentation öffnen', 'lsttraining'); ?></a>
+                    <a class="button button-primary" href="<?php echo esc_url($wiki_url); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Wiki-Startseite öffnen', 'lsttraining'); ?></a>
+                    <a class="button button-secondary" href="<?php echo esc_url($security_docs_url); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Sicherheitsdokumentation öffnen', 'lsttraining'); ?></a>
                 </p>
                 <p><code>docs/README.md</code></p>
             </section>

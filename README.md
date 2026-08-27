@@ -34,7 +34,7 @@
 3. Schreibrechte für AJAX-Endpunkte (`admin-ajax.php`) sicherstellen.
 4. Die Datenbankmigration läuft bei Aktivierung beziehungsweise beim ersten Admin-Aufruf nach einem Upgrade automatisch. Vor produktiven Upgrades immer ein Datenbank-Backup erstellen; der aktuelle Stand kann unter **LST Training → Einstellungen** erneut geprüft werden.
 
-Eine rollenabhängige Bedienhilfe steht im WordPress-Adminbereich unter **LST Training → Hilfe & Dokumentation** bereit. Die vollständige, wikiartig gegliederte Dokumentation beginnt unter [`docs/README.md`](docs/README.md). Normale Spieler sehen in WordPress ausschließlich die Spielerhilfe; administrative und technische Kapitel werden dort nur Administratoren beziehungsweise passend berechtigten Bearbeitern angezeigt.
+Eine rollenabhängige Bedienhilfe steht im WordPress-Adminbereich unter **LST Training → Hilfe & Dokumentation** bereit. Die vollständige, wikiartig gegliederte Dokumentation beginnt unter [`docs/README.md`](docs/README.md). Über die Einstellung **Dokumentation auf Seite** oder den Shortcode `[lsttraining_docs]` werden die Markdown-Dateien sicher innerhalb des aktiven WordPress-Themes dargestellt. Normale Spieler sehen in WordPress ausschließlich die Spielerhilfe; administrative und technische Kapitel werden dort nur Administratoren beziehungsweise passend berechtigten Bearbeitern angezeigt.
 
 ## 🧱 Datenbank
 

@@ -38,12 +38,13 @@ Zugangsdaten gehören nicht in die Dokumentation, in Screenshots oder in das Rep
 
 ## WordPress-Seiten und Shortcodes
 
-Das Plugin stellt zwei zentrale Shortcodes bereit:
+Das Plugin stellt drei zentrale Shortcodes bereit:
 
 | Shortcode | Zweck |
 |---|---|
 | `[lsttraining_start]` | Spielstart, gespeicherte Spiele und offene Multiplayer-Spiele |
 | `[lsttraining_profile]` | Benutzerprofil, Schwierigkeit und Fahrzeugdarstellung |
+| `[lsttraining_docs]` | rollenabhängige, im aktiven Theme gerenderte Wiki-Dokumentation |
 
 Empfohlener Aufbau:
 
@@ -51,6 +52,15 @@ Empfohlener Aufbau:
 2. diese Seite unter **LST Training → Einstellungen → Kartenanzeige auf Seite** auswählen;
 3. eine Seite **Profil** mit `[lsttraining_profile]` anlegen;
 4. beide Seiten nur angemeldeten Benutzern zugänglich machen.
+
+Für die Browser-Dokumentation zusätzlich:
+
+1. eine normale WordPress-Seite **Hilfe** anlegen, die nicht zugleich als Karten-/Simulationsseite ausgewählt ist;
+2. diese Seite unter **LST Training → Einstellungen → Dokumentation auf Seite** auswählen;
+3. das Plugin setzt dort das Wiki automatisch ein; alternativ `[lsttraining_docs]` manuell im Seiteninhalt platzieren;
+4. die Seite als Spieler, Bereichsbearbeiter und Administrator auf die jeweilige Artikelauswahl prüfen.
+
+Da die Ausgabe über `the_content` beziehungsweise den Shortcode erfolgt, verwendet sie das Template und die Gestaltung des aktiven WordPress-Themes.
 
 Die eigentliche Simulation öffnet sich in einer eigenen Vollbildansicht.
 
@@ -63,6 +73,7 @@ Die eigentliche Simulation öffnet sich in einer eigenen Vollbildansicht.
 | Externe DB-Felder | Verbindung zur externen Datenbank |
 | OpenRouteService API-Key | Routing für Fahrzeugwege |
 | Default-Fahrzeugbild | Fallback für Fahrzeuge ohne eigenes Bild |
+| Dokumentation auf Seite | WordPress-Seite für den rollenabhängigen Markdown-Viewer |
 
 ## Empfohlene Ersteinrichtung
 

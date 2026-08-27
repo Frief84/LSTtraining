@@ -61,6 +61,17 @@ Diese Prüfungen ersetzen keinen realen WordPress-/PHP-/MySQL-/Browser-Test.
 
 Ein normaler Spieler ohne Verwaltungsrecht soll die administrativen Menüpunkte und die technische Dokumentation nicht sehen.
 
+### Dokumentationsseite zeigt kein Wiki
+
+- unter **LST Training → Einstellungen → Dokumentation auf Seite** die richtige WordPress-Seite auswählen;
+- Dokumentations- und Karten-/Simulationsseite dürfen nicht dieselbe Seite sein;
+- alternativ `[lsttraining_docs]` in den Seiteninhalt einfügen;
+- Theme- oder Seitenbuilder-Cache leeren;
+- prüfen, ob `includes/documentation.php` und `css/documentation.css` deployt wurden;
+- als angemeldeter Benutzer testen – anonyme Besucher erhalten nur den Anmeldehinweis.
+
+Wird ein Artikel direkt über `?lst_doc=…` angefragt, prüft der Server dessen Zielgruppe erneut. Ein erratener URL-Parameter umgeht die Rollenfreigabe nicht.
+
 ### Objekt ist nicht sichtbar
 
 - Bereichsrecht prüfen;

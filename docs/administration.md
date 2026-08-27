@@ -296,6 +296,7 @@ Das Protokoll kann nach Zeitraum, Benutzer-ID, Objektbereich und Aktion gefilter
 
 - **Einstellungen:** Kartenseite, Datenbankmodus, Routing-Schlüssel und Standardfahrzeugbild.
 - **Schema-Prüfung:** manueller, geschützter Lauf der versionierten Migrationen.
+- **Dokumentation auf Seite:** rendert die freigegebenen Markdown-Artikel innerhalb des aktiven WordPress-Themes; alternativ steht `[lsttraining_docs]` bereit.
 - **Hilfe & Dokumentation:** rollenabhängige Bedienhilfe im Backend. Administrator- und API-Inhalte werden normalen Benutzern nicht angezeigt.
 
 ## Abnahme der Stammdaten

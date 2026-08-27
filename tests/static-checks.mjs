@@ -30,8 +30,8 @@ check('JSON-Daten', () => {
 check('PHP-Struktur und Bootstrap-Abhängigkeiten', () => {
   const pairs = { '(': ')', '[': ']', '{': '}' };
   const changedPhp = [
-    'lsttraining-plugin.php', 'includes/admin-menu.php', 'includes/admin-ui.php', 'includes/benutzer.php', 'includes/fahrzeuge.php',
-    'includes/help.php',
+    'lsttraining-plugin.php', 'includes/admin-menu.php', 'includes/admin-ui.php', 'includes/benutzer.php', 'includes/documentation.php',
+    'includes/fahrzeuge.php', 'includes/help.php',
     'includes/instance-lifecycle.php', 'includes/leitstellen_editor.php', 'includes/migrations.php',
     'includes/nebenstellen_editor.php', 'includes/permissions.php', 'includes/schema_import.php',
     'includes/rest-api.php', 'includes/rest-management-api.php', 'includes/settings.php', 'includes/simulation-workspace.php', 'includes/wachen.php',
@@ -259,6 +259,31 @@ check('Vollstaendige Wiki-Dokumentation', () => {
       assert.ok(existsSync(resolve(root, dirname(file), target)), `Toter Doku-Link in ${file}: ${rawTarget}`);
     }
   }
+});
+
+check('Rollenbasierter WordPress-Dokumentationsviewer', () => {
+  const viewer = read('includes/documentation.php');
+  const settings = read('includes/settings.php');
+  const help = read('includes/help.php');
+  const plugin = read('lsttraining-plugin.php');
+  assert.match(plugin, /includes\/documentation\.php/);
+  assert.match(viewer, /add_shortcode\('lsttraining_docs'/);
+  assert.match(viewer, /add_filter\('the_content'/);
+  assert.match(viewer, /}, 9\);/);
+  assert.match(viewer, /lsttraining_documentation_markdown/);
+  assert.match(viewer, /wp_kses_post\(lsttraining_documentation_markdown/);
+  assert.match(viewer, /'audience' => 'player'/);
+  assert.match(viewer, /'audience' => 'admin'/);
+  assert.match(viewer, /lsttraining_documentation_can_view/);
+  assert.match(viewer, /user_can\(\$user_id, 'manage_options'\)/);
+  for (const page of walk('docs').filter((path) => extname(path) === '.md' && !['docs/README.md', 'docs/_Sidebar.md'].includes(path))) {
+    assert.ok(viewer.includes(`'${page}'`), `Markdown-Seite fehlt im WordPress-Viewer: ${page}`);
+  }
+  assert.match(settings, /lsttraining_docs_page_id/);
+  assert.match(settings, /\[lsttraining_docs\]/);
+  assert.match(viewer, /has_shortcode\(\(string\) \$post->post_content, 'lsttraining_docs'\)/);
+  assert.match(help, /lsttraining_documentation_page_url/);
+  assert.ok(existsSync(join(root, 'css/documentation.css')), 'Stylesheet des Dokumentationsviewers fehlt');
 });
 
 console.log(`OK: ${checks.length} Prüfgruppen`);

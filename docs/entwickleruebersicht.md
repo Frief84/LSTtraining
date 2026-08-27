@@ -22,6 +22,7 @@ Diese Seite beschreibt die technische Orientierung im Repository. Sie enthält k
 | `includes/admin-menu.php` | rollenabhängige Backend-Menüs |
 | `includes/admin-ui.php` | Assets und Render-Callbacks |
 | `includes/frontend.php` | Shortcodes, Startseite, Profil und Vollbildsimulation |
+| `includes/documentation.php` | sicherer Markdown-Renderer, Artikelkatalog, Rollenfilter und `[lsttraining_docs]` |
 | `includes/simulation-workspace.php` | HTML und Assets des aktuellen Workspaces |
 | `includes/ajax-handlers.php` | kompatibler Einstieg in die AJAX-Module |
 | `includes/ajax/ajax_index.php` | modulare AJAX-Registrierung |
@@ -45,6 +46,8 @@ LSTtraining/
 ├─ openlayers/      lokale OpenLayers-Auslieferung
 └─ tests/           dependency-freie statische Prüfungen
 ```
+
+`css/documentation.css` ergänzt das aktive WordPress-Theme um das responsive Wiki-Raster, ohne ein eigenes Seitentemplate zu ersetzen.
 
 ## Datenbank-Layer
 

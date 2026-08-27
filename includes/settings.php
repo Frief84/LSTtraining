@@ -3,6 +3,7 @@ if (!defined('ABSPATH')) { exit; }
 
 function lsttraining_register_settings() {
     register_setting('lsttraining_options', 'lsttraining_map_page');
+    register_setting('lsttraining_options', 'lsttraining_docs_page_id', ['sanitize_callback' => 'absint']);
     register_setting('lsttraining_options', 'lsttraining_db_mode');
     register_setting('lsttraining_options', 'lsttraining_ext_host');
     register_setting('lsttraining_options', 'lsttraining_ext_user');
@@ -17,6 +18,7 @@ function lsttraining_settings_page() {
     wp_enqueue_media();
 
     $map_page = get_option('lsttraining_map_page', '');
+    $docs_page_id = absint(get_option('lsttraining_docs_page_id', 0));
     $db_mode  = get_option('lsttraining_db_mode', 'wordpress');
     $host     = get_option('lsttraining_ext_host', '');
     $user     = get_option('lsttraining_ext_user', '');
@@ -51,6 +53,21 @@ function lsttraining_settings_page() {
                             <?php endforeach; ?>
                         </select>
                         <p class="description">Wähle eine bestehende WordPress-Seite, auf der die Karte erscheinen soll.</p>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row">Dokumentation auf Seite</th>
+                    <td>
+                        <select name="lsttraining_docs_page_id">
+                            <option value="0">-- Seite wählen --</option>
+                            <?php foreach ($pages as $page): ?>
+                                <option value="<?php echo esc_attr($page->ID); ?>" <?php selected($docs_page_id, (int) $page->ID); ?>>
+                                    <?php echo esc_html($page->post_title); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <p class="description">Die ausgewählte Seite zeigt das rollenabhängige LSTtraining-Wiki automatisch im aktiven WordPress-Theme. Sie muss sich von der Karten-/Simulationsseite unterscheiden. Alternativ kann <code>[lsttraining_docs]</code> in eine beliebige Seite eingefügt werden.</p>
                     </td>
                 </tr>
 
