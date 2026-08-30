@@ -184,6 +184,7 @@ check('Geschuetzte REST-Verwaltungs-API', () => {
   const help = read('includes/help.php');
   const managementDocs = read('docs/rest-management-api.md');
   const statusDocs = read('docs/rest-status-api.md');
+  const apiGuide = read('docs/rest-api-praxis.md');
   for (const resource of ['leitstellen', 'nebenleitstellen', 'wachen', 'fahrzeuge', 'krankenhaeuser']) {
     assert.match(api, new RegExp(`'${resource}'`));
   }
@@ -203,6 +204,10 @@ check('Geschuetzte REST-Verwaltungs-API', () => {
   assert.match(managementDocs, /Vollstaendige Feldreferenz/);
   assert.match(managementDocs, /HTTP-Statuscodes und Fehlerwerte/);
   assert.match(statusDocs, /Live-Zustand schreiben/);
+  assert.match(apiGuide, /Daten hochladen/);
+  assert.match(apiGuide, /Objekte verschieben/);
+  assert.match(apiGuide, /data_base64/);
+  assert.match(apiGuide, /wache_id/);
 });
 
 check('Strikte REST-Eingabe- und Bildvalidierung', () => {
@@ -292,7 +297,8 @@ check('Vollstaendige Wiki-Dokumentation', () => {
     'docs/betrieb-und-fehlerbehebung.md', 'docs/entwickleruebersicht.md',
     'docs/leitstellen-editor.md', 'docs/nebenleitstellen-editor.md',
     'docs/krankenhaeuser-editor.md', 'docs/wachen-editor.md',
-    'docs/fahrzeuge-editor.md', 'docs/polizei-und-unterstuetzungsfahrzeuge.md'
+    'docs/fahrzeuge-editor.md', 'docs/polizei-und-unterstuetzungsfahrzeuge.md',
+    'docs/rest-api-praxis.md'
   ];
   for (const page of requiredPages) {
     assert.ok(existsSync(join(root, page)), `Wiki-Seite fehlt: ${page}`);

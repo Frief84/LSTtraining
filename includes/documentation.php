@@ -125,6 +125,12 @@ function lsttraining_documentation_catalog(): array {
             'audience' => 'admin',
             'description' => 'Stammdaten-Routen, Felder, Beziehungen und Fehler.',
         ],
+        'rest-api-praxis' => [
+            'title' => 'REST-API Praxisanleitung',
+            'path' => 'docs/rest-api-praxis.md',
+            'audience' => 'admin',
+            'description' => 'Praktische Beispiele fuer JSON-Aufrufe, Uploads, Bilddaten und Zuordnungen.',
+        ],
         'rest-status-api' => [
             'title' => 'REST-Status-API',
             'path' => 'docs/rest-status-api.md',

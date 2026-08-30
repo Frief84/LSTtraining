@@ -28,6 +28,9 @@ $security_docs_url = $docs_page_configured
 $management_api_url = $docs_page_configured
     ? lsttraining_documentation_page_url('rest-management-api')
     : 'https://github.com/Frief84/LSTtraining/blob/main/docs/rest-management-api.md';
+$rest_api_guide_url = $docs_page_configured
+    ? lsttraining_documentation_page_url('rest-api-praxis')
+    : 'https://github.com/Frief84/LSTtraining/blob/main/docs/rest-api-praxis.md';
 $status_api_url = $docs_page_configured
     ? lsttraining_documentation_page_url('rest-status-api')
     : 'https://github.com/Frief84/LSTtraining/blob/main/docs/rest-status-api.md';
@@ -356,6 +359,7 @@ foreach ([
                 <p>
                     <a class="button button-primary" href="<?php echo esc_url($wiki_url); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Wiki-Startseite öffnen', 'lsttraining'); ?></a>
                     <a class="button button-secondary" href="<?php echo esc_url($security_docs_url); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Sicherheitsdokumentation öffnen', 'lsttraining'); ?></a>
+                    <a class="button button-secondary" href="<?php echo esc_url($rest_api_guide_url); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('REST-API Praxisanleitung öffnen', 'lsttraining'); ?></a>
                 </p>
                 <p><code>docs/README.md</code></p>
             </section>

@@ -20,6 +20,7 @@ Willkommen in der zentralen Dokumentation von LSTtraining. Diese Startseite ordn
 | Rechte sicher vergeben | [Sicherheit, Migration und Berechtigungen](sicherheit-migration-multiplayer.md) |
 | ein Problem nach einem Update untersuchen | [Betrieb und Fehlerbehebung](betrieb-und-fehlerbehebung.md) |
 | Code, Datenfluss oder Schnittstellen verstehen | [Entwicklerübersicht](entwickleruebersicht.md) |
+| REST-Aufrufe, Uploads und Verschieben praktisch nutzen | [REST-API Praxisanleitung](rest-api-praxis.md) |
 
 ## Dokumentation nach Zielgruppe
 
@@ -51,6 +52,7 @@ Willkommen in der zentralen Dokumentation von LSTtraining. Diese Startseite ordn
 ### Entwickler und Integratoren
 
 - [Entwicklerübersicht](entwickleruebersicht.md)
+- [REST-API Praxisanleitung](rest-api-praxis.md)
 - [REST-Verwaltungs-API](rest-management-api.md)
 - [REST-Status-API](rest-status-api.md)
 - [OSM-Tile-Architektur](osm_tile_architecture.md)
@@ -72,6 +74,7 @@ Willkommen in der zentralen Dokumentation von LSTtraining. Diese Startseite ordn
 | [Sicherheit, Migration und Berechtigungen](sicherheit-migration-multiplayer.md) | serverseitige Rechte, CSRF, Schema und Abnahme | Administratoren/Entwickler |
 | [Betrieb und Fehlerbehebung](betrieb-und-fehlerbehebung.md) | Backups, Updates, Diagnose und Checklisten | Betreiber |
 | [Entwicklerübersicht](entwickleruebersicht.md) | Architektur, Module, Datenfluss, APIs und Tests | Entwickler |
+| [REST-API Praxisanleitung](rest-api-praxis.md) | JSON-Aufrufe, Uploads, Bilddaten und Verschieben | Integratoren |
 | [REST-Verwaltungs-API](rest-management-api.md) | Stammdaten-CRUD und Felder | Integratoren |
 | [REST-Status-API](rest-status-api.md) | Instanz- und Live-Fahrzeugzustände | Integratoren |
 | [Einsatz-Ortsbindung](einsatz-ortsbindung.md) | Ermittlung zulässiger Einsatzorte | Ausbilder/Entwickler |
