@@ -35,6 +35,7 @@
       e.preventDefault();
       const fd = new FormData(e.target);
       fd.set('action', 'lsttraining_save_departments');
+      fd.set('nonce', lstHospitalsAjax.nonce);
       fetch(`${lstHospitalsAjax.ajax_url}?action=lsttraining_save_departments`, {
         method: 'POST',
         credentials: 'same-origin',

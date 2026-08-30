@@ -54,11 +54,11 @@ function lsttraining_workspace_enqueue_assets(): void {
         'legacy_url_param' => 'legacy',
         'department_config_url' => LSTTRAINING_URL . 'data/departments.json',
         'signal_sprite_urls' => [
-            'beacon' => LSTTRAINING_URL . 'img/signal/beacon.png',
-            'strobe' => LSTTRAINING_URL . 'img/signal/strobe.png',
-            'bar' => LSTTRAINING_URL . 'img/signal/lightbar.png',
-            'glow' => LSTTRAINING_URL . 'img/signal/glow.png',
-            'editor_point' => LSTTRAINING_URL . 'img/signal/editor-point.png',
+            'beacon' => LSTTRAINING_URL . 'img/signal/beacon.svg',
+            'strobe' => LSTTRAINING_URL . 'img/signal/strobe.svg',
+            'bar' => LSTTRAINING_URL . 'img/signal/lightbar.svg',
+            'glow' => LSTTRAINING_URL . 'img/signal/glow.svg',
+            'editor_point' => LSTTRAINING_URL . 'img/signal/editor-point.svg',
         ],
         'texts' => [
             'bootstrapError' => 'Simulationsbasis konnte nicht geladen werden.',

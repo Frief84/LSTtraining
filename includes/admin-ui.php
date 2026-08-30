@@ -236,11 +236,11 @@ add_action('admin_enqueue_scripts', function ($hook) {
             // falls du OSM-AJAX nutzt:
             'osm_nonce' => wp_create_nonce('lsttraining_osm_layers'),
             'signal_sprite_urls' => [
-                'beacon' => $root_url . 'img/signal/beacon.png',
-                'strobe' => $root_url . 'img/signal/strobe.png',
-                'bar' => $root_url . 'img/signal/lightbar.png',
-                'glow' => $root_url . 'img/signal/glow.png',
-                'editor_point' => $root_url . 'img/signal/editor-point.png',
+                'beacon' => $root_url . 'img/signal/beacon.svg',
+                'strobe' => $root_url . 'img/signal/strobe.svg',
+                'bar' => $root_url . 'img/signal/lightbar.svg',
+                'glow' => $root_url . 'img/signal/glow.svg',
+                'editor_point' => $root_url . 'img/signal/editor-point.svg',
             ],
         ]);
 
@@ -334,6 +334,7 @@ add_action('admin_enqueue_scripts', function ($hook) {
         wp_localize_script('lst-wachen', 'lstWachenAjax', [
             'ajax_url'        => admin_url('admin-ajax.php'),
             'admin_url'       => admin_url('admin.php'),
+            'nonce'           => wp_create_nonce('lsttraining_wachen'),
             'fahrzeuge_nonce' => wp_create_nonce('lst_fahrzeuge_nonce'),
         ]);
     }
@@ -393,11 +394,11 @@ add_action('admin_enqueue_scripts', function ($hook) {
             'bundeslaender' => $bundeslaender,
             'fahrzeugtypen' => $fahrzeugtypen,
             'signal_sprite_urls' => [
-                'beacon' => $root_url . 'img/signal/beacon.png',
-                'strobe' => $root_url . 'img/signal/strobe.png',
-                'bar' => $root_url . 'img/signal/lightbar.png',
-                'glow' => $root_url . 'img/signal/glow.png',
-                'editor_point' => $root_url . 'img/signal/editor-point.png',
+                'beacon' => $root_url . 'img/signal/beacon.svg',
+                'strobe' => $root_url . 'img/signal/strobe.svg',
+                'bar' => $root_url . 'img/signal/lightbar.svg',
+                'glow' => $root_url . 'img/signal/glow.svg',
+                'editor_point' => $root_url . 'img/signal/editor-point.svg',
             ],
         ]);
     }
@@ -482,7 +483,7 @@ if (!function_exists('lsttraining_render_einsaetze')) {
 
 if (!function_exists('lsttraining_render_leitstellen_fahrzeuge')) {
     function lsttraining_render_leitstellen_fahrzeuge() {
-        if (!current_user_can('read')) {
+        if (!lsttraining_user_can('fahrzeuge')) {
             wp_die('Keine Berechtigung.');
         }
         $template = plugin_dir_path(__FILE__) . 'fahrzeuge.php';
@@ -535,6 +536,17 @@ if (!function_exists('lsttraining_render_verlauf_page')) {
             require_once $template;
         } else {
             echo '<div class="notice notice-error"><p>Die Datei verlauf.php wurde nicht gefunden.</p></div>';
+        }
+    }
+}
+
+if (!function_exists('lsttraining_render_help')) {
+    function lsttraining_render_help() {
+        $template = plugin_dir_path(__FILE__) . 'help.php';
+        if (is_readable($template)) {
+            include $template;
+        } else {
+            echo '<div class="notice notice-error"><p>' . esc_html__('Die Hilfedatei wurde nicht gefunden.', 'lsttraining') . '</p></div>';
         }
     }
 }

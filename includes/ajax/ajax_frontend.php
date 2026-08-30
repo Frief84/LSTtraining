@@ -53,25 +53,8 @@ function lsttraining_frontend_column_type(PDO $pdo, string $table, string $colum
 }
 
 function lsttraining_frontend_ensure_instance_columns(PDO $pdo): void {
-    $instance_columns = [
-        'settings_json' => 'ALTER TABLE spielinstanzen ADD COLUMN settings_json LONGTEXT NULL AFTER ist_aktiv',
-        'started_at'    => 'ALTER TABLE spielinstanzen ADD COLUMN started_at DATETIME NULL AFTER settings_json',
-        'sim_state'     => "ALTER TABLE spielinstanzen ADD COLUMN sim_state ENUM('created','running','paused','ended') NOT NULL DEFAULT 'created' AFTER started_at",
-    ];
-
-    foreach ($instance_columns as $column => $alter_sql) {
-        if (!lsttraining_frontend_column_exists($pdo, 'spielinstanzen', $column)) {
-            $pdo->exec($alter_sql);
-        }
-    }
-
-    if (lsttraining_frontend_column_type($pdo, 'spielinstanzen', 'settings_json') !== 'longtext') {
-        $pdo->exec('ALTER TABLE spielinstanzen MODIFY COLUMN settings_json LONGTEXT NULL');
-    }
-
-    // Ältere Installationen haben diese Spalte ggf. noch nicht; die Frontend-Join-Logik nutzt sie.
-    if (lsttraining_frontend_table_exists($pdo, 'instanz_user') && !lsttraining_frontend_column_exists($pdo, 'instanz_user', 'connected')) {
-        $pdo->exec('ALTER TABLE instanz_user ADD COLUMN connected TINYINT(1) NULL DEFAULT 1 AFTER rolle');
+    if (!lsttraining_frontend_column_exists($pdo, 'instanz_user', 'connected')) {
+        throw new RuntimeException('Datenbankschema ist nicht aktuell: instanz_user.connected fehlt.');
     }
 
     if (function_exists('lsttraining_instance_lifecycle_ensure_schema')) {

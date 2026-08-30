@@ -35,6 +35,7 @@ $can_global_wachen = lsttraining_user_can_global_area( 'wachen' );
 $allowed_wachen_leitstellen = current_user_can( 'manage_options' ) || $can_global_wachen
     ? []
     : lsttraining_user_allowed_leitstellen( 'wachen' );
+$allowed_sql = $allowed_wachen_leitstellen ? implode( ',', array_map( 'intval', $allowed_wachen_leitstellen ) ) : '0';
 
 if ( ! $can_global_wachen && $filter_leitstelle > 0 && ! in_array( $filter_leitstelle, $allowed_wachen_leitstellen, true ) ) {
     wp_die( 'Keine Berechtigung.' );
@@ -56,9 +57,17 @@ if ( ! $can_global_wachen ) {
 }
 
 // 2) Alle Nebenleitstellen laden
-$all_nls = $pdo->query(
-    'SELECT id, name FROM nebenleitstellen ORDER BY name'
-)->fetchAll( PDO::FETCH_ASSOC );
+$all_nls_sql = current_user_can('manage_options') || $can_global_wachen
+    ? 'SELECT id, name FROM nebenleitstellen ORDER BY name'
+    : "SELECT DISTINCT n.id, n.name FROM nebenleitstellen n JOIN leitstelle_nebenleitstellen ln ON ln.nebenleitstelle_id = n.id WHERE ln.leitstelle_id IN ($allowed_sql) ORDER BY n.name";
+$all_nls = $pdo->query($all_nls_sql)->fetchAll(PDO::FETCH_ASSOC);
+
+if ($filter_leitstelle > 0 && !lsttraining_user_can('wachen', $filter_leitstelle)) {
+    wp_die('Keine Berechtigung für diese Leitstelle.');
+}
+if ($filter_nebenleitstelle > 0 && !lsttraining_user_can_object($pdo, 'wachen', 'nebenstelle', $filter_nebenleitstelle)) {
+    wp_die('Keine Berechtigung für diese Nebenleitstelle.');
+}
 
 ?>
 <div class="wrap">
@@ -265,16 +274,8 @@ $where = [];
         }
     }
 
-    if ( ! $can_global_wachen ) {
-        if ( $allowed_wachen_leitstellen ) {
-            if ( strpos( $joins, 'wache_leitstellen AS wl' ) === false ) {
-                $joins .= ' INNER JOIN wache_leitstellen AS wl ON w.id = wl.wache_id ';
-            }
-            $where[] = 'wl.leitstelle_id IN (' . implode( ',', array_fill( 0, count( $allowed_wachen_leitstellen ), '?' ) ) . ')';
-            $params = array_merge( $params, $allowed_wachen_leitstellen );
-        } else {
-            $where[] = '0 = 1';
-        }
+    if ( ! current_user_can( 'manage_options' ) && ! $can_global_wachen ) {
+        $where[] = "(EXISTS (SELECT 1 FROM wache_leitstellen awl WHERE awl.wache_id = w.id AND awl.leitstelle_id IN ($allowed_sql)) OR EXISTS (SELECT 1 FROM wache_nebenleitstellen awn JOIN leitstelle_nebenleitstellen aln ON aln.nebenleitstelle_id = awn.nebenleitstelle_id WHERE awn.wache_id = w.id AND aln.leitstelle_id IN ($allowed_sql)))";
     }
 
     // 3c) SQL zusammensetzen
@@ -354,11 +355,9 @@ $where = [];
             <button class="button edit-wache" data-id="<?php echo esc_attr($w['id']); ?>">
               Bearbeiten
             </button>
-            <a href="<?php echo esc_url(admin_url('admin.php?page=lsttraining_leitstellen_wachen&delete_id=' . $w['id'])); ?>"
-               class="button button-link-delete"
-               onclick="return confirm('Wache wirklich löschen?');">
+            <button type="button" class="button button-link-delete delete-wache" data-id="<?php echo esc_attr($w['id']); ?>">
               Löschen
-            </a>
+            </button>
           </td>
         </tr>
       <?php endforeach; ?>
@@ -637,4 +636,3 @@ $where = [];
     </p>
   </form>
 </script>
-

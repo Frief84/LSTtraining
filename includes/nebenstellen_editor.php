@@ -73,13 +73,14 @@ if ( ! function_exists( 'lsttraining_nebenstellen_sort_link' ) ) {
 
 $nextId = (int) $pdo->query('SELECT MAX(id)+1 FROM nebenleitstellen')->fetchColumn() ?: 1;
 
-/* --- delete & update  (identisch zu deiner Version) -------------------- */
-if ( isset( $_GET['delete_id'] ) && $pdo ) {
-    $pdo->prepare( 'DELETE FROM nebenleitstellen WHERE id = ?' )
-        ->execute( [ intval( $_GET['delete_id'] ) ] );
-}
-
 if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['neben_update_id'] ) && $pdo ) {
+    $update_id = absint( $_POST['neben_update_id'] );
+    if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['lsttraining_nonce'] ?? '' ) ), 'lsttraining_nebenstelle_form' ) ) {
+        wp_die( 'Ungültiger Sicherheits-Token.', 403 );
+    }
+    if ( $update_id > 0 && ! lsttraining_user_can_object( $pdo, 'nebenstellen', 'nebenstelle', $update_id ) ) {
+        wp_die( 'Keine Berechtigung.', 403 );
+    }
     $pdo->prepare(
         'UPDATE nebenleitstellen
             SET name = ?, zustandigkeit = ?, einwohner = ?, flaeche_km2 = ?,
@@ -93,7 +94,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['neben_update_id'] )
         sanitize_text_field( $_POST['neben_update_gps'] ),
         intval   ( $_POST['neben_update_nachbar'] ),
         stripslashes( $_POST['geojson_edit'] ?? '' ),
-        intval   ( $_POST['neben_update_id'] )
+        $update_id
     ] );
 }
 
@@ -101,8 +102,21 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['neben_update_id'] )
  * LIST – fetch only small cols + Boolean flag (no big JSON)
  * ---------------------------------------------------------------------- */
 if ($pdo) {
+    $scope_join = '';
+    $where_parts = [];
+    $args = [];
+    if (!current_user_can('manage_options')) {
+        $allowed_ids = lsttraining_user_leitstellen_ids();
+        $scope_join = ' INNER JOIN leitstelle_nebenleitstellen AS ln ON ln.nebenleitstelle_id = n.id ';
+        if ($allowed_ids) {
+            $where_parts[] = 'ln.leitstelle_id IN (' . implode(',', array_fill(0, count($allowed_ids), '?')) . ')';
+            $args = array_merge($args, $allowed_ids);
+        } else {
+            $where_parts[] = '1 = 0';
+        }
+    }
     $sql = '
-        SELECT
+        SELECT DISTINCT
             n.id,
             n.name,
             n.zustandigkeit,
@@ -111,7 +125,7 @@ if ($pdo) {
             n.gps,
             (CHAR_LENGTH(TRIM(COALESCE(n.geojson, ""))) > 2) AS has_geojson,
             COALESCE(cnt.cnt, 0) AS wachen_cnt
-        FROM nebenleitstellen AS n
+        FROM nebenleitstellen AS n ' . $scope_join . '
         LEFT JOIN (
             SELECT nebenleitstelle_id, COUNT(*) AS cnt
             FROM wache_nebenleitstellen
@@ -119,11 +133,13 @@ if ($pdo) {
         ) AS cnt
           ON cnt.nebenleitstelle_id = n.id';
 
-    $args = [];
-
     if ($suchbegriff !== '') {
-        $sql  .= ' WHERE n.name LIKE ? OR n.id = ?';
-        $args  = [ "%$suchbegriff%", $suchbegriff ];
+        $where_parts[] = '(n.name LIKE ? OR n.id = ?)';
+        $args[] = "%$suchbegriff%";
+        $args[] = $suchbegriff;
+    }
+    if ($where_parts) {
+        $sql .= ' WHERE ' . implode(' AND ', $where_parts);
     }
 
     $stmt = $pdo->prepare($sql);
@@ -154,6 +170,9 @@ if ($pdo) {
 }
 
 if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['neben_create'] ) && $pdo ) {
+    if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['lsttraining_nonce'] ?? '' ) ), 'lsttraining_nebenstelle_form' ) ) {
+        wp_die( 'Ungültiger Sicherheits-Token.', 403 );
+    }
     $stmt = $pdo->prepare(
         'INSERT INTO nebenleitstellen
          (name,zustandigkeit,einwohner,flaeche_km2,gps,nachbarleitstelle,geojson)
@@ -237,6 +256,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['neben_create'] ) &&
 <!-- Edit-Popup -->
 <div id="edit-nebenstelle-formular" class="lst-nebenstelle-modal" style="display:none;">
     <form method="post" class="lst-nebenstelle-modal__form">
+        <?php wp_nonce_field( 'lsttraining_nebenstelle_form', 'lsttraining_nonce' ); ?>
         <div class="lst-nebenstelle-modal__header">
             <div>
                 <h2>Nebenleitstelle bearbeiten</h2>

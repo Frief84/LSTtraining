@@ -67,77 +67,7 @@ if (!function_exists('lsttraining_permissions_ensure_schema')) {
             return;
         }
 
-        $pdo = $pdo ?: lsttraining_get_connection();
-        if (!$pdo instanceof PDO) {
-            return;
-        }
-
-        try {
-            if (
-                lsttraining_permissions_table_exists($pdo, 'leitstellen')
-                && !lsttraining_permissions_column_exists($pdo, 'leitstellen', 'created_by_user_id')
-            ) {
-                $pdo->exec('ALTER TABLE leitstellen ADD COLUMN created_by_user_id BIGINT UNSIGNED NULL DEFAULT NULL AFTER created_at');
-            }
-
-            if (
-                lsttraining_permissions_table_exists($pdo, 'user_permissions')
-                && !lsttraining_permissions_column_exists($pdo, 'user_permissions', 'can_manage_spielinstanzen')
-            ) {
-                $pdo->exec('ALTER TABLE user_permissions ADD COLUMN can_manage_spielinstanzen TINYINT(1) NOT NULL DEFAULT 0 AFTER can_edit_fahrzeuge');
-            }
-
-            $pdo->exec("
-                CREATE TABLE IF NOT EXISTS `user_leitstelle_permissions` (
-                  `user_id` BIGINT UNSIGNED NOT NULL,
-                  `leitstelle_id` INT NOT NULL,
-                  `can_edit_leitstelle` TINYINT(1) NOT NULL DEFAULT 0,
-                  `can_edit_hospitals` TINYINT(1) NOT NULL DEFAULT 0,
-                  `can_edit_wachen` TINYINT(1) NOT NULL DEFAULT 0,
-                  `can_edit_fahrzeuge` TINYINT(1) NOT NULL DEFAULT 0,
-                  `granted_by_user_id` BIGINT UNSIGNED NULL DEFAULT NULL,
-                  `granted_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                  PRIMARY KEY (`user_id`, `leitstelle_id`),
-                  KEY `idx_ulp_leitstelle` (`leitstelle_id`),
-                  KEY `idx_ulp_user` (`user_id`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-            ");
-
-            if (
-                lsttraining_permissions_table_exists($pdo, 'user_permissions')
-                && lsttraining_permissions_column_exists($pdo, 'user_permissions', 'leitstellen_ids')
-            ) {
-                $rows = $pdo->query('
-                    SELECT user_id, can_edit_leitstellen, can_edit_hospitals, can_edit_wachen, can_edit_fahrzeuge, leitstellen_ids
-                    FROM user_permissions
-                    WHERE leitstellen_ids IS NOT NULL AND leitstellen_ids <> \'\'
-                ');
-                $insert = $pdo->prepare('
-                    INSERT IGNORE INTO user_leitstelle_permissions
-                        (user_id, leitstelle_id, can_edit_leitstelle, can_edit_hospitals, can_edit_wachen, can_edit_fahrzeuge, granted_by_user_id, granted_at)
-                    VALUES (?, ?, ?, ?, ?, ?, NULL, NOW())
-                ');
-                foreach (($rows ? $rows->fetchAll(PDO::FETCH_ASSOC) : []) as $row) {
-                    $ids = array_filter(array_map('trim', explode(',', (string) ($row['leitstellen_ids'] ?? ''))), static function ($id): bool {
-                        return $id !== '' && ctype_digit($id);
-                    });
-                    foreach (array_unique($ids) as $leitstelle_id) {
-                        $insert->execute([
-                            (int) $row['user_id'],
-                            (int) $leitstelle_id,
-                            (int) ($row['can_edit_leitstellen'] ?? 0),
-                            (int) ($row['can_edit_hospitals'] ?? 0),
-                            (int) ($row['can_edit_wachen'] ?? 0),
-                            (int) ($row['can_edit_fahrzeuge'] ?? 0),
-                        ]);
-                    }
-                }
-            }
-
-            $ready = true;
-        } catch (Throwable $e) {
-            error_log('[LSTtraining][permissions_schema] ' . $e->getMessage());
-        }
+        $ready = true;
     }
 }
 
@@ -350,7 +280,7 @@ function lsttraining_user_can_global_area(string $area, ?int $user_id = null): b
 function lsttraining_user_can(string $area, ?int $ls_id = null, ?int $user_id = null): bool {
     $user_id = $user_id ?: (int) get_current_user_id();
 
-    if (current_user_can('manage_options')) {
+    if (user_can($user_id, 'manage_options')) {
         return true;
     }
     if ($user_id <= 0) {
@@ -397,6 +327,86 @@ if (!function_exists('lsttraining_current_user_leitstellen_ids')) {
     function lsttraining_current_user_leitstellen_ids(): array {
         return lsttraining_user_allowed_leitstellen('leitstellen');
     }
+}
+
+/**
+ * Normalisiert die Leitstellen-Freigaben eines Benutzers.
+ */
+function lsttraining_user_leitstellen_ids(?int $user_id = null): array {
+    return lsttraining_user_visible_leitstellen($user_id);
+}
+
+/**
+ * Prüft einen Bereich gegen alle Leitstellen, denen ein Objekt zugeordnet ist.
+ * Unzugeordnete Objekte werden für Nicht-Admins absichtlich gesperrt.
+ */
+function lsttraining_user_can_all_leitstellen(string $area, array $leitstellen_ids, ?int $user_id = null): bool {
+    $user_id = $user_id ?: (int) get_current_user_id();
+    if (user_can($user_id, 'manage_options')) {
+        return true;
+    }
+
+    $ids = array_values(array_unique(array_filter(
+        array_map('intval', $leitstellen_ids),
+        static fn(int $id): bool => $id > 0
+    )));
+    if (!$ids || !lsttraining_user_can($area, null, $user_id)) {
+        return false;
+    }
+
+    $allowed = lsttraining_user_allowed_leitstellen($area, $user_id);
+    return !array_diff($ids, $allowed);
+}
+
+/**
+ * Ermittelt den Leitstellen-Scope eines Objekts ausschließlich aus der DB.
+ */
+function lsttraining_object_leitstellen_ids(PDO $pdo, string $object_type, int $object_id): array {
+    if ($object_id <= 0) {
+        return [];
+    }
+
+    $queries = [
+        'leitstelle'   => 'SELECT id FROM leitstellen WHERE id = ?',
+        'nebenstelle'  => 'SELECT leitstelle_id AS id FROM leitstelle_nebenleitstellen WHERE nebenleitstelle_id = ?',
+        'wache'        => 'SELECT leitstelle_id AS id FROM wache_leitstellen WHERE wache_id = ? UNION SELECT ln.leitstelle_id AS id FROM wache_nebenleitstellen wn JOIN leitstelle_nebenleitstellen ln ON ln.nebenleitstelle_id = wn.nebenleitstelle_id WHERE wn.wache_id = ?',
+        'fahrzeug'     => 'SELECT wl.leitstelle_id AS id FROM fahrzeuge f JOIN wache_leitstellen wl ON wl.wache_id = f.wache_id WHERE f.id = ? UNION SELECT ln.leitstelle_id AS id FROM fahrzeuge f JOIN wache_nebenleitstellen wn ON wn.wache_id = f.wache_id JOIN leitstelle_nebenleitstellen ln ON ln.nebenleitstelle_id = wn.nebenleitstelle_id WHERE f.id = ?',
+    ];
+    if (!isset($queries[$object_type])) {
+        return [];
+    }
+
+    $stmt = $pdo->prepare($queries[$object_type]);
+    $placeholder_count = substr_count($queries[$object_type], '?');
+    $stmt->execute(array_fill(0, $placeholder_count, $object_id));
+    return array_values(array_unique(array_filter(array_map(
+        'intval',
+        $stmt->fetchAll(PDO::FETCH_COLUMN) ?: []
+    ))));
+}
+
+/**
+ * Löst neue Wachen-Zuordnungen in Leitstellen-IDs auf. Request-IDs werden
+ * dabei nie als Berechtigungsnachweis akzeptiert, sondern in der DB geprüft.
+ */
+function lsttraining_assignment_leitstellen_ids(PDO $pdo, array $leitstellen_ids, array $nebenstellen_ids): array {
+    $ids = array_values(array_unique(array_filter(array_map('intval', $leitstellen_ids))));
+    $nls = array_values(array_unique(array_filter(array_map('intval', $nebenstellen_ids))));
+    if ($nls) {
+        $placeholders = implode(',', array_fill(0, count($nls), '?'));
+        $stmt = $pdo->prepare("SELECT DISTINCT leitstelle_id FROM leitstelle_nebenleitstellen WHERE nebenleitstelle_id IN ($placeholders)");
+        $stmt->execute($nls);
+        $ids = array_merge($ids, array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN) ?: []));
+    }
+    return array_values(array_unique(array_filter($ids)));
+}
+
+function lsttraining_user_can_object(PDO $pdo, string $area, string $object_type, int $object_id, ?int $user_id = null): bool {
+    return lsttraining_user_can_all_leitstellen(
+        $area,
+        lsttraining_object_leitstellen_ids($pdo, $object_type, $object_id),
+        $user_id
+    );
 }
 
 add_action('init', static function (): void {

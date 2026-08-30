@@ -6,7 +6,6 @@
  */
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
-if ( ! current_user_can( 'read' ) ) { wp_die( 'Keine Berechtigung.' ); }
 
 require_once plugin_dir_path( __FILE__ ) . 'db.php';
 require_once plugin_dir_path( __FILE__ ) . 'permissions.php';
@@ -130,7 +129,7 @@ try {
                 $st = $pdo->prepare('SELECT id, name FROM leitstellen WHERE id IN (' . implode(',', array_fill(0, count($allowed_fahrzeuge_leitstellen), '?')) . ' ) ORDER BY name');
                 $st->execute($allowed_fahrzeuge_leitstellen);
             } else {
-                $st = $pdo->query("SELECT id, name FROM leitstellen ORDER BY name");
+                $st = false;
             }
         } else {
             $st = $pdo->query("SELECT id, name FROM leitstellen ORDER BY name");
@@ -213,6 +212,9 @@ try {
  * ----------------------------------------------------------- */
 $wache_name = '';
 if ($wache_id > 0) {
+    if (!lsttraining_user_can_object($pdo, 'fahrzeuge', 'wache', $wache_id)) {
+        wp_die('Keine Berechtigung für diese Wache.');
+    }
     try {
         $st = $pdo->prepare("SELECT name FROM wachen WHERE id = :wid LIMIT 1");
         $st->execute([':wid' => $wache_id]);
@@ -313,6 +315,9 @@ if ($s !== '') {
 
 // Leitstelle
 if ($leitstelle_id > 0) {
+    if (!lsttraining_user_can('fahrzeuge', $leitstelle_id)) {
+        wp_die('Keine Berechtigung für diese Leitstelle.');
+    }
     if ($has_wachen_leitstelle) {
         $where[] = 'w.leitstelle_id = :lsid';
         $params[':lsid'] = $leitstelle_id;
@@ -328,6 +333,9 @@ if ($leitstelle_id > 0) {
 
 // Nebenleitstelle
 if ($neben_id > 0) {
+    if (!lsttraining_user_can_object($pdo, 'fahrzeuge', 'nebenstelle', $neben_id)) {
+        wp_die('Keine Berechtigung für diese Nebenleitstelle.');
+    }
     if ($has_wachen_neben) {
         $where[] = 'w.nebenleitstelle_id = :nbid';
         $params[':nbid'] = $neben_id;
@@ -339,6 +347,15 @@ if ($neben_id > 0) {
         $where[] = 'wnb.nebenleitstelle_id = :nbid';
         $params[':nbid'] = $neben_id;
     }
+}
+
+if (!current_user_can('manage_options') && !$can_global_fahrzeuge) {
+    $scope_ids = $allowed_fahrzeuge_leitstellen;
+    if (!$scope_ids) {
+        wp_die('Für diesen Benutzer ist keine Leitstelle freigegeben.');
+    }
+    $scope_sql = implode(',', array_map('intval', $scope_ids));
+    $where[] = "(EXISTS (SELECT 1 FROM wache_leitstellen swl WHERE swl.wache_id = w.id AND swl.leitstelle_id IN ($scope_sql)) OR EXISTS (SELECT 1 FROM wache_nebenleitstellen swn JOIN leitstelle_nebenleitstellen sln ON sln.nebenleitstelle_id = swn.nebenleitstelle_id WHERE swn.wache_id = w.id AND sln.leitstelle_id IN ($scope_sql)))";
 }
 
 // Bundesland

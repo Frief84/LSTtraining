@@ -10,6 +10,7 @@ add_action('wp_ajax_lsttraining_save_nebenleitstelle', function () {
         'area' => 'nebenstellen',
         'nonce_action' => 'lst_nebenstellen_nonce',
         'nonce_field' => '_ajax_nonce',
+        'method' => 'POST',
     ]);
 
     // 2) DB verbinden
@@ -30,6 +31,10 @@ add_action('wp_ajax_lsttraining_save_nebenleitstelle', function () {
     $einwohner   = (int)($_POST['einwohner'] ?? 0);
     $flaeche_km2 = (float)($_POST['flaeche'] ?? 0);
     $gps         = sanitize_text_field($_POST['gps'] ?? '');
+
+    if ($id > 0 && !lsttraining_user_can_object($pdo, 'nebenstellen', 'nebenstelle', $id)) {
+        wp_send_json_error(['code' => 'permission', 'msg' => 'Keine Berechtigung für diese Nebenstelle'], 403);
+    }
 
     if ($name === '') {
         wp_send_json_error(['code' => 'validation', 'msg' => 'Name darf nicht leer sein'], 400);
@@ -205,7 +210,10 @@ add_action('wp_ajax_lsttraining_save_nebenleitstelle', function () {
  * @action wp_ajax_lsttraining_delete_nebenstelle
  */
 add_action('wp_ajax_lsttraining_delete_nebenstelle', function () {
-    if (!lsttraining_user_can('nebenstellen')) {
+    if (strtoupper($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        wp_send_json_error('Ungültige HTTP-Methode', 405);
+    }
+    if (!is_user_logged_in() || !lsttraining_user_can('nebenstellen')) {
         wp_send_json_error('Keine Berechtigung', 403);
     }
 
@@ -217,6 +225,10 @@ add_action('wp_ajax_lsttraining_delete_nebenstelle', function () {
     }
 
     $pdo = lsttraining_get_connection();
+
+    if (!lsttraining_user_can_object($pdo, 'nebenstellen', 'nebenstelle', (int)$id)) {
+        wp_send_json_error('Keine Berechtigung für diese Nebenstelle', 403);
+    }
 
     $stmt = $pdo->prepare('DELETE FROM nebenleitstellen WHERE id = ?');
     $ok = $stmt->execute([$id]);
@@ -235,4 +247,3 @@ add_action('wp_ajax_lsttraining_delete_nebenstelle', function () {
     }
     wp_send_json_error('Löschen fehlgeschlagen', 500);
 });
-

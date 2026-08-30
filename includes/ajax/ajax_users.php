@@ -8,6 +8,8 @@ add_action('wp_ajax_lsttraining_get_user_permissions', function () {
     lsttraining_ajax_guard([
         'area' => 'leitstellen',
         'capability' => 'manage_options',
+        'nonce_action' => 'lsttraining_save_permissions',
+        'method' => 'GET',
     ]);
 
 $pdo = lsttraining_get_connection();
@@ -74,6 +76,8 @@ add_action('wp_ajax_lsttraining_save_user_permissions', function () {
     lsttraining_ajax_guard([
         'area' => 'leitstellen',
         'capability' => 'manage_options',
+        'nonce_action' => 'lsttraining_save_permissions',
+        'method' => 'POST',
     ]);
 
 $json = wp_unslash($_POST['user_permissions'] ?? '');
@@ -113,6 +117,7 @@ $json = wp_unslash($_POST['user_permissions'] ?? '');
                leitstellen_ids        = ?
          WHERE user_id = ?
     ');
+    $valid_leitstellen_ids = array_map('intval', $pdo->query('SELECT id FROM leitstellen')->fetchAll(PDO::FETCH_COLUMN) ?: []);
 
     try {
         $pdo->beginTransaction();
@@ -128,9 +133,10 @@ $json = wp_unslash($_POST['user_permissions'] ?? '');
             $can_fahrzeuge    = !empty($entry['can_edit_fahrzeuge']) ? 1 : 0;
 
             $ids_raw = sanitize_text_field($entry['leitstellen_ids'] ?? '');
-            $ids_arr = array_filter(array_map('trim', explode(',', $ids_raw)), static function ($v) {
-                return $v !== '' && ctype_digit($v);
-            });
+            $ids_arr = array_values(array_unique(array_intersect(
+                array_map('intval', explode(',', $ids_raw)),
+                $valid_leitstellen_ids
+            )));
             $leitstellen_ids = implode(',', $ids_arr);
 
             $stmtCheck->execute([$user_id]);
@@ -176,4 +182,3 @@ $json = wp_unslash($_POST['user_permissions'] ?? '');
         wp_send_json_error('Datenbank-Fehler: ' . $e->getMessage(), 500);
     }
 });
-

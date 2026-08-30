@@ -57,6 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['lsttraining_nonce']))
                    leitstellen_ids = ?
              WHERE user_id = ?
         ");
+        $valid_leitstellen_ids = array_map('intval', $pdo->query('SELECT id FROM leitstellen')->fetchAll(PDO::FETCH_COLUMN) ?: []);
         $deleteMatrix = $pdo->prepare('DELETE FROM user_leitstelle_permissions WHERE user_id = ?');
         $insertMatrix = $pdo->prepare('
             INSERT INTO user_leitstelle_permissions
@@ -77,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['lsttraining_nonce']))
 
             foreach ((array) ($matrix[$user_id] ?? []) as $leitstelle_id => $row) {
                 $leitstelle_id = (int) $leitstelle_id;
-                if ($leitstelle_id <= 0 || !is_array($row)) {
+                if ($leitstelle_id <= 0 || !in_array($leitstelle_id, $valid_leitstellen_ids, true) || !is_array($row)) {
                     continue;
                 }
                 $row_leitstelle = !empty($row['leitstelle']) ? 1 : 0;

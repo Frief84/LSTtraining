@@ -40,7 +40,8 @@
 
         $.getJSON(lstHospitalsAjax.ajax_url, {
                 action: 'get_departments',
-                hospital_id: hospitalId
+                hospital_id: hospitalId,
+                nonce: lstHospitalsAjax.nonce
             })
             .done(json => {
                 if (!json.success) {
@@ -142,6 +143,7 @@
                         e.preventDefault();
                         const fd = new FormData(e.target);
 						fd.set('action', 'lsttraining_save_departments');
+                        fd.set('nonce', lstHospitalsAjax.nonce);
                         fetch(`${lstHospitalsAjax.ajax_url}?action=lsttraining_save_departments`, {
                                 method: 'POST',
                                 credentials: 'same-origin',
@@ -291,7 +293,7 @@
 
     function fetchHospitals() {
         const term = document.getElementById('hospital-search')?.value.trim().toLowerCase() || '';
-        fetch(`${lstHospitalsAjax.ajax_url}?action=get_krankenhaeuser`, { credentials: 'same-origin' })
+        fetch(`${lstHospitalsAjax.ajax_url}?action=get_krankenhaeuser&nonce=${encodeURIComponent(lstHospitalsAjax.nonce)}`, { credentials: 'same-origin' })
             .then(res => res.json())
             .then(data => {
                 const filtered = term
@@ -379,7 +381,7 @@
             $.ajax({
                 url: lstHospitalsAjax.ajax_url,
                 type: 'POST',
-                data: { action: 'delete_krankenhaus', id },
+                data: { action: 'delete_krankenhaus', id, nonce: lstHospitalsAjax.nonce },
                 xhrFields: { withCredentials: true }
             })
             .done(resp => {
@@ -541,6 +543,7 @@
 						// id bleibt im FormData
 					}
 					fd.append('action', action);
+					fd.set('nonce', lstHospitalsAjax.nonce);
 
 					/* ---------------- 3) Ajax-Aufruf ----------------------- */
 					fetch(lstHospitalsAjax.ajax_url, {
@@ -566,7 +569,7 @@
                     deleteBtn.addEventListener('click', () => {
                         if (!confirm('Krankenhaus wirklich löschen?')) return;
                         const idToDelete = deleteBtn.dataset.id;
-                        const params = new URLSearchParams({ id: idToDelete });
+                        const params = new URLSearchParams({ id: idToDelete, nonce: lstHospitalsAjax.nonce });
                         fetch(`${lstHospitalsAjax.ajax_url}?action=delete_krankenhaus`, {
                                 method: 'POST',
                                 credentials: 'same-origin',

@@ -55,6 +55,67 @@
     }
     window.initLeitstellenEditor = initLeitstellenEditor;
 
+    function openLeitstellePopupForCreate() {
+        const heading = document.querySelector('#edit-leitstelle-formular h2');
+        if (heading) heading.textContent = 'Leitstelle erstellen';
+
+        [
+            'lst_update_id',
+            'lst_update_name',
+            'lst_update_ort',
+            'lst_update_bl',
+            'lst_update_land',
+            'lst_update_lat',
+            'lst_update_lon'
+        ].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        const policeImage = document.getElementById('lst_update_police_vehicle_image');
+        if (policeImage) policeImage.value = 'img/fahrzeug/default.png';
+        const policeSignals = document.getElementById('lst_update_police_signal_lights_json');
+        if (policeSignals) policeSignals.value = '';
+        const rescueImage = document.getElementById('lst_update_rescue_vehicle_image');
+        if (rescueImage) rescueImage.value = 'img/fahrzeug/default.png';
+        const rescueSignals = document.getElementById('lst_update_rescue_signal_lights_json');
+        if (rescueSignals) rescueSignals.value = '';
+        const neighbors = document.getElementById('lst_neighbor_nebenleitstellen');
+        if (neighbors) {
+            Array.from(neighbors.options).forEach(option => { option.selected = false; });
+        }
+
+        const mode = document.getElementById('lst_form_mode');
+        if (mode) mode.value = 'create';
+
+        if (typeof resetEditMaps === 'function') resetEditMaps();
+        if (typeof ensureEditMap === 'function') ensureEditMap();
+
+        const overlay = document.getElementById('popup-overlay');
+        if (overlay) overlay.style.display = 'block';
+
+        const popup = document.getElementById('edit-leitstelle-formular');
+        if (popup) popup.style.display = 'block';
+        if (typeof window.updateAllDefaultVehiclePreviews === 'function') {
+            window.updateAllDefaultVehiclePreviews();
+        }
+    }
+    window.openLeitstellePopupForCreate = openLeitstellePopupForCreate;
+
+    function ensureEditMap() {
+        /* no-op */
+    }
+    window.ensureEditMap = ensureEditMap;
+
+    function resetEditMaps() {
+        if (window.mapEdit) {
+            window.mapEdit.getView().setCenter(ol.proj.fromLonLat([9.0, 51.0]));
+            window.mapEdit.getLayers().item(1).getSource().clear();
+        }
+        const poly = document.getElementById('geojson_edit');
+        if (poly) poly.value = '';
+    }
+    window.resetEditMaps = resetEditMaps;
+
     document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.edit-leitstelle').forEach((btn) => {
             btn.addEventListener('click', () => {
@@ -95,11 +156,11 @@
         var configured = window.lstLeitstellenAjax && lstLeitstellenAjax.signal_sprite_urls ? lstLeitstellenAjax.signal_sprite_urls : {};
         var base = pluginBaseUrl();
         return {
-            beacon: configured.beacon || (base ? base + 'img/signal/beacon.png' : ''),
-            strobe: configured.strobe || (base ? base + 'img/signal/strobe.png' : ''),
-            bar: configured.bar || (base ? base + 'img/signal/lightbar.png' : ''),
-            glow: configured.glow || (base ? base + 'img/signal/glow.png' : ''),
-            editor_point: configured.editor_point || (base ? base + 'img/signal/editor-point.png' : '')
+            beacon: configured.beacon || (base ? base + 'img/signal/beacon.svg' : ''),
+            strobe: configured.strobe || (base ? base + 'img/signal/strobe.svg' : ''),
+            bar: configured.bar || (base ? base + 'img/signal/lightbar.svg' : ''),
+            glow: configured.glow || (base ? base + 'img/signal/glow.svg' : ''),
+            editor_point: configured.editor_point || (base ? base + 'img/signal/editor-point.svg' : '')
         };
     }
 
@@ -506,7 +567,8 @@ function updateWachenZuordButtonState() {
 
         $.getJSON(window.lstLeitstellenAjax.ajax_url, {
                 action: 'get_leitstelle_hospitals',
-                leitstelle_id: id
+                leitstelle_id: id,
+                nonce: window.lstLeitstellenAjax.nonce
             })
             .done(function(json) {
                 if (!json.success) {
@@ -732,6 +794,7 @@ function updateWachenZuordButtonState() {
                             data: {
                                 action: 'save_leitstelle_hospitals',
                                 leitstelle_id: id,
+                                nonce: window.lstLeitstellenAjax.nonce,
                                 hospitals: JSON.stringify(selected)
                             },
                             success: function(resp) {

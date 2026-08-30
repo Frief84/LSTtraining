@@ -5,9 +5,11 @@
  * ---------------------------------------------------------------------- */
 
 add_action('wp_ajax_get_krankenhaeuser', function () {
-    if (!lsttraining_user_can_global_area('hospitals')) {
-        wp_send_json_error('Keine Berechtigung', 403);
-    }
+    lsttraining_ajax_guard([
+        'area' => 'hospitals',
+        'nonce_action' => 'lsttraining_hospitals',
+        'method' => 'GET',
+    ]);
 
 $pdo = lsttraining_get_connection();
     $stmt = $pdo->prepare('
@@ -47,9 +49,11 @@ function lsttraining_ajax_get_krankenhaus() {
 }
 
 add_action('wp_ajax_delete_krankenhaus', function () {
-    if (!lsttraining_user_can_global_area('hospitals')) {
-        wp_send_json_error('Keine Berechtigung', 403);
-    }
+    lsttraining_ajax_guard([
+        'area' => 'hospitals',
+        'nonce_action' => 'lsttraining_hospitals',
+        'method' => 'POST',
+    ]);
 
 $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) {
@@ -73,9 +77,11 @@ $id = (int)($_POST['id'] ?? 0);
 });
 
 add_action('wp_ajax_save_krankenhaus', function () {
-    if (!lsttraining_user_can_global_area('hospitals')) {
-        wp_send_json_error('Keine Berechtigung', 403);
-    }
+    lsttraining_ajax_guard([
+        'area' => 'hospitals',
+        'nonce_action' => 'lsttraining_hospitals',
+        'method' => 'POST',
+    ]);
 
 $id             = (int)($_POST['id'] ?? 0);
     $name           = sanitize_text_field($_POST['name'] ?? '');
@@ -139,9 +145,11 @@ $id             = (int)($_POST['id'] ?? 0);
 });
 
 add_action('wp_ajax_lsttraining_create_krankenhaus', function () {
-    if (!lsttraining_user_can_global_area('hospitals')) {
-        wp_send_json_error('Keine Berechtigung', 403);
-    }
+    lsttraining_ajax_guard([
+        'area' => 'hospitals',
+        'nonce_action' => 'lsttraining_hospitals',
+        'method' => 'POST',
+    ]);
 
 $name = sanitize_text_field($_POST['name'] ?? '');
     if ($name === '') {
@@ -165,14 +173,15 @@ $name = sanitize_text_field($_POST['name'] ?? '');
     $departments = ($departments === '') ? '[]' : $departments;
 
     $helipad = isset($_POST['helipad']) ? 1 : 0;
+    $poi_id = 'manual-' . wp_generate_uuid4();
 
     $pdo = lsttraining_get_connection();
     $stmt = $pdo->prepare('
         INSERT INTO krankenhaeuser
-            (name, versorgungsstufe, trauma_level, latitude, longitude, departments, helipad)
-        VALUES (?,?,?,?,?,?,?)
+            (poi_id, name, versorgungsstufe, trauma_level, latitude, longitude, departments, helipad)
+        VALUES (?,?,?,?,?,?,?,?)
     ');
-    $ok = $stmt->execute([$name, $versorgungsstufe, $trauma_level, $lat, $lon, $departments, $helipad]);
+    $ok = $stmt->execute([$poi_id, $name, $versorgungsstufe, $trauma_level, $lat, $lon, $departments, $helipad]);
 
     if ($ok) {
         $newId = (int)$pdo->lastInsertId();
@@ -192,9 +201,11 @@ $name = sanitize_text_field($_POST['name'] ?? '');
  */
 add_action('wp_ajax_lsttraining_save_departments', 'lsttraining_save_departments');
 function lsttraining_save_departments() {
-    if (!lsttraining_user_can_global_area('hospitals')) {
-        wp_send_json_error('Keine Berechtigung', 403);
-    }
+    lsttraining_ajax_guard([
+        'area' => 'hospitals',
+        'nonce_action' => 'lsttraining_hospitals',
+        'method' => 'POST',
+    ]);
 
 $hid = (int)($_POST['hospital_id'] ?? 0);
     if ($hid <= 0) {
@@ -279,9 +290,11 @@ $hid = (int)($_POST['hospital_id'] ?? 0);
  */
 add_action('wp_ajax_get_departments', 'lsttraining_get_departments');
 function lsttraining_get_departments() {
-    if (!lsttraining_user_can_global_area('hospitals')) {
-        wp_send_json_error('Keine Berechtigung.', 403);
-    }
+    lsttraining_ajax_guard([
+        'area' => 'hospitals',
+        'nonce_action' => 'lsttraining_hospitals',
+        'method' => 'GET',
+    ]);
 
     $hid = (int)($_REQUEST['hospital_id'] ?? 0);
     if ($hid <= 0) {
@@ -395,6 +408,11 @@ function lsttraining_get_departments() {
  * ---------------------------------------------------------------------- */
 
 add_action('wp_ajax_get_leitstelle_hospitals', function () {
+    lsttraining_ajax_guard([
+        'area' => 'leitstellen',
+        'nonce_action' => 'lsttraining_leitstellen',
+        'method' => 'GET',
+    ]);
     $id = (int)($_GET['leitstelle_id'] ?? 0);
     if ($id <= 0) {
         wp_send_json_error('Ungültige Leitstelle', 400);
@@ -455,6 +473,11 @@ add_action('wp_ajax_get_leitstelle_hospitals', function () {
 });
 
 add_action('wp_ajax_save_leitstelle_hospitals', function () {
+    lsttraining_ajax_guard([
+        'area' => 'leitstellen',
+        'nonce_action' => 'lsttraining_leitstellen',
+        'method' => 'POST',
+    ]);
     $id = (int)($_POST['leitstelle_id'] ?? 0);
     if ($id <= 0) {
         wp_send_json_error('Ungültige Leitstelle', 400);

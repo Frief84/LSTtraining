@@ -63,82 +63,15 @@ function lsttraining_instance_lifecycle_ensure_schema(PDO $pdo): void {
     if ($ready) {
         return;
     }
-
-    $runtime_columns = [
-        'settings_json' => 'ALTER TABLE spielinstanzen ADD COLUMN settings_json LONGTEXT NULL AFTER ist_aktiv',
-        'started_at'    => 'ALTER TABLE spielinstanzen ADD COLUMN started_at DATETIME NULL DEFAULT NULL AFTER settings_json',
-        'sim_state'     => "ALTER TABLE spielinstanzen ADD COLUMN sim_state ENUM('created','running','paused','ended') NOT NULL DEFAULT 'created' AFTER started_at",
+    $required_columns = [
+        'settings_json', 'started_at', 'sim_state', 'owner_user_id',
+        'last_activity_at', 'retention_notice_sent_at', 'retention_delete_at',
     ];
-
-    foreach ($runtime_columns as $column => $alter_sql) {
+    foreach ($required_columns as $column) {
         if (!lsttraining_instance_lifecycle_column_exists($pdo, 'spielinstanzen', $column)) {
-            $pdo->exec($alter_sql);
+            throw new RuntimeException('Datenbankschema ist nicht aktuell: spielinstanzen.' . $column . ' fehlt.');
         }
     }
-
-    if (lsttraining_instance_lifecycle_column_type($pdo, 'spielinstanzen', 'settings_json') !== 'longtext') {
-        $pdo->exec('ALTER TABLE spielinstanzen MODIFY COLUMN settings_json LONGTEXT NULL');
-    }
-
-    $columns = [
-        'owner_user_id'            => 'ALTER TABLE spielinstanzen ADD COLUMN owner_user_id BIGINT UNSIGNED NULL DEFAULT NULL AFTER sim_state',
-        'last_activity_at'         => 'ALTER TABLE spielinstanzen ADD COLUMN last_activity_at DATETIME NULL DEFAULT NULL AFTER owner_user_id',
-        'retention_notice_sent_at' => 'ALTER TABLE spielinstanzen ADD COLUMN retention_notice_sent_at DATETIME NULL DEFAULT NULL AFTER last_activity_at',
-        'retention_delete_at'      => 'ALTER TABLE spielinstanzen ADD COLUMN retention_delete_at DATETIME NULL DEFAULT NULL AFTER retention_notice_sent_at',
-    ];
-
-    foreach ($columns as $column => $alter_sql) {
-        if (!lsttraining_instance_lifecycle_column_exists($pdo, 'spielinstanzen', $column)) {
-            $pdo->exec($alter_sql);
-        }
-    }
-
-    if (!lsttraining_instance_lifecycle_index_exists($pdo, 'spielinstanzen', 'idx_spielinstanzen_retention')) {
-        $pdo->exec('
-            ALTER TABLE spielinstanzen
-            ADD INDEX idx_spielinstanzen_retention
-                (ist_aktiv, sim_state, last_activity_at, retention_delete_at)
-        ');
-    }
-
-    // Existing owned simulations receive a fresh retention period when this feature is introduced.
-    $stmt = $pdo->query('
-        SELECT si.id, si.settings_json
-        FROM spielinstanzen si
-        WHERE si.owner_user_id IS NULL
-        ORDER BY si.id ASC
-    ');
-    $owner_stmt = $pdo->prepare('
-        SELECT user_id
-        FROM instanz_user
-        WHERE instanz_id = ?
-          AND (? = ? OR rolle = ?)
-        ORDER BY id ASC
-        LIMIT 1
-    ');
-    $update_stmt = $pdo->prepare('
-        UPDATE spielinstanzen
-        SET owner_user_id = ?,
-            last_activity_at = COALESCE(last_activity_at, NOW()),
-            retention_notice_sent_at = NULL,
-            retention_delete_at = NULL
-        WHERE id = ? AND owner_user_id IS NULL
-    ');
-
-    foreach (($stmt->fetchAll(PDO::FETCH_ASSOC) ?: []) as $row) {
-        $settings = json_decode((string) ($row['settings_json'] ?? ''), true);
-        $mode = is_array($settings) ? (string) ($settings['mode'] ?? '') : '';
-        if (!in_array($mode, ['singleplayer', 'einsatzleiter'], true)) {
-            continue;
-        }
-
-        $owner_stmt->execute([(int) $row['id'], $mode, 'singleplayer', 'leiter']);
-        $owner_user_id = (int) $owner_stmt->fetchColumn();
-        if ($owner_user_id > 0) {
-            $update_stmt->execute([$owner_user_id, (int) $row['id']]);
-        }
-    }
-
     $ready = true;
 }
 

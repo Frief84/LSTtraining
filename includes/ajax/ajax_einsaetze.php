@@ -122,18 +122,7 @@ function lsttraining_einsatzeditor_require_table(PDO $pdo, string $table, string
 }
 
 function lsttraining_einsatzeditor_ensure_column(PDO $pdo, string $table, string $column, string $definition): bool {
-    if (lsttraining_einsatzeditor_column_exists($pdo, $table, $column)) {
-        return true;
-    }
-    if (!preg_match('/^[A-Za-z0-9_]+$/', $table) || !preg_match('/^[A-Za-z0-9_]+$/', $column)) {
-        return false;
-    }
-    try {
-        $pdo->exec("ALTER TABLE `{$table}` ADD COLUMN `{$column}` {$definition}");
-        return lsttraining_einsatzeditor_column_exists($pdo, $table, $column);
-    } catch (Throwable $e) {
-        return false;
-    }
+    return lsttraining_einsatzeditor_column_exists($pdo, $table, $column);
 }
 
 function lsttraining_einsatzeditor_ensure_profile_assignment_table(PDO $pdo): void {
@@ -141,54 +130,7 @@ function lsttraining_einsatzeditor_ensure_profile_assignment_table(PDO $pdo): vo
         return;
     }
 
-    lsttraining_einsatzeditor_require_table($pdo, 'einsaetze', 'Basistabelle');
-    lsttraining_einsatzeditor_require_table($pdo, 'anrufer_profile', 'Basistabelle');
-
-    $createWithForeignKeys = "
-        CREATE TABLE IF NOT EXISTS `einsatz_anrufer_profiles` (
-          `einsatz_id` INT NOT NULL,
-          `profile_id` INT NOT NULL,
-          `weight` INT NOT NULL DEFAULT 100,
-          PRIMARY KEY (`einsatz_id`, `profile_id`),
-          KEY `idx_eap_profile` (`profile_id`),
-          CONSTRAINT `fk_eap_einsatz`
-            FOREIGN KEY (`einsatz_id`) REFERENCES `einsaetze`(`id`) ON DELETE CASCADE,
-          CONSTRAINT `fk_eap_profile`
-            FOREIGN KEY (`profile_id`) REFERENCES `anrufer_profile`(`id`) ON DELETE CASCADE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-    ";
-    $createWithoutForeignKeys = "
-        CREATE TABLE IF NOT EXISTS `einsatz_anrufer_profiles` (
-          `einsatz_id` INT NOT NULL,
-          `profile_id` INT NOT NULL,
-          `weight` INT NOT NULL DEFAULT 100,
-          PRIMARY KEY (`einsatz_id`, `profile_id`),
-          KEY `idx_eap_profile` (`profile_id`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-    ";
-
-    $errors = [];
-    try {
-        $pdo->exec($createWithForeignKeys);
-    } catch (Throwable $e) {
-        $errors[] = 'mit Foreign Keys: ' . $e->getMessage();
-    }
-
-    if (!lsttraining_einsatzeditor_table_exists($pdo, 'einsatz_anrufer_profiles')) {
-        try {
-            $pdo->exec($createWithoutForeignKeys);
-        } catch (Throwable $e) {
-            $errors[] = 'ohne Foreign Keys: ' . $e->getMessage();
-        }
-    }
-
-    if (!lsttraining_einsatzeditor_table_exists($pdo, 'einsatz_anrufer_profiles')) {
-        $message = 'Zuordnungstabelle `einsatz_anrufer_profiles` konnte nicht angelegt werden.';
-        if ($errors) {
-            $message .= ' DB-Fehler: ' . implode(' | ', $errors);
-        }
-        throw new RuntimeException($message);
-    }
+    throw new RuntimeException('Datenbankschema ist nicht aktuell: einsatz_anrufer_profiles fehlt.');
 }
 
 function lsttraining_einsatzeditor_group_caller_parts(array $rows): array {

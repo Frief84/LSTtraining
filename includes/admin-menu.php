@@ -38,9 +38,18 @@ add_action( 'admin_menu', function () {
         $default_callback = 'lsttraining_render_leitstellen_fahrzeuge';
     }
 
-    // Hat der Benutzer weder Admin-Rechte noch irgendeine Ressource?
+    // Reine Spieler erhalten ausschließlich die rollenreduzierte Hilfeseite.
     if ( ! $is_admin && ! in_array( true, $can, true ) ) {
-        return;                       // → Menü gar nicht erst anlegen
+        add_menu_page(
+            'LST Training – Hilfe',
+            'LST Training',
+            'read',
+            'lsttraining_hilfe',
+            'lsttraining_render_help',
+            'dashicons-editor-help',
+            30
+        );
+        return;
     }
 
     /* ------------------------------------------------------------------ */
@@ -158,6 +167,16 @@ if ( $can['leitstellen'] ) {
         'lsttraining_render_anruferprofile'
     );
 }
+
+    // Hilfe ist für jeden Benutzer sichtbar, der Zugriff auf das Plugin-Menü hat.
+    add_submenu_page(
+        $parent_slug,
+        'Hilfe & Dokumentation',
+        'Hilfe & Dokumentation',
+        'read',
+        'lsttraining_hilfe',
+        'lsttraining_render_help'
+    );
 	
     /* ------------------------------------------------------------------ */
     /*   4. Admin-exklusive Punkte                                        */
@@ -196,4 +215,3 @@ if ( $can['leitstellen'] ) {
 
 
 } );
-

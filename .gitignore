@@ -1,5 +1,9 @@
 aa_db_tools/
 img/
+!img/
+img/*
+!img/signal/
+!img/signal/*.svg
 *.log
 node_modules/
 .env
