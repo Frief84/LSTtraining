@@ -227,6 +227,7 @@ foreach ([
                 </ul>
 
                 <h3><?php esc_html_e('Verwaltungsrouten', 'lsttraining'); ?></h3>
+                <p><?php esc_html_e('Die Verwaltungs-API arbeitet ressourcenbasiert. Eine Ressource entspricht einem Stammdatenbereich. Hochladen bedeutet dabei immer: JSON an die passende Route senden. Verschieben bedeutet: Beziehungsfelder oder die Wache eines Fahrzeugs ändern, nicht Dateien auf dem Server per FTP bewegen.', 'lsttraining'); ?></p>
                 <table class="widefat striped lst-help-api-table">
                     <thead><tr><th><?php esc_html_e('Methode', 'lsttraining'); ?></th><th><?php esc_html_e('Pfad', 'lsttraining'); ?></th><th><?php esc_html_e('Funktion', 'lsttraining'); ?></th></tr></thead>
                     <tbody>
@@ -237,6 +238,37 @@ foreach ([
                         <tr><td><code>DELETE</code></td><td><code>/verwaltung/{ressource}/{id}?confirm=true</code></td><td><?php esc_html_e('Datensatz und schemaabhängige Kinddaten löschen', 'lsttraining'); ?></td></tr>
                     </tbody>
                 </table>
+
+                <h3><?php esc_html_e('Daten hochladen und ändern', 'lsttraining'); ?></h3>
+                <p><?php esc_html_e('Neue Datensätze werden mit POST angelegt, vorhandene Datensätze mit PATCH geändert. Der Body ist immer ein JSON-Objekt. Nur die Felder der jeweiligen Ressource sind erlaubt; unbekannte Felder führen zu HTTP 400.', 'lsttraining'); ?></p>
+                <table class="widefat striped lst-help-api-table">
+                    <thead><tr><th><?php esc_html_e('Datenart', 'lsttraining'); ?></th><th><?php esc_html_e('So wird sie übertragen', 'lsttraining'); ?></th></tr></thead>
+                    <tbody>
+                        <tr><td><?php esc_html_e('Texte und Stammdaten', 'lsttraining'); ?></td><td><code>{"name":"RW Mitte","typ":"Rettungswache"}</code></td></tr>
+                        <tr><td><?php esc_html_e('Koordinaten', 'lsttraining'); ?></td><td><code>{"latitude":52.52,"longitude":13.405}</code></td></tr>
+                        <tr><td><?php esc_html_e('Einsatzgebiet', 'lsttraining'); ?></td><td><code>{"geojson":{...}}</code> <?php esc_html_e('oder ein GeoJSON-String mit Polygon/MultiPolygon.', 'lsttraining'); ?></td></tr>
+                        <tr><td><?php esc_html_e('ID-Listen', 'lsttraining'); ?></td><td><code>{"leitstellen":[3,7],"nebenleitstellen":[12]}</code></td></tr>
+                        <tr><td><?php esc_html_e('Fachbereiche', 'lsttraining'); ?></td><td><code>{"departments":["CARD","NEURO"]}</code> <?php esc_html_e('oder Fachbereiche mit eigenen Koordinaten.', 'lsttraining'); ?></td></tr>
+                        <tr><td><?php esc_html_e('Signallichter', 'lsttraining'); ?></td><td><code>{"signal_lights_json":{"version":1,"lights":[{"x":0.5,"y":0.2,"type":"beacon"}]}}</code></td></tr>
+                        <tr><td><?php esc_html_e('Vorhandenes lokales Bild', 'lsttraining'); ?></td><td><code>{"bild_datei":"img/fahrzeug/default.png"}</code></td></tr>
+                        <tr><td><?php esc_html_e('Neues Bild als Upload', 'lsttraining'); ?></td><td><code>{"bild_datei":{"filename":"rtw.png","mime_type":"image/png","data_base64":"..."}}</code></td></tr>
+                    </tbody>
+                </table>
+                <p><?php esc_html_e('Bei PATCH muss nicht der komplette Datensatz gesendet werden. Es reichen die Felder, die geändert werden sollen. Beziehungen werden aber als vollständige neue Liste verstanden: Wer leitstellen oder nebenleitstellen sendet, ersetzt damit die bisherige Zuordnung dieser Beziehung.', 'lsttraining'); ?></p>
+
+                <h3><?php esc_html_e('Verschieben und Zuordnungen ändern', 'lsttraining'); ?></h3>
+                <p><?php esc_html_e('Die API verschiebt keine Ordner oder Dateien, sondern fachliche Objekte zwischen Leitstellen, Nebenleitstellen und Wachen. Der Server prüft dabei immer den alten und den neuen Leitstellen-Scope.', 'lsttraining'); ?></p>
+                <table class="widefat striped lst-help-api-table">
+                    <thead><tr><th><?php esc_html_e('Aktion', 'lsttraining'); ?></th><th><?php esc_html_e('Route und Felder', 'lsttraining'); ?></th><th><?php esc_html_e('Wirkung', 'lsttraining'); ?></th></tr></thead>
+                    <tbody>
+                        <tr><td><?php esc_html_e('Wache anderer Leitstelle zuordnen', 'lsttraining'); ?></td><td><code>PATCH /verwaltung/wachen/{id}</code><br><code>{"leitstellen":[5]}</code></td><td><?php esc_html_e('Die Wache gehört danach zur übergebenen Leitstellenliste.', 'lsttraining'); ?></td></tr>
+                        <tr><td><?php esc_html_e('Wache zusätzlich einer Nebenleitstelle zuordnen', 'lsttraining'); ?></td><td><code>PATCH /verwaltung/wachen/{id}</code><br><code>{"nebenleitstellen":[8,9]}</code></td><td><?php esc_html_e('Die Nebenleitstellen-Zuordnung wird ersetzt.', 'lsttraining'); ?></td></tr>
+                        <tr><td><?php esc_html_e('Fahrzeug in eine andere Wache verschieben', 'lsttraining'); ?></td><td><code>PATCH /verwaltung/fahrzeuge/{id}</code><br><code>{"wache_id":22}</code></td><td><?php esc_html_e('Das Fahrzeug gehört danach zur Zielwache; der Rufname muss dort eindeutig sein.', 'lsttraining'); ?></td></tr>
+                        <tr><td><?php esc_html_e('Krankenhaus für Leitstellen freigeben', 'lsttraining'); ?></td><td><code>PATCH /verwaltung/leitstellen/{id}</code><br><code>{"available_hospitals":[4,11]}</code></td><td><?php esc_html_e('Die Leitstelle nutzt danach genau diese Krankenhausliste.', 'lsttraining'); ?></td></tr>
+                        <tr><td><?php esc_html_e('Nebenleitstelle mit Leitstellen verknüpfen', 'lsttraining'); ?></td><td><code>PATCH /verwaltung/nebenleitstellen/{id}</code><br><code>{"leitstellen":[3]}</code></td><td><?php esc_html_e('Die Nebenleitstelle wird den übergebenen Hauptleitstellen zugeordnet.', 'lsttraining'); ?></td></tr>
+                    </tbody>
+                </table>
+                <p><?php esc_html_e('Nicht-Administratoren dürfen nur in Bereiche verschieben, für die sie berechtigt sind. Gehört ein Objekt mehreren Leitstellen, muss der Benutzer für alle betroffenen Leitstellen die passende Bereichsfreigabe besitzen.', 'lsttraining'); ?></p>
 
                 <details open>
                     <summary><?php esc_html_e('Leitstellen', 'lsttraining'); ?></summary>

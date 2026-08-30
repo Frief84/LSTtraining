@@ -248,6 +248,10 @@ check('Strikte REST-Eingabe- und Bildvalidierung', () => {
   assert.match(docs, /vollstaendig decodiert/);
   assert.match(docs, /data_base64/);
   assert.match(help, /vollständig neu codiert/);
+  assert.match(help, /Daten hochladen und ändern/);
+  assert.match(help, /Verschieben und Zuordnungen ändern/);
+  assert.match(help, /base64/);
+  assert.match(help, /wache_id/);
 });
 
 check('Benutzerrechte pro Bereich und Leitstelle', () => {
