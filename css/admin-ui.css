@@ -859,6 +859,101 @@ tr {
   background-color: #f2f2f2; /* falls PNG transparent ist */
 }
 
+.lst-fahrzeuge-filter {
+  display: grid;
+  grid-template-columns: minmax(230px, 1.25fr) minmax(115px, .62fr) minmax(150px, .8fr) minmax(180px, 1fr) minmax(180px, 1fr) 76px auto;
+  gap: 8px;
+  align-items: end;
+  margin: 0 0 12px;
+  padding: 10px;
+  border: 1px solid #dcdcde;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+}
+
+.lst-fahrzeuge-filter__field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  margin: 0;
+  color: #1d2327;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.lst-fahrzeuge-filter__field input,
+.lst-fahrzeuge-filter__field select {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  min-height: 32px;
+  font-weight: 400;
+}
+
+.lst-fahrzeuge-filter__field .description {
+  display: none;
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+.lst-fahrzeuge-filter__field--small input {
+  max-width: 92px;
+}
+
+.lst-fahrzeuge-filter__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-height: 32px;
+}
+
+.lst-fahrzeuge-filter__actions .spinner {
+  float: none;
+  margin: 0;
+  visibility: hidden;
+}
+
+.lst-fahrzeuge-results {
+  position: relative;
+  transition: opacity .15s ease;
+}
+
+.lst-fahrzeuge-results.is-loading {
+  opacity: .58;
+  pointer-events: none;
+}
+
+.lst-fahrzeuge-summary {
+  margin: 12px 0;
+}
+
+.lst-fahrzeuge-filter-error {
+  margin: 10px 0;
+}
+
+@media (max-width: 1200px) {
+  .lst-fahrzeuge-filter {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+  }
+
+  .lst-fahrzeuge-filter__field--search {
+    grid-column: 1 / -1;
+  }
+
+  .lst-fahrzeuge-filter__actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 680px) {
+  .lst-fahrzeuge-filter {
+    grid-template-columns: 1fr;
+  }
+}
+
 .lst-leitstelle-overlay {
   position: fixed;
   inset: 0;
@@ -930,6 +1025,108 @@ tr {
   font-size: 15px;
 }
 
+.lst-leitstelle-workflow {
+  display: grid;
+  gap: 12px;
+}
+
+.lst-leitstelle-steps {
+  display: grid;
+  gap: 10px;
+}
+
+.lst-leitstelle-step {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #dcdcde;
+  border-radius: 8px;
+  background: #f6f7f7;
+}
+
+.lst-leitstelle-step.is-ready {
+  border-color: #9ed4b0;
+  background: #f3fbf5;
+}
+
+.lst-leitstelle-step.is-locked {
+  opacity: 0.78;
+}
+
+.lst-leitstelle-step__meta {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.lst-leitstelle-modal.is-edit .lst-leitstelle-step__meta {
+  grid-template-columns: 1fr;
+}
+
+.lst-leitstelle-modal.is-edit .lst-leitstelle-step__number {
+  display: none;
+}
+
+.lst-leitstelle-modal.is-edit .lst-leitstelle-step {
+  grid-template-columns: minmax(240px, 1fr) auto;
+}
+
+.lst-leitstelle-step__number {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #1d2327;
+  color: #fff;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.lst-leitstelle-step__meta strong {
+  display: block;
+  margin-bottom: 3px;
+}
+
+.lst-leitstelle-step__meta p {
+  margin: 0;
+  color: #646970;
+}
+
+.lst-leitstelle-step__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.lst-leitstelle-step__status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 2px 9px;
+  border: 1px solid #dcdcde;
+  border-radius: 6px;
+  background: #fff;
+  color: #646970;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.lst-leitstelle-step__status.is-ok {
+  border-color: #9ed4b0;
+  color: #0a6f2b;
+}
+
+.lst-leitstelle-step__status.is-missing {
+  border-color: #f0c36d;
+  color: #755100;
+}
+
 .lst-leitstelle-fields {
   display: grid;
   gap: 12px;
@@ -971,6 +1168,12 @@ tr {
   grid-template-columns: minmax(260px, 340px) minmax(320px, 1fr);
   gap: 14px;
   align-items: stretch;
+}
+
+.lst-neighbor-picker__list select {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .lst-neighbor-picker__list label {
@@ -1039,6 +1242,63 @@ tr {
 .lst-neighbor-legend .is-home { background: #2563eb; }
 .lst-neighbor-legend .is-selected { background: #16a34a; }
 .lst-neighbor-legend .is-available { background: #94a3b8; }
+
+.lst-neighbor-editor-modal.hidden {
+  display: none;
+}
+
+.lst-neighbor-editor-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100200;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.lst-neighbor-editor-modal__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(29, 35, 39, 0.56);
+}
+
+.lst-neighbor-editor-modal__dialog {
+  position: relative;
+  z-index: 1;
+  width: min(1100px, calc(100vw - 36px));
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  box-sizing: border-box;
+  padding: 18px;
+  border: 1px solid #dcdcde;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.28);
+}
+
+.lst-neighbor-editor-modal__head,
+.lst-neighbor-editor-modal__actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.lst-neighbor-editor-modal__head {
+  margin-bottom: 14px;
+}
+
+.lst-neighbor-editor-modal__head h3 {
+  margin: 2px 0 0;
+  font-size: 18px;
+}
+
+.lst-neighbor-editor-modal__actions {
+  justify-content: flex-end;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #dcdcde;
+}
 
 .lst-default-vehicle-grid {
   display: grid;
@@ -1279,10 +1539,25 @@ tr {
 
 @media (max-width: 980px) {
   .lst-leitstelle-grid,
+  .lst-leitstelle-step,
   .lst-neighbor-picker,
   .lst-default-vehicle-grid,
   .lst-default-vehicle-card {
     grid-template-columns: 1fr;
+  }
+
+  .lst-leitstelle-step__actions {
+    justify-content: flex-start;
+  }
+
+  .lst-neighbor-editor-modal {
+    padding: 10px;
+  }
+
+  .lst-neighbor-editor-modal__dialog {
+    width: calc(100vw - 20px);
+    max-height: calc(100vh - 20px);
+    padding: 14px;
   }
 
   .lst-leitstelle-modal {
@@ -1394,6 +1669,119 @@ tr {
   margin-top: 10px;
 }
 
+.einsatzgebiet-boundary-assistant {
+  border: 1px solid #dcdcde;
+  background: #fff;
+  padding: 12px;
+}
+
+.einsatzgebiet-boundary-assistant__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.einsatzgebiet-boundary-assistant__controls {
+  display: grid;
+  grid-template-columns: minmax(150px, 190px) minmax(150px, 190px) minmax(220px, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+  margin-top: 12px;
+}
+
+.einsatzgebiet-boundary-assistant__controls label {
+  display: grid;
+  gap: 4px;
+}
+
+.einsatzgebiet-boundary-assistant__controls select,
+.einsatzgebiet-boundary-assistant__controls input {
+  width: 100%;
+  max-width: 100%;
+}
+
+.einsatzgebiet-boundary-assistant__status {
+  min-height: 20px;
+  margin-top: 10px;
+}
+
+.einsatzgebiet-boundary-assistant__status.is-error {
+  color: #b32d2e;
+}
+
+.einsatzgebiet-boundary-assistant__results {
+  margin-top: 8px;
+  border: 1px solid #dcdcde;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.einsatzgebiet-boundary-result {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 8px;
+  align-items: start;
+  padding: 8px 10px;
+  border-bottom: 1px solid #f0f0f1;
+  cursor: pointer;
+}
+
+.einsatzgebiet-boundary-result:last-child {
+  border-bottom: 0;
+}
+
+.einsatzgebiet-boundary-result:hover {
+  background: #f6f7f7;
+}
+
+.einsatzgebiet-boundary-result__text {
+  display: grid;
+  gap: 2px;
+}
+
+.einsatzgebiet-boundary-result__text span {
+  color: #646970;
+  overflow-wrap: anywhere;
+}
+
+.einsatzgebiet-boundary-assistant__selected {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #c3c4c7;
+  background: #f6f7f7;
+}
+
+.einsatzgebiet-boundary-selected__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.einsatzgebiet-boundary-selected__item {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  max-width: 100%;
+  padding: 5px 8px;
+  border: 1px solid #8c8f94;
+  background: #fff;
+}
+
+.einsatzgebiet-boundary-selected__item span {
+  overflow-wrap: anywhere;
+}
+
+.einsatzgebiet-boundary-assistant__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 10px;
+}
+
 .einsatzgebiet-manual {
   width: 100%;
   max-width: 100%;
@@ -1418,6 +1806,10 @@ tr {
 
   .einsatzgebiet-map {
     height: 420px;
+  }
+
+  .einsatzgebiet-boundary-assistant__controls {
+    grid-template-columns: 1fr;
   }
 }
 

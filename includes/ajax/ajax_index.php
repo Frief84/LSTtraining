@@ -5,6 +5,7 @@ require_once plugin_dir_path(__FILE__) . 'ajax_common.php';
 
 // Aufteilung nach Verantwortung
 require_once plugin_dir_path(__FILE__) . 'ajax_einsatzgebiet.php';
+require_once plugin_dir_path(__FILE__) . 'ajax_boundaries.php';
 require_once plugin_dir_path(__FILE__) . 'ajax_nebenstellen.php';
 require_once plugin_dir_path(__FILE__) . 'ajax_wachen.php';
 require_once plugin_dir_path(__FILE__) . 'ajax_hospitals.php';

@@ -56,6 +56,14 @@ if (!function_exists('lsttraining_enqueue_nebenstellen_assets')) {
         );
 
         wp_enqueue_script(
+            'lsttraining-boundary-assistant',
+            $root_url . 'js/einsatzgebiet-boundary-assistant.js',
+            ['lsttraining-einsatzgebiet-upload'],
+            $version('js/einsatzgebiet-boundary-assistant.js'),
+            true
+        );
+
+        wp_enqueue_script(
             'lst-zuordnung-inline',
             $root_url . 'js/zuordnung_modal.js',
             ['lst-openlayers', 'lst-nebenstellen-editor'],
@@ -79,6 +87,10 @@ if (!function_exists('lsttraining_enqueue_nebenstellen_assets')) {
         wp_localize_script('lst-nebenstellen-editor', 'LSTTRAINING', [
             'ajax_url'           => admin_url('admin-ajax.php'),
             'nonce_nebenstellen' => wp_create_nonce('lst_nebenstellen_nonce'),
+        ]);
+
+        wp_localize_script('lsttraining-boundary-assistant', 'lstBoundaryAssistant', [
+            'ajax_url' => admin_url('admin-ajax.php'),
         ]);
 
         wp_localize_script('lst-nebenstellen-editor', 'lstNebenstellenAjax', [
@@ -184,7 +196,7 @@ add_action('admin_enqueue_scripts', function ($hook) {
             'lsttraining-einsatzgebiet-editor',
             $root_url . 'js/einsatzgebiet-editor.js',
             ['jquery', 'lst-openlayers'],
-            '1.0.0',
+            $asset_version('js/einsatzgebiet-editor.js'),
             true
         );
 
@@ -193,7 +205,7 @@ add_action('admin_enqueue_scripts', function ($hook) {
             'lsttraining-turf',
             $root_url . 'js/turf.min.js',
             [],
-            '6.5.0',
+            $asset_version('js/turf.min.js'),
             true
         );
 
@@ -202,9 +214,21 @@ add_action('admin_enqueue_scripts', function ($hook) {
             'lsttraining-einsatzgebiet-upload',
             $root_url . 'js/einsatzgebiet_upload.js',
             ['lsttraining-turf', 'lst-openlayers', 'lsttraining-einsatzgebiet-editor'],
-            '1.0.0',
+            $asset_version('js/einsatzgebiet_upload.js'),
             true
         );
+
+        wp_enqueue_script(
+            'lsttraining-boundary-assistant',
+            $root_url . 'js/einsatzgebiet-boundary-assistant.js',
+            ['lsttraining-einsatzgebiet-upload'],
+            $asset_version('js/einsatzgebiet-boundary-assistant.js'),
+            true
+        );
+
+        wp_localize_script('lsttraining-boundary-assistant', 'lstBoundaryAssistant', [
+            'ajax_url' => admin_url('admin-ajax.php'),
+        ]);
 
         wp_localize_script('lst-leitstellen-editor', 'lstLeitstellenAjax', [
             'ajax_url'  => admin_url('admin-ajax.php'),
@@ -338,7 +362,7 @@ add_action('admin_enqueue_scripts', function ($hook) {
             'lst-fahrzeuge',
             $root_url . 'js/fahrzeuge.js',
             ['jquery', 'select2'],
-            '1.9.1',
+            $asset_version('js/fahrzeuge.js'),
             true
         );
 
@@ -479,6 +503,17 @@ if (!function_exists('lsttraining_render_krankenhaeuser')) {
 if (!function_exists('lsttraining_render_leitstellen_wachen')) {
     function lsttraining_render_leitstellen_wachen() {
         require_once plugin_dir_path(__FILE__) . 'wachen.php';
+    }
+}
+
+if (!function_exists('lsttraining_render_spielinstanzen')) {
+    function lsttraining_render_spielinstanzen() {
+        $template = plugin_dir_path(__FILE__) . 'spielinstanzen.php';
+        if (file_exists($template)) {
+            require_once $template;
+        } else {
+            echo '<div class="notice notice-error"><p>Die Datei spielinstanzen.php wurde nicht gefunden.</p></div>';
+        }
     }
 }
 

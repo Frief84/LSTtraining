@@ -55,67 +55,6 @@
     }
     window.initLeitstellenEditor = initLeitstellenEditor;
 
-    function openLeitstellePopupForCreate() {
-        const heading = document.querySelector('#edit-leitstelle-formular h2');
-        if (heading) heading.textContent = 'Leitstelle erstellen';
-
-        [
-            'lst_update_id',
-            'lst_update_name',
-            'lst_update_ort',
-            'lst_update_bl',
-            'lst_update_land',
-            'lst_update_lat',
-            'lst_update_lon'
-        ].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.value = '';
-        });
-        const policeImage = document.getElementById('lst_update_police_vehicle_image');
-        if (policeImage) policeImage.value = 'img/fahrzeug/default_pol.png';
-        const policeSignals = document.getElementById('lst_update_police_signal_lights_json');
-        if (policeSignals) policeSignals.value = '';
-        const rescueImage = document.getElementById('lst_update_rescue_vehicle_image');
-        if (rescueImage) rescueImage.value = 'img/fahrzeug/default.png';
-        const rescueSignals = document.getElementById('lst_update_rescue_signal_lights_json');
-        if (rescueSignals) rescueSignals.value = '';
-        const neighbors = document.getElementById('lst_neighbor_nebenleitstellen');
-        if (neighbors) {
-            Array.from(neighbors.options).forEach(option => { option.selected = false; });
-        }
-
-        const mode = document.getElementById('lst_form_mode');
-        if (mode) mode.value = 'create';
-
-        if (typeof resetEditMaps === 'function') resetEditMaps();
-        if (typeof ensureEditMap === 'function') ensureEditMap();
-
-        const overlay = document.getElementById('popup-overlay');
-        if (overlay) overlay.style.display = 'block';
-
-        const popup = document.getElementById('edit-leitstelle-formular');
-        if (popup) popup.style.display = 'block';
-        if (typeof window.updateAllDefaultVehiclePreviews === 'function') {
-            window.updateAllDefaultVehiclePreviews();
-        }
-    }
-    window.openLeitstellePopupForCreate = openLeitstellePopupForCreate;
-
-    function ensureEditMap() {
-        /* no-op */
-    }
-    window.ensureEditMap = ensureEditMap;
-
-    function resetEditMaps() {
-        if (window.mapEdit) {
-            window.mapEdit.getView().setCenter(ol.proj.fromLonLat([9.0, 51.0]));
-            window.mapEdit.getLayers().item(1).getSource().clear();
-        }
-        const poly = document.getElementById('geojson_edit');
-        if (poly) poly.value = '';
-    }
-    window.resetEditMaps = resetEditMaps;
-
     document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.edit-leitstelle').forEach((btn) => {
             btn.addEventListener('click', () => {
@@ -134,13 +73,7 @@
             });
         });
 
-        const btn = document.getElementById('btn-new-leitstelle');
-        if (btn) {
-            btn.addEventListener('click', e => {
-                e.preventDefault();
-                openLeitstellePopupForCreate();
-            });
-        }
+        // #btn-new-leitstelle is handled in admin-ui.js to avoid double create resets.
     });
 
 })(window, document, ol);
@@ -522,12 +455,22 @@
 })(jQuery);
 
 function updateWachenZuordButtonState() {
+    if (typeof window.syncLeitstelleWorkflowState === 'function') {
+        window.syncLeitstelleWorkflowState();
+        return;
+    }
+
     var $btn = jQuery('#w_zuord_button_l');
 
     var geojson = jQuery('#edit-leitstelle-formular')
         .find('[name="geojson_edit"]')
         .first()
         .val();
+    var id = jQuery('#edit-leitstelle-formular')
+        .find('[name="lst_update_id"]')
+        .first()
+        .val();
+    var hasId = (/^\d+$/).test(String(id || '')) && String(id) !== '0';
 
     var hasGeo = false;
 
@@ -545,12 +488,12 @@ function updateWachenZuordButtonState() {
         }
     }
 
-    if (hasGeo) {
+    if (hasId && hasGeo) {
         $btn.prop('disabled', false);
-        $btn.attr('title', 'Zuordnung der Wachen bearbeiten');
+        $btn.attr('title', 'Wachen im Einsatzgebiet zuordnen');
     } else {
         $btn.prop('disabled', true);
-        $btn.attr('title', 'Bitte zuerst ein Einsatzgebiet anlegen');
+        $btn.attr('title', hasId ? 'Bitte zuerst ein Einsatzgebiet anlegen' : 'Bitte zuerst speichern');
     }
 }
 
@@ -1353,7 +1296,7 @@ function updateWachenZuordButtonState() {
 })(jQuery);
 
 // ---------------------------------------------------------------------------
-// Zuordnung-Button (Leitstelle) nur aktiv, wenn ID + Einsatzgebiet vorhanden
+// Leitstellen-Workflow: Folgeaktionen erst nach Speichern + Einsatzgebiet
 // ---------------------------------------------------------------------------
 (function() {
     function getLeitstellenIdFromEditForm() {
@@ -1397,50 +1340,149 @@ function updateWachenZuordButtonState() {
         }
     }
 
-    function syncWachenZuordButton() {
-        var btn = document.getElementById('w_zuord_button_l');
-        if (!btn) return;
-
+    function hasSavedLeitstelle() {
         var id = getLeitstellenIdFromEditForm();
-        var hasId = (/^\d+$/).test(id) && id !== '0';
-        var hasGeo = hasValidGeoJson();
+        return (/^\d+$/).test(id) && id !== '0';
+    }
 
-        if (hasId && hasGeo) {
-            btn.disabled = false;
-            btn.title = 'Zuordnung der Wachen bearbeiten';
+    function syncWachenZuordButton() {
+        syncLeitstelleWorkflowState();
+    }
+
+    function setButtonState(btn, enabled, title) {
+        if (!btn) return;
+        btn.disabled = !enabled;
+        if (enabled) {
+            btn.removeAttribute('title');
+            btn.classList.remove('is-disabled');
         } else {
-            btn.disabled = true;
-            btn.title = hasId ?
-                'Bitte zuerst ein Einsatzgebiet anlegen' :
-                'Bitte zuerst speichern';
+            btn.title = title;
+            btn.classList.add('is-disabled');
         }
+    }
+
+    function syncLeitstelleWorkflowState() {
+        var hasId = hasSavedLeitstelle();
+        var hasGeo = hasValidGeoJson();
+        var lockedTitle = !hasId ?
+            'Bitte zuerst die Leitstelle speichern.' :
+            'Bitte zuerst ein Einsatzgebiet hinterlegen.';
+        var enabled = hasId && hasGeo;
+
+        document.querySelectorAll('[data-lst-requires="saved_geo"]').forEach(function(btn) {
+            setButtonState(btn, enabled, lockedTitle);
+        });
+
+        var btn = document.getElementById('w_zuord_button_l');
+        if (btn && enabled) {
+            btn.title = 'Wachen im Einsatzgebiet zuordnen';
+        }
+
+        var geoStatus = document.querySelector('[data-lst-geo-status]');
+        if (geoStatus) {
+            geoStatus.textContent = hasGeo ? 'Einsatzgebiet vorhanden' : 'Kein Einsatzgebiet hinterlegt';
+            geoStatus.classList.toggle('is-ok', hasGeo);
+            geoStatus.classList.toggle('is-missing', !hasGeo);
+        }
+
+        var areaStep = document.querySelector('[data-lst-step="gebiet"]');
+        if (areaStep) areaStep.classList.toggle('is-ready', hasGeo);
+
+        var resourceStep = document.querySelector('[data-lst-step="ressourcen"]');
+        if (resourceStep) resourceStep.classList.toggle('is-locked', !enabled);
+
+        var supplyStep = document.querySelector('[data-lst-step="versorgung"]');
+        if (supplyStep) supplyStep.classList.toggle('is-locked', !enabled);
+    }
+
+    function openNeighborEditor() {
+        if (!hasSavedLeitstelle() || !hasValidGeoJson()) {
+            syncLeitstelleWorkflowState();
+            return;
+        }
+
+        var modal = document.getElementById('lst-neighbor-editor-modal');
+        if (!modal) return;
+
+        modal.classList.remove('hidden');
+        modal.setAttribute('aria-hidden', 'false');
+
+        if (typeof window.initNeighborLeitstellenMap === 'function') {
+            window.initNeighborLeitstellenMap(getLeitstellenGeoJsonFromEditForm());
+        }
+        if (window.lstNeighborMap) {
+            setTimeout(function() {
+                window.lstNeighborMap.updateSize();
+            }, 40);
+        }
+    }
+
+    function closeNeighborEditor() {
+        var modal = document.getElementById('lst-neighbor-editor-modal');
+        if (!modal) return;
+        modal.classList.add('hidden');
+        modal.setAttribute('aria-hidden', 'true');
+        syncLeitstelleWorkflowState();
+    }
+
+    function openWachenEditor() {
+        if (!hasSavedLeitstelle() || !hasValidGeoJson()) {
+            syncLeitstelleWorkflowState();
+            return;
+        }
+        var btn = document.getElementById('lst-open-wachen-editor');
+        var id = getLeitstellenIdFromEditForm();
+        var baseUrl = btn ? String(btn.getAttribute('data-wachen-url') || '') : '';
+        if (!baseUrl || !id) return;
+        window.location.href = baseUrl + '&ls_id=' + encodeURIComponent(id);
     }
 
     document.addEventListener('DOMContentLoaded', function() {
         var btn = document.getElementById('w_zuord_button_l');
-        if (!btn) return;
+        if (btn) {
+            btn.addEventListener('click', function(e) {
+                var id = getLeitstellenIdFromEditForm();
 
-        btn.addEventListener('click', function(e) {
-            var id = getLeitstellenIdFromEditForm();
-            var hasId = (/^\d+$/).test(id) && id !== '0';
-            var hasGeo = hasValidGeoJson();
+                if (!hasSavedLeitstelle() || !hasValidGeoJson()) {
+                    e.preventDefault();
+                    syncLeitstelleWorkflowState();
+                    return;
+                }
 
-            if (!(hasId && hasGeo)) {
+                if (typeof openZuordnungPopup === 'function') {
+                    e.preventDefault();
+                    openZuordnungPopup({
+                        entityType: 'leitstelle',
+                        entityId: id
+                    });
+                }
+            });
+        }
+
+        var wachenBtn = document.getElementById('lst-open-wachen-editor');
+        if (wachenBtn) {
+            wachenBtn.addEventListener('click', function(e) {
                 e.preventDefault();
-                syncWachenZuordButton();
-                return;
-            }
+                openWachenEditor();
+            });
+        }
 
-            if (typeof openZuordnungPopup === 'function') {
+        var neighborBtn = document.getElementById('lst-open-neighbor-editor');
+        if (neighborBtn) {
+            neighborBtn.addEventListener('click', function(e) {
                 e.preventDefault();
-                openZuordnungPopup({
-                    entityType: 'leitstelle',
-                    entityId: id
-                });
-            }
+                openNeighborEditor();
+            });
+        }
+
+        document.querySelectorAll('[data-lst-neighbor-close], #lst-neighbor-apply').forEach(function(closeBtn) {
+            closeBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                closeNeighborEditor();
+            });
         });
 
-        syncWachenZuordButton();
+        syncLeitstelleWorkflowState();
 
         document.addEventListener('input', function(e) {
             if (
@@ -1452,7 +1494,7 @@ function updateWachenZuordButtonState() {
                     e.target.id === 'geojson_edit'
                 )
             ) {
-                syncWachenZuordButton();
+                syncLeitstelleWorkflowState();
             }
         });
 
@@ -1466,10 +1508,16 @@ function updateWachenZuordButtonState() {
                     e.target.id === 'geojson_edit'
                 )
             ) {
-                syncWachenZuordButton();
+                syncLeitstelleWorkflowState();
             }
         });
 
+        document.addEventListener('lsttraining:einsatzgebiet-saved', syncLeitstelleWorkflowState);
+        document.addEventListener('lsttraining:einsatzgebiet-updated', syncLeitstelleWorkflowState);
+
         window.syncWachenZuordButton = syncWachenZuordButton;
+        window.syncLeitstelleWorkflowState = syncLeitstelleWorkflowState;
+        window.lstLeitstelleHasSavedId = hasSavedLeitstelle;
+        window.lstLeitstelleHasValidGeoJson = hasValidGeoJson;
     });
 })();

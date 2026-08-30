@@ -25,6 +25,9 @@ window.initEinsatzgebietEditor = function (container) {
 
   // Popup sichtbar machen BEVOR OpenLayers arbeitet
   container.style.display = 'block';
+  if (typeof window.initBoundaryAssistant === 'function') {
+    window.initBoundaryAssistant();
+  }
 
   // Controls, die wir hier brauchen (Turf-Import läuft woanders)
   const fileInput   = container.querySelector('#geojson-file');     // wichtig: Bindestrich
@@ -222,6 +225,21 @@ window.openEinsatzgebietPopup = function() {
         requestAnimationFrame(() => map.updateSize());
     }
 };
+
+document.addEventListener('click', (event) => {
+  const searchBtn = event.target.closest('[data-boundary-search]');
+  const applyBtn = event.target.closest('[data-boundary-apply]');
+  if (!searchBtn && !applyBtn) return;
+
+  if (window.lstBoundaryAssistantRun) return;
+
+  const root = (searchBtn || applyBtn).closest('[data-boundary-assistant]');
+  const status = root ? root.querySelector('[data-boundary-status]') : null;
+  if (status) {
+    status.textContent = 'Der Verwaltungsgrenzen-Assistent wurde nicht geladen. Bitte Browser-Cache leeren und Seite neu laden.';
+    status.classList.add('is-error');
+  }
+});
 	
 	document.addEventListener('click', async (ev) => {
   const btn = ev.target.closest('#btn-geojson-import');
@@ -288,6 +306,10 @@ window.openEinsatzgebietPopup = function() {
     return;
   }
   hidden.value = JSON.stringify(obj);
+  hidden.dispatchEvent(new Event('input', { bubbles: true }));
+  document.dispatchEvent(new CustomEvent('lsttraining:einsatzgebiet-updated', {
+    detail: { field: hidden.id }
+  }));
 
   // Karte updaten
   const mapId = popup.dataset.mapId;

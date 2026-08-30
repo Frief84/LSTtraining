@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS `leitstellen` (
   `available_hospitals` TEXT COLLATE utf8mb4_general_ci NOT NULL
     COMMENT 'JSON-Array mit IDs der freigeschalteten Krankenhäuser',
   `created_at`          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created_by_user_id`  BIGINT UNSIGNED NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -296,9 +297,28 @@ CREATE TABLE IF NOT EXISTS `user_permissions` (
   `can_edit_hospitals`    TINYINT(1) NOT NULL DEFAULT 0,
   `can_edit_wachen`       TINYINT(1) NOT NULL DEFAULT 0,
   `can_edit_fahrzeuge`    TINYINT(1) NOT NULL DEFAULT 0,
+  `can_manage_spielinstanzen` TINYINT(1) NOT NULL DEFAULT 0,
   `leitstellen_ids`       TEXT COLLATE utf8mb4_unicode_ci NOT NULL
     COMMENT 'Kommagetrennte Liste von Leitstellen‐IDs, die der Benutzer bearbeiten darf',
   PRIMARY KEY (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `user_leitstelle_permissions` (
+  `user_id`                 BIGINT UNSIGNED NOT NULL,
+  `leitstelle_id`           INT NOT NULL,
+  `can_edit_leitstelle`     TINYINT(1) NOT NULL DEFAULT 0,
+  `can_edit_hospitals`      TINYINT(1) NOT NULL DEFAULT 0,
+  `can_edit_wachen`         TINYINT(1) NOT NULL DEFAULT 0,
+  `can_edit_fahrzeuge`      TINYINT(1) NOT NULL DEFAULT 0,
+  `granted_by_user_id`      BIGINT UNSIGNED NULL DEFAULT NULL,
+  `granted_at`              DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (`user_id`, `leitstelle_id`),
+  KEY `idx_ulp_leitstelle` (`leitstelle_id`),
+  KEY `idx_ulp_user` (`user_id`),
+
+  CONSTRAINT `fk_ulp_leitstelle`
+    FOREIGN KEY (`leitstelle_id`) REFERENCES `leitstellen`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `lst_activity_log` (

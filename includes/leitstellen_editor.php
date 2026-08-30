@@ -156,8 +156,20 @@ if ( ! function_exists( 'lsttraining_leitstellen_normalize_signal_lights_json' )
     }
 }
 
-if ( ! lsttraining_user_can( 'leitstellen', $leitstelle_id ) ) {
+if (
+    ( $leitstelle_id > 0 && ! (
+        lsttraining_user_can( 'leitstellen', $leitstelle_id )
+        || lsttraining_user_can( 'hospitals', $leitstelle_id )
+        || lsttraining_user_can( 'wachen', $leitstelle_id )
+        || lsttraining_user_can( 'fahrzeuge', $leitstelle_id )
+    ) )
+    || ( $leitstelle_id <= 0 && ! lsttraining_user_can_view_leitstellen_admin() )
+) {
     wp_die( 'Keine Berechtigung.' );
+}
+
+if ( $pdo ) {
+    lsttraining_permissions_ensure_schema( $pdo );
 }
 
 if ( $pdo && ! lsttraining_leitstellen_column_exists( $pdo, 'leitstellen', 'police_vehicle_image' ) ) {
@@ -204,13 +216,17 @@ if ( $pdo ) {
  * DELETE
  * ---------------------------------------------------------------------- */
 if ( isset( $_GET['delete_id'] ) && $pdo ) {
+    $delete_id = intval( $_GET['delete_id'] );
+    if ( ! lsttraining_user_can( 'leitstellen', $delete_id ) ) {
+        wp_die( 'Keine Berechtigung.' );
+    }
     $pdo->prepare( 'DELETE FROM leitstellen WHERE id = ?' )
-        ->execute( [ intval( $_GET['delete_id'] ) ] );
+        ->execute( [ $delete_id ] );
 	    // Log: Leitstelle gelöscht
     lsttraining_log_activity([
         'entity_type' => 'leitstelle',
         'action'      => 'delete',
-        'entity_id'   => (int)$_GET['delete_id'],
+        'entity_id'   => $delete_id,
         'meta'        => ['page' => 'leitstellen_editor.php']
     ]);
     add_settings_error( 'lsttraining_msg', 'deleted',
@@ -224,6 +240,9 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST'
      && isset( $_POST['lst_form_mode'] )
      && $_POST['lst_form_mode'] === 'create'
      && $pdo ) {
+    if ( ! lsttraining_user_can_global_area( 'leitstellen' ) ) {
+        wp_die( 'Keine Berechtigung.' );
+    }
 
     // Neue Leitstelle schreiben
     $create_columns = 'name, ort, bundesland, land, latitude, longitude, geojson';
@@ -237,6 +256,11 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST'
         floatval( $_POST['lst_update_lon'] ),
         wp_unslash( $_POST['geojson_edit'] ?? '' ),
     ];
+    if ( lsttraining_leitstellen_column_exists( $pdo, 'leitstellen', 'created_by_user_id' ) ) {
+        $create_columns .= ', created_by_user_id';
+        $create_values .= ',?';
+        $create_params[] = (int) get_current_user_id();
+    }
     if ( $leitstellen_has_police_image_column ) {
         $create_columns .= ', police_vehicle_image';
         $create_values .= ',?';
@@ -290,6 +314,11 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST'
      && ( $_POST['lst_form_mode'] ?? '' ) !== 'create'
      && $pdo ) {
 
+    $update_id = intval( $_POST['lst_update_id'] );
+    if ( ! lsttraining_user_can( 'leitstellen', $update_id ) ) {
+        wp_die( 'Keine Berechtigung.' );
+    }
+
     /* basic data */
     $update_sql = 'UPDATE leitstellen
             SET name = ?,
@@ -323,18 +352,18 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST'
         $update_params[] = lsttraining_leitstellen_normalize_signal_lights_json( $_POST['lst_update_rescue_signal_lights_json'] ?? '' );
     }
     $update_sql .= ' WHERE id = ?';
-    $update_params[] = intval( $_POST['lst_update_id'] );
+    $update_params[] = $update_id;
     $pdo->prepare( $update_sql )->execute( $update_params );
     lsttraining_leitstellen_save_neighbors(
         $pdo,
-        intval( $_POST['lst_update_id'] ),
+        $update_id,
         array_map( 'intval', (array) ( $_POST['lst_neighbor_nebenleitstellen'] ?? [] ) )
     );
 	
    lsttraining_log_activity([
         'entity_type' => 'leitstelle',
         'action'      => 'update',
-        'entity_id'   => (int)$leitstelle_id,
+        'entity_id'   => $update_id,
         'meta'        => ['page' => 'leitstellen_editor.php']
     ]);
 
@@ -348,7 +377,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST'
     if ( $geojson !== '' ) {
         $pdo->prepare(
             'UPDATE leitstellen SET geojson = ? WHERE id = ?'
-        )->execute( [ $geojson, intval( $_POST['lst_update_id'] ) ] );
+        )->execute( [ $geojson, $update_id ] );
     }
 
     /* success notice */
@@ -373,21 +402,41 @@ if ( $pdo ) {
         ? 'rescue_signal_lights_json'
         : "'' AS rescue_signal_lights_json";
     $default_selects = implode( ',', [ $police_image_select, $police_signal_select, $rescue_image_select, $rescue_signal_select ] );
+    $scope_where = '';
+    $scope_params = [];
+    if ( ! current_user_can( 'manage_options' ) ) {
+        $allowed_leitstellen = lsttraining_user_visible_leitstellen();
+        if ( $allowed_leitstellen ) {
+            $scope_where = 'id IN (' . implode( ',', array_fill( 0, count( $allowed_leitstellen ), '?' ) ) . ')';
+            $scope_params = $allowed_leitstellen;
+        } else {
+            $scope_where = '0 = 1';
+        }
+    }
     if ( $suchbegriff !== '' ) {
+        $where_parts = [
+            '(name LIKE ? OR id = ?)',
+        ];
+        $query_params = [ '%' . $suchbegriff . '%', $suchbegriff ];
+        if ( $scope_where !== '' ) {
+            $where_parts[] = $scope_where;
+            $query_params = array_merge( $query_params, $scope_params );
+        }
         $stmt = $pdo->prepare(
             'SELECT id,name,ort,bundesland,land,latitude,longitude,' . $default_selects . '
                FROM leitstellen
-              WHERE name LIKE ?
-                 OR id = ?
+              WHERE ' . implode( ' AND ', $where_parts ) . '
            ORDER BY name ASC'
         );
-        $stmt->execute( [ '%' . $suchbegriff . '%', $suchbegriff ] );
+        $stmt->execute( $query_params );
     } else {
-        $stmt = $pdo->query(
+        $sql =
             'SELECT id,name,ort,bundesland,land,latitude,longitude,' . $default_selects . '
                FROM leitstellen
-           ORDER BY name ASC'
-        );
+              ' . ( $scope_where !== '' ? 'WHERE ' . $scope_where : '' ) . '
+           ORDER BY name ASC';
+        $stmt = $pdo->prepare( $sql );
+        $stmt->execute( $scope_params );
     }
     $leitstellen = $stmt->fetchAll( PDO::FETCH_OBJ );
     $neighbor_ids_by_leitstelle = [];
@@ -426,9 +475,11 @@ if ( $pdo ) {
         <button class="button">Suchen</button>
     </form>
 	
+<?php if ( lsttraining_user_can_global_area( 'leitstellen' ) ) : ?>
 	<button id="btn-new-leitstelle" class="button button-primary">
     + Neue Leitstelle
 </button>
+<?php endif; ?>
 
     <table class="widefat">
         <thead>
@@ -460,12 +511,14 @@ if ( $pdo ) {
                        data-rescue-image="<?php echo esc_attr( $l->rescue_vehicle_image ?: 'img/fahrzeug/default.png' ); ?>"
                        data-rescue-signal-lights="<?php echo esc_attr( $l->rescue_signal_lights_json ?? '' ); ?>"
                        data-neighbor-ids="<?php echo esc_attr( wp_json_encode( $neighbor_ids_by_leitstelle[ (int) $l->id ] ?? [] ) ); ?>"
-                    >Bearbeiten</a>
+                    ><?php echo lsttraining_user_can( 'leitstellen', (int) $l->id ) ? 'Bearbeiten' : 'Öffnen'; ?></a>
+                    <?php if ( lsttraining_user_can( 'leitstellen', (int) $l->id ) ) : ?>
                     <a href="<?php echo admin_url(
                         'admin.php?page=lsttraining_leitstellen&delete_id=' . $l->id ); ?>"
                        class="button button-link-delete"
                        onclick="return confirm('Wirklich löschen?');"
                     >Löschen</a>
+                    <?php endif; ?>
                 </td>
             </tr>
         <?php endforeach; ?>
@@ -477,7 +530,7 @@ if ( $pdo ) {
 <div id="popup-overlay" class="lst-leitstelle-overlay" style="display:none;"></div>
 
 <!-- Edit popup -->
-<div id="edit-leitstelle-formular" class="lst-leitstelle-modal" style="display:none;">
+<div id="edit-leitstelle-formular" class="lst-leitstelle-modal is-edit" style="display:none;">
     <div class="lst-leitstelle-modal__head">
         <div>
             <span class="lst-leitstelle-kicker">Leitstelle</span>
@@ -510,8 +563,8 @@ if ( $pdo ) {
             </section>
         </div>
 
-        <section class="lst-leitstelle-card">
-            <h3>Verwaltung</h3>
+        <section class="lst-leitstelle-card lst-leitstelle-workflow">
+            <h3>Einrichtung</h3>
 <?php
 /* hidden polygon field + invisible map container (filled via JS) */
 lsttraining_einsatzgebiet_editor(
@@ -520,86 +573,131 @@ lsttraining_einsatzgebiet_editor(
     '', 0, 'leitstelle', ''
 );
 ?>
-            <div class="lst-leitstelle-actions">
-<button type="button" class="button open-einsatzgebiet-editor"
-        data-map-id="einsatzgebiet_edit"
-        data-leitstelle-id="0"
-        data-center=""
-        data-context="leitstelle">
-    Einsatzgebiet bearbeiten
-</button>
-			
-<button type="button" class="button open-wachen-editor"
-        onclick="window.location.href='<?php 
-          echo admin_url( 'admin.php?page=lsttraining_leitstellen_wachen' );
-        ?>&ls_id='+document.getElementById('lst_update_id').value;">
-    Wachen bearbeiten
-</button>
-<input type="hidden" id="current_leitstelle_id" name="ls_id" 
-       value="<?php echo esc_attr( $leitstelle_id ); ?>">
+            <div class="lst-leitstelle-steps" aria-label="Einrichtungsablauf">
+                <section class="lst-leitstelle-step" data-lst-step="gebiet">
+                    <div class="lst-leitstelle-step__meta">
+                        <span class="lst-leitstelle-step__number">1</span>
+                        <div>
+                            <strong>Einsatzgebiet</strong>
+                            <p>Erst danach werden Ressourcen und Orte sinnvoll bearbeitet.</p>
+                        </div>
+                    </div>
+                    <div class="lst-leitstelle-step__actions">
+                        <button type="button" class="button open-einsatzgebiet-editor"
+                                data-map-id="einsatzgebiet_edit"
+                                data-leitstelle-id="0"
+                                data-center=""
+                                data-context="leitstelle">
+                            Einsatzgebiet bearbeiten
+                        </button>
+                        <span class="lst-leitstelle-step__status" data-lst-geo-status>Kein Einsatzgebiet hinterlegt</span>
+                    </div>
+                </section>
 
-<button
-   type="button"
-   class="button open-leitstelle-hospitals-editor"
->
-   Krankenhäuser bearbeiten
-</button>
+                <section class="lst-leitstelle-step" data-lst-step="ressourcen">
+                    <div class="lst-leitstelle-step__meta">
+                        <span class="lst-leitstelle-step__number">2</span>
+                        <div>
+                            <strong>Ressourcen</strong>
+                            <p>Wachen und angrenzende Leitstellen zuordnen.</p>
+                        </div>
+                    </div>
+                    <div class="lst-leitstelle-step__actions">
+                        <button type="button" class="button open-wachen-editor"
+                                id="lst-open-wachen-editor"
+                                data-lst-requires="saved_geo"
+                                data-wachen-url="<?php echo esc_url( admin_url( 'admin.php?page=lsttraining_leitstellen_wachen' ) ); ?>">
+                            Wachen bearbeiten
+                        </button>
+                        <button type="button"
+                                class="button button-small"
+                                id="w_zuord_button_l"
+                                data-lst-requires="saved_geo"
+                                disabled
+                                title="Bitte zuerst speichern">
+                            Wachen im Einsatzgebiet zuordnen
+                        </button>
+                        <button type="button"
+                                class="button"
+                                id="lst-open-neighbor-editor"
+                                data-lst-requires="saved_geo">
+                            Nachbarleitstellen bearbeiten
+                        </button>
+                    </div>
+                </section>
 
-<button
-   type="button"
-   class="button open-leitstelle-pois-editor"
->
-   POIs bearbeiten
-</button>
-
-<button
-   type="button"
-   class="button"
-   id="btn-osm-refresh"
-   title="Geänderte OSM-Tiles für diese Leitstelle anwenden"
->OSM Tiles sync</button>
-<?php
-$zuo_url = admin_url( 'admin.php?page=lsttraining_zuordnung_modal'
-    . '&entity_type=leitstelle&entity_id=' . intval($leitstelle_id)
-    . '&TB_iframe=true&width=1100&height=760' );
-?>
-<button type="button"
-        class="button"
-        id="w_zuord_button_l"
-        disabled
-        title="Bitte zuerst speichern">
-  Zuordnung der Wachen bearbeiten
-</button>
+                <section class="lst-leitstelle-step" data-lst-step="versorgung">
+                    <div class="lst-leitstelle-step__meta">
+                        <span class="lst-leitstelle-step__number">3</span>
+                        <div>
+                            <strong>Versorgung & Orte</strong>
+                            <p>Krankenhäuser, POIs und OSM-Daten für die Simulation pflegen.</p>
+                        </div>
+                    </div>
+                    <div class="lst-leitstelle-step__actions">
+                        <button type="button"
+                                class="button open-leitstelle-hospitals-editor"
+                                data-lst-requires="saved_geo">
+                            Krankenhäuser bearbeiten
+                        </button>
+                        <button type="button"
+                                class="button open-leitstelle-pois-editor"
+                                data-lst-requires="saved_geo">
+                            POIs bearbeiten
+                        </button>
+                        <button type="button"
+                                class="button"
+                                id="btn-osm-refresh"
+                                data-lst-requires="saved_geo"
+                                title="Geänderte OSM-Tiles für diese Leitstelle anwenden">
+                            OSM Tiles sync
+                        </button>
+                    </div>
+                </section>
             </div>
+            <input type="hidden" id="current_leitstelle_id" name="ls_id" value="<?php echo esc_attr( $leitstelle_id ); ?>">
             <span id="lst-osm-refresh-spinner" class="spinner" style="float:none; margin-left:6px; visibility:hidden;"></span>
             <div id="lst-osm-refresh-status" class="notice inline" style="display:none; margin-top:10px; padding:8px;"></div>
         </section>
 
-        <section class="lst-leitstelle-card">
-            <h3>Nachbarleitstellen</h3>
-            <div class="lst-neighbor-picker">
-                <div class="lst-neighbor-picker__list">
-                    <label for="lst_neighbor_nebenleitstellen">Angrenzende Leitstellen</label>
-                    <select id="lst_neighbor_nebenleitstellen" name="lst_neighbor_nebenleitstellen[]" multiple size="8" style="min-width:320px;width:100%;">
-                        <?php foreach ( $nebenleitstellen_options as $nls ) : ?>
-                            <option value="<?php echo esc_attr( (string) (int) $nls['id'] ); ?>">
-                                <?php echo esc_html( (string) $nls['name'] ); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+        <div id="lst-neighbor-editor-modal" class="lst-neighbor-editor-modal hidden" aria-hidden="true">
+            <div class="lst-neighbor-editor-modal__overlay" data-lst-neighbor-close></div>
+            <div class="lst-neighbor-editor-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="lst-neighbor-editor-title">
+                <div class="lst-neighbor-editor-modal__head">
+                    <div>
+                        <span class="lst-leitstelle-kicker">Ressourcen</span>
+                        <h3 id="lst-neighbor-editor-title">Nachbarleitstellen bearbeiten</h3>
+                    </div>
+                    <button type="button" class="button" data-lst-neighbor-close>Schließen</button>
                 </div>
-                <div class="lst-neighbor-picker__map-wrap">
-                    <div id="lst_neighbor_map" class="lst-neighbor-map" aria-label="Nachbarleitstellen visuell auswählen"></div>
-                    <div class="lst-neighbor-map__empty" data-lst-neighbor-map-empty hidden>Keine Nebenleitstellen mit gültigen Koordinaten vorhanden.</div>
-                    <div class="lst-neighbor-legend" aria-hidden="true">
-                        <span><i class="is-home"></i> Leitstelle</span>
-                        <span><i class="is-selected"></i> ausgewählt</span>
-                        <span><i class="is-available"></i> weitere</span>
+                <div class="lst-neighbor-picker">
+                    <div class="lst-neighbor-picker__list">
+                        <label for="lst_neighbor_nebenleitstellen">Angrenzende Leitstellen</label>
+                        <select id="lst_neighbor_nebenleitstellen" name="lst_neighbor_nebenleitstellen[]" multiple size="12">
+                            <?php foreach ( $nebenleitstellen_options as $nls ) : ?>
+                                <option value="<?php echo esc_attr( (string) (int) $nls['id'] ); ?>">
+                                    <?php echo esc_html( (string) $nls['name'] ); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="lst-neighbor-picker__map-wrap">
+                        <div id="lst_neighbor_map" class="lst-neighbor-map" aria-label="Nachbarleitstellen visuell auswählen"></div>
+                        <div class="lst-neighbor-map__empty" data-lst-neighbor-map-empty hidden>Keine Nebenleitstellen mit gültigen Koordinaten vorhanden.</div>
+                        <div class="lst-neighbor-legend" aria-hidden="true">
+                            <span><i class="is-home"></i> Leitstelle</span>
+                            <span><i class="is-selected"></i> ausgewählt</span>
+                            <span><i class="is-available"></i> weitere</span>
+                        </div>
                     </div>
                 </div>
+                <p class="description">Die Auswahl wird mit dem Hauptformular gespeichert.</p>
+                <div class="lst-neighbor-editor-modal__actions">
+                    <button type="button" class="button button-primary" id="lst-neighbor-apply">Übernehmen</button>
+                    <button type="button" class="button" data-lst-neighbor-close>Schließen</button>
+                </div>
             </div>
-            <p class="description">Diese Nebenleitstellen können in laufenden Einsätzen per Unterstützungsanfrage kontaktiert werden.</p>
-        </section>
+        </div>
 
         <section class="lst-leitstelle-card">
             <h3>Default-Fahrzeuge</h3>

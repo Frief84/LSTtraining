@@ -20,7 +20,55 @@ require_once plugin_dir_path( __FILE__ ) . '/einsatzgebiet-editor.php';
 
 $pdo          = lsttraining_get_connection();
 $nebenstellen = [];
-$suchbegriff  = $_GET['suchbegriff'] ?? '';
+$suchbegriff  = isset($_GET['suchbegriff']) ? sanitize_text_field(wp_unslash((string) $_GET['suchbegriff'])) : '';
+$orderby      = isset($_GET['orderby']) ? sanitize_key((string) $_GET['orderby']) : 'id';
+$order        = isset($_GET['order']) ? strtolower((string) $_GET['order']) : 'asc';
+
+if ( ! function_exists( 'lsttraining_nebenstellen_detect_land' ) ) {
+    function lsttraining_nebenstellen_detect_land( string $name, string $zustandigkeit ): string {
+        $haystack = str_replace(
+            [ 'Ä', 'Ö', 'Ü' ],
+            [ 'ä', 'ö', 'ü' ],
+            strtolower( $name . ' ' . $zustandigkeit )
+        );
+        $countries = [
+            'Österreich' => [
+                'österreich', 'austria', 'burgenland', 'kärnten', 'kaernten', 'niederösterreich',
+                'niederoesterreich', 'oberösterreich', 'oberoesterreich', 'salzburg', 'steiermark',
+                'tirol', 'vorarlberg', 'wien',
+            ],
+            'Deutschland' => [
+                'deutschland', 'germany', 'baden-württemberg', 'baden-wuerttemberg', 'bayern',
+                'berlin', 'brandenburg', 'bremen', 'hamburg', 'hessen', 'mecklenburg-vorpommern',
+                'niedersachsen', 'nordrhein-westfalen', 'rheinland-pfalz', 'saarland', 'sachsen',
+                'sachsen-anhalt', 'schleswig-holstein', 'thüringen', 'thueringen',
+            ],
+        ];
+
+        foreach ( $countries as $country => $needles ) {
+            foreach ( $needles as $needle ) {
+                if ( $needle !== '' && strpos( $haystack, $needle ) !== false ) {
+                    return $country;
+                }
+            }
+        }
+
+        return '';
+    }
+}
+
+if ( ! function_exists( 'lsttraining_nebenstellen_sort_link' ) ) {
+    function lsttraining_nebenstellen_sort_link( string $label, string $key, string $current_key, string $current_order ): string {
+        $next_order = ( $current_key === $key && $current_order === 'asc' ) ? 'desc' : 'asc';
+        $qs = $_GET;
+        $qs['orderby'] = $key;
+        $qs['order'] = $next_order;
+        $url = add_query_arg( $qs, admin_url( 'admin.php?page=lsttraining_nebenstellen' ) );
+        $arrow = $current_key === $key ? ( $current_order === 'asc' ? ' ▲' : ' ▼' ) : '';
+
+        return '<a href="' . esc_url( $url ) . '">' . esc_html( $label . $arrow ) . '</a>';
+    }
+}
 
 
 $nextId = (int) $pdo->query('SELECT MAX(id)+1 FROM nebenleitstellen')->fetchColumn() ?: 1;
@@ -78,10 +126,31 @@ if ($pdo) {
         $args  = [ "%$suchbegriff%", $suchbegriff ];
     }
 
-    // bewusst kein ORDER BY → entspricht deinem aktuellen Verhalten
     $stmt = $pdo->prepare($sql);
     $stmt->execute($args);
     $nebenstellen = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+    foreach ($nebenstellen as $n) {
+        $n->land = lsttraining_nebenstellen_detect_land(
+            (string) ($n->name ?? ''),
+            (string) ($n->zustandigkeit ?? '')
+        );
+    }
+
+    $order_factor = ($order === 'desc') ? -1 : 1;
+    $sort_key = in_array($orderby, ['id', 'name', 'land', 'wachen'], true) ? $orderby : 'id';
+    usort($nebenstellen, static function ($a, $b) use ($sort_key, $order_factor) {
+        if ($sort_key === 'id') {
+            $cmp = (int) $a->id <=> (int) $b->id;
+        } elseif ($sort_key === 'wachen') {
+            $cmp = (int) $a->wachen_cnt <=> (int) $b->wachen_cnt;
+        } else {
+            $field = $sort_key === 'land' ? 'land' : 'name';
+            $cmp = strnatcasecmp((string) ($a->{$field} ?? ''), (string) ($b->{$field} ?? ''));
+        }
+
+        return $cmp * $order_factor;
+    });
 }
 
 if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['neben_create'] ) && $pdo ) {
@@ -99,7 +168,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['neben_create'] ) &&
         intval( $_POST['neben_update_nachbar'] ?? 0 ),
         stripslashes( $_POST['geojson_edit'] ?? '[]' ),
     ]);
-    wp_safe_redirect( admin_url( 'admin.php?page=lsttraining_nebenleitstellen' ) );
+    wp_safe_redirect( admin_url( 'admin.php?page=lsttraining_nebenstellen' ) );
     exit;
 }
 
@@ -109,15 +178,15 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['neben_create'] ) &&
     <h1>Nebenleitstellen verwalten</h1>
 
     <div style="margin-bottom:20px;">
-  		<input id="nebenstellen-search" data-target="#nebenstellen-table" type="text" placeholder="Suchen nach Name oder ID …" style="width:300px;">
+        <input id="nebenstellen-search" data-target="#nebenstellen-table" type="text" placeholder="Suchen nach Name oder ID …" value="<?php echo esc_attr($suchbegriff); ?>" style="width:300px;">
 		<button    id="create-nebenstelle"    class="button"     data-next-id="<?php echo esc_attr( $nextId ); ?>"    style="margin-left:10px;"
 >+ Nebenstelle erstellen</button>
 	</div>
 
     <table class="widefat" id="nebenstellen-table">
         <thead>
-            <tr><th>ID</th><th>Name</th><th>Zuständigkeit</th><th>Einwohner</th>
-                <th>Fläche</th><th>Standort</th><th>Einsatzgebiet</th><th>Wachen</th><th>Aktionen</th></tr>
+            <tr><th><?php echo lsttraining_nebenstellen_sort_link('ID', 'id', $orderby, $order); ?></th><th><?php echo lsttraining_nebenstellen_sort_link('Name', 'name', $orderby, $order); ?></th><th><?php echo lsttraining_nebenstellen_sort_link('Land', 'land', $orderby, $order); ?></th><th>Zuständigkeit</th><th>Einwohner</th>
+                <th>Fläche</th><th>Standort</th><th>Einsatzgebiet</th><th><?php echo lsttraining_nebenstellen_sort_link('Wachen', 'wachen', $orderby, $order); ?></th><th>Aktionen</th></tr>
         </thead>
         <tbody>
         <?php foreach ($nebenstellen as $n) : ?>
@@ -141,6 +210,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['neben_create'] ) &&
   <tr class="<?php echo esc_attr($rowClass); ?>">
     <td><?php echo esc_html($n->id); ?></td>
     <td><?php echo esc_html($n->name); ?></td>
+    <td><?php echo esc_html($n->land ?: '–'); ?></td>
     <td><?php echo esc_html($n->zustandigkeit); ?></td>
     <td><?php echo esc_html($n->einwohner); ?></td>
     <td><?php echo esc_html($n->flaeche_km2); ?></td>

@@ -5,7 +5,11 @@ if ( ! lsttraining_user_can( 'wachen' ) ) {
 
 
 require_once plugin_dir_path( __FILE__ ) . '/db.php';
+require_once plugin_dir_path( __FILE__ ) . '/permissions.php';
 $pdo = lsttraining_get_connection();
+if ( $pdo instanceof PDO ) {
+    lsttraining_permissions_ensure_schema( $pdo );
+}
 
 // Filter aus Request
 $filter_leitstelle      = isset( $_GET['ls_id'] )  ? intval( $_GET['ls_id'] )  : 0;
@@ -27,10 +31,29 @@ if ($selectedBundesland !== '') {
     $selectedBundesland = '';
 }
 
-// 1) Alle Leitstellen laden
-$all_ls  = $pdo->query(
-    'SELECT id, name FROM leitstellen ORDER BY name'
-)->fetchAll( PDO::FETCH_ASSOC );
+$can_global_wachen = lsttraining_user_can_global_area( 'wachen' );
+$allowed_wachen_leitstellen = current_user_can( 'manage_options' ) || $can_global_wachen
+    ? []
+    : lsttraining_user_allowed_leitstellen( 'wachen' );
+
+if ( ! $can_global_wachen && $filter_leitstelle > 0 && ! in_array( $filter_leitstelle, $allowed_wachen_leitstellen, true ) ) {
+    wp_die( 'Keine Berechtigung.' );
+}
+
+// 1) Alle sichtbaren Leitstellen laden
+if ( ! $can_global_wachen ) {
+    if ( $allowed_wachen_leitstellen ) {
+        $st = $pdo->prepare( 'SELECT id, name FROM leitstellen WHERE id IN (' . implode( ',', array_fill( 0, count( $allowed_wachen_leitstellen ), '?' ) ) . ') ORDER BY name' );
+        $st->execute( $allowed_wachen_leitstellen );
+        $all_ls = $st->fetchAll( PDO::FETCH_ASSOC );
+    } else {
+        $all_ls = [];
+    }
+} else {
+    $all_ls  = $pdo->query(
+        'SELECT id, name FROM leitstellen ORDER BY name'
+    )->fetchAll( PDO::FETCH_ASSOC );
+}
 
 // 2) Alle Nebenleitstellen laden
 $all_nls = $pdo->query(
@@ -198,7 +221,7 @@ if (!$anyFilterSet) {
 } else {
     // 3) SQL aufbauen wie gehabt
 $sql = '
-  SELECT
+  SELECT DISTINCT
     w.id,
     w.name,
     w.typ,
@@ -239,6 +262,18 @@ $where = [];
             $joins   .= ' INNER JOIN wache_nebenleitstellen AS wn ON w.id = wn.wache_id ';
             $where[]  = 'wn.nebenleitstelle_id = ?';
             $params[] = (int)$filter_nebenleitstelle;
+        }
+    }
+
+    if ( ! $can_global_wachen ) {
+        if ( $allowed_wachen_leitstellen ) {
+            if ( strpos( $joins, 'wache_leitstellen AS wl' ) === false ) {
+                $joins .= ' INNER JOIN wache_leitstellen AS wl ON w.id = wl.wache_id ';
+            }
+            $where[] = 'wl.leitstelle_id IN (' . implode( ',', array_fill( 0, count( $allowed_wachen_leitstellen ), '?' ) ) . ')';
+            $params = array_merge( $params, $allowed_wachen_leitstellen );
+        } else {
+            $where[] = '0 = 1';
         }
     }
 

@@ -72,6 +72,10 @@ function lsttraining_get_connection() {
  * @param string $resource 'leitstellen' | 'nebenstellen' | 'hospitals' | 'wachen' | 'fahrzeuge'
  */
 function lsttraining_current_user_can_edit(string $resource): bool {
+    if (function_exists('lsttraining_user_can')) {
+        return lsttraining_user_can($resource);
+    }
+
     if (current_user_can('manage_options')) {
         return true;
     }
@@ -108,6 +112,10 @@ function lsttraining_current_user_can_edit(string $resource): bool {
 }
 
 function lsttraining_current_user_leitstellen_ids(): array {
+    if (function_exists('lsttraining_user_allowed_leitstellen')) {
+        return lsttraining_user_allowed_leitstellen('leitstellen');
+    }
+
     if (current_user_can('manage_options')) {
         return [];
     }

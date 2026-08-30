@@ -125,18 +125,23 @@ window.initMapWithMarker = function (
       const feats = fmt.readFeatures(polygonGeoJson, {
         featureProjection: map.getView().getProjection()
       });
-      const polyLayer = new ol.layer.Vector({
-        source: new ol.source.Vector({ features: feats }),
-        style : new ol.style.Style({
-          stroke: new ol.style.Stroke({ color: 'rgba(0,128,255,0.8)', width: 2 }),
-          fill  : new ol.style.Fill({ color: 'rgba(0,128,255,0.2)' })
-        })
-      });
-      map.addLayer(polyLayer);
-      map.getView().fit(polyLayer.getSource().getExtent(), {
-        padding : [20, 20, 20, 20],
-        duration: 500
-      });
+      if (feats.length) {
+        const polyLayer = new ol.layer.Vector({
+          source: new ol.source.Vector({ features: feats }),
+          style : new ol.style.Style({
+            stroke: new ol.style.Stroke({ color: 'rgba(0,128,255,0.8)', width: 2 }),
+            fill  : new ol.style.Fill({ color: 'rgba(0,128,255,0.2)' })
+          })
+        });
+        map.addLayer(polyLayer);
+        const extent = polyLayer.getSource().getExtent();
+        if (!ol.extent.isEmpty(extent)) {
+          map.getView().fit(extent, {
+            padding : [20, 20, 20, 20],
+            duration: 500
+          });
+        }
+      }
     } catch (err) {
       console.warn('initMapWithMarker: invalid GeoJSON', err);
     }
@@ -144,6 +149,7 @@ window.initMapWithMarker = function (
 
   window[assignMap]        = map;
   window[assignInteraction] = drag;
+  setTimeout(() => map.updateSize(), 0);
 };
 
 /* ---------------------------------------------------------- */
@@ -493,6 +499,8 @@ window.editLeitstelle = function (id, name, ort, bl, land, lat, lon, policeImage
 
   if (createFrm) createFrm.style.display = 'none';
   editFrm.style.display = 'block';
+  editFrm.classList.remove('is-create');
+  editFrm.classList.add('is-edit');
 
    /* fill text inputs */
   const values = { id, name, ort, bl, land, lat, lon };
@@ -599,39 +607,30 @@ function resetValue(id) {
 }
 
 function ensureEditMap() {
-  // existiert schon? → nur Größe & Marker resetten
-  if (window.mapEdit) {
-    window.mapEdit.getView()
-                  .setCenter(ol.proj.fromLonLat([9.0, 51.0]))  // Mitte DE
-                  .setZoom(7);
+  window.initMapWithMarker(
+    'map_edit',
+    'lst_update_lat',
+    'lst_update_lon',
+    [9.0, 51.0],
+    'mapEdit',
+    'dragInteractionEdit'
+  );
 
-    // Marker / Feature-Layer leeren
-    const src = mapEdit.getLayers().item(1).getSource();
-    if (src) src.clear();
-
-  } else {
-    // noch keine Map vorhanden – komplett anlegen
-    window.initMapWithMarker(
-      'map_edit',          // DIV-ID
-      'lst_update_lat',    // hidden lat-Input
-      'lst_update_lon',    // hidden lon-Input
-      [9.0, 51.0],         // Start-Center
-      'mapEdit',           // globale Referenz
-      'dragInteractionEdit'
-    );
-  }
-
-  // Timing-Problem: Map war eben noch in display:none
-  // ⇒ Größe nachträglich aktualisieren
-  setTimeout(() => mapEdit.updateSize(), 0);
+  setTimeout(() => window.mapEdit && window.mapEdit.updateSize(), 0);
 }
 
 function openLeitstellePopupForCreate() {
   // heading
+  const modal = document.getElementById('edit-leitstelle-formular');
+  if (modal) {
+    modal.classList.remove('is-edit');
+    modal.classList.add('is-create');
+  }
+
   const heading = document.querySelector('#edit-leitstelle-formular h2');
   if (heading) heading.textContent = 'Leitstelle erstellen';
 
-  // clear inputs
+  // clear inputs and stale edit state
   [
     'lst_update_id','lst_update_name','lst_update_ort',
     'lst_update_bl','lst_update_land','lst_update_lat','lst_update_lon'
@@ -648,6 +647,16 @@ function openLeitstellePopupForCreate() {
   const rescueSignalsEl = document.getElementById('lst_update_rescue_signal_lights_json');
   if (rescueSignalsEl) rescueSignalsEl.value = '';
   setLeitstelleNeighborSelection([]);
+  const neighborModal = document.getElementById('lst-neighbor-editor-modal');
+  if (neighborModal) {
+    neighborModal.classList.add('hidden');
+    neighborModal.setAttribute('aria-hidden', 'true');
+  }
+  if (window.lstNeighborMap) {
+    try { window.lstNeighborMap.setTarget(null); } catch (e) {}
+    window.lstNeighborMap = null;
+  }
+  window.lstNeighborMapSource = null;
   if (typeof window.updateAllDefaultVehiclePreviews === 'function') {
     window.updateAllDefaultVehiclePreviews();
   }
@@ -656,8 +665,42 @@ function openLeitstellePopupForCreate() {
   const mode = document.getElementById('lst_form_mode');
   if (mode) mode.value = 'create';
 
+  const poly = document.getElementById('geojson_edit');
+  if (poly) {
+    poly.value = '';
+    poly.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  const egBtn = document.querySelector('#edit-leitstelle-formular .open-einsatzgebiet-editor');
+  if (egBtn) {
+    egBtn.dataset.mapId = 'einsatzgebiet_edit';
+    egBtn.dataset.leitstelleId = '0';
+    egBtn.dataset.center = '';
+    egBtn.dataset.context = 'leitstelle';
+  }
+
+  const egPopup = document.querySelector('#edit-leitstelle-formular .einsatzgebiet-popup');
+  if (egPopup) {
+    egPopup.dataset.mapId = 'einsatzgebiet_edit';
+    egPopup.dataset.leitstelleId = '0';
+    egPopup.dataset.center = '';
+    egPopup.dataset.context = 'leitstelle';
+    egPopup.dataset.geojson = '';
+    egPopup.style.display = 'none';
+    const mapDiv = egPopup.querySelector('[data-einsatzgebiet-map]');
+    if (mapDiv) mapDiv.id = 'einsatzgebiet_edit';
+  }
+
+  if (window._openlayersMaps) {
+    Object.keys(window._openlayersMaps).forEach(function(mapId) {
+      if (mapId.indexOf('einsatzgebiet_') === 0 || mapId === 'einsatzgebiet_edit') {
+        try { window._openlayersMaps[mapId].setTarget(null); } catch (e) {}
+        delete window._openlayersMaps[mapId];
+      }
+    });
+  }
+
   // map reset / init
-  if (typeof resetEditMaps === 'function') resetEditMaps();
   if (typeof ensureEditMap  === 'function') ensureEditMap();
 
   // show overlay + popup
@@ -666,16 +709,16 @@ function openLeitstellePopupForCreate() {
 
   const popup = document.getElementById('edit-leitstelle-formular');
   if (popup)  popup.style.display = 'block';
-  if (typeof window.initNeighborLeitstellenMap === 'function') {
-    window.initNeighborLeitstellenMap('');
-  }
 
-	if (typeof window.syncWachenZuordButton === 'function') {
-	  window.syncWachenZuordButton();
-	} else if (typeof window.updateWachenZuordButtonState === 'function') {
-	  window.updateWachenZuordButtonState();
-	}
+  if (typeof window.syncLeitstelleWorkflowState === 'function') {
+    window.syncLeitstelleWorkflowState();
+  } else if (typeof window.syncWachenZuordButton === 'function') {
+    window.syncWachenZuordButton();
+  } else if (typeof window.updateWachenZuordButtonState === 'function') {
+    window.updateWachenZuordButtonState();
+  }
 }
+window.openLeitstellePopupForCreate = openLeitstellePopupForCreate;
 
 /* register click handler after DOM is ready */
 document.addEventListener('DOMContentLoaded', () => {
@@ -707,9 +750,6 @@ document.addEventListener('DOMContentLoaded', () => {
         window.refreshNeighborLeitstellenMapSelection();
       }
     });
-  }
-  if (neighbors && typeof window.initNeighborLeitstellenMap === 'function') {
-    window.initNeighborLeitstellenMap((document.getElementById('geojson_edit') || {}).value || '');
   }
 });
 

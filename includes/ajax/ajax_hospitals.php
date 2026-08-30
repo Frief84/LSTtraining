@@ -5,10 +5,9 @@
  * ---------------------------------------------------------------------- */
 
 add_action('wp_ajax_get_krankenhaeuser', function () {
-        // Guard
-    lsttraining_ajax_guard([
-        'area' => 'hospitals',
-    ]);
+    if (!lsttraining_user_can_global_area('hospitals')) {
+        wp_send_json_error('Keine Berechtigung', 403);
+    }
 
 $pdo = lsttraining_get_connection();
     $stmt = $pdo->prepare('
@@ -48,10 +47,9 @@ function lsttraining_ajax_get_krankenhaus() {
 }
 
 add_action('wp_ajax_delete_krankenhaus', function () {
-        // Guard
-    lsttraining_ajax_guard([
-        'area' => 'hospitals',
-    ]);
+    if (!lsttraining_user_can_global_area('hospitals')) {
+        wp_send_json_error('Keine Berechtigung', 403);
+    }
 
 $id = (int)($_POST['id'] ?? 0);
     if ($id <= 0) {
@@ -75,10 +73,9 @@ $id = (int)($_POST['id'] ?? 0);
 });
 
 add_action('wp_ajax_save_krankenhaus', function () {
-        // Guard
-    lsttraining_ajax_guard([
-        'area' => 'hospitals',
-    ]);
+    if (!lsttraining_user_can_global_area('hospitals')) {
+        wp_send_json_error('Keine Berechtigung', 403);
+    }
 
 $id             = (int)($_POST['id'] ?? 0);
     $name           = sanitize_text_field($_POST['name'] ?? '');
@@ -142,10 +139,9 @@ $id             = (int)($_POST['id'] ?? 0);
 });
 
 add_action('wp_ajax_lsttraining_create_krankenhaus', function () {
-        // Guard
-    lsttraining_ajax_guard([
-        'area' => 'hospitals',
-    ]);
+    if (!lsttraining_user_can_global_area('hospitals')) {
+        wp_send_json_error('Keine Berechtigung', 403);
+    }
 
 $name = sanitize_text_field($_POST['name'] ?? '');
     if ($name === '') {
@@ -196,10 +192,9 @@ $name = sanitize_text_field($_POST['name'] ?? '');
  */
 add_action('wp_ajax_lsttraining_save_departments', 'lsttraining_save_departments');
 function lsttraining_save_departments() {
-        // Guard
-    lsttraining_ajax_guard([
-        'area' => 'hospitals',
-    ]);
+    if (!lsttraining_user_can_global_area('hospitals')) {
+        wp_send_json_error('Keine Berechtigung', 403);
+    }
 
 $hid = (int)($_POST['hospital_id'] ?? 0);
     if ($hid <= 0) {
@@ -284,7 +279,7 @@ $hid = (int)($_POST['hospital_id'] ?? 0);
  */
 add_action('wp_ajax_get_departments', 'lsttraining_get_departments');
 function lsttraining_get_departments() {
-    if (!lsttraining_user_can('hospitals')) {
+    if (!lsttraining_user_can_global_area('hospitals')) {
         wp_send_json_error('Keine Berechtigung.', 403);
     }
 
@@ -404,7 +399,7 @@ add_action('wp_ajax_get_leitstelle_hospitals', function () {
     if ($id <= 0) {
         wp_send_json_error('Ungültige Leitstelle', 400);
     }
-    if (!lsttraining_user_can('leitstellen', $id)) {
+    if (!lsttraining_user_can('hospitals', $id)) {
         wp_send_json_error('Keine Berechtigung', 403);
     }
 
@@ -464,7 +459,7 @@ add_action('wp_ajax_save_leitstelle_hospitals', function () {
     if ($id <= 0) {
         wp_send_json_error('Ungültige Leitstelle', 400);
     }
-    if (!lsttraining_user_can('leitstellen', $id)) {
+    if (!lsttraining_user_can('hospitals', $id)) {
         wp_send_json_error('Keine Berechtigung', 403);
     }
 
@@ -496,4 +491,3 @@ add_action('wp_ajax_save_leitstelle_hospitals', function () {
         wp_send_json_error('Speicherfehler: ' . $e->getMessage(), 500);
     }
 });
-

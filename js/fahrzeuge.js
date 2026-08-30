@@ -678,29 +678,148 @@
   }
 
   $(function () {
+    var filterRequest = null;
+    var filterTimer = null;
+
+    function filterFormData(pageOverride) {
+      var $filter = $('#fahrzeuge-filter');
+      var data = $filter.serializeArray();
+      data.push({ name: 'action', value: 'lsttraining_filter_fahrzeuge' });
+      data.push({ name: 'nonce', value: lstFahrzeugeAjax.nonce });
+      if (pageOverride) {
+        data = data.filter(function (item) { return item.name !== 'paged'; });
+        data.push({ name: 'paged', value: String(pageOverride) });
+      }
+      return data;
+    }
+
+    function filterPageUrl(pageOverride) {
+      var $filter = $('#fahrzeuge-filter');
+      var params = new URLSearchParams();
+      $filter.serializeArray().forEach(function (item) {
+        if (item.name === 'paged' && pageOverride) return;
+        if (item.value !== '') params.set(item.name, item.value);
+      });
+      if (pageOverride) params.set('paged', String(pageOverride));
+      return window.location.pathname + '?' + params.toString();
+    }
+
+    function setFilterLoading(isLoading) {
+      $('#lst-fahrzeuge-results').toggleClass('is-loading', !!isLoading);
+      $('#fahrzeuge-filter').toggleClass('is-loading', !!isLoading);
+      $('#fahrzeuge-filter-spinner').css('visibility', isLoading ? 'visible' : 'hidden');
+    }
+
+    function applyFilterResponse(resp) {
+      if (!resp || !resp.success || !resp.data) return;
+      if (resp.data.html) {
+        $('#lst-fahrzeuge-results').html(resp.data.html);
+      }
+      if (resp.data.url && window.history && window.history.replaceState) {
+        window.history.replaceState({}, '', resp.data.url);
+      }
+      var $reset = $('#fahrzeuge-reset');
+      if (resp.data.reset_url) $reset.attr('href', resp.data.reset_url);
+      $reset.prop('hidden', !resp.data.has_filter);
+    }
+
+    function refreshFahrzeuge(pageOverride) {
+      var $filter = $('#fahrzeuge-filter');
+      if (!$filter.length || !$('#lst-fahrzeuge-results').length) return;
+      $('.lst-fahrzeuge-filter-error').remove();
+      if (filterRequest && filterRequest.readyState !== 4) {
+        filterRequest.abort();
+      }
+      setFilterLoading(true);
+      filterRequest = $.ajax({
+        url: lstFahrzeugeAjax.ajax_url,
+        method: 'GET',
+        data: filterFormData(pageOverride),
+        dataType: 'json'
+      })
+      .done(applyFilterResponse)
+      .fail(function (xhr, status) {
+        if (status === 'abort') return;
+        var msg = (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.msg)
+          ? xhr.responseJSON.data.msg
+          : ('HTTP ' + (xhr.status || ''));
+        $('#lst-fahrzeuge-results').prepend(
+          '<div class="notice notice-error inline lst-fahrzeuge-filter-error"><p>Filter konnten nicht geladen werden: ' +
+          $('<div>').text(msg).html() +
+          '</p></div>'
+        );
+        window.location.href = filterPageUrl(pageOverride);
+      })
+      .always(function () {
+        setFilterLoading(false);
+      });
+    }
+
+    function refreshFahrzeugeSoon() {
+      window.clearTimeout(filterTimer);
+      filterTimer = window.setTimeout(function () {
+        refreshFahrzeuge(1);
+      }, 300);
+    }
+
+    window.lstFahrzeugeRefreshFilters = function () {
+      refreshFahrzeuge(1);
+    };
+
+    window.lstFahrzeugeRefreshFiltersSoon = refreshFahrzeugeSoon;
+
     $('#fahrzeug-new').on('click', function (ev) {
       ev.preventDefault();
       openForNew();
     });
 
-    $('#fahrzeuge-table').on('click', '.btn-edit-fahrzeug', function (ev) {
+    $(document).on('click', '#fahrzeuge-table .btn-edit-fahrzeug', function (ev) {
       ev.preventDefault();
       var id = parseInt($(this).data('id'), 10) || 0;
       if (id > 0) openForEdit(id);
     });
 
-    $('#fahrzeuge-table tbody').on('dblclick', 'tr', function () {
+    $(document).on('dblclick', '#fahrzeuge-table tbody tr', function () {
       var id = parseInt($(this).attr('data-id'), 10) || 0;
       if (id > 0) openForEdit(id);
     });
 
-    // Auto-submit bei Filteränderung (setzt auf Seite 1 zurück)
-    var $filter = $('#fahrzeuge-filter');
-    $filter.find('select[name="bundesland"], select[name="leitstelle_id"], select[name="neben_id"]').on('change', function () {
-      var $p = $filter.find('input[name="paged"]');
-      if (!$p.length) $p = $('<input type="hidden" name="paged" value="1">').appendTo($filter);
-      else $p.val('1');
-      $filter.trigger('submit');
+    $(document).on('submit', '#fahrzeuge-filter', function (ev) {
+      ev.preventDefault();
+      refreshFahrzeuge(1);
+    });
+    $(document).on('change select2:select select2:clear', '#fahrzeuge-filter select[name="land"], #fahrzeuge-filter select[name="bundesland"], #fahrzeuge-filter select[name="leitstelle_id"], #fahrzeuge-filter select[name="neben_id"], #fahrzeuge-filter input[name="per_page"]', function () {
+      refreshFahrzeuge(1);
+    });
+    $(document).on('input', '#fahrzeuge-filter input[name="s"]', refreshFahrzeugeSoon);
+
+    $(document).on('click', '#fahrzeuge-table .sort-link, #lst-fahrzeuge-results .tablenav-pages a.button', function (ev) {
+      var $filter = $('#fahrzeuge-filter');
+      var href = $(this).attr('href') || '';
+      if (!href || $(this).hasClass('disabled')) return;
+      ev.preventDefault();
+      var url = new URL(href, window.location.href);
+      ['orderby', 'order', 'paged'].forEach(function (key) {
+        var value = url.searchParams.get(key);
+        var $field = $filter.find('[name="' + key + '"]');
+        if (value) {
+          if (!$field.length) $field = $('<input type="hidden">').attr('name', key).appendTo($filter);
+          $field.val(value);
+        } else {
+          $field.remove();
+        }
+      });
+      refreshFahrzeuge();
+    });
+
+    $(document).on('click', '#fahrzeuge-reset', function (ev) {
+      var $filter = $('#fahrzeuge-filter');
+      ev.preventDefault();
+      $filter.find('input[name="s"]').val('');
+      $filter.find('select[name="land"], select[name="bundesland"], select[name="leitstelle_id"], select[name="neben_id"]').val('').trigger('change.select2');
+      $filter.find('input[name="per_page"]').val('50');
+      $filter.find('input[name="paged"], input[name="orderby"], input[name="order"]').remove();
+      refreshFahrzeuge(1);
     });
   });
 

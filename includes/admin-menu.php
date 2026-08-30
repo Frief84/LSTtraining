@@ -22,7 +22,21 @@ add_action( 'admin_menu', function () {
     'wachen'       => lsttraining_user_can( 'wachen'       ),
     'fahrzeuge'    => lsttraining_user_can( 'fahrzeuge'    ),
     'einsaetze'    => lsttraining_user_can( 'einsaetze'    ),
+    'spielinstanzen' => lsttraining_user_can( 'spielinstanzen' ),
 ];
+    $can_view_leitstellen = lsttraining_user_can_view_leitstellen_admin();
+    $default_callback = 'lsttraining_render_spielinstanzen';
+    if ( $can_view_leitstellen ) {
+        $default_callback = 'lsttraining_render_leitstellen';
+    } elseif ( $can['nebenstellen'] ) {
+        $default_callback = 'lsttraining_render_nebenstellen';
+    } elseif ( lsttraining_user_can_global_area( 'hospitals' ) ) {
+        $default_callback = 'lsttraining_render_krankenhaeuser';
+    } elseif ( $can['wachen'] ) {
+        $default_callback = 'lsttraining_render_leitstellen_wachen';
+    } elseif ( $can['fahrzeuge'] ) {
+        $default_callback = 'lsttraining_render_leitstellen_fahrzeuge';
+    }
 
     // Hat der Benutzer weder Admin-Rechte noch irgendeine Ressource?
     if ( ! $is_admin && ! in_array( true, $can, true ) ) {
@@ -39,7 +53,7 @@ add_action( 'admin_menu', function () {
         'LST Training',               // Menü-Label
         'read',                       // minimale Cap: jeder eingeloggte User
         $parent_slug,                 // Slug
-        'lsttraining_render_leitstellen',
+        $default_callback,
         'dashicons-location-alt',
         30
     );
@@ -49,7 +63,7 @@ add_action( 'admin_menu', function () {
     /* ------------------------------------------------------------------ */
 
     // 3.1 Leitstellen (Placement 0 → ganz oben)
-    if ( $can['leitstellen'] ) {
+    if ( $can_view_leitstellen ) {
         add_submenu_page(
             $parent_slug,
             'Leitstellen',
@@ -74,7 +88,7 @@ add_action( 'admin_menu', function () {
     }
 
     // 3.3 Krankenhäuser
-    if ( $can['hospitals'] ) {
+    if ( lsttraining_user_can_global_area( 'hospitals' ) ) {
         add_submenu_page(
             $parent_slug,
             'Krankenhäuser',
@@ -108,8 +122,20 @@ add_action( 'admin_menu', function () {
             'lsttraining_render_leitstellen_fahrzeuge'
         );
     }
+
+    // 3.6 Spielinstanzen
+    if ( $can['spielinstanzen'] ) {
+        add_submenu_page(
+            $parent_slug,
+            'Spielinstanzen',
+            'Spielinstanzen',
+            'read',
+            'lsttraining_spielinstanzen',
+            'lsttraining_render_spielinstanzen'
+        );
+    }
 	
-	// 3.6 Einsätze
+	// 3.7 Einsätze
 	if ( $can['leitstellen'] ) {
 		add_submenu_page(
 			$parent_slug,
@@ -121,7 +147,7 @@ add_action( 'admin_menu', function () {
 		);
 	}
 	
-// 3.6 Anruferprofile
+// 3.8 Anruferprofile
 if ( $can['leitstellen'] ) {
     add_submenu_page(
         $parent_slug,

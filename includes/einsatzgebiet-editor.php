@@ -47,6 +47,7 @@ function lsttraining_einsatzgebiet_editor(
                 <a href="https://opendatalab.de/projects/geojson-utilities/" target="_blank" rel="noopener noreferrer">GeoJSON Utilities</a>
                 nutzen.
             </li>
+            <li>Für DACH-Gebiete kannst du unten Verwaltungsgrenzen suchen und als GeoJSON übernehmen.</li>
         </ul>
     </div>';
 
@@ -79,6 +80,46 @@ function lsttraining_einsatzgebiet_editor(
             <p class="description">
                 Hinweis: Speichern im Popup schreibt direkt in die DB.
             </p>
+        </div>
+    </div>';
+
+    echo '<div class="einsatzgebiet-boundary-assistant" data-boundary-assistant>
+        <div class="einsatzgebiet-boundary-assistant__head">
+            <label class="einsatzgebiet-label"><strong>Gebiet aus Verwaltungsgrenzen</strong></label>
+            <span class="description">Offizielle Quellen zuerst, OSM nur als Fallback.</span>
+        </div>
+
+        <div class="einsatzgebiet-boundary-assistant__controls">
+            <label>
+                <span>Land</span>
+                <select data-boundary-country form="lst-boundary-assistant-detached-form">
+                    <option value="de">Deutschland</option>
+                    <option value="at">Österreich</option>
+                    <option value="ch">Schweiz/Liechtenstein</option>
+                </select>
+            </label>
+            <label>
+                <span>Ebene</span>
+                <select data-boundary-level form="lst-boundary-assistant-detached-form">
+                    <option value="gemeinde">Gemeinde</option>
+                    <option value="kreis">Kreis</option>
+                    <option value="bundesland">Bundesland</option>
+                </select>
+            </label>
+            <label class="einsatzgebiet-boundary-assistant__query">
+                <span>Name oder Schlüssel</span>
+                <input type="search" class="regular-text" data-boundary-query form="lst-boundary-assistant-detached-form" placeholder="z. B. Potsdam, 12054, Zürich">
+            </label>
+            <button type="button" class="button" data-boundary-search>Suchen</button>
+        </div>
+
+        <div class="einsatzgebiet-boundary-assistant__status description" data-boundary-status></div>
+        <div class="einsatzgebiet-boundary-assistant__results" data-boundary-results hidden></div>
+        <div class="einsatzgebiet-boundary-assistant__selected" data-boundary-selected hidden></div>
+
+        <div class="einsatzgebiet-boundary-assistant__actions">
+            <button type="button" class="button button-primary" data-boundary-apply disabled>Auswahl übernehmen</button>
+            <span class="description" data-boundary-attribution>Quelle wird nach Land angezeigt.</span>
         </div>
     </div>';
 

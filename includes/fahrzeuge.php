@@ -9,9 +9,15 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 if ( ! current_user_can( 'read' ) ) { wp_die( 'Keine Berechtigung.' ); }
 
 require_once plugin_dir_path( __FILE__ ) . 'db.php';
+require_once plugin_dir_path( __FILE__ ) . 'permissions.php';
+
+if ( ! lsttraining_user_can( 'fahrzeuge' ) ) {
+    wp_die( 'Keine Berechtigung.' );
+}
 
 $pdo = lsttraining_get_connection();
 if ( ! $pdo ) { wp_die( 'Keine Datenbankverbindung.' ); }
+lsttraining_permissions_ensure_schema($pdo);
 
 /* -----------------------------------------------------------
  * Helper: Tabellen-/Spalten-Existenz prüfen (robust)
@@ -19,18 +25,29 @@ if ( ! $pdo ) { wp_die( 'Keine Datenbankverbindung.' ); }
 if ( ! function_exists('lst_col_exists') ) {
     function lst_col_exists(PDO $pdo, $table, $column) {
         try {
-            $st = $pdo->prepare("SHOW COLUMNS FROM `$table` LIKE ?");
-            $st->execute([$column]);
-            return ($st && $st->rowCount() > 0);
+            $st = $pdo->prepare(
+                'SELECT COUNT(*)
+                   FROM INFORMATION_SCHEMA.COLUMNS
+                  WHERE TABLE_SCHEMA = DATABASE()
+                    AND TABLE_NAME = ?
+                    AND COLUMN_NAME = ?'
+            );
+            $st->execute([(string) $table, (string) $column]);
+            return (int) $st->fetchColumn() > 0;
         } catch (Throwable $e) { return false; }
     }
 }
 if ( ! function_exists('lst_tbl_exists') ) {
     function lst_tbl_exists(PDO $pdo, $table) {
         try {
-            $st = $pdo->prepare("SHOW TABLES LIKE ?");
-            $st->execute([$table]);
-            return ($st && $st->rowCount() > 0);
+            $st = $pdo->prepare(
+                'SELECT COUNT(*)
+                   FROM INFORMATION_SCHEMA.TABLES
+                  WHERE TABLE_SCHEMA = DATABASE()
+                    AND TABLE_NAME = ?'
+            );
+            $st->execute([(string) $table]);
+            return (int) $st->fetchColumn() > 0;
         } catch (Throwable $e) { return false; }
     }
 }
@@ -44,6 +61,7 @@ $order    = isset($_GET['order']) ? strtolower((string)$_GET['order']) : 'asc';
 $paged    = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
 $per_page = isset($_GET['per_page']) ? max(10, min(200, intval($_GET['per_page']))) : 50;
 
+$land          = isset($_GET['land']) ? trim(sanitize_text_field(wp_unslash((string) $_GET['land']))) : '';
 $bundesland    = isset($_GET['bundesland']) ? trim((string)$_GET['bundesland']) : '';
 $leitstelle_id = (isset($_GET['leitstelle_id']) && $_GET['leitstelle_id'] !== '') ? max(0, intval($_GET['leitstelle_id'])) : 0;
 $neben_id      = (isset($_GET['neben_id'])      && $_GET['neben_id'] !== '')      ? max(0, intval($_GET['neben_id']))      : 0;
@@ -55,16 +73,38 @@ $wache_id = (isset($_GET['wache_id']) && $_GET['wache_id'] !== '') ? max(0, intv
  * Spalten/Relationen erkennen
  * ----------------------------------------------------------- */
 $has_wachen_bundesland = lst_col_exists($pdo, 'wachen', 'bundesland');
+$has_wachen_land       = lst_col_exists($pdo, 'wachen', 'land');
 $has_wachen_leitstelle = lst_col_exists($pdo, 'wachen', 'leitstelle_id');
 $has_wachen_neben      = lst_col_exists($pdo, 'wachen', 'nebenleitstelle_id');
 
 $has_leitstellen_tbl   = lst_tbl_exists($pdo, 'leitstellen');
 $has_ls_bundesland     = $has_leitstellen_tbl ? lst_col_exists($pdo, 'leitstellen', 'bundesland') : false;
+$has_ls_land           = $has_leitstellen_tbl ? lst_col_exists($pdo, 'leitstellen', 'land') : false;
 
-$map_ls_tbl  = lst_tbl_exists($pdo, 'wachen_leitstellen')  ? 'wachen_leitstellen'
-            : (lst_tbl_exists($pdo, 'leitstellen_wachen')  ? 'leitstellen_wachen' : '');
-$map_neb_tbl = lst_tbl_exists($pdo, 'wachen_nebenstellen') ? 'wachen_nebenstellen'
-            : (lst_tbl_exists($pdo, 'nebenstellen_wachen') ? 'nebenstellen_wachen' : '');
+$map_ls_tbl  = lst_tbl_exists($pdo, 'wache_leitstellen')   ? 'wache_leitstellen'
+            : (lst_tbl_exists($pdo, 'wachen_leitstellen')  ? 'wachen_leitstellen'
+            : (lst_tbl_exists($pdo, 'leitstellen_wachen')  ? 'leitstellen_wachen' : ''));
+$map_neb_tbl = lst_tbl_exists($pdo, 'wache_nebenleitstellen') ? 'wache_nebenleitstellen'
+            : (lst_tbl_exists($pdo, 'wachen_nebenstellen')    ? 'wachen_nebenstellen'
+            : (lst_tbl_exists($pdo, 'nebenstellen_wachen')    ? 'nebenstellen_wachen' : ''));
+
+$can_global_fahrzeuge = current_user_can('manage_options') || lsttraining_user_can_global_area('fahrzeuge');
+$allowed_fahrzeuge_leitstellen = current_user_can('manage_options') || $can_global_fahrzeuge
+    ? []
+    : lsttraining_user_allowed_leitstellen('fahrzeuge');
+
+if (!$can_global_fahrzeuge && $leitstelle_id > 0 && !in_array($leitstelle_id, $allowed_fahrzeuge_leitstellen, true)) {
+    wp_die('Keine Berechtigung.');
+}
+
+if ($wache_id > 0 && !$can_global_fahrzeuge) {
+    $st_perm = $pdo->prepare('SELECT leitstelle_id FROM wache_leitstellen WHERE wache_id = ?');
+    $st_perm->execute([$wache_id]);
+    $wache_ls = array_map('intval', $st_perm->fetchAll(PDO::FETCH_COLUMN) ?: []);
+    if (!array_intersect($wache_ls, $allowed_fahrzeuge_leitstellen)) {
+        wp_die('Keine Berechtigung.');
+    }
+}
 
 /* -----------------------------------------------------------
  * Optionen für Filter-Dropdowns laden
@@ -85,7 +125,26 @@ if ( is_readable($bl_path) ) {
 $leitstellen_opts = [];
 try {
     if ($has_leitstellen_tbl) {
-        $st = $pdo->query("SELECT id, name FROM leitstellen ORDER BY name");
+        if (!$can_global_fahrzeuge) {
+            if ($allowed_fahrzeuge_leitstellen) {
+                $st = $pdo->prepare('SELECT id, name FROM leitstellen WHERE id IN (' . implode(',', array_fill(0, count($allowed_fahrzeuge_leitstellen), '?')) . ' ) ORDER BY name');
+                $st->execute($allowed_fahrzeuge_leitstellen);
+            } else {
+                $st = $pdo->query("SELECT id, name FROM leitstellen ORDER BY name");
+            }
+        } else {
+            $st = $pdo->query("SELECT id, name FROM leitstellen ORDER BY name");
+        }
+        if ($st) { $leitstellen_opts = $st->fetchAll(PDO::FETCH_ASSOC); }
+    }
+    if (!$leitstellen_opts && $has_leitstellen_tbl && $map_ls_tbl) {
+        $st = $pdo->query(
+            "SELECT DISTINCT l.id, l.name
+               FROM leitstellen l
+               JOIN {$map_ls_tbl} wl ON wl.leitstelle_id = l.id
+               JOIN fahrzeuge f ON f.wache_id = wl.wache_id
+           ORDER BY l.name"
+        );
         if ($st) { $leitstellen_opts = $st->fetchAll(PDO::FETCH_ASSOC); }
     }
 } catch (Throwable $e) {}
@@ -94,7 +153,57 @@ try {
 $neben_opts = [];
 try {
     if (lst_tbl_exists($pdo, 'nebenleitstellen')) {
-        $st = $pdo->query("SELECT id, name FROM nebenleitstellen ORDER BY name");
+        if (!$can_global_fahrzeuge) {
+            if ($allowed_fahrzeuge_leitstellen && lst_tbl_exists($pdo, 'leitstelle_nebenleitstellen')) {
+                $st = $pdo->prepare(
+                    'SELECT DISTINCT n.id, n.name
+                       FROM nebenleitstellen n
+                       JOIN leitstelle_nebenleitstellen ln ON ln.nebenleitstelle_id = n.id
+                      WHERE ln.leitstelle_id IN (' . implode(',', array_fill(0, count($allowed_fahrzeuge_leitstellen), '?')) . ')
+                   ORDER BY n.name'
+                );
+                $st->execute($allowed_fahrzeuge_leitstellen);
+                $neben_opts = $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+            }
+            if ($allowed_fahrzeuge_leitstellen && $map_ls_tbl && $map_neb_tbl) {
+                $st = $pdo->prepare(
+                    "SELECT DISTINCT n.id, n.name
+                       FROM nebenleitstellen n
+                       JOIN {$map_neb_tbl} wnb ON wnb.nebenleitstelle_id = n.id
+                       JOIN {$map_ls_tbl} wls ON wls.wache_id = wnb.wache_id
+                      WHERE wls.leitstelle_id IN (" . implode(',', array_fill(0, count($allowed_fahrzeuge_leitstellen), '?')) . ")
+                   ORDER BY n.name"
+                );
+                $st->execute($allowed_fahrzeuge_leitstellen);
+                $neben_opts = array_merge($neben_opts, $st->fetchAll(PDO::FETCH_ASSOC) ?: []);
+            }
+            if (!$neben_opts) {
+                $st = $pdo->query("SELECT id, name FROM nebenleitstellen ORDER BY name");
+                if ($st) { $neben_opts = $st->fetchAll(PDO::FETCH_ASSOC); }
+            }
+        } else {
+            $st = $pdo->query("SELECT id, name FROM nebenleitstellen ORDER BY name");
+            if ($st) { $neben_opts = $st->fetchAll(PDO::FETCH_ASSOC); }
+        }
+        $seen_neben = [];
+        $neben_opts = array_values(array_filter($neben_opts, static function ($row) use (&$seen_neben) {
+            $id = (int) ($row['id'] ?? 0);
+            if ($id <= 0 || isset($seen_neben[$id])) { return false; }
+            $seen_neben[$id] = true;
+            return true;
+        }));
+        usort($neben_opts, static function ($a, $b) {
+            return strnatcasecmp((string) ($a['name'] ?? ''), (string) ($b['name'] ?? ''));
+        });
+    }
+    if (!$neben_opts && $map_neb_tbl) {
+        $st = $pdo->query(
+            "SELECT DISTINCT n.id, n.name
+               FROM nebenleitstellen n
+               JOIN {$map_neb_tbl} wn ON wn.nebenleitstelle_id = n.id
+               JOIN fahrzeuge f ON f.wache_id = wn.wache_id
+           ORDER BY n.name"
+        );
         if ($st) { $neben_opts = $st->fetchAll(PDO::FETCH_ASSOC); }
     }
 } catch (Throwable $e) {}
@@ -168,6 +277,7 @@ $params = [];
 $joins  = [];
 
 $joined_wls = false;
+$joined_wnb = false;
 $joined_ls  = false;
 
 // Kontextfilter Wache (muss ganz oben rein, weil er die Ergebnismenge begrenzt)
@@ -183,9 +293,22 @@ if ($wache_id > 0) {
 // Suche
 if ($s !== '') {
     // Der Standort einer Wache wird in diesem Schema über ihren Namen geführt.
-    $where[] = '(f.rufname LIKE :q_rufname OR w.name LIKE :q_wache)';
+    $search_parts = ['f.rufname LIKE :q_rufname', 'w.name LIKE :q_wache'];
+    if ($has_wachen_bundesland) {
+        $search_parts[] = 'w.bundesland LIKE :q_bundesland';
+    }
+    if ($has_wachen_land) {
+        $search_parts[] = 'w.land LIKE :q_land';
+    }
+    $where[] = '(' . implode(' OR ', $search_parts) . ')';
     $params[':q_rufname'] = '%' . $s . '%';
     $params[':q_wache'] = '%' . $s . '%';
+    if ($has_wachen_bundesland) {
+        $params[':q_bundesland'] = '%' . $s . '%';
+    }
+    if ($has_wachen_land) {
+        $params[':q_land'] = '%' . $s . '%';
+    }
 }
 
 // Leitstelle
@@ -209,13 +332,43 @@ if ($neben_id > 0) {
         $where[] = 'w.nebenleitstelle_id = :nbid';
         $params[':nbid'] = $neben_id;
     } elseif ($map_neb_tbl) {
-        $joins[] = "JOIN {$map_neb_tbl} AS wnb ON wnb.wache_id = w.id";
+        if (!$joined_wnb) {
+            $joins[] = "JOIN {$map_neb_tbl} AS wnb ON wnb.wache_id = w.id";
+            $joined_wnb = true;
+        }
         $where[] = 'wnb.nebenleitstelle_id = :nbid';
         $params[':nbid'] = $neben_id;
     }
 }
 
 // Bundesland
+if ($land !== '') {
+    if ($has_wachen_land) {
+        $where[] = 'w.land = :land';
+        $params[':land'] = $land;
+    } elseif ($has_ls_land) {
+        if ($has_wachen_leitstelle) {
+            if (!$joined_ls) {
+                $joins[] = "JOIN leitstellen AS ls ON ls.id = w.leitstelle_id";
+                $joined_ls = true;
+            }
+            $where[] = 'ls.land = :land';
+            $params[':land'] = $land;
+        } elseif ($map_ls_tbl) {
+            if (!$joined_wls) {
+                $joins[] = "JOIN {$map_ls_tbl} AS wls ON wls.wache_id = w.id";
+                $joined_wls = true;
+            }
+            if (!$joined_ls) {
+                $joins[] = "JOIN leitstellen AS ls ON ls.id = wls.leitstelle_id";
+                $joined_ls = true;
+            }
+            $where[] = 'ls.land = :land';
+            $params[':land'] = $land;
+        }
+    }
+}
+
 if ($bundesland !== '') {
     if ($has_wachen_bundesland) {
         $where[] = 'w.bundesland = :bl';
@@ -243,13 +396,35 @@ if ($bundesland !== '') {
     }
 }
 
+if (!$can_global_fahrzeuge) {
+    if ($allowed_fahrzeuge_leitstellen) {
+        if (!$joined_wls && $map_ls_tbl) {
+            $joins[] = "JOIN {$map_ls_tbl} AS wls ON wls.wache_id = w.id";
+            $joined_wls = true;
+        }
+        if ($joined_wls) {
+            $in_keys = [];
+            foreach ($allowed_fahrzeuge_leitstellen as $idx => $allowed_id) {
+                $key = ':allowed_lsid_' . $idx;
+                $in_keys[] = $key;
+                $params[$key] = (int) $allowed_id;
+            }
+            $where[] = 'wls.leitstelle_id IN (' . implode(',', $in_keys) . ')';
+        } else {
+            $where[] = '0 = 1';
+        }
+    } else {
+        $where[] = '0 = 1';
+    }
+}
+
 $where_sql = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
 $joins_sql = $joins ? (' ' . implode(' ', $joins) . ' ') : ' ';
 
 /* -----------------------------------------------------------
  * Count
  * ----------------------------------------------------------- */
-$sql_count = "SELECT COUNT(*)
+$sql_count = "SELECT COUNT(DISTINCT f.id)
               FROM fahrzeuge f
               JOIN wachen w ON w.id = f.wache_id
               {$joins_sql}
@@ -278,7 +453,7 @@ $has_fahrzeuge_image_id  = lst_col_exists($pdo, 'fahrzeuge', 'image_id');
 /* -----------------------------------------------------------
  * Daten
  * ----------------------------------------------------------- */
-$sql = "SELECT
+$sql = "SELECT DISTINCT
             f.id,
             f.rufname,
             f.fahrzeugtyp,
@@ -372,20 +547,34 @@ function lst_sort_link($label, $key, $current_key, $current_order) {
     </p> 
   <?php endif; ?>
 
-  <form method="get" id="fahrzeuge-filter" style="margin-bottom:16px;">
+  <form method="get" id="fahrzeuge-filter" class="lst-fahrzeuge-filter" onchange="if (window.lstFahrzeugeRefreshFilters) { window.lstFahrzeugeRefreshFilters(); } else { this.requestSubmit ? this.requestSubmit() : this.submit(); }">
     <input type="hidden" name="page" value="lsttraining_fahrzeuge" />
     <?php if ($wache_id > 0): ?>
       <input type="hidden" name="wache_id" value="<?php echo (int)$wache_id; ?>" />
     <?php endif; ?>
 
-    <label for="fahrzeuge-search" class="screen-reader-text">Rufname oder Standort der Wache suchen</label>
-    <input type="search" id="fahrzeuge-search" name="s" value="<?php echo esc_attr($s); ?>"
-           placeholder="Rufname oder Wachenort suchen" style="min-width:320px;"
-           aria-describedby="fahrzeuge-search-hint" />
-    <span id="fahrzeuge-search-hint" class="description">Sucht im Rufnamen und im Namen der Wache.</span>
+    <div class="lst-fahrzeuge-filter__field lst-fahrzeuge-filter__field--search">
+      <label for="fahrzeuge-search">Suche</label>
+      <input type="search" id="fahrzeuge-search" name="s" value="<?php echo esc_attr($s); ?>"
+             placeholder="Rufname oder Wachenort suchen"
+             aria-describedby="fahrzeuge-search-hint" />
+      <span id="fahrzeuge-search-hint" class="description">Rufname oder Name der Wache.</span>
+    </div>
 
-    <label style="margin-left:10px;">
-      Bundesland:
+    <label class="lst-fahrzeuge-filter__field">
+      <span>Land</span>
+      <select name="land">
+        <option value="">– alle –</option>
+        <?php foreach (array_keys($bundes_opts) as $landName): ?>
+          <option value="<?php echo esc_attr($landName); ?>" <?php selected($land, $landName); ?>>
+            <?php echo esc_html($landName); ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
+    </label>
+
+    <label class="lst-fahrzeuge-filter__field">
+      <span>Bundesland</span>
       <select name="bundesland">
         <option value="">– alle –</option>
         <?php
@@ -402,9 +591,9 @@ function lst_sort_link($label, $key, $current_key, $current_order) {
       </select>
     </label>
 
-    <label style="margin-left:10px;">
-      Leitstelle:
-      <select name="leitstelle_id" style="min-width:220px;">
+    <label class="lst-fahrzeuge-filter__field">
+      <span>Leitstelle</span>
+      <select name="leitstelle_id">
         <option value="">– alle –</option>
         <?php foreach ($leitstellen_opts as $ls): ?>
           <option value="<?php echo (int)$ls['id']; ?>" <?php selected($leitstelle_id, (int)$ls['id']); ?>>
@@ -414,9 +603,9 @@ function lst_sort_link($label, $key, $current_key, $current_order) {
       </select>
     </label>
 
-    <label style="margin-left:10px;">
-      Nebenleitstelle:
-      <select name="neben_id" style="min-width:220px;">
+    <label class="lst-fahrzeuge-filter__field">
+      <span>Nebenleitstelle</span>
+      <select name="neben_id">
         <option value="">– alle –</option>
         <?php foreach ($neben_opts as $nb): ?>
           <option value="<?php echo (int)$nb['id']; ?>" <?php selected($neben_id, (int)$nb['id']); ?>>
@@ -426,26 +615,27 @@ function lst_sort_link($label, $key, $current_key, $current_order) {
       </select>
     </label>
 
-    <label style="margin-left:10px;">
-      Pro Seite:
+    <label class="lst-fahrzeuge-filter__field lst-fahrzeuge-filter__field--small">
+      <span>Pro Seite</span>
       <input type="number" min="10" max="200" step="10" name="per_page"
-             value="<?php echo esc_attr($per_page); ?>" style="width:80px;" />
+             value="<?php echo esc_attr($per_page); ?>" />
     </label>
 
-    <button class="button" style="margin-left:8px;">Filtern</button>
-
     <?php
-      $hasFilter = ($s !== '' || $bundesland !== '' || $leitstelle_id > 0 || $neben_id > 0 || isset($_GET['per_page']));
-      if ($hasFilter):
-          $reset_qs = ['page' => 'lsttraining_fahrzeuge'];
-          if ($wache_id > 0) { $reset_qs['wache_id'] = $wache_id; }
-          $reset_url = add_query_arg($reset_qs, admin_url('admin.php'));
+      $hasFilter = ($s !== '' || $land !== '' || $bundesland !== '' || $leitstelle_id > 0 || $neben_id > 0 || (isset($_GET['per_page']) && (int) $_GET['per_page'] !== 50));
+      $reset_qs = ['page' => 'lsttraining_fahrzeuge'];
+      if ($wache_id > 0) { $reset_qs['wache_id'] = $wache_id; }
+      $reset_url = add_query_arg($reset_qs, admin_url('admin.php'));
     ?>
-      <a class="button" href="<?php echo esc_url($reset_url); ?>" style="margin-left:6px;">Zurücksetzen</a>
-    <?php endif; ?>
+    <div class="lst-fahrzeuge-filter__actions">
+      <span class="spinner" id="fahrzeuge-filter-spinner" aria-hidden="true"></span>
+      <a class="button" id="fahrzeuge-reset" href="<?php echo esc_url($reset_url); ?>"<?php echo $hasFilter ? '' : ' hidden'; ?>>Zurücksetzen</a>
+    </div>
   </form>
 <a href="#" class="button button-primary" id="fahrzeug-new">Neues Fahrzeug</a>
-  <p>
+
+<div id="lst-fahrzeuge-results" class="lst-fahrzeuge-results" aria-live="polite">
+  <p class="lst-fahrzeuge-summary">
     <strong><?php echo number_format_i18n($total); ?></strong> Fahrzeuge gefunden.
     <?php if ($s !== ''): ?>
       Suche nach <strong>„<?php echo esc_html($s); ?>“</strong> in Rufname oder Wachenort.
@@ -539,4 +729,5 @@ function lst_sort_link($label, $key, $current_key, $current_order) {
 
   <p style="margin-top:14px">
   </p>
+</div>
 </div>

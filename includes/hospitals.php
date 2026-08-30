@@ -1,5 +1,5 @@
 <?php
-if ( ! lsttraining_user_can( 'hospitals' ) ) {
+if ( ! lsttraining_user_can_global_area( 'hospitals' ) ) {
     wp_die( 'Keine Berechtigung.' );
 }
 

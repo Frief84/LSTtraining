@@ -17,6 +17,37 @@ function lst_col_exists(PDO $pdo, string $table, string $col): bool {
     }
 }
 
+function lsttraining_user_can_manage_wache_id(PDO $pdo, int $wache_id): bool {
+    if ($wache_id <= 0) {
+        return false;
+    }
+    if (lsttraining_user_can_global_area('wachen')) {
+        return true;
+    }
+
+    $stmt = $pdo->prepare('SELECT leitstelle_id FROM wache_leitstellen WHERE wache_id = ?');
+    $stmt->execute([$wache_id]);
+    foreach (($stmt->fetchAll(PDO::FETCH_COLUMN) ?: []) as $leitstelle_id) {
+        if (lsttraining_user_can('wachen', (int) $leitstelle_id)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function lsttraining_user_can_manage_wachen_for_leitstellen(array $leitstellen): bool {
+    $leitstellen = array_values(array_unique(array_filter(array_map('intval', $leitstellen))));
+    if (!$leitstellen) {
+        return lsttraining_user_can_global_area('wachen');
+    }
+    foreach ($leitstellen as $leitstelle_id) {
+        if (!lsttraining_user_can('wachen', $leitstelle_id)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 /**
  * Liste der Wachen für Karte/Tabelle
  * @action wp_ajax_lsttraining_get_wachen
@@ -52,6 +83,12 @@ function lsttraining_get_wachen() {
 
     if (!$ls && !$nls && $bl === '') {
         wp_send_json_error(['msg' => 'Kein Filter angegeben.'], 400);
+    }
+    if ($ls && !lsttraining_user_can('wachen', $ls)) {
+        wp_send_json_error(['msg' => 'Keine Berechtigung'], 403);
+    }
+    if (!$ls && !lsttraining_user_can_global_area('wachen')) {
+        wp_send_json_error(['msg' => 'Keine Berechtigung'], 403);
     }
 
     $sql = "
@@ -131,11 +168,6 @@ function lsttraining_get_wachen() {
  * @action wp_ajax_lsttraining_get_wache
  */
 add_action('wp_ajax_lsttraining_get_wache', function () {
-        // Guard
-    lsttraining_ajax_guard([
-        'area' => 'wachen',
-    ]);
-
 $id = (int)($_GET['wache_id'] ?? 0);
     if ($id <= 0) {
         wp_send_json_error('Wache-ID fehlt', 400);
@@ -144,6 +176,9 @@ $id = (int)($_GET['wache_id'] ?? 0);
     $pdo = lsttraining_get_connection();
     if (!$pdo instanceof PDO) {
         wp_send_json_error('Datenbankfehler', 500);
+    }
+    if (!lsttraining_user_can_manage_wache_id($pdo, $id)) {
+        wp_send_json_error('Keine Berechtigung', 403);
     }
 
     try {
@@ -181,11 +216,6 @@ $id = (int)($_GET['wache_id'] ?? 0);
  * @action wp_ajax_lsttraining_save_wache
  */
 add_action('wp_ajax_lsttraining_save_wache', function () {
-        // Guard
-    lsttraining_ajax_guard([
-        'area' => 'wachen',
-    ]);
-
 $id         = (int)($_POST['id'] ?? 0);
     $name       = sanitize_text_field($_POST['name'] ?? '');
     $typ        = sanitize_text_field($_POST['typ'] ?? '');
@@ -205,6 +235,12 @@ $id         = (int)($_POST['id'] ?? 0);
     }
 
     $pdo = lsttraining_get_connection();
+    if (!$pdo instanceof PDO) {
+        wp_send_json_error('Datenbankfehler', 500);
+    }
+    if (!lsttraining_user_can_manage_wache_id($pdo, $id) || !lsttraining_user_can_manage_wachen_for_leitstellen($leit_ids)) {
+        wp_send_json_error('Keine Berechtigung', 403);
+    }
 
     try {
         $pdo->beginTransaction();
@@ -292,17 +328,18 @@ $id         = (int)($_POST['id'] ?? 0);
  * @action wp_ajax_lsttraining_delete_wache
  */
 add_action('wp_ajax_lsttraining_delete_wache', function () {
-        // Guard
-    lsttraining_ajax_guard([
-        'area' => 'wachen',
-    ]);
-
 $id = (int)($_POST['wache_id'] ?? 0);
     if ($id <= 0) {
         wp_send_json_error('Ungültige Wache-ID', 400);
     }
 
     $pdo = lsttraining_get_connection();
+    if (!$pdo instanceof PDO) {
+        wp_send_json_error('Datenbankfehler', 500);
+    }
+    if (!lsttraining_user_can_manage_wache_id($pdo, $id)) {
+        wp_send_json_error('Keine Berechtigung', 403);
+    }
 
     try {
         $pdo->beginTransaction();
@@ -339,11 +376,6 @@ $id = (int)($_POST['wache_id'] ?? 0);
  * @action wp_ajax_lsttraining_create_wache
  */
 add_action('wp_ajax_lsttraining_create_wache', function () {
-        // Guard
-    lsttraining_ajax_guard([
-        'area' => 'wachen',
-    ]);
-
 $name       = sanitize_text_field($_POST['name'] ?? '');
     $typ        = sanitize_text_field($_POST['typ'] ?? '');
     $latitude   = (float)($_POST['latitude'] ?? 0);
@@ -362,6 +394,12 @@ $name       = sanitize_text_field($_POST['name'] ?? '');
     }
 
     $pdo = lsttraining_get_connection();
+    if (!$pdo instanceof PDO) {
+        wp_send_json_error('Datenbankfehler', 500);
+    }
+    if (!lsttraining_user_can_manage_wachen_for_leitstellen($ls_ids)) {
+        wp_send_json_error('Keine Berechtigung', 403);
+    }
 
     try {
         $pdo->beginTransaction();
@@ -446,7 +484,7 @@ function lst_z_check() {
 
 function lst_z_check_entity(string $type, int $id): void {
     if ($type === 'leitstelle') {
-        $allowed = lsttraining_user_can('leitstellen', $id);
+        $allowed = lsttraining_user_can('wachen', $id);
     } elseif ($type === 'nebenleitstelle') {
         $allowed = lsttraining_user_can('nebenstellen');
     } else {
@@ -815,10 +853,6 @@ add_action('wp_ajax_lsttraining_update_wache', function () {
     if (!is_user_logged_in()) {
         wp_send_json_error(['message' => 'Nicht angemeldet'], 401);
     }
-    if (!function_exists('lsttraining_user_can') || !lsttraining_user_can('wachen')) {
-        wp_send_json_error(['message' => 'Keine Berechtigung'], 403);
-    }
-
     if (!function_exists('lsttraining_get_connection')) {
         require_once plugin_dir_path(__FILE__) . 'db.php';
     }
@@ -841,6 +875,10 @@ add_action('wp_ajax_lsttraining_update_wache', function () {
 
     if ($id <= 0) {
         wp_send_json_error(['message' => 'Ungültige ID'], 400);
+    }
+
+    if (!lsttraining_user_can_manage_wache_id($pdo, $id)) {
+        wp_send_json_error(['message' => 'Keine Berechtigung'], 403);
     }
 
     $updated_by_user_id = get_current_user_id();

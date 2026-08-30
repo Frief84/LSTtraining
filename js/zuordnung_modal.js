@@ -13,7 +13,7 @@ function openZuordnungPopup(cfg) {
     wrap.innerHTML =
         '<div id="zuo-modal" style="background:#fff;max-width:1100px;width:96%;max-height:90vh;display:flex;flex-direction:column;border:1px solid #ccc;box-shadow:0 0 15px rgba(0,0,0,.35);">' +
         '<div style="display:flex;align-items:center;gap:8px;padding:10px;border-bottom:1px solid #e5e5e5;">' +
-        '<h2 style="margin:0;flex:1;">Zuordnung der Wachen bearbeiten</h2>' +
+        '<h2 style="margin:0;flex:1;">Wachen im Einsatzgebiet zuordnen</h2>' +
         '<button type="button" id="zuo-close" class="button">Schließen</button>' +
         '</div>' +
         '<div style="padding:10px;overflow:auto;flex:1;">' +
