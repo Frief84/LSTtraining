@@ -54,6 +54,10 @@ function lsttraining_migration_add_column(PDO $pdo, string $table, string $colum
 }
 
 function lsttraining_migration_execute_baseline(PDO $pdo): void {
+    if (lsttraining_migration_table_exists($pdo, 'leitstellen')) {
+        return;
+    }
+
     $schema_file = LSTTRAINING_PATH . 'database/schema.sql';
     if (!is_readable($schema_file)) {
         throw new RuntimeException('database/schema.sql wurde nicht gefunden.');
