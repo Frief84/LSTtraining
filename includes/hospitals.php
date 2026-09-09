@@ -65,6 +65,17 @@ $pdo = lsttraining_get_connection();
 
   <div id="krankenhaus-map" style="height: 400px; margin-bottom: 20px;"></div>
 
+  <div class="hospital-list-filters" style="display:flex;gap:12px;align-items:center;margin-bottom:1em;">
+    <input id="hospital-search" type="search" placeholder="Suche nach ID oder Name…" style="min-width:280px;padding:4px;">
+    <label for="hospital-country-filter"><strong>Land:</strong></label>
+    <select id="hospital-country-filter">
+      <option value="">Alle Länder</option>
+      <option value="Deutschland">Deutschland</option>
+      <option value="Österreich">Österreich</option>
+      <option value="Schweiz">Schweiz</option>
+    </select>
+  </div>
+
   <?php
 $stmt = $pdo->query('SELECT id, name, versorgungsstufe, trauma_level, latitude, longitude FROM krankenhaeuser ORDER BY name');
 $krankenhaeuser = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -76,6 +87,7 @@ $krankenhaeuser = $stmt->fetchAll(PDO::FETCH_ASSOC);
       <tr>
       <th data-field="id"               style="cursor:pointer;">ID</th>
       <th data-field="name"             style="cursor:pointer;">Name</th>
+      <th data-field="land"             style="cursor:pointer;">Land</th>
       <th data-field="versorgungsstufe" style="cursor:pointer;">Versorgungsstufe</th>
       <th data-field="trauma_level"     style="cursor:pointer;">Trauma-Level</th>
       <th>Koordinaten</th>
@@ -83,7 +95,7 @@ $krankenhaeuser = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </tr>
     </thead>
    <tbody>
-  <tr><td colspan="6">Lade Krankenhäuser…</td></tr>
+  <tr><td colspan="7">Lade Krankenhäuser…</td></tr>
 </tbody>
   </table>
 
@@ -112,6 +124,11 @@ $krankenhaeuser = $stmt->fetchAll(PDO::FETCH_ASSOC);
                  class="regular-text"
                  required>
         </td>
+      </tr>
+
+      <tr>
+        <th><label for="h-land">Land</label></th>
+        <td><input type="text" id="h-land" name="land" value="{{ data.land || 'Deutschland' }}" class="regular-text" required></td>
       </tr>
 
       <!-- Versorgungsstufe -->

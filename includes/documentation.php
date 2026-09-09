@@ -53,6 +53,12 @@ function lsttraining_documentation_catalog(): array {
             'areas' => ['hospitals'],
             'description' => 'Klinikstandorte, Fachbereiche, Versorgungsstufen und Leitstellenfreigaben pflegen.',
         ],
+        'schweizer-krankenhaeuser-import' => [
+            'title' => 'Schweizer Krankenhäuser importieren',
+            'path' => 'docs/schweizer-krankenhaeuser-import.md',
+            'audience' => 'admin',
+            'description' => 'BAG-Standortdaten prüfen, geokodieren und über die Verwaltungs-API importieren.',
+        ],
         'wachen-editor' => [
             'title' => 'Wachen-Editor',
             'path' => 'docs/wachen-editor.md',

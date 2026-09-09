@@ -41,6 +41,7 @@ Willkommen in der zentralen Dokumentation von LSTtraining. Diese Startseite ordn
 - [Polizei und Unterstützungsfahrzeuge](polizei-und-unterstuetzungsfahrzeuge.md): Default-Konfiguration im Leitstellen-Editor
 - [Einsatz-Ortsbindung](einsatz-ortsbindung.md): Einsatzorte, Gebietstypen, Straßen- und Autobahnlayer
 - [Krankenhäuser im Simulations-Workspace](simulation-workspace-hospitals.md): Fachabteilungen und Patientenzuweisung
+- [Schweizer Krankenhäuser importieren](schweizer-krankenhaeuser-import.md): BAG-Daten prüfen und über die Verwaltungs-API importieren
 - [Wetter und Nachbarleitstellen-Auslastung](wetter-und-nachbarleitstellen-auslastung.md)
 
 ### Administratoren und Betreiber

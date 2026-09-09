@@ -494,11 +494,12 @@ function lsttraining_sim_station_kind(string $type): string {
         return 'thw';
     }
 
-    if (strpos($normalized, 'feuerwehr') !== false || preg_match('/(^|[^a-z])fw([^a-z]|$)/', $normalized)) {
+    if (in_array($normalized, ['fw', 'ffw', 'frrd'], true) || strpos($normalized, 'feuerwehr') !== false || preg_match('/(^|[^a-z])fw([^a-z]|$)/', $normalized)) {
         return 'fw';
     }
 
     if (
+        $normalized === 'rd' ||
         strpos($normalized, 'rettung') !== false ||
         strpos($normalized, 'rettungsdienst') !== false ||
         strpos($normalized, 'rettungswache') !== false ||

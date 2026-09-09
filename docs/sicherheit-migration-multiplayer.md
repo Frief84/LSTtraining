@@ -1,7 +1,7 @@
 # Sicherheits-, Datenbank- und Multiplayer-Härtung
 
 Stand: 26. August 2026
-Schema-Version: `2026082601`
+Schema-Version: `2026090902`
 
 Diese Dokumentation beschreibt die verbindlichen Sicherheits- und Betriebsregeln des Plugins. Sie ergänzt die allgemeine Projektbeschreibung in der `README.md`.
 
@@ -202,7 +202,7 @@ Diese Prüfungen ersetzen keinen echten Integrationslauf mit WordPress, PHP, MyS
 
 ### Frische Installation
 
-1. Plugin aktivieren und kontrollieren, dass die Schema-Version `2026082601` erreicht wird.
+1. Plugin aktivieren und kontrollieren, dass die Schema-Version `2026090902` erreicht wird.
 2. Alle Admin-Seiten öffnen.
 3. Die manuelle Schema-Prüfung erneut ausführen; sie muss ohne neue Fehler oder Dubletten abschließen.
 

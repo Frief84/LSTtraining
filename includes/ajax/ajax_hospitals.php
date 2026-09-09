@@ -4,6 +4,18 @@
  * 5. KRANKENHÄUSER (Liste, Details, CRUD, Departments)
  * ---------------------------------------------------------------------- */
 
+function lsttraining_hospital_departments_json($value): string {
+    if (!function_exists('lsttraining_rest_departments')) {
+        throw new RuntimeException('Die Fachbereichsvalidierung ist nicht verfügbar.');
+    }
+    return wp_json_encode(lsttraining_rest_departments('departments', $value));
+}
+
+function lsttraining_hospital_ajax_exception(Throwable $e, string $context): void {
+    error_log($context . ': ' . $e->getMessage());
+    wp_send_json_error('Die Krankenhausdaten konnten nicht verarbeitet werden.', 500);
+}
+
 add_action('wp_ajax_get_krankenhaeuser', function () {
     lsttraining_ajax_guard([
         'area' => 'hospitals',
@@ -11,14 +23,18 @@ add_action('wp_ajax_get_krankenhaeuser', function () {
         'method' => 'GET',
     ]);
 
-$pdo = lsttraining_get_connection();
-    $stmt = $pdo->prepare('
-        SELECT id, name, versorgungsstufe, trauma_level, latitude, longitude
-          FROM krankenhaeuser
-         ORDER BY name
-    ');
-    $stmt->execute();
-    wp_send_json($stmt->fetchAll(PDO::FETCH_ASSOC));
+    try {
+        $pdo = lsttraining_get_connection();
+        $stmt = $pdo->prepare('
+            SELECT id, name, land, versorgungsstufe, trauma_level, latitude, longitude
+              FROM krankenhaeuser
+             ORDER BY name
+        ');
+        $stmt->execute();
+        wp_send_json($stmt->fetchAll(PDO::FETCH_ASSOC));
+    } catch (Throwable $e) {
+        lsttraining_hospital_ajax_exception($e, 'get_krankenhaeuser');
+    }
 });
 
 /**
@@ -34,17 +50,28 @@ function lsttraining_ajax_get_krankenhaus() {
         wp_send_json_error('Ungültige Krankenhaus-ID', 400);
     }
 
-    $pdo = lsttraining_get_connection();
-    $stmt = $pdo->prepare('
-        SELECT id, name, versorgungsstufe, trauma_level,
+    try {
+        $pdo = lsttraining_get_connection();
+        $stmt = $pdo->prepare('
+        SELECT id, name, land, versorgungsstufe, trauma_level,
                latitude, longitude, departments, helipad
           FROM krankenhaeuser
          WHERE id = ?
     ');
-    $stmt->execute([$id]);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt->execute([$id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    $row ? wp_send_json_success($row) : wp_send_json_error('Krankenhaus nicht gefunden', 404);
+        if (!$row) {
+            wp_send_json_error('Krankenhaus nicht gefunden', 404);
+        }
+        $row['departments'] = json_decode(lsttraining_hospital_departments_json($row['departments']), true);
+        wp_send_json_success($row);
+    } catch (InvalidArgumentException $e) {
+        error_log('get_krankenhaus: Ungültige Fachbereiche für Krankenhaus ' . $id . ': ' . $e->getMessage());
+        wp_send_json_error('Die gespeicherten Fachrichtungsdaten sind ungültig.', 422);
+    } catch (Throwable $e) {
+        lsttraining_hospital_ajax_exception($e, 'get_krankenhaus');
+    }
     wp_die();
 }
 
@@ -85,6 +112,7 @@ add_action('wp_ajax_save_krankenhaus', function () {
 
 $id             = (int)($_POST['id'] ?? 0);
     $name           = sanitize_text_field($_POST['name'] ?? '');
+    $land           = sanitize_text_field($_POST['land'] ?? 'Deutschland');
     $versorgungsstufe = sanitize_text_field($_POST['versorgungsstufe'] ?? '');
     $trauma_level   = (int)($_POST['trauma_level'] ?? 0);
     $latitude       = (float)($_POST['latitude'] ?? 0);
@@ -103,6 +131,7 @@ $id             = (int)($_POST['id'] ?? 0);
 
     $set = '
         name             = ?,
+        land             = ?,
         versorgungsstufe = ?,
         trauma_level     = ?,
         latitude         = ?,
@@ -114,6 +143,7 @@ $id             = (int)($_POST['id'] ?? 0);
 
     $params = [
         $name,
+        $land,
         $versorgungsstufe,
         $trauma_level,
         $latitude,
@@ -124,6 +154,11 @@ $id             = (int)($_POST['id'] ?? 0);
     ];
 
     if ($departments_in !== null) {
+        try {
+            $departments_in = lsttraining_hospital_departments_json($departments_in);
+        } catch (InvalidArgumentException $e) {
+            wp_send_json_error($e->getMessage(), 400);
+        }
         $set .= ', departments = ?';
         $params[] = $departments_in;
     }
@@ -157,6 +192,7 @@ $name = sanitize_text_field($_POST['name'] ?? '');
     }
 
     $versorgungsstufe = sanitize_text_field($_POST['versorgungsstufe'] ?? '');
+    $land               = sanitize_text_field($_POST['land'] ?? 'Deutschland');
     $trauma_level     = (int)($_POST['trauma_level'] ?? 0);
 
     $lat = (float)($_POST['latitude'] ?? 0);
@@ -170,7 +206,11 @@ $name = sanitize_text_field($_POST['name'] ?? '');
     }
 
     $departments = wp_unslash($_POST['departments'] ?? '');
-    $departments = ($departments === '') ? '[]' : $departments;
+    try {
+        $departments = lsttraining_hospital_departments_json($departments === '' ? [] : $departments);
+    } catch (InvalidArgumentException $e) {
+        wp_send_json_error($e->getMessage(), 400);
+    }
 
     $helipad = isset($_POST['helipad']) ? 1 : 0;
     $poi_id = 'manual-' . wp_generate_uuid4();
@@ -178,10 +218,10 @@ $name = sanitize_text_field($_POST['name'] ?? '');
     $pdo = lsttraining_get_connection();
     $stmt = $pdo->prepare('
         INSERT INTO krankenhaeuser
-            (poi_id, name, versorgungsstufe, trauma_level, latitude, longitude, departments, helipad)
-        VALUES (?,?,?,?,?,?,?,?)
+            (poi_id, name, land, versorgungsstufe, trauma_level, latitude, longitude, departments, helipad)
+        VALUES (?,?,?,?,?,?,?,?,?)
     ');
-    $ok = $stmt->execute([$poi_id, $name, $versorgungsstufe, $trauma_level, $lat, $lon, $departments, $helipad]);
+    $ok = $stmt->execute([$poi_id, $name, $land, $versorgungsstufe, $trauma_level, $lat, $lon, $departments, $helipad]);
 
     if ($ok) {
         $newId = (int)$pdo->lastInsertId();
@@ -267,7 +307,11 @@ $hid = (int)($_POST['hospital_id'] ?? 0);
         $out[] = [$code => $latlon];
     }
 
-    $json = wp_json_encode($out);
+    try {
+        $json = lsttraining_hospital_departments_json($out);
+    } catch (InvalidArgumentException $e) {
+        wp_send_json_error($e->getMessage(), 400);
+    }
 
     $pdo = lsttraining_get_connection();
     $stmt = $pdo->prepare('UPDATE krankenhaeuser SET departments = ? WHERE id = ?');
@@ -301,18 +345,19 @@ function lsttraining_get_departments() {
         wp_send_json_error('Ungültige Krankenhaus-ID.', 400);
     }
 
-    $pdo = lsttraining_get_connection();
-    $stmt = $pdo->prepare('SELECT departments, latitude, longitude FROM krankenhaeuser WHERE id = :hid');
-    if (!$stmt->execute([':hid' => $hid])) {
-        wp_send_json_error('Datenbankfehler.', 500);
-    }
+    try {
+        $pdo = lsttraining_get_connection();
+        $stmt = $pdo->prepare('SELECT departments, latitude, longitude FROM krankenhaeuser WHERE id = :hid');
+        if (!$stmt->execute([':hid' => $hid])) {
+            wp_send_json_error('Datenbankfehler.', 500);
+        }
 
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$row) {
         wp_send_json_error('Krankenhaus nicht gefunden.', 404);
     }
 
-    $existing_raw = json_decode((string)$row['departments'], true) ?: [];
+        $existing_raw = json_decode(lsttraining_hospital_departments_json($row['departments']), true);
     $existing = [];
 
     foreach ($existing_raw as $item) {
@@ -346,7 +391,7 @@ function lsttraining_get_departments() {
     }
 
     // departments.json robust laden (code + label)
-    $deps_path = plugin_dir_path(__FILE__) . 'departments.json';
+    $deps_path = dirname(__DIR__) . '/departments.json';
     $allowed_pairs = []; // [{code,label}]
     if (is_readable($deps_path)) {
         try {
@@ -390,7 +435,7 @@ function lsttraining_get_departments() {
         return $p['label'];
     }, $allowed_pairs)));
 
-    wp_send_json_success([
+        wp_send_json_success([
         'hospital_id'     => $hid,
         'existing'        => $existing,
         'existing_codes'  => $existing_codes,
@@ -400,7 +445,13 @@ function lsttraining_get_departments() {
         'label_by_code'   => $label_by_code,
         'hospital_lat'    => (float)$row['latitude'],
         'hospital_lon'    => (float)$row['longitude'],
-    ]);
+        ]);
+    } catch (InvalidArgumentException $e) {
+        error_log('get_departments: Ungültige Fachbereiche für Krankenhaus ' . $hid . ': ' . $e->getMessage());
+        wp_send_json_error('Die gespeicherten Fachrichtungsdaten sind ungültig.', 422);
+    } catch (Throwable $e) {
+        lsttraining_hospital_ajax_exception($e, 'get_departments');
+    }
 }
 
 /* -------------------------------------------------------------------------

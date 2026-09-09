@@ -123,10 +123,11 @@ function lst_manage_resource_configs(): array {
             'label' => 'Krankenhaus',
             'search_field' => 'name',
             'order' => 'name ASC, id ASC',
-            'list_fields' => ['id', 'poi_id', 'name', 'latitude', 'longitude', 'versorgungsstufe', 'trauma_level', 'helipad', 'last_update', 'created_at'],
+            'list_fields' => ['id', 'poi_id', 'name', 'land', 'latitude', 'longitude', 'versorgungsstufe', 'trauma_level', 'helipad', 'last_update', 'created_at'],
             'fields' => [
                 'poi_id' => ['type' => 'identifier', 'max' => 50],
                 'name' => ['type' => 'string', 'required' => true, 'max' => 255],
+                'land' => ['type' => 'string', 'max' => 100, 'default' => 'Deutschland'],
                 'latitude' => ['type' => 'latitude', 'required' => true],
                 'longitude' => ['type' => 'longitude', 'required' => true],
                 'versorgungsstufe' => ['type' => 'enum', 'allowed' => ['Grundversorgung', 'Schwerpunktversorger', 'Maximalversorger'], 'default' => 'Grundversorgung'],

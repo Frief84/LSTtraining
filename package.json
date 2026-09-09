@@ -2,6 +2,7 @@
   "name": "lsttraining-quality-gates",
   "private": true,
   "scripts": {
-    "test": "node tests/static-checks.mjs"
+    "test": "node tests/static-checks.mjs && node --test tests/swiss-hospitals-import.test.mjs",
+    "import:swiss-hospitals": "node scripts/import-swiss-hospitals.mjs"
   }
 }

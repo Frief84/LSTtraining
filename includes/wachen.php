@@ -203,6 +203,10 @@ $region_filter_disabled = (bool) ($filter_leitstelle || $filter_nebenleitstelle)
 <button id="btn-new-wache" class="button button-primary">
   + Neue Wache
 </button>
+  <div id="wachen-loading" class="notice notice-info inline lst-wachen-loading" role="status" aria-live="polite" hidden>
+    <span class="spinner is-active" aria-hidden="true"></span>
+    <span>Wachen werden geladen …</span>
+  </div>
   <!-- Karte -->
   <div id="wachen-map" style="height: 400px; margin-bottom: 20px;"></div>
 
@@ -366,7 +370,7 @@ $where = [];
 </table>
 
 <!-- 6) Modal + Template: immer ausgeben, außerhalb von Tabellen -->
-<div id="wache-edit-modal" class="hidden">
+<div id="wache-edit-modal" class="wache-edit-modal hidden">
   <div class="wache-edit-overlay"></div>
   <div class="wache-edit-content"></div>
 </div>
@@ -525,107 +529,6 @@ $where = [];
       <tr>
         <th><label for="w-bild">Bild (optional)</label></th>
         <td><input type="file" id="w-bild" name="bild_datei" accept="image/*"></td>
-      </tr>
-    </table>
-
-    <p class="submit">
-      <button type="submit" class="button button-primary">Speichern</button>
-      <button type="button" id="wache-edit-cancel" class="button">Abbrechen</button>
-      <button type="button" class="button-delete-wache" data-id="{{id}}">Wache löschen</button>
-    </p>
-  </form>
-</script>
-
-<!-- -------------- -->
-<!-- Edit-Modal HTML -->
-<!-- -------------- -->
-<div id="wache-edit-modal" class="wache-edit-modal hidden">
-  <div class="wache-edit-overlay"></div>
-  <div class="wache-edit-container">
-    <h2>Wache bearbeiten</h2>
-    <div class="wache-edit-content">
-      <!-- form will be injected via JS -->
-    </div>
-  </div>
-</div>
-
-<!-- Template for the form (loaded by JS via wp.template / _.template) -->
-<script type="text/html" id="tmpl-wache-edit-form">
-  <form id="wache-edit-form">
-    <input type="hidden" name="id" value="{{id}}">
-
-    <table class="form-table">
-      <tr>
-        <th>ID</th>
-        <td><strong>{{id}}</strong></td>
-      </tr>
-
-      <tr>
-        <th><label for="w-name">Name</label></th>
-        <td>
-          <input type="text" id="w-name" name="name" value="{{name}}" class="regular-text" required>
-        </td>
-      </tr>
-
-      <tr>
-        <th><label for="w-typ">Typ</label></th>
-        <td>
-          <select id="w-typ" name="typ">
-            <option value="">– wählen –</option>
-            <option value="FW"   {{typ==="FW"  ?"selected":""}}>Feuerwache</option>
-            <option value="FFW"  {{typ==="FFW" ?"selected":""}}>Freiwillige Feuerwehr</option>
-            <option value="SEG"  {{typ==="SEG" ?"selected":""}}>Sondereinsatzgruppe</option>
-            <option value="RD"   {{typ==="RD"  ?"selected":""}}>Rettungswache</option>
-            <option value="FRRD" {{typ==="FRRD"?"selected":""}}>Rettungsdienst + Feuerwehr</option>
-          </select>
-        </td>
-      </tr>
-
-      <!-- one combined position string + hidden lat/lon; JS keeps them in sync -->
-      <tr>
-        <th><label for="w-pos">Position&nbsp;(lat, lon)</label></th>
-        <td>
-          <input type="text" id="w-pos" name="position"
-                 value="{{latitude}}, {{longitude}}"
-                 class="regular-text"
-                 pattern="^\s*-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?\s*$"
-                 title="Format: Breitengrad, Längengrad">
-          <input type="hidden" id="w-lat" name="latitude"  value="{{latitude}}">
-          <input type="hidden" id="w-lon" name="longitude" value="{{longitude}}">
-        </td>
-      </tr>
-	  
-	  <tr>
-  <th><label for="w-arr">Anfahrts-Position</label></th>
-  <td><input type="text" id="w-arr" name="arrival_pos"
-             value="{{arrival_pos}}" placeholder="52.704615, 12.520004"></td>
-</tr>
-<tr>
-  <th><label for="w-dep">Abfahrts-Position</label></th>
-  <td><input type="text" id="w-dep"  name="departure_pos"
-             value="{{departure_pos}}" placeholder="52.704615, 12.520004"></td>
-</tr>
-
-	  
-      <!-- interactive OpenLayers map -->
-      <tr>
-        <th>Koordinaten-Karte</th>
-        <td>
-          <div id="map_wache_edit" style="height:280px; border:1px solid #ccc;"></div>
-          <p class="description">Marker ziehen oder Position eingeben.</p>
-		  <p class="description">
-      <strong>Arrival-Marker:</strong> Shift&nbsp;+&nbsp;Klick &nbsp;|&nbsp;
-      <strong>Departure-Marker:</strong> Strg&nbsp;+&nbsp;Klick &nbsp;|&nbsp;
-      <strong>Marker löschen:</strong> Feld leeren
-    </p>
-        </td>
-      </tr>
-
-      <tr>
-        <th><label for="w-bild">Bild (optional)</label></th>
-        <td>
-          <input type="file" id="w-bild" name="bild_datei" accept="image/*">
-        </td>
       </tr>
     </table>
 

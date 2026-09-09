@@ -1,6 +1,21 @@
 // js/hospitals.js
 
 (function($) {
+
+    async function parseJsonResponse(response) {
+        const text = await response.text();
+        let json;
+        try {
+            json = JSON.parse(text);
+        } catch (_) {
+            throw new Error(`Serverantwort ist kein gültiges JSON (HTTP ${response.status}).`);
+        }
+        if (!response.ok) {
+            const message = typeof json.data === 'string' ? json.data : `HTTP ${response.status}`;
+            throw new Error(message);
+        }
+        return json;
+    }
 	
 
     /* -------------------------------------------------------------
@@ -38,12 +53,14 @@
             return;
         }
 
-        $.getJSON(lstHospitalsAjax.ajax_url, {
-                action: 'get_departments',
-                hospital_id: hospitalId,
-                nonce: lstHospitalsAjax.nonce
-            })
-            .done(json => {
+        const query = new URLSearchParams({
+            action: 'get_departments',
+            hospital_id: hospitalId,
+            nonce: lstHospitalsAjax.nonce
+        });
+        fetch(`${lstHospitalsAjax.ajax_url}?${query}`, { credentials: 'same-origin' })
+            .then(parseJsonResponse)
+            .then(json => {
                 if (!json.success) {
                     alert('Fehler: ' + json.data);
                     return;
@@ -149,7 +166,7 @@
                                 credentials: 'same-origin',
                                 body: fd
                             })
-                            .then(r => r.json())
+                            .then(parseJsonResponse)
                             .then(res => {
                                 if (!res.success) throw new Error(res.data || 'Speichern fehlgeschlagen');
                                 $modal.addClass('hidden');
@@ -162,9 +179,9 @@
                     });
 
             })
-            .fail((jqXHR, textStatus, err) => {
+            .catch(err => {
                 console.error('Department-Editor laden fehlgeschlagen', err);
-                alert('Editor konnte nicht geladen werden: ' + err);
+                alert('Editor konnte nicht geladen werden: ' + err.message);
             });
     }
     window.openDepartmentEditor = openDepartmentEditor;
@@ -279,29 +296,48 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        const wrap = document.querySelector('#krankenhaus-map').closest('.wrap');
-        if (wrap && !wrap.querySelector('#hospital-search')) {
-            const input = document.createElement('input');
-            input.id = 'hospital-search';
-            input.type = 'search';
-            input.placeholder = 'Suche nach ID oder Name…';
-            input.style.cssText = 'margin-bottom:1em; width:100%; padding:4px;';
-            wrap.querySelector('table.widefat.fixed').before(input);
-            input.addEventListener('input', () => fetchHospitals());
-        }
+        document.getElementById('hospital-search')?.addEventListener('input', fetchHospitals);
+        document.getElementById('hospital-country-filter')?.addEventListener('change', fetchHospitals);
     });
 
     function fetchHospitals() {
         const term = document.getElementById('hospital-search')?.value.trim().toLowerCase() || '';
+        const selectedCountry = document.getElementById('hospital-country-filter')?.value || '';
         fetch(`${lstHospitalsAjax.ajax_url}?action=get_krankenhaeuser&nonce=${encodeURIComponent(lstHospitalsAjax.nonce)}`, { credentials: 'same-origin' })
-            .then(res => res.json())
+            .then(parseJsonResponse)
             .then(data => {
-                const filtered = term
-                    ? data.filter(kh =>
+                const countryFilter = document.getElementById('hospital-country-filter');
+                if (countryFilter) {
+                    const defaultCountries = ['Deutschland', 'Österreich', 'Schweiz'];
+                    const countries = [...new Set([
+                        ...defaultCountries,
+                        ...data.map(kh => (kh.land || 'Deutschland').trim()).filter(Boolean)
+                    ])]
+                        .sort((a, b) => a.localeCompare(b, 'de'));
+                    const current = countryFilter.value;
+                    countryFilter.innerHTML = '<option value="">Alle Länder</option>';
+                    countries.forEach(country => countryFilter.add(new Option(country, country)));
+                    countryFilter.value = countries.includes(current) ? current : '';
+                }
+
+                const filtered = data.filter(kh => {
+                    const matchesTerm = !term ||
                         kh.id.toString().includes(term) ||
-                        kh.name.toLowerCase().includes(term)
-                      )
-                    : data;
+                        kh.name.toLowerCase().includes(term);
+                    const matchesCountry = !selectedCountry || (kh.land || 'Deutschland') === selectedCountry;
+                    return matchesTerm && matchesCountry;
+                });
+
+                if (sortField) {
+                    filtered.sort((left, right) => {
+                        const a = left[sortField] ?? '';
+                        const b = right[sortField] ?? '';
+                        const compared = typeof a === 'number' && typeof b === 'number'
+                            ? a - b
+                            : String(a).localeCompare(String(b), 'de', { numeric: true, sensitivity: 'base' });
+                        return sortAsc ? compared : -compared;
+                    });
+                }
 
                 const wrap = document.querySelector('#krankenhaus-map').closest('.wrap');
                 const table = wrap.querySelector('table.widefat.fixed');
@@ -319,6 +355,7 @@
                     tr.innerHTML = `
                         <td>${kh.id}</td>
                         <td>${kh.name}</td>
+                        <td>${kh.land || 'Deutschland'}</td>
                         <td>${kh.versorgungsstufe}</td>
                         <td>${kh.trauma_level}</td>
                         <td>${kh.latitude}, ${kh.longitude}</td>
@@ -412,7 +449,7 @@
 
         const loadData = id
             ? fetch(`${lstHospitalsAjax.ajax_url}?action=get_krankenhaus&id=${id}`, { credentials: 'same-origin' })
-                .then(r => r.json())
+                .then(parseJsonResponse)
                 .then(r => {
                     if (!r.success) throw new Error(r.data || 'Unknown');
                     return r.data;
@@ -420,6 +457,7 @@
             : Promise.resolve({
                 id: '',
                 name: '',
+                land: 'Deutschland',
                 versorgungsstufe: 'Grundversorgung',
                 trauma_level: 0,
                 latitude: 0,
@@ -551,7 +589,7 @@
 						credentials: 'same-origin',
 						body: fd
 					})
-					.then(r => r.json())
+					.then(parseJsonResponse)
 					.then(json => {
 						if (!json.success) throw new Error(json.data || 'Speichern fehlgeschlagen');
 						document.getElementById('hospital-edit-modal').classList.add('hidden');
@@ -576,7 +614,7 @@
                                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                                 body: params
                             })
-                            .then(r => r.json())
+                            .then(parseJsonResponse)
                             .then(json => {
                                 if (!json.success) throw new Error(json.data || 'Löschen fehlgeschlagen');
                                 modal.classList.add('hidden');

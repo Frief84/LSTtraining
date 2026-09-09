@@ -1,7 +1,7 @@
 <?php
 if (!defined('ABSPATH')) { exit; }
 
-const LSTTRAINING_SCHEMA_VERSION = 2026082601;
+const LSTTRAINING_SCHEMA_VERSION = 2026090902;
 const LSTTRAINING_SCHEMA_OPTION = 'lsttraining_schema_versions';
 
 function lsttraining_schema_fingerprint(): string {
@@ -43,6 +43,66 @@ function lsttraining_migration_index_exists(PDO $pdo, string $table, string $ind
     return (int) $stmt->fetchColumn() > 0;
 }
 
+function lsttraining_migration_baseline_tables(): array {
+    static $tables = null;
+    if (is_array($tables)) {
+        return $tables;
+    }
+
+    $schema_file = LSTTRAINING_PATH . 'database/schema.sql';
+    if (!is_readable($schema_file)) {
+        throw new RuntimeException('database/schema.sql wurde nicht gefunden.');
+    }
+    $sql = file_get_contents($schema_file);
+    if ($sql === false || trim($sql) === '') {
+        throw new RuntimeException('database/schema.sql ist leer oder nicht lesbar.');
+    }
+
+    preg_match_all('/CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?`([^`]+)`/i', $sql, $matches);
+    $tables = array_values(array_unique($matches[1] ?? []));
+    if (!$tables) {
+        throw new RuntimeException('database/schema.sql enthält keine Tabellen-Definitionen.');
+    }
+
+    return $tables;
+}
+
+function lsttraining_migration_baseline_complete(PDO $pdo): bool {
+    foreach (lsttraining_migration_baseline_tables() as $table) {
+        if (!lsttraining_migration_table_exists($pdo, $table)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function lsttraining_migration_execute_missing_baseline_tables(PDO $pdo, string $sql): void {
+    preg_match_all('/CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?`([^`]+)`[\s\S]*?;\s*/i', $sql, $matches, PREG_SET_ORDER);
+    if (!$matches) {
+        throw new RuntimeException('database/schema.sql enthält keine ausführbaren Tabellen-Definitionen.');
+    }
+
+    $pdo->exec('SET NAMES utf8mb4');
+    $pdo->exec('SET foreign_key_checks = 0');
+    $pdo->exec("SET sql_mode = 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'");
+
+    foreach ($matches as $match) {
+        $table = (string) $match[1];
+        if (lsttraining_migration_table_exists($pdo, $table)) {
+            continue;
+        }
+        $statement = preg_replace('/CREATE\s+TABLE\s+(?!IF\s+NOT\s+EXISTS)/i', 'CREATE TABLE IF NOT EXISTS ', (string) $match[0]);
+        if (!is_string($statement) || trim($statement) === '') {
+            throw new RuntimeException('Tabellen-Definition konnte nicht vorbereitet werden: ' . $table);
+        }
+        $pdo->exec($statement);
+    }
+
+    if (lsttraining_migration_table_exists($pdo, 'anrufer_name_pool') && preg_match('/INSERT\s+IGNORE\s+INTO\s+anrufer_name_pool[\s\S]*?;\s*/i', $sql, $insert_match)) {
+        $pdo->exec((string) $insert_match[0]);
+    }
+}
+
 function lsttraining_migration_add_column(PDO $pdo, string $table, string $column, string $definition): void {
     if (!lsttraining_migration_table_exists($pdo, $table) || lsttraining_migration_column_exists($pdo, $table, $column)) {
         return;
@@ -54,7 +114,7 @@ function lsttraining_migration_add_column(PDO $pdo, string $table, string $colum
 }
 
 function lsttraining_migration_execute_baseline(PDO $pdo): void {
-    if (lsttraining_migration_table_exists($pdo, 'leitstellen')) {
+    if (lsttraining_migration_baseline_complete($pdo)) {
         return;
     }
 
@@ -67,7 +127,7 @@ function lsttraining_migration_execute_baseline(PDO $pdo): void {
         throw new RuntimeException('database/schema.sql ist leer oder nicht lesbar.');
     }
     try {
-        $pdo->exec($sql);
+        lsttraining_migration_execute_missing_baseline_tables($pdo, $sql);
     } finally {
         try {
             $pdo->exec('SET foreign_key_checks = 1');
@@ -182,6 +242,47 @@ function lsttraining_migration_2026082601(PDO $pdo): void {
 }
 
 /**
+ * Ältere Installationen besaßen die Krankenhaustabelle bereits vor Einführung
+ * der externen, idempotenten POI-Kennung. CREATE TABLE IF NOT EXISTS ergänzt
+ * vorhandene Tabellen nicht, daher muss die Spalte ausdrücklich migriert werden.
+ */
+function lsttraining_migration_2026090901(PDO $pdo): void {
+    if (!lsttraining_migration_table_exists($pdo, 'krankenhaeuser')) {
+        return;
+    }
+
+    lsttraining_migration_add_column(
+        $pdo,
+        'krankenhaeuser',
+        'poi_id',
+        "VARCHAR(50) COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'Externe POI-ID' AFTER id"
+    );
+
+    // Bestehende Datensätze erhalten eine stabile, konfliktfreie Legacy-ID.
+    $pdo->exec("UPDATE krankenhaeuser SET poi_id = CONCAT('legacy-', id) WHERE poi_id IS NULL OR TRIM(poi_id) = ''");
+
+    if (!lsttraining_migration_index_exists($pdo, 'krankenhaeuser', 'poi_id')) {
+        $pdo->exec('ALTER TABLE krankenhaeuser ADD UNIQUE INDEX poi_id (poi_id)');
+    }
+
+    $pdo->exec("ALTER TABLE krankenhaeuser MODIFY COLUMN poi_id VARCHAR(50) COLLATE utf8mb4_general_ci NOT NULL COMMENT 'Externe POI-ID'");
+}
+
+function lsttraining_migration_2026090902(PDO $pdo): void {
+    lsttraining_migration_add_column(
+        $pdo,
+        'krankenhaeuser',
+        'land',
+        "VARCHAR(100) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'Deutschland' AFTER name"
+    );
+
+    // Die stabilen Importkennungen erlauben eine sichere Bestandszuordnung.
+    if (lsttraining_migration_column_exists($pdo, 'krankenhaeuser', 'poi_id')) {
+        $pdo->exec("UPDATE krankenhaeuser SET land = 'Schweiz' WHERE poi_id LIKE 'ch-bag-%'");
+    }
+}
+
+/**
  * MySQL-DDL führt implizite Commits aus. Deshalb sind alle Schritte idempotent;
  * die Versionsnummer wird erst gespeichert, wenn der komplette Lauf erfolgreich war.
  */
@@ -200,6 +301,12 @@ function lsttraining_run_migrations(bool $force = false): int {
     lsttraining_migration_execute_baseline($pdo);
     if ($force || $current < 2026082601) {
         lsttraining_migration_2026082601($pdo);
+    }
+    if ($force || $current < 2026090901) {
+        lsttraining_migration_2026090901($pdo);
+    }
+    if ($force || $current < 2026090902) {
+        lsttraining_migration_2026090902($pdo);
     }
     lsttraining_schema_store_version(LSTTRAINING_SCHEMA_VERSION);
     return LSTTRAINING_SCHEMA_VERSION;

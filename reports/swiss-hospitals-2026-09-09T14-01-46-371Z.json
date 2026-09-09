@@ -1,0 +1,3441 @@
+{
+  "generated_at": "2026-09-09T14:01:31.675Z",
+  "mode": "apply",
+  "source": "qip24_tabdaten_stao.csv",
+  "mapping_version": 1,
+  "summary": {
+    "gesamt": 210,
+    "unvollständig": 101,
+    "angelegt": 109
+  },
+  "items": [
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-39482ba3b91b7c2d4c46",
+      "api_id": "",
+      "name": "Les Hôpitaux Universitaires de Genève HUG - HUG - Soins aigus",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "NECH",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "PED",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig; fetch failed"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-516b0da92d29a827b86a",
+      "api_id": 1025,
+      "name": "CHUV Centre Hospitalier Universitaire Vaudois - Centre Hospitalier Universitaire Vaudois",
+      "latitude": 46.5247917175293,
+      "longitude": 6.639625072479248,
+      "departments": [
+        "CARD",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "NECH",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "PED",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-887a93cc92bf8c085e1f",
+      "api_id": 1026,
+      "name": "Insel Gruppe AG (universitär) - Inselspital",
+      "latitude": 46.947540283203125,
+      "longitude": 7.425736904144287,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "NECH",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "PED",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-5dd204d38a9403075b55",
+      "api_id": 1027,
+      "name": "Universitätsspital Basel - USB Campus",
+      "latitude": 47.56105422973633,
+      "longitude": 7.581457614898682,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GYNO",
+        "NECH",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "PED",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-ecf5d152a9df123d4695",
+      "api_id": 1028,
+      "name": "Universitätsspital Basel - USB Orthopädie Klinik am Bethesda Spital",
+      "latitude": 47.54817581176758,
+      "longitude": 7.617187023162842,
+      "departments": [],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-40aa4f50bc3c3983a6d7",
+      "api_id": "",
+      "name": "Universitätsspital Basel - USB Augenklinik",
+      "latitude": null,
+      "longitude": null,
+      "departments": [],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-f754f397085c453bc7e3",
+      "api_id": 1029,
+      "name": "Universitätsspital Zürich - Universitätsspital Zürich",
+      "latitude": 47.37660598754883,
+      "longitude": 8.54916763305664,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GYNO",
+        "NECH",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "PED",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-8583f174bb3d914deccf",
+      "api_id": "",
+      "name": "LUKS Spitalbetriebe AG - LUKS Luzern",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "NECH",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "PED",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-4e640a4a0ea4052d6c13",
+      "api_id": "",
+      "name": "LUKS Spitalbetriebe AG - LUKS Sursee",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GYNO",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-fadad4278a7d7762acf2",
+      "api_id": "",
+      "name": "LUKS Spitalbetriebe AG - LUKS Wolhusen",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-ccd299efda892026f9d0",
+      "api_id": 1030,
+      "name": "EOC Ente ospedaliero cantonale - Ospedale Regionale di Lugano",
+      "latitude": 46.01811599731445,
+      "longitude": 8.952422142028809,
+      "departments": [
+        "CARD",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "NECH",
+        "NEUR",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-eda351a7ad86c958c2af",
+      "api_id": "",
+      "name": "EOC Ente ospedaliero cantonale - Ospedale Regionale San Giovanni",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "NECH",
+        "NEUR",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-311b61f81e37e52c4946",
+      "api_id": 1031,
+      "name": "EOC Ente ospedaliero cantonale - Ospedale Regionale La Carità",
+      "latitude": 46.16892623901367,
+      "longitude": 8.791390419006348,
+      "departments": [
+        "CARD",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "NEUR",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-cd64d78cab9063fcf054",
+      "api_id": 1032,
+      "name": "EOC Ente ospedaliero cantonale - Ospedale Regionale Beata Vergine",
+      "latitude": 45.8670539855957,
+      "longitude": 8.98250675201416,
+      "departments": [
+        "CARD",
+        "DERM",
+        "GERI",
+        "NEUR",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-55b0fd2fbb1ccd1914b3",
+      "api_id": 1033,
+      "name": "EOC Ente ospedaliero cantonale - Ospedale Regionale Faido",
+      "latitude": 46.47844696044922,
+      "longitude": 8.8048734664917,
+      "departments": [
+        "CARD",
+        "NEUR",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-14319f1423df3916546b",
+      "api_id": "",
+      "name": "EOC Ente ospedaliero cantonale - Ospedale Regionale Acquarossa",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "NEUR",
+        "PALL",
+        "STRK",
+        "UROL"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-8094e34aced28204e157",
+      "api_id": 1034,
+      "name": "EOC Ente ospedaliero cantonale - Cardiocentro Ticino (CCT)",
+      "latitude": 46.01866149902344,
+      "longitude": 8.953547477722168,
+      "departments": [
+        "CARD",
+        "GERI",
+        "NEUR",
+        "ONKO",
+        "PALL",
+        "PED",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-d60ef5d9f84cd02d2882",
+      "api_id": 1035,
+      "name": "Hôpital du Valais - Hôpital de Sierre",
+      "latitude": 46.292076110839844,
+      "longitude": 7.5219645500183105,
+      "departments": [
+        "CARD",
+        "DERM",
+        "GERI",
+        "ONKO",
+        "STRK",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-2feb6a6447c444d1ae6e",
+      "api_id": 1036,
+      "name": "Hôpital du Valais - Hôpital de Sion Champsec",
+      "latitude": 46.234596252441406,
+      "longitude": 7.386514663696289,
+      "departments": [
+        "CARD",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "NECH",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "PED",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-f0f867843b66ad3ac874",
+      "api_id": "",
+      "name": "Hôpital du Valais - Hôpital de Martigny",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "GERI",
+        "NECH",
+        "NEUR",
+        "PALL",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-944858c35595cfaae54c",
+      "api_id": 1037,
+      "name": "Hôpital du Valais - Clinique St-Amé",
+      "latitude": 46.21329116821289,
+      "longitude": 6.997808456420898,
+      "departments": [
+        "GERI",
+        "STRK"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-038a61968f00d93396cc",
+      "api_id": "",
+      "name": "Hôpital du Valais - Hôpital de Malévoz - IPVR",
+      "latitude": null,
+      "longitude": null,
+      "departments": [],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-c6f0a79a6f72a3b4b446",
+      "api_id": "",
+      "name": "Hôpital du Valais - Spitalzentrum Oberwallis (Brig)",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "DERM",
+        "GERI",
+        "NECH",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-bafec5a390787b782d75",
+      "api_id": 1038,
+      "name": "Hôpital du Valais - Spitalzentrum Oberwallis (Visp)",
+      "latitude": 46.28791809082031,
+      "longitude": 7.883821964263916,
+      "departments": [
+        "CARD",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "NECH",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-65b8a932e55569e5b890",
+      "api_id": 1039,
+      "name": "Stadtspital Zürich - Stadtspital Zürich Triemli",
+      "latitude": 47.365970611572266,
+      "longitude": 8.497568130493164,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "NECH",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "PED",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-fd88ac42de8ba6694b8d",
+      "api_id": 1040,
+      "name": "Stadtspital Zürich - Stadtspital Zürich Waid",
+      "latitude": 47.39881896972656,
+      "longitude": 8.520533561706543,
+      "departments": [
+        "CARD",
+        "GERI",
+        "NEUR",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-6a3febb502f9df71bfe9",
+      "api_id": "",
+      "name": "Kantonsspital St. Gallen - Kantonsspital St. Gallen",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GYNO",
+        "NECH",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "PED",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-7333fa5d3ee2c32aac53",
+      "api_id": 1041,
+      "name": "Solothurner Spitäler AG - Bürgerspital Solothurn",
+      "latitude": 47.200252532958984,
+      "longitude": 7.538145065307617,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "NECH",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-4542d991f32eae331f7d",
+      "api_id": 1042,
+      "name": "Solothurner Spitäler AG - Kantonsspital Olten",
+      "latitude": 47.355892181396484,
+      "longitude": 7.903113842010498,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-49a4c6173d603109ab2f",
+      "api_id": 1043,
+      "name": "Solothurner Spitäler AG - Spital Dornach",
+      "latitude": 47.4866943359375,
+      "longitude": 7.613632678985596,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GERI",
+        "ONKO",
+        "STRK"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-bb3369cf142a7d1ac8c7",
+      "api_id": "",
+      "name": "Spital Thurgau AG - Kantonsspital Frauenfeld KSF",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GYNO",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-ac95418c8a0d440e9386",
+      "api_id": "",
+      "name": "Spital Thurgau AG - Kantonsspital Münsterlingen KSM",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "NECH",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-cc1b44561273812391b7",
+      "api_id": 1044,
+      "name": "Spital Thurgau AG - Psych. Dienste Thurgau PDT",
+      "latitude": 47.6328010559082,
+      "longitude": 9.233686447143555,
+      "departments": [],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-ad43eca8b535484dd0b7",
+      "api_id": "",
+      "name": "Spital Thurgau AG - Klinik St. Katharinental KSK",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "STRK"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-9205e66a9fc738ce0614",
+      "api_id": "",
+      "name": "Kantonsspital Aarau AG - Kantonsspital Aarau AG",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "NECH",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PED",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-c6127e73e9dcd0b2eb4e",
+      "api_id": "",
+      "name": "Kantonsspital Winterthur - Kantonsspital Winterthur",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "NECH",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "PED",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-59681812c55f985a41b1",
+      "api_id": 1045,
+      "name": "Lindenhofgruppe AG - Lindenhofspital",
+      "latitude": 46.95822525024414,
+      "longitude": 7.427734851837158,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GYNO",
+        "NECH",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-e72c82c0bd68b2252f76",
+      "api_id": 1046,
+      "name": "Lindenhofgruppe AG - Sonnenhofspital",
+      "latitude": 46.94268035888672,
+      "longitude": 7.4740190505981445,
+      "departments": [
+        "CARD",
+        "PALL"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-0fa34ee830b27ba48777",
+      "api_id": "",
+      "name": "Lindenhofgruppe AG - Engeriedspital",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "GYNO",
+        "PALL",
+        "STRK"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-0a74ce1870507342d24a",
+      "api_id": "",
+      "name": "Kantonsspital Baselland - KSBL Liestal",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-05863d3cf9cbe78a95ce",
+      "api_id": "",
+      "name": "Kantonsspital Baden AG - Kantonsspital Baden",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-541bc13fb134620dd7f0",
+      "api_id": "",
+      "name": "HFR - Hôpital fribourgeois - HFR Fribourg - Hôpital cantonal",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "NECH",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "PED",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-bc5f40e284b268dea04b",
+      "api_id": 1047,
+      "name": "HFR - Hôpital fribourgeois - HFR Tafers",
+      "latitude": 46.81060028076172,
+      "longitude": 7.212348937988281,
+      "departments": [
+        "CARD",
+        "DERM",
+        "GERI",
+        "NEUR",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-4e197027f7e4d85185ed",
+      "api_id": "",
+      "name": "HFR - Hôpital fribourgeois - HFR Meyriez-Murten",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "GERI",
+        "NEUR",
+        "STRK",
+        "UROL"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-3bc794ab20b4355b545c",
+      "api_id": 1048,
+      "name": "HFR - Hôpital fribourgeois - HFR Riaz",
+      "latitude": 46.64149856567383,
+      "longitude": 7.059842109680176,
+      "departments": [
+        "CARD",
+        "GERI",
+        "NECH",
+        "NEUR",
+        "STRK",
+        "UROL"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-639a405a315b09efc28e",
+      "api_id": "",
+      "name": "Kantonsspital Graubünden - Kantonsspital Graubünden",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "NECH",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-1e1552421ba786aa4a5c",
+      "api_id": "",
+      "name": "Kantonsspital Graubünden - Spital Walenstadt",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GERI",
+        "NEUR",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-ab70c72b9cc5b61d12ac",
+      "api_id": 1049,
+      "name": "Klinik Hirslanden AG - Klinik Hirslanden AG",
+      "latitude": 47.35129928588867,
+      "longitude": 8.576312065124512,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GYNO",
+        "NECH",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PED",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-1f7db376eb0dfaf213d0",
+      "api_id": 1050,
+      "name": "Hôpital Riviera-Chablais Vaud-Valais - Rennaz Centre hospitalier de Rennaz",
+      "latitude": 46.379234313964844,
+      "longitude": 6.920517921447754,
+      "departments": [
+        "CARD",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "NECH",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-55c5a0456b9a56577f75",
+      "api_id": "",
+      "name": "Réseau hospitalier neuchâtelois RHNe - La Chaux-de-Fonds",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "DERM",
+        "GERI",
+        "NEUR",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-9e4766239b16b2ff8554",
+      "api_id": "",
+      "name": "Réseau hospitalier neuchâtelois RHNe - Pourtalès",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "NECH",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-b9c46946093c1c39eaa9",
+      "api_id": "",
+      "name": "Réseau hospitalier neuchâtelois RHNe - Val-de-Ruz",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "STRK"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-cf2326229abe785e3d98",
+      "api_id": 1051,
+      "name": "Réseau hospitalier neuchâtelois RHNe - Le Locle",
+      "latitude": 47.05710983276367,
+      "longitude": 6.743182182312012,
+      "departments": [
+        "STRK"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-346e5df57ab2081ed93d",
+      "api_id": "",
+      "name": "Réseau hospitalier neuchâtelois RHNe - Chrysalide",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "GERI",
+        "NEUR",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-c7390dea102ba383bb18",
+      "api_id": 1052,
+      "name": "Hirslanden Bern AG - Klinik Beau-Site",
+      "latitude": 46.9528694152832,
+      "longitude": 7.448222637176514,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GYNO",
+        "ONKO",
+        "STRK",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-680c48f432125a036a72",
+      "api_id": 1053,
+      "name": "Hirslanden Bern AG - Salem-Spital",
+      "latitude": 46.95222854614258,
+      "longitude": 7.453740119934082,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "OBST",
+        "ONKO",
+        "STRK",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-bf68b3b19b9e3acedb47",
+      "api_id": 1054,
+      "name": "Hirslanden Bern AG - Klinik Permanence",
+      "latitude": 46.94465637207031,
+      "longitude": 7.392138957977295,
+      "departments": [
+        "STRK"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-cc4d7969e0dbd90646cd",
+      "api_id": 1055,
+      "name": "Spital STS AG - Spital Thun",
+      "latitude": 46.76079177856445,
+      "longitude": 7.63203763961792,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GYNO",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-4cf35326c62b14bfd897",
+      "api_id": 1056,
+      "name": "Spital STS AG - Spital Zweisimmen",
+      "latitude": 46.557865142822266,
+      "longitude": 7.3733229637146,
+      "departments": [
+        "NEUR",
+        "ONKO",
+        "STRK",
+        "UROL"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-79677b4ef5baa9416ed0",
+      "api_id": "",
+      "name": "Hirslanden Klinik St. Anna AG - Hirslanden Klinik St. Anna AG",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GYNO",
+        "NECH",
+        "OBST",
+        "ONKO",
+        "PED",
+        "STRK",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-cd8de6db4dcb2530c3b6",
+      "api_id": "",
+      "name": "Hirslanden Klinik St. Anna AG - Hirslanden Klinik Meggen",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "DERM",
+        "ONKO"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-ab3da8d8055b61f1a523",
+      "api_id": 1057,
+      "name": "Spitalzentrum Biel AG - Spitalzentrum Biel",
+      "latitude": 47.14688491821289,
+      "longitude": 7.244624614715576,
+      "departments": [
+        "CARD",
+        "CAT",
+        "GERI",
+        "GYNO",
+        "NECH",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-cabd0e0b68932dec7161",
+      "api_id": 1058,
+      "name": "EHC Ensemble hospitalier de la Côte - Hôpital de Morges",
+      "latitude": 46.52267837524414,
+      "longitude": 6.500016689300537,
+      "departments": [
+        "CARD",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "PED",
+        "STRK",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-a79770e7eb5523ad056e",
+      "api_id": 1059,
+      "name": "EHC Ensemble hospitalier de la Côte - Hôpital de Gilly",
+      "latitude": 46.47021484375,
+      "longitude": 6.305415153503418,
+      "departments": [
+        "DERM",
+        "GERI",
+        "ONKO",
+        "STRK"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-cc5f4fd7e9c5e2335327",
+      "api_id": "",
+      "name": "EHC Ensemble hospitalier de la Côte - Hôpital d'Aubonne",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "GERI",
+        "PALL",
+        "STRK"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-76d0815683db46d86b01",
+      "api_id": "",
+      "name": "Spital Limmattal - Spital Limmattal",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "GERI",
+        "GYNO",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-ceb480db9ea83909f4d6",
+      "api_id": "",
+      "name": "Spitalregion Rheintal Werdenberg Sarganserland - Spital Altstätten",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "GERI",
+        "NEUR",
+        "PALL",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-f85767e1ba8965617e00",
+      "api_id": "",
+      "name": "Spitalregion Rheintal Werdenberg Sarganserland - Spital Grabs",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "NECH",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-31e951249cf60305f5d3",
+      "api_id": "",
+      "name": "Etablissements Hospitaliers du Nord Vaudois (eHnv) - Hôpital d'Yverdon-les-Bains",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "GERI",
+        "GYNO",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "STRK"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-ace0e2fc3bdfeca285f3",
+      "api_id": "",
+      "name": "Etablissements Hospitaliers du Nord Vaudois (eHnv) - Hôpital de Saint-Loup",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "ONKO",
+        "PALL",
+        "STRK"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-8def5c8ef75e65a07355",
+      "api_id": "",
+      "name": "Etablissements Hospitaliers du Nord Vaudois (eHnv) - Hôpital de Chamblon",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "GERI",
+        "STRK"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-400f1dc45bb3e473d6aa",
+      "api_id": "",
+      "name": "Etablissements Hospitaliers du Nord Vaudois (eHnv) - Hôpital d'Orbe",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "ONKO",
+        "PALL",
+        "STRK"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-345a2113f34593278936",
+      "api_id": "",
+      "name": "St. Claraspital - St. Claraspital",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GYNO",
+        "NECH",
+        "NEUR",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-3d73a995396bd7f45627",
+      "api_id": 1060,
+      "name": "Spital Emmental AG - Spital Burgdorf",
+      "latitude": 47.04832458496094,
+      "longitude": 7.621397018432617,
+      "departments": [
+        "CARD",
+        "CAT",
+        "GERI",
+        "GYNO",
+        "NECH",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-a7675dbeb6e712745e7d",
+      "api_id": 1061,
+      "name": "Spital Emmental AG - Spital Langnau",
+      "latitude": 46.943450927734375,
+      "longitude": 7.786759376525879,
+      "departments": [
+        "CARD",
+        "CAT",
+        "GERI",
+        "STRK"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-4de9c1d2c137b63e7d2b",
+      "api_id": "",
+      "name": "Spital Zollikerberg - Spital Zollikerberg",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-196fed4a09385d656494",
+      "api_id": "",
+      "name": "Zuger Kantonsspital AG - Zuger Kantonsspital",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "GYNO",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-d2d107403a0eae52449a",
+      "api_id": "",
+      "name": "Spitäler Schaffhausen - Kantonsspital Standort Geissberg",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "GERI",
+        "GYNO",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-861e58084a5a421497e0",
+      "api_id": 1062,
+      "name": "Hirslanden Klinik Aarau - Hirslanden Klinik Aarau",
+      "latitude": 47.390567779541016,
+      "longitude": 8.043206214904785,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GYNO",
+        "NECH",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-2204868aa39f48b93004",
+      "api_id": "",
+      "name": "Spital Bülach AG - Spital Bülach",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-1b28f49441b116d7e419",
+      "api_id": 1063,
+      "name": "Spitäler Frutigen Meiringen Interlaken AG - Spital Frutigen",
+      "latitude": 46.58396530151367,
+      "longitude": 7.640990257263184,
+      "departments": [
+        "GERI",
+        "OBST",
+        "PALL",
+        "STRK"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-f72b54dfdcb1cf69f53e",
+      "api_id": 1064,
+      "name": "Spitäler Frutigen Meiringen Interlaken AG - Spital Interlaken",
+      "latitude": 46.680965423583984,
+      "longitude": 7.843043327331543,
+      "departments": [
+        "CARD",
+        "CAT",
+        "GERI",
+        "GYNO",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-24935ebe0bb7f5baf859",
+      "api_id": "",
+      "name": "Spital Uster AG - Spital Uster AG",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "GERI",
+        "GYNO",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-f0ae4159ce4a2824f5e7",
+      "api_id": 1065,
+      "name": "See-Spital - See-Spital",
+      "latitude": 47.26363754272461,
+      "longitude": 8.589569091796875,
+      "departments": [
+        "CARD",
+        "CAT",
+        "GERI",
+        "GYNO",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-9c5f461e1f390800ef39",
+      "api_id": 1066,
+      "name": "SRO AG - Spital Langenthal",
+      "latitude": 47.216129302978516,
+      "longitude": 7.794120788574219,
+      "departments": [
+        "CARD",
+        "CAT",
+        "GERI",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-d74c3735e3e0d2023536",
+      "api_id": "",
+      "name": "GZO Spital Wetzikon - GZO Spital Wetzikon",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "GYNO",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-9309b9b1886aa295dd0d",
+      "api_id": "",
+      "name": "Insel Gruppe AG (nicht-universitär) - Spital Aarberg",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "NEUR",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-52bdd26e7f4cfe723425",
+      "api_id": "",
+      "name": "Insel Gruppe AG (nicht-universitär) - Spital und Altersheim Belp",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "STRK"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-8f9d12671f49a7411e13",
+      "api_id": 1067,
+      "name": "Insel Gruppe AG (nicht-universitär) - Spital Riggisberg",
+      "latitude": 46.813838958740234,
+      "longitude": 7.477756500244141,
+      "departments": [
+        "CARD",
+        "CAT",
+        "STRK"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-ac849967607e283e522d",
+      "api_id": "",
+      "name": "Hôpital du Jura - Site de Delémont",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "GERI",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-2b10cddcdb932b52619e",
+      "api_id": 1068,
+      "name": "Hôpital du Jura - Site de Porrentruy",
+      "latitude": 47.419612884521484,
+      "longitude": 7.058699131011963,
+      "departments": [
+        "CARD",
+        "GERI",
+        "PALL",
+        "STRK"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-a20404cde4ae420a8ff9",
+      "api_id": 1069,
+      "name": "Gruppo ospedaliero Moncucco - Clinica Moncucco",
+      "latitude": 46.00505447387695,
+      "longitude": 8.939889907836914,
+      "departments": [
+        "CARD",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "NEUR",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-2b799663b4f56fc3cb6a",
+      "api_id": 1070,
+      "name": "Gruppo ospedaliero Moncucco - Clinica Santa Chiara",
+      "latitude": 46.166900634765625,
+      "longitude": 8.79994010925293,
+      "departments": [
+        "CARD",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "ONKO",
+        "STRK",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-3453875cf685c8399ed1",
+      "api_id": 1071,
+      "name": "Gesundheitszentrum Fricktal - GZF, Spital Rheinfelden",
+      "latitude": 47.556209564208984,
+      "longitude": 7.806821346282959,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "OBST",
+        "ONKO",
+        "STRK",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-d0c3fa6c05b5a4614b1e",
+      "api_id": "",
+      "name": "Gesundheitszentrum Fricktal - GZF, Spital Laufenburg",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "GERI",
+        "STRK"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-5dbfd6dd08045326a810",
+      "api_id": "",
+      "name": "Groupement Hospitalier de l'Ouest Lémanique (GHOL) SA - Hôpital de Nyon",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "DERM",
+        "GYNO",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "STRK",
+        "UROL"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-8c149d6c7815c1029903",
+      "api_id": "",
+      "name": "Groupement Hospitalier de l'Ouest Lémanique (GHOL) SA - Hôpital de Rolle",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "STRK"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-3bf7319a81614aa4c7ae",
+      "api_id": 1072,
+      "name": "Hôpital de la Tour - Hôpital de La Tour",
+      "latitude": 46.22890090942383,
+      "longitude": 6.067326545715332,
+      "departments": [
+        "CARD",
+        "DERM",
+        "GYNO",
+        "NECH",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-32c28b96d55c79f88ca7",
+      "api_id": 1073,
+      "name": "Spital Männedorf AG - Spital Männedorf",
+      "latitude": 47.25114822387695,
+      "longitude": 8.696739196777344,
+      "departments": [
+        "CARD",
+        "CAT",
+        "GERI",
+        "GYNO",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-e66423b9f90cd304f8ad",
+      "api_id": "",
+      "name": "Hirslanden Klinik Stephanshorn - Hirslanden Klinik Stephanshorn",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "DERM",
+        "GYNO",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-8ec0f6fc899077a9d263",
+      "api_id": "",
+      "name": "Stiftung Spital Muri - Stiftung Spital Muri",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "GERI",
+        "GYNO",
+        "OBST",
+        "ONKO",
+        "STRK"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-569cc5cae431b34742c4",
+      "api_id": "",
+      "name": "Spital Lachen - Spital Lachen",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-335319a2fe971afef33c",
+      "api_id": "",
+      "name": "Spitalregion Fürstenland Toggenburg - Spital Wil",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "GERI",
+        "GYNO",
+        "NEUR",
+        "OBST",
+        "PALL",
+        "STRK",
+        "UROL"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-0745ab7e61e2552feefb",
+      "api_id": 1074,
+      "name": "Spital Schwyz - Spital Schwyz",
+      "latitude": 47.01592254638672,
+      "longitude": 8.659566879272461,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GYNO",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-0a090465a62918fce14f",
+      "api_id": 1075,
+      "name": "Hirslanden Klinik Linde AG - Klinik Linde",
+      "latitude": 47.13276290893555,
+      "longitude": 7.262879848480225,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GYNO",
+        "NECH",
+        "OBST",
+        "ONKO",
+        "STRK",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-60dd1abbf8d17343e6ff",
+      "api_id": 1076,
+      "name": "Clinique des Grangettes SA - Clinique des Grangettes SA",
+      "latitude": 46.199951171875,
+      "longitude": 6.182006359100342,
+      "departments": [
+        "CARD",
+        "DERM",
+        "GYNO",
+        "OBST",
+        "ONKO",
+        "PED",
+        "STRK",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-354aa193d5da2c93bca8",
+      "api_id": "",
+      "name": "Spitalverbund Appenzell Ausserrhoden - Spital Herisau",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "OBST",
+        "ONKO",
+        "STRK",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-10c082cbeda3aa9c5d19",
+      "api_id": 1077,
+      "name": "Hôpital Intercantonal de la Broye (HIB) - Payerne",
+      "latitude": 46.81889724731445,
+      "longitude": 6.945942401885986,
+      "departments": [
+        "CARD",
+        "DERM",
+        "GYNO",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "STRK",
+        "UROL"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-b0944d6e8bc6a7267d35",
+      "api_id": "",
+      "name": "Hôpital Intercantonal de la Broye (HIB) - Estavayer-le-Lac",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "STRK"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-f48877918a1d5fd5a0cd",
+      "api_id": 1078,
+      "name": "Réseau de l'Arc SA - Hôpital de Saint-Imier",
+      "latitude": 47.148502349853516,
+      "longitude": 6.983596324920654,
+      "departments": [
+        "CARD",
+        "GERI",
+        "GYNO",
+        "OBST",
+        "STRK"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-d0c8d29b753e45789830",
+      "api_id": 1079,
+      "name": "Réseau de l'Arc SA - Hôpital de Moutier",
+      "latitude": 47.28200912475586,
+      "longitude": 7.37397575378418,
+      "departments": [
+        "CARD",
+        "STRK",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-16e6e946bb0d256018a1",
+      "api_id": 1080,
+      "name": "Réseau de l'Arc SA - Unité de St-Imier",
+      "latitude": 47.152278900146484,
+      "longitude": 6.9992146492004395,
+      "departments": [],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-daf8fb35a862e48a8ebb",
+      "api_id": 1081,
+      "name": "Réseau de l'Arc SA - Unité du Fuet",
+      "latitude": 47.25062561035156,
+      "longitude": 7.192271709442139,
+      "departments": [],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-e80db66bf9fb589fc80a",
+      "api_id": "",
+      "name": "Kantonsspital Glarus - Kantonsspital Glarus Akutsomatik",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "GERI",
+        "GYNO",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-3175c0ee73e024c44afe",
+      "api_id": "",
+      "name": "Kantonsspital Obwalden - Kantonsspital Obwalden",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "OBST",
+        "ONKO",
+        "PALL",
+        "STRK"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-77c5a81005e7e2579580",
+      "api_id": 1082,
+      "name": "Bethesda Spital AG - Bethesda Spital",
+      "latitude": 47.54817581176758,
+      "longitude": 7.617187023162842,
+      "departments": [
+        "DERM",
+        "GYNO",
+        "OBST",
+        "ONKO",
+        "STRK"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-8b1d0e7303f653da7302",
+      "api_id": 1083,
+      "name": "Klinik Im Park - Klinik Im Park",
+      "latitude": 47.35255432128906,
+      "longitude": 8.531611442565918,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GYNO",
+        "OBST",
+        "ONKO",
+        "PED",
+        "STRK",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-36173cd207ee446281e7",
+      "api_id": 1084,
+      "name": "Hôpital Jules Daler - Daler",
+      "latitude": 46.80112075805664,
+      "longitude": 7.140584945678711,
+      "departments": [
+        "GYNO",
+        "OBST",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-9d675006c9ac9cb13367",
+      "api_id": "",
+      "name": "Spital Linth - Spital Linth",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "GERI",
+        "GYNO",
+        "OBST",
+        "PALL",
+        "STRK"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-7cf27314f50efbf747e7",
+      "api_id": "",
+      "name": "Spital Nidwalden AG - Spital Nidwalden AG",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "GYNO",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-910f73f5fa92e37711bd",
+      "api_id": "",
+      "name": "Clinique Generale-Beaulieu - Clinique Générale Beaulieu",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "GYNO",
+        "NECH",
+        "OBST",
+        "STRK"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-dceb0d4e8603855b9306",
+      "api_id": "",
+      "name": "Spital Zofingen AG - Spital Zofingen AG",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "GERI",
+        "PALL",
+        "STRK",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-9e6ce3a26ff208c5c630",
+      "api_id": 1085,
+      "name": "Clinique Cecil - Clinique Cecil",
+      "latitude": 46.52030563354492,
+      "longitude": 6.621953964233398,
+      "departments": [
+        "CARD",
+        "DERM",
+        "GYNO",
+        "OBST",
+        "ONKO",
+        "PED",
+        "STRK",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-b9fb36de2611ad9a70ee",
+      "api_id": "",
+      "name": "Andreas Klinik - Andreas Klinik",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "DERM",
+        "GYNO",
+        "OBST",
+        "ONKO",
+        "STRK",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-104cee56b9df0f135682",
+      "api_id": 1086,
+      "name": "Asana Spital Leuggern AG - Asana Spital Leuggern AG",
+      "latitude": 47.580684661865234,
+      "longitude": 8.217353820800781,
+      "departments": [
+        "GYNO",
+        "OBST",
+        "STRK"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-4286b139cc7d59d8373e",
+      "api_id": "",
+      "name": "Clinique de la Source - Clinique de la Source",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "DERM",
+        "GYNO",
+        "NECH",
+        "OBST",
+        "ONKO",
+        "STRK",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-4af33fd52d40edeb4959",
+      "api_id": "",
+      "name": "Kantonsspital Uri - Kantonsspital Uri",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "GERI",
+        "GYNO",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-fde3d2ae7e5447954a09",
+      "api_id": 1087,
+      "name": "GSMN Schweiz AG Privatklinik Bethanien - Privatklinik Bethanien",
+      "latitude": 47.38100814819336,
+      "longitude": 8.557256698608398,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GYNO",
+        "OBST",
+        "ONKO",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-fa01e4d0075f3d414a5f",
+      "api_id": 1088,
+      "name": "Clinique Bois-Cerf - Clinique Bois-Cerf",
+      "latitude": 46.5120735168457,
+      "longitude": 6.630589962005615,
+      "departments": [],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-faaf64469011cd1d0afc",
+      "api_id": "",
+      "name": "AMEOS Spital Einsiedeln AG - AMEOS Spital Einsiedeln AG",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "GERI",
+        "GYNO",
+        "OBST",
+        "ONKO",
+        "STRK",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-a1ffd8765966f8c113b2",
+      "api_id": 1089,
+      "name": "Asana Spital Menziken AG - Asana Spital Menziken AG",
+      "latitude": 47.24613571166992,
+      "longitude": 8.189313888549805,
+      "departments": [
+        "CARD",
+        "STRK"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-0444076a0684f3f5114b",
+      "api_id": 1090,
+      "name": "Spital Oberengadin - Spital Oberengadin",
+      "latitude": 46.53997802734375,
+      "longitude": 9.878914833068848,
+      "departments": [
+        "CARD",
+        "CAT",
+        "GYNO",
+        "NEUR",
+        "OBST",
+        "ONKO",
+        "STRK",
+        "UROL",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-04dfe21bd04500c1dd2b",
+      "api_id": "",
+      "name": "Spital Affoltern AG - Spital Affoltern AG",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "GERI",
+        "PALL",
+        "STRK"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-41da27f98d0c5de7f204",
+      "api_id": 1091,
+      "name": "Regionalspital Surselva AG - Regionalspital Surselva",
+      "latitude": 46.776947021484375,
+      "longitude": 9.205327033996582,
+      "departments": [
+        "CARD",
+        "CAT",
+        "DERM",
+        "OBST",
+        "ONKO",
+        "STRK"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-a92d524bd5fdcb8312e3",
+      "api_id": "",
+      "name": "GSMN Schweiz SA Clinique de Genolier - Clinique de Genolier",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "DERM",
+        "GYNO",
+        "NECH",
+        "ONKO",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-683ad5cfb0280078e049",
+      "api_id": "",
+      "name": "Spital Davos AG Akutabteilung - Spital Davos",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "CAT",
+        "OBST",
+        "STRK"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-f1b57699aed7906b3e1f",
+      "api_id": 1092,
+      "name": "Swiss Medical Network Hospitals SA Clinica Sant'Anna - Clinica Sant'Anna",
+      "latitude": 46.000213623046875,
+      "longitude": 8.939435958862305,
+      "departments": [
+        "GYNO",
+        "STRK"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-9d7bb0ed480554570ffe",
+      "api_id": "",
+      "name": "Klinik Arlesheim AG - Klinik Arlesheim",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "DERM",
+        "ONKO",
+        "PALL",
+        "STRK",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-c9621dcfd87f11a052a8",
+      "api_id": 1093,
+      "name": "Herz-Neuro-Zentrum Bodensee AG - Herz-Neuro-Zentrum Münsterlingen",
+      "latitude": 47.629554748535156,
+      "longitude": 9.238059043884277,
+      "departments": [
+        "CARD",
+        "CAT",
+        "NECH",
+        "STRK",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-08f82c2e40d0ae7f5ef1",
+      "api_id": "",
+      "name": "Spital Thusis - Spital Thusis",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "OBST",
+        "STRK",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-0c457b72be5d50b11d8c",
+      "api_id": 1094,
+      "name": "Center da Sanda Engiadina Bassa Ospidal d'Engiadina Bassa - Ospidal d'Engiadina Bassa",
+      "latitude": 46.80006408691406,
+      "longitude": 10.303679466247559,
+      "departments": [
+        "GYNO",
+        "NEUR",
+        "OBST",
+        "STRK",
+        "UROL"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-44c702321552d17b2ddd",
+      "api_id": "",
+      "name": "Réseau Santé Balcon du Jura.vd (RSBJ) - Les Rosiers",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "GERI",
+        "STRK"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-ad6fa166c42f41e3283a",
+      "api_id": "",
+      "name": "Pôle santé Vallée de Joux Hôpital de la Vallée de Joux - Hôpital de la Vallée de Joux",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "STRK"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-4408179f55f3c7618547",
+      "api_id": 1095,
+      "name": "ArKa SA - UATm - Clinique d'Onex",
+      "latitude": 46.185665130615234,
+      "longitude": 6.104940414428711,
+      "departments": [
+        "STRK"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-63d9aee768f544f95c41",
+      "api_id": "",
+      "name": "ArKa SA - UATm - Clinique de Carouge",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "STRK"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-03ac5b1f115762d528fe",
+      "api_id": 1096,
+      "name": "Center da Sanadad Savognin SA - Center da Sanadad Savognin",
+      "latitude": 46.595272064208984,
+      "longitude": 9.600570678710938,
+      "departments": [
+        "STRK"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-9976b0187fbecc6a07fb",
+      "api_id": "",
+      "name": "Centro Sanitario Valposchiavo Ospedale San Sisto - Centro Sanitario Valposchiavo Ospedale San Sisto",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "STRK"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-b0d09d28c984c0c24acb",
+      "api_id": "",
+      "name": "Pôle santé du Pays-d’Enhaut - Pôle santé du Pays-d’Enhaut",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "STRK"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-fbfa25f688765e9af67a",
+      "api_id": 1097,
+      "name": "Stiftung Diaconis Palliative Care - Station Oranienburg",
+      "latitude": 46.95237731933594,
+      "longitude": 7.456482410430908,
+      "departments": [
+        "PALL",
+        "STRK"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-5dd83facf001f64ff227",
+      "api_id": "",
+      "name": "Center da Sanda Val Müstair Akutabteilung - Center da Sanda Val Müstair",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "STRK"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-f410519eb07f3e97e358",
+      "api_id": 1098,
+      "name": "PALLIATIVKLINIK IM PARK - PALLIATIVKLINIK IM PARK",
+      "latitude": 47.4919319152832,
+      "longitude": 7.613457679748535,
+      "departments": [
+        "PALL",
+        "STRK"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-41b29fe75ead5698b452",
+      "api_id": "",
+      "name": "Centro Sanitario Bregaglia Reparto Acuto - Centro Sanitario Bregaglia Reparto Acuto",
+      "latitude": null,
+      "longitude": null,
+      "departments": [],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-16ad746863b427dfa41f",
+      "api_id": 1099,
+      "name": "Clinique CIC Riviera - CIC",
+      "latitude": 46.441070556640625,
+      "longitude": 6.892035484313965,
+      "departments": [
+        "GYNO"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-0ef92015833ce51399ee",
+      "api_id": 1100,
+      "name": "Schulthess Klinik - Schulthess Klinik",
+      "latitude": 47.35210418701172,
+      "longitude": 8.57321548461914,
+      "departments": [
+        "CARD"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-2d1e50507f59147156e5",
+      "api_id": 1101,
+      "name": "Merian Iselin Klinik AG - Merian Iselin Klinik AG",
+      "latitude": 47.55549621582031,
+      "longitude": 7.57003927230835,
+      "departments": [
+        "DERM",
+        "ONKO",
+        "STRK",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-47470f4b22841555028c",
+      "api_id": 1102,
+      "name": "Universitätsklinik Balgrist - Universitätsklinik Balgrist",
+      "latitude": 47.35299301147461,
+      "longitude": 8.575407981872559,
+      "departments": [
+        "CARD",
+        "NECH",
+        "ONKO",
+        "STRK",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-5eba55bf103ace0187a7",
+      "api_id": 1103,
+      "name": "Clinique CIC Saxon SA - Clinique CIC Saxon SA",
+      "latitude": 46.14376449584961,
+      "longitude": 7.164407253265381,
+      "departments": [],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-874ed1bb06e7aca40f56",
+      "api_id": 1104,
+      "name": "Berit Klinik AG - Berit Klinik AG",
+      "latitude": 47.41545486450195,
+      "longitude": 9.437500953674316,
+      "departments": [
+        "OBST",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-a25c8d382389153db00e",
+      "api_id": "",
+      "name": "Clinique la Colline - Clinique La Colline",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "NECH",
+        "STRK",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-928fc53e766fa9b087ee",
+      "api_id": 1105,
+      "name": "Hirslanden Klinik Birshof - Hirslanden Klinik Birshof",
+      "latitude": 47.52766036987305,
+      "longitude": 7.604982376098633,
+      "departments": [
+        "STRK"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-108af827e0a3ca269a23",
+      "api_id": 1106,
+      "name": "Swiss Medical Network Hospitals SA Clinica Ars Medica - Clinica Ars Medica",
+      "latitude": 46.03986358642578,
+      "longitude": 8.923990249633789,
+      "departments": [
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-399fb410dccf8e21972e",
+      "api_id": 1107,
+      "name": "Klinik Gut St. Moritz AG - Klinik Gut St. Moritz",
+      "latitude": 46.49660873413086,
+      "longitude": 9.838174819946289,
+      "departments": [
+        "STRK"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-51d3c4fbfafc69a4c7cf",
+      "api_id": "",
+      "name": "Klinik Gut St. Moritz AG - Klinik Gut Fläsch",
+      "latitude": null,
+      "longitude": null,
+      "departments": [],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-737221a8889d33c194c3",
+      "api_id": 1108,
+      "name": "Swiss Medical Network Hospitals SA Clinique Générale Ste-Anne - Clinique Générale Ste-Anne",
+      "latitude": 46.79974365234375,
+      "longitude": 7.154477596282959,
+      "departments": [
+        "GYNO"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-3fc2513261854fdfa0fe",
+      "api_id": 1109,
+      "name": "Limmatklinik AG - Limmatklinik AG",
+      "latitude": 47.3930549621582,
+      "longitude": 8.513496398925781,
+      "departments": [],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-b0928f2fcd957c8eff9e",
+      "api_id": "",
+      "name": "Swiss Medical Network Hospitals SA Clinique de Valère - Clinique de Valère",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "CARD",
+        "GYNO",
+        "STRK"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-626b82d1da27880298f6",
+      "api_id": 1110,
+      "name": "Hirslanden Klinik Am Rosenberg AG - Hirslanden Klinik Am Rosenberg AG",
+      "latitude": 47.446346282958984,
+      "longitude": 9.527130126953125,
+      "departments": [],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-bbf37c3cc7852e709b75",
+      "api_id": "",
+      "name": "Klinik Seeschau AG - Seeschau Kreuzlingen",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "DERM",
+        "ONKO"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-1d4edb86b2cb1cc34264",
+      "api_id": 1111,
+      "name": "Swiss Medical Network Hospitals SA Privatklinik Obach - Privatklinik Obach",
+      "latitude": 47.20498275756836,
+      "longitude": 7.531261444091797,
+      "departments": [
+        "GYNO"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-65be57ff2610d07555ef",
+      "api_id": "",
+      "name": "Swiss Medical Network Hospitals SA Neuchâtel - Hôpital de La Providence",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "STRK",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-2fcdbb5668176f989fca",
+      "api_id": 1112,
+      "name": "Swiss Medical Network Hospitals SA Privatklinik Siloah - Privatklinik Siloah",
+      "latitude": 46.93201446533203,
+      "longitude": 7.517735004425049,
+      "departments": [
+        "DERM",
+        "ONKO"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-ab1712f383c09d863745",
+      "api_id": "",
+      "name": "Swiss Medical Network Hospitals SA Privatklinik Villa im Park - Privatklinik Villa im Park",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "OBST"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-13fda4943b16b98361cd",
+      "api_id": 1113,
+      "name": "Praxisklinik Rennbahn AG - Praxisklinik Rennbahn",
+      "latitude": 47.535491943359375,
+      "longitude": 7.634092330932617,
+      "departments": [],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-57e76d4d7cefbfadd69f",
+      "api_id": 1114,
+      "name": "Medaxo Klinik AG - Hohmad Thun",
+      "latitude": 46.74966812133789,
+      "longitude": 7.6248250007629395,
+      "departments": [
+        "GYNO"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-317c8b052b9868f97635",
+      "api_id": 1115,
+      "name": "Uroviva Klinik AG - Uroviva Klinik AG",
+      "latitude": 47.515480041503906,
+      "longitude": 8.542397499084473,
+      "departments": [],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-d0f160f8f22fe9905610",
+      "api_id": "",
+      "name": "GSMN Schweiz AG Privatklinik Lindberg - Privatklinik Lindberg",
+      "latitude": null,
+      "longitude": null,
+      "departments": [],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-d1dde18aafa416484fa8",
+      "api_id": "",
+      "name": "Rosenklinik AG - Rosenklinik AG",
+      "latitude": null,
+      "longitude": null,
+      "departments": [],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-cd54d2b972c1519cb646",
+      "api_id": "",
+      "name": "Swiss Medical Network Hospitals SA Privatklinik Belair - Privatklinik Belair",
+      "latitude": null,
+      "longitude": null,
+      "departments": [],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-43c743e46d7c786d85c1",
+      "api_id": "",
+      "name": "Berit Klinik Wattwil - Berit Klinik Wattwil",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "STRK"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-00b4c22e5e3b2189841a",
+      "api_id": "",
+      "name": "GSMN Schweiz SA Clinique de Montchoisi - Clinique de Montchoisi",
+      "latitude": null,
+      "longitude": null,
+      "departments": [],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-5216e1145bb9c4e19f69",
+      "api_id": 1116,
+      "name": "Klinik Pyramide am See AG - Klinik Pyramide am See",
+      "latitude": 47.358097076416016,
+      "longitude": 8.548999786376953,
+      "departments": [
+        "DERM",
+        "GYNO",
+        "ONKO"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-5e83b9d4ecc99947b91d",
+      "api_id": "",
+      "name": "Adus Medica AG - Adus Medica AG",
+      "latitude": null,
+      "longitude": null,
+      "departments": [],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-e32838f270690221dbd5",
+      "api_id": "",
+      "name": "Thurklinik AG - Thurklinik AG",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "OBST"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-a69f9f489e881f279926",
+      "api_id": 1117,
+      "name": "Clinique de la Plaine - Clinique de la Plaine",
+      "latitude": 46.20010757446289,
+      "longitude": 6.13839864730835,
+      "departments": [
+        "GYNO"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-93f9319871bfbf54d3ed",
+      "api_id": "",
+      "name": "SMN Ambulatory Services SA La Chaux-de-Fonds - Clinique Montbrillant",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "STRK"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-298f29396bcc169675ed",
+      "api_id": "",
+      "name": "Venenklinik Bellevue AG - Venenklinik Bellevue Kreuzlingen",
+      "latitude": null,
+      "longitude": null,
+      "departments": [],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-391fd4d8d1e80a6389c8",
+      "api_id": "",
+      "name": "Nouvelle Clinique Vert-Pré - NCVP Conches",
+      "latitude": null,
+      "longitude": null,
+      "departments": [],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-a142b272fd49eb32addc",
+      "api_id": 1118,
+      "name": "Klinik Tiefenbrunnen AG - Klinik Tiefenbrunnen",
+      "latitude": 47.343597412109375,
+      "longitude": 8.568154335021973,
+      "departments": [],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-a730cc8d83cbe6749931",
+      "api_id": "",
+      "name": "Berit Klinik Goldach - Berit Klinik Goldach",
+      "latitude": null,
+      "longitude": null,
+      "departments": [],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-d1f9411f5fe553191614",
+      "api_id": 1119,
+      "name": "Eulachklinik AG - Eulachklinik AG",
+      "latitude": 47.50516891479492,
+      "longitude": 8.72536849975586,
+      "departments": [],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-8902e07278348c461b5b",
+      "api_id": 1120,
+      "name": "Geburtshaus Terra Alta - Geburtshaus Terra Alta Oberkirch",
+      "latitude": 47.16183853149414,
+      "longitude": 8.0994291305542,
+      "departments": [
+        "OBST"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-afb831141d4c58b93074",
+      "api_id": "",
+      "name": "Geburtshaus Terra Alta - Geburtshaus Terra Alta Luzern",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "OBST"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-a8890f9d38011c4431dc",
+      "api_id": "",
+      "name": "Matthea Geburtshaus - Matthea Geburtshaus",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "OBST"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-969586b3e7a5bfc6f8ce",
+      "api_id": 1121,
+      "name": "Geburtshaus St. Gallen AG - Geburtshaus St. Gallen AG",
+      "latitude": 47.433074951171875,
+      "longitude": 9.393271446228027,
+      "departments": [
+        "OBST"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-22a49e4b80e725da686d",
+      "api_id": 1122,
+      "name": "Geburtshaus Luna AG - Geburtshaus Luna Bern",
+      "latitude": 46.95437240600586,
+      "longitude": 7.49057149887085,
+      "departments": [
+        "OBST"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-a44b3e9e2a718009514a",
+      "api_id": 1123,
+      "name": "Geburtshaus Winterthur AG - Geburtshaus Winterthur AG",
+      "latitude": 47.50502395629883,
+      "longitude": 8.72944450378418,
+      "departments": [
+        "OBST"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-c25d9127ada4324a1041",
+      "api_id": 1124,
+      "name": "Geburtshaus Zürcher Oberland AG - Geburtshaus Zürcher Oberland  AG",
+      "latitude": 47.33232498168945,
+      "longitude": 8.847349166870117,
+      "departments": [
+        "OBST"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-12b3a3007c87baa33b1f",
+      "api_id": 1125,
+      "name": "Geburtshaus Delphys - Geburtshaus Delphys",
+      "latitude": 47.374656677246094,
+      "longitude": 8.519956588745117,
+      "departments": [
+        "OBST"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-f50cf3d859565cf8f966",
+      "api_id": 1126,
+      "name": "Maison de Naissance le Petit Prince - Le Petit Prince",
+      "latitude": 46.798797607421875,
+      "longitude": 7.119243144989014,
+      "departments": [
+        "OBST"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-fc786b399ee96b1fb027",
+      "api_id": 1127,
+      "name": "Geburtshaus Tagmond GmbH - Geburtshaus Tagmond",
+      "latitude": 47.517608642578125,
+      "longitude": 7.701967239379883,
+      "departments": [
+        "OBST"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-d4f2418df79acd45344f",
+      "api_id": "",
+      "name": "Maison de naissance La Roseraie - Maison de naissance La Roseraie",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "OBST"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-78441880feb95ac3f609",
+      "api_id": 1128,
+      "name": "Geburtshaus Stans GmbH - Geburtshaus Stans GmbH",
+      "latitude": 46.967262268066406,
+      "longitude": 8.354208946228027,
+      "departments": [
+        "OBST"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-e86cd9978413f5534916",
+      "api_id": 1129,
+      "name": "Genossenschaft Geburtshaus Simmental-Saanenland Maternité Alpine - Geburtshaus Maternité Alpine",
+      "latitude": 46.56067657470703,
+      "longitude": 7.374022483825684,
+      "departments": [
+        "OBST"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-7ae9633b0c30186ef095",
+      "api_id": 1130,
+      "name": "Maison de Naissance Tilia Sàrl - Maison de Naissance Tilia Sàrl",
+      "latitude": 46.991947174072266,
+      "longitude": 6.912419319152832,
+      "departments": [
+        "OBST"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-885c1997c0b791627190",
+      "api_id": 1131,
+      "name": "Maison de naissance Les Cigognes - Maison de naissance Les Cigognes",
+      "latitude": 47.348724365234375,
+      "longitude": 7.411528587341309,
+      "departments": [
+        "OBST"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-64b2900e583b0299f772",
+      "api_id": "",
+      "name": "Geburtshaus ambra GmbH - Geburtshaus ambra GmbH",
+      "latitude": null,
+      "longitude": null,
+      "departments": [],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-a79ca0eefcfc58f73173",
+      "api_id": 1132,
+      "name": "Universitäts-Kinderspital Zürich das Spital der Eleonorenstiftung - Universitäts-Kinderspital Zürich Eleonorenstiftung",
+      "latitude": 47.352012634277344,
+      "longitude": 8.570621490478516,
+      "departments": [
+        "CARD",
+        "CAT",
+        "NECH",
+        "ONKO",
+        "PALL",
+        "PED",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "angelegt",
+      "poi_id": "ch-bag-ba69660e56fe93d442b2",
+      "api_id": 1133,
+      "name": "Universitäts-Kinderspital beider Basel (UKBB) - UKBB",
+      "latitude": 47.56377029418945,
+      "longitude": 7.5818634033203125,
+      "departments": [
+        "CAT",
+        "NECH",
+        "PALL",
+        "VASG"
+      ],
+      "message": ""
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-2e6a8a1892de9f352f39",
+      "api_id": "",
+      "name": "Stiftung Ostschweizer Kinderspital - Ostschweizer Kinderspital",
+      "latitude": null,
+      "longitude": null,
+      "departments": [
+        "GYNO",
+        "NECH",
+        "PALL",
+        "VASG"
+      ],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    },
+    {
+      "status": "unvollständig",
+      "poi_id": "ch-bag-4d2228f6943e5692d1e8",
+      "api_id": "",
+      "name": "Stiftung Ostschweizer Kinderspital - Romerhuus",
+      "latitude": null,
+      "longitude": null,
+      "departments": [],
+      "message": "Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+    }
+  ]
+}

@@ -15,6 +15,8 @@ Alle Routen beginnen mit:
 
 Es gibt zwei API-Bereiche:
 
+- **Stammdaten-Lese-API:** liest Wachen und Fahrzeuge fuer Karten,
+  Listen und externe Auswertungen.
 - **Verwaltungs-API:** liest, erstellt, aendert und loescht Stammdaten wie
   Leitstellen, Nebenleitstellen, Wachen, Fahrzeuge und Krankenhaeuser.
 - **Status-API:** liest und aendert den Live-Zustand einer laufenden
@@ -24,6 +26,31 @@ Es gibt zwei API-Bereiche:
 Die API ersetzt keine Berechtigungspruefung im WordPress-Backend. Jede Anfrage
 wird serverseitig gegen Anmeldung, Rolle, Bereichsrecht und Leitstellen-Scope
 geprueft.
+
+## Stammdaten lesen
+
+Wachen und Fahrzeuge koennen direkt abgefragt werden:
+
+```text
+GET /wachen
+GET /fahrzeuge
+```
+
+Beide Routen unterstuetzen `leitstelle_id`, `nebenleitstelle_id` und `search`.
+`GET /fahrzeuge` unterstuetzt zusaetzlich `wache_id`, `fahrzeugtyp` und
+`fms_status`.
+
+Beispiele:
+
+```http
+GET /wp-json/lst/v1/wachen?leitstelle_id=3
+GET /wp-json/lst/v1/fahrzeuge?wache_id=12
+GET /wp-json/lst/v1/fahrzeuge?leitstelle_id=3&fms_status=2
+```
+
+Die Antwort enthaelt jeweils `count`, die Liste (`wachen` oder `fahrzeuge`) und
+`generated_at`. Benutzer mit eingeschraenktem Leitstellen-Scope erhalten auch
+ohne Filter nur Datensaetze aus ihren freigegebenen Leitstellen.
 
 ## Anmeldung und Nonce
 

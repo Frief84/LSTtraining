@@ -1,0 +1,211 @@
+status;poi_id;api_id;name;latitude;longitude;departments;message
+unvollständig;ch-bag-39482ba3b91b7c2d4c46;;Les Hôpitaux Universitaires de Genève HUG - HUG - Soins aigus;;;CARD|DERM|GERI|GYNO|NECH|NEUR|OBST|ONKO|PALL|PED|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig; fetch failed"
+angelegt;ch-bag-516b0da92d29a827b86a;1025;CHUV Centre Hospitalier Universitaire Vaudois - Centre Hospitalier Universitaire Vaudois;46.5247917175293;6.639625072479248;CARD|DERM|GERI|GYNO|NECH|NEUR|OBST|ONKO|PALL|PED|STRK|UROL|VASG;
+angelegt;ch-bag-887a93cc92bf8c085e1f;1026;Insel Gruppe AG (universitär) - Inselspital;46.947540283203125;7.425736904144287;CARD|CAT|DERM|GERI|GYNO|NECH|NEUR|OBST|ONKO|PALL|PED|STRK|UROL|VASG;
+angelegt;ch-bag-5dd204d38a9403075b55;1027;Universitätsspital Basel - USB Campus;47.56105422973633;7.581457614898682;CARD|CAT|DERM|GYNO|NECH|NEUR|OBST|ONKO|PALL|PED|STRK|UROL|VASG;
+angelegt;ch-bag-ecf5d152a9df123d4695;1028;Universitätsspital Basel - USB Orthopädie Klinik am Bethesda Spital;47.54817581176758;7.617187023162842;;
+unvollständig;ch-bag-40aa4f50bc3c3983a6d7;;Universitätsspital Basel - USB Augenklinik;;;;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-f754f397085c453bc7e3;1029;Universitätsspital Zürich - Universitätsspital Zürich;47.37660598754883;8.54916763305664;CARD|CAT|DERM|GYNO|NECH|NEUR|OBST|ONKO|PALL|PED|STRK|UROL|VASG;
+unvollständig;ch-bag-8583f174bb3d914deccf;;LUKS Spitalbetriebe AG - LUKS Luzern;;;CARD|CAT|DERM|GERI|GYNO|NECH|NEUR|OBST|ONKO|PALL|PED|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-4e640a4a0ea4052d6c13;;LUKS Spitalbetriebe AG - LUKS Sursee;;;CARD|CAT|DERM|GYNO|NEUR|OBST|ONKO|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-fadad4278a7d7762acf2;;LUKS Spitalbetriebe AG - LUKS Wolhusen;;;CARD|CAT|DERM|GERI|GYNO|NEUR|OBST|ONKO|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-ccd299efda892026f9d0;1030;EOC Ente ospedaliero cantonale - Ospedale Regionale di Lugano;46.01811599731445;8.952422142028809;CARD|DERM|GERI|GYNO|NECH|NEUR|ONKO|PALL|STRK|UROL|VASG;
+unvollständig;ch-bag-eda351a7ad86c958c2af;;EOC Ente ospedaliero cantonale - Ospedale Regionale San Giovanni;;;CARD|DERM|GERI|GYNO|NECH|NEUR|ONKO|PALL|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-311b61f81e37e52c4946;1031;EOC Ente ospedaliero cantonale - Ospedale Regionale La Carità;46.16892623901367;8.791390419006348;CARD|DERM|GERI|GYNO|NEUR|ONKO|PALL|STRK|UROL|VASG;
+angelegt;ch-bag-cd64d78cab9063fcf054;1032;EOC Ente ospedaliero cantonale - Ospedale Regionale Beata Vergine;45.8670539855957;8.98250675201416;CARD|DERM|GERI|NEUR|ONKO|PALL|STRK|UROL|VASG;
+angelegt;ch-bag-55b0fd2fbb1ccd1914b3;1033;EOC Ente ospedaliero cantonale - Ospedale Regionale Faido;46.47844696044922;8.8048734664917;CARD|NEUR|ONKO|PALL|STRK|UROL|VASG;
+unvollständig;ch-bag-14319f1423df3916546b;;EOC Ente ospedaliero cantonale - Ospedale Regionale Acquarossa;;;CARD|NEUR|PALL|STRK|UROL;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-8094e34aced28204e157;1034;EOC Ente ospedaliero cantonale - Cardiocentro Ticino (CCT);46.01866149902344;8.953547477722168;CARD|GERI|NEUR|ONKO|PALL|PED|STRK|UROL|VASG;
+angelegt;ch-bag-d60ef5d9f84cd02d2882;1035;Hôpital du Valais - Hôpital de Sierre;46.292076110839844;7.5219645500183105;CARD|DERM|GERI|ONKO|STRK|VASG;
+angelegt;ch-bag-2feb6a6447c444d1ae6e;1036;Hôpital du Valais - Hôpital de Sion Champsec;46.234596252441406;7.386514663696289;CARD|DERM|GERI|GYNO|NECH|NEUR|OBST|ONKO|PALL|PED|STRK|UROL|VASG;
+unvollständig;ch-bag-f0f867843b66ad3ac874;;Hôpital du Valais - Hôpital de Martigny;;;CARD|GERI|NECH|NEUR|PALL|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-944858c35595cfaae54c;1037;Hôpital du Valais - Clinique St-Amé;46.21329116821289;6.997808456420898;GERI|STRK;
+unvollständig;ch-bag-038a61968f00d93396cc;;Hôpital du Valais - Hôpital de Malévoz - IPVR;;;;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-c6f0a79a6f72a3b4b446;;Hôpital du Valais - Spitalzentrum Oberwallis (Brig);;;CARD|DERM|GERI|NECH|ONKO|PALL|STRK|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-bafec5a390787b782d75;1038;Hôpital du Valais - Spitalzentrum Oberwallis (Visp);46.28791809082031;7.883821964263916;CARD|DERM|GERI|GYNO|NECH|OBST|ONKO|PALL|STRK|VASG;
+angelegt;ch-bag-65b8a932e55569e5b890;1039;Stadtspital Zürich - Stadtspital Zürich Triemli;47.365970611572266;8.497568130493164;CARD|CAT|DERM|GERI|GYNO|NECH|NEUR|OBST|ONKO|PALL|PED|STRK|UROL|VASG;
+angelegt;ch-bag-fd88ac42de8ba6694b8d;1040;Stadtspital Zürich - Stadtspital Zürich Waid;47.39881896972656;8.520533561706543;CARD|GERI|NEUR|ONKO|PALL|STRK|UROL|VASG;
+unvollständig;ch-bag-6a3febb502f9df71bfe9;;Kantonsspital St. Gallen - Kantonsspital St. Gallen;;;CARD|CAT|DERM|GYNO|NECH|NEUR|OBST|ONKO|PALL|PED|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-7333fa5d3ee2c32aac53;1041;Solothurner Spitäler AG - Bürgerspital Solothurn;47.200252532958984;7.538145065307617;CARD|CAT|DERM|GERI|GYNO|NECH|NEUR|OBST|ONKO|PALL|STRK|UROL|VASG;
+angelegt;ch-bag-4542d991f32eae331f7d;1042;Solothurner Spitäler AG - Kantonsspital Olten;47.355892181396484;7.903113842010498;CARD|CAT|DERM|GERI|GYNO|NEUR|OBST|ONKO|PALL|STRK|UROL|VASG;
+angelegt;ch-bag-49a4c6173d603109ab2f;1043;Solothurner Spitäler AG - Spital Dornach;47.4866943359375;7.613632678985596;CARD|CAT|DERM|GERI|ONKO|STRK;
+unvollständig;ch-bag-bb3369cf142a7d1ac8c7;;Spital Thurgau AG - Kantonsspital Frauenfeld KSF;;;CARD|CAT|DERM|GYNO|NEUR|OBST|ONKO|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-ac95418c8a0d440e9386;;Spital Thurgau AG - Kantonsspital Münsterlingen KSM;;;CARD|CAT|DERM|GERI|GYNO|NECH|NEUR|OBST|ONKO|PALL|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-cc1b44561273812391b7;1044;Spital Thurgau AG - Psych. Dienste Thurgau PDT;47.6328010559082;9.233686447143555;;
+unvollständig;ch-bag-ad43eca8b535484dd0b7;;Spital Thurgau AG - Klinik St. Katharinental KSK;;;STRK;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-9205e66a9fc738ce0614;;Kantonsspital Aarau AG - Kantonsspital Aarau AG;;;CARD|CAT|DERM|GERI|GYNO|NECH|NEUR|OBST|ONKO|PED|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-c6127e73e9dcd0b2eb4e;;Kantonsspital Winterthur - Kantonsspital Winterthur;;;CARD|CAT|DERM|GERI|GYNO|NECH|NEUR|OBST|ONKO|PALL|PED|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-59681812c55f985a41b1;1045;Lindenhofgruppe AG - Lindenhofspital;46.95822525024414;7.427734851837158;CARD|CAT|DERM|GYNO|NECH|NEUR|OBST|ONKO|PALL|STRK|UROL|VASG;
+angelegt;ch-bag-e72c82c0bd68b2252f76;1046;Lindenhofgruppe AG - Sonnenhofspital;46.94268035888672;7.4740190505981445;CARD|PALL;
+unvollständig;ch-bag-0fa34ee830b27ba48777;;Lindenhofgruppe AG - Engeriedspital;;;CARD|GYNO|PALL|STRK;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-0a74ce1870507342d24a;;Kantonsspital Baselland - KSBL Liestal;;;CARD|CAT|DERM|GERI|GYNO|OBST|ONKO|PALL|STRK|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-05863d3cf9cbe78a95ce;;Kantonsspital Baden AG - Kantonsspital Baden;;;CARD|CAT|DERM|GERI|GYNO|NEUR|OBST|ONKO|PALL|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-541bc13fb134620dd7f0;;HFR - Hôpital fribourgeois - HFR Fribourg - Hôpital cantonal;;;CARD|DERM|GERI|GYNO|NECH|NEUR|OBST|ONKO|PALL|PED|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-bc5f40e284b268dea04b;1047;HFR - Hôpital fribourgeois - HFR Tafers;46.81060028076172;7.212348937988281;CARD|DERM|GERI|NEUR|ONKO|PALL|STRK|UROL;
+unvollständig;ch-bag-4e197027f7e4d85185ed;;HFR - Hôpital fribourgeois - HFR Meyriez-Murten;;;CARD|GERI|NEUR|STRK|UROL;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-3bc794ab20b4355b545c;1048;HFR - Hôpital fribourgeois - HFR Riaz;46.64149856567383;7.059842109680176;CARD|GERI|NECH|NEUR|STRK|UROL;
+unvollständig;ch-bag-639a405a315b09efc28e;;Kantonsspital Graubünden - Kantonsspital Graubünden;;;CARD|CAT|DERM|GERI|GYNO|NECH|NEUR|OBST|ONKO|PALL|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-1e1552421ba786aa4a5c;;Kantonsspital Graubünden - Spital Walenstadt;;;CARD|CAT|DERM|GERI|NEUR|ONKO|PALL|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-ab70c72b9cc5b61d12ac;1049;Klinik Hirslanden AG - Klinik Hirslanden AG;47.35129928588867;8.576312065124512;CARD|CAT|DERM|GYNO|NECH|NEUR|OBST|ONKO|PED|STRK|UROL|VASG;
+angelegt;ch-bag-1f7db376eb0dfaf213d0;1050;Hôpital Riviera-Chablais Vaud-Valais - Rennaz Centre hospitalier de Rennaz;46.379234313964844;6.920517921447754;CARD|DERM|GERI|GYNO|NECH|NEUR|OBST|ONKO|PALL|STRK|UROL|VASG;
+unvollständig;ch-bag-55c5a0456b9a56577f75;;Réseau hospitalier neuchâtelois RHNe - La Chaux-de-Fonds;;;CARD|DERM|GERI|NEUR|ONKO|PALL|STRK|UROL;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-9e4766239b16b2ff8554;;Réseau hospitalier neuchâtelois RHNe - Pourtalès;;;CARD|DERM|GERI|GYNO|NECH|NEUR|OBST|ONKO|PALL|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-b9c46946093c1c39eaa9;;Réseau hospitalier neuchâtelois RHNe - Val-de-Ruz;;;STRK;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-cf2326229abe785e3d98;1051;Réseau hospitalier neuchâtelois RHNe - Le Locle;47.05710983276367;6.743182182312012;STRK;
+unvollständig;ch-bag-346e5df57ab2081ed93d;;Réseau hospitalier neuchâtelois RHNe - Chrysalide;;;CARD|GERI|NEUR|ONKO|PALL|STRK|UROL;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-c7390dea102ba383bb18;1052;Hirslanden Bern AG - Klinik Beau-Site;46.9528694152832;7.448222637176514;CARD|CAT|DERM|GYNO|ONKO|STRK|VASG;
+angelegt;ch-bag-680c48f432125a036a72;1053;Hirslanden Bern AG - Salem-Spital;46.95222854614258;7.453740119934082;CARD|CAT|DERM|GERI|GYNO|OBST|ONKO|STRK|VASG;
+angelegt;ch-bag-bf68b3b19b9e3acedb47;1054;Hirslanden Bern AG - Klinik Permanence;46.94465637207031;7.392138957977295;STRK;
+angelegt;ch-bag-cc4d7969e0dbd90646cd;1055;Spital STS AG - Spital Thun;46.76079177856445;7.63203763961792;CARD|CAT|DERM|GYNO|NEUR|OBST|ONKO|PALL|STRK|UROL|VASG;
+angelegt;ch-bag-4cf35326c62b14bfd897;1056;Spital STS AG - Spital Zweisimmen;46.557865142822266;7.3733229637146;NEUR|ONKO|STRK|UROL;
+unvollständig;ch-bag-79677b4ef5baa9416ed0;;Hirslanden Klinik St. Anna AG - Hirslanden Klinik St. Anna AG;;;CARD|CAT|DERM|GYNO|NECH|OBST|ONKO|PED|STRK|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-cd8de6db4dcb2530c3b6;;Hirslanden Klinik St. Anna AG - Hirslanden Klinik Meggen;;;CARD|DERM|ONKO;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-ab3da8d8055b61f1a523;1057;Spitalzentrum Biel AG - Spitalzentrum Biel;47.14688491821289;7.244624614715576;CARD|CAT|GERI|GYNO|NECH|NEUR|OBST|ONKO|STRK|UROL|VASG;
+angelegt;ch-bag-cabd0e0b68932dec7161;1058;EHC Ensemble hospitalier de la Côte - Hôpital de Morges;46.52267837524414;6.500016689300537;CARD|DERM|GERI|GYNO|OBST|ONKO|PALL|PED|STRK|VASG;
+angelegt;ch-bag-a79770e7eb5523ad056e;1059;EHC Ensemble hospitalier de la Côte - Hôpital de Gilly;46.47021484375;6.305415153503418;DERM|GERI|ONKO|STRK;
+unvollständig;ch-bag-cc5f4fd7e9c5e2335327;;EHC Ensemble hospitalier de la Côte - Hôpital d'Aubonne;;;CARD|GERI|PALL|STRK;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-76d0815683db46d86b01;;Spital Limmattal - Spital Limmattal;;;CARD|CAT|GERI|GYNO|NEUR|OBST|ONKO|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-ceb480db9ea83909f4d6;;Spitalregion Rheintal Werdenberg Sarganserland - Spital Altstätten;;;CARD|GERI|NEUR|PALL|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-f85767e1ba8965617e00;;Spitalregion Rheintal Werdenberg Sarganserland - Spital Grabs;;;CARD|CAT|DERM|GERI|GYNO|NECH|NEUR|OBST|ONKO|PALL|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-31e951249cf60305f5d3;;Etablissements Hospitaliers du Nord Vaudois (eHnv) - Hôpital d'Yverdon-les-Bains;;;CARD|GERI|GYNO|OBST|ONKO|PALL|STRK;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-ace0e2fc3bdfeca285f3;;Etablissements Hospitaliers du Nord Vaudois (eHnv) - Hôpital de Saint-Loup;;;CARD|ONKO|PALL|STRK;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-8def5c8ef75e65a07355;;Etablissements Hospitaliers du Nord Vaudois (eHnv) - Hôpital de Chamblon;;;CARD|GERI|STRK;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-400f1dc45bb3e473d6aa;;Etablissements Hospitaliers du Nord Vaudois (eHnv) - Hôpital d'Orbe;;;ONKO|PALL|STRK;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-345a2113f34593278936;;St. Claraspital - St. Claraspital;;;CARD|CAT|DERM|GYNO|NECH|NEUR|ONKO|PALL|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-3d73a995396bd7f45627;1060;Spital Emmental AG - Spital Burgdorf;47.04832458496094;7.621397018432617;CARD|CAT|GERI|GYNO|NECH|NEUR|OBST|ONKO|PALL|STRK|UROL;
+angelegt;ch-bag-a7675dbeb6e712745e7d;1061;Spital Emmental AG - Spital Langnau;46.943450927734375;7.786759376525879;CARD|CAT|GERI|STRK;
+unvollständig;ch-bag-4de9c1d2c137b63e7d2b;;Spital Zollikerberg - Spital Zollikerberg;;;CARD|CAT|DERM|GERI|GYNO|NEUR|OBST|ONKO|PALL|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-196fed4a09385d656494;;Zuger Kantonsspital AG - Zuger Kantonsspital;;;CARD|CAT|GYNO|NEUR|OBST|ONKO|PALL|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-d2d107403a0eae52449a;;Spitäler Schaffhausen - Kantonsspital Standort Geissberg;;;CARD|CAT|GERI|GYNO|NEUR|OBST|ONKO|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-861e58084a5a421497e0;1062;Hirslanden Klinik Aarau - Hirslanden Klinik Aarau;47.390567779541016;8.043206214904785;CARD|CAT|DERM|GYNO|NECH|OBST|ONKO|PALL|STRK|VASG;
+unvollständig;ch-bag-2204868aa39f48b93004;;Spital Bülach AG - Spital Bülach;;;CARD|DERM|GERI|GYNO|NEUR|OBST|ONKO|PALL|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-1b28f49441b116d7e419;1063;Spitäler Frutigen Meiringen Interlaken AG - Spital Frutigen;46.58396530151367;7.640990257263184;GERI|OBST|PALL|STRK;
+angelegt;ch-bag-f72b54dfdcb1cf69f53e;1064;Spitäler Frutigen Meiringen Interlaken AG - Spital Interlaken;46.680965423583984;7.843043327331543;CARD|CAT|GERI|GYNO|NEUR|OBST|ONKO|PALL|STRK|UROL;
+unvollständig;ch-bag-24935ebe0bb7f5baf859;;Spital Uster AG - Spital Uster AG;;;CARD|CAT|GERI|GYNO|NEUR|OBST|ONKO|PALL|STRK|UROL;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-f0ae4159ce4a2824f5e7;1065;See-Spital - See-Spital;47.26363754272461;8.589569091796875;CARD|CAT|GERI|GYNO|NEUR|OBST|ONKO|STRK|UROL|VASG;
+angelegt;ch-bag-9c5f461e1f390800ef39;1066;SRO AG - Spital Langenthal;47.216129302978516;7.794120788574219;CARD|CAT|GERI|NEUR|OBST|ONKO|STRK|UROL|VASG;
+unvollständig;ch-bag-d74c3735e3e0d2023536;;GZO Spital Wetzikon - GZO Spital Wetzikon;;;CARD|CAT|GYNO|NEUR|OBST|ONKO|PALL|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-9309b9b1886aa295dd0d;;Insel Gruppe AG (nicht-universitär) - Spital Aarberg;;;CARD|CAT|NEUR|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-52bdd26e7f4cfe723425;;Insel Gruppe AG (nicht-universitär) - Spital und Altersheim Belp;;;STRK;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-8f9d12671f49a7411e13;1067;Insel Gruppe AG (nicht-universitär) - Spital Riggisberg;46.813838958740234;7.477756500244141;CARD|CAT|STRK;
+unvollständig;ch-bag-ac849967607e283e522d;;Hôpital du Jura - Site de Delémont;;;CARD|GERI|NEUR|OBST|ONKO|PALL|STRK|UROL;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-2b10cddcdb932b52619e;1068;Hôpital du Jura - Site de Porrentruy;47.419612884521484;7.058699131011963;CARD|GERI|PALL|STRK;
+angelegt;ch-bag-a20404cde4ae420a8ff9;1069;Gruppo ospedaliero Moncucco - Clinica Moncucco;46.00505447387695;8.939889907836914;CARD|DERM|GERI|GYNO|NEUR|ONKO|PALL|STRK|UROL|VASG;
+angelegt;ch-bag-2b799663b4f56fc3cb6a;1070;Gruppo ospedaliero Moncucco - Clinica Santa Chiara;46.166900634765625;8.79994010925293;CARD|DERM|GERI|GYNO|ONKO|STRK|VASG;
+angelegt;ch-bag-3453875cf685c8399ed1;1071;Gesundheitszentrum Fricktal - GZF, Spital Rheinfelden;47.556209564208984;7.806821346282959;CARD|CAT|DERM|GERI|GYNO|OBST|ONKO|STRK|VASG;
+unvollständig;ch-bag-d0c3fa6c05b5a4614b1e;;Gesundheitszentrum Fricktal - GZF, Spital Laufenburg;;;CARD|CAT|GERI|STRK;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-5dbfd6dd08045326a810;;Groupement Hospitalier de l'Ouest Lémanique (GHOL) SA - Hôpital de Nyon;;;CARD|DERM|GYNO|NEUR|OBST|ONKO|STRK|UROL;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-8c149d6c7815c1029903;;Groupement Hospitalier de l'Ouest Lémanique (GHOL) SA - Hôpital de Rolle;;;STRK;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-3bf7319a81614aa4c7ae;1072;Hôpital de la Tour - Hôpital de La Tour;46.22890090942383;6.067326545715332;CARD|DERM|GYNO|NECH|NEUR|OBST|ONKO|STRK|UROL|VASG;
+angelegt;ch-bag-32c28b96d55c79f88ca7;1073;Spital Männedorf AG - Spital Männedorf;47.25114822387695;8.696739196777344;CARD|CAT|GERI|GYNO|OBST|ONKO|PALL|STRK|VASG;
+unvollständig;ch-bag-e66423b9f90cd304f8ad;;Hirslanden Klinik Stephanshorn - Hirslanden Klinik Stephanshorn;;;CARD|DERM|GYNO|OBST|ONKO|PALL|STRK|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-8ec0f6fc899077a9d263;;Stiftung Spital Muri - Stiftung Spital Muri;;;CARD|CAT|GERI|GYNO|OBST|ONKO|STRK;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-569cc5cae431b34742c4;;Spital Lachen - Spital Lachen;;;CARD|CAT|DERM|GERI|GYNO|NEUR|OBST|ONKO|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-335319a2fe971afef33c;;Spitalregion Fürstenland Toggenburg - Spital Wil;;;CARD|CAT|GERI|GYNO|NEUR|OBST|PALL|STRK|UROL;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-0745ab7e61e2552feefb;1074;Spital Schwyz - Spital Schwyz;47.01592254638672;8.659566879272461;CARD|CAT|DERM|GYNO|NEUR|OBST|ONKO|PALL|STRK|UROL|VASG;
+angelegt;ch-bag-0a090465a62918fce14f;1075;Hirslanden Klinik Linde AG - Klinik Linde;47.13276290893555;7.262879848480225;CARD|CAT|DERM|GYNO|NECH|OBST|ONKO|STRK|VASG;
+angelegt;ch-bag-60dd1abbf8d17343e6ff;1076;Clinique des Grangettes SA - Clinique des Grangettes SA;46.199951171875;6.182006359100342;CARD|DERM|GYNO|OBST|ONKO|PED|STRK|VASG;
+unvollständig;ch-bag-354aa193d5da2c93bca8;;Spitalverbund Appenzell Ausserrhoden - Spital Herisau;;;CARD|CAT|DERM|GERI|GYNO|OBST|ONKO|STRK|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-10c082cbeda3aa9c5d19;1077;Hôpital Intercantonal de la Broye (HIB) - Payerne;46.81889724731445;6.945942401885986;CARD|DERM|GYNO|NEUR|OBST|ONKO|STRK|UROL;
+unvollständig;ch-bag-b0944d6e8bc6a7267d35;;Hôpital Intercantonal de la Broye (HIB) - Estavayer-le-Lac;;;STRK;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-f48877918a1d5fd5a0cd;1078;Réseau de l'Arc SA - Hôpital de Saint-Imier;47.148502349853516;6.983596324920654;CARD|GERI|GYNO|OBST|STRK;
+angelegt;ch-bag-d0c8d29b753e45789830;1079;Réseau de l'Arc SA - Hôpital de Moutier;47.28200912475586;7.37397575378418;CARD|STRK|VASG;
+angelegt;ch-bag-16e6e946bb0d256018a1;1080;Réseau de l'Arc SA - Unité de St-Imier;47.152278900146484;6.9992146492004395;;
+angelegt;ch-bag-daf8fb35a862e48a8ebb;1081;Réseau de l'Arc SA - Unité du Fuet;47.25062561035156;7.192271709442139;;
+unvollständig;ch-bag-e80db66bf9fb589fc80a;;Kantonsspital Glarus - Kantonsspital Glarus Akutsomatik;;;CARD|CAT|GERI|GYNO|NEUR|OBST|ONKO|PALL|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-3175c0ee73e024c44afe;;Kantonsspital Obwalden - Kantonsspital Obwalden;;;CARD|CAT|DERM|GERI|GYNO|OBST|ONKO|PALL|STRK;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-77c5a81005e7e2579580;1082;Bethesda Spital AG - Bethesda Spital;47.54817581176758;7.617187023162842;DERM|GYNO|OBST|ONKO|STRK;
+angelegt;ch-bag-8b1d0e7303f653da7302;1083;Klinik Im Park - Klinik Im Park;47.35255432128906;8.531611442565918;CARD|CAT|DERM|GYNO|OBST|ONKO|PED|STRK|VASG;
+angelegt;ch-bag-36173cd207ee446281e7;1084;Hôpital Jules Daler - Daler;46.80112075805664;7.140584945678711;GYNO|OBST|VASG;
+unvollständig;ch-bag-9d675006c9ac9cb13367;;Spital Linth - Spital Linth;;;CARD|GERI|GYNO|OBST|PALL|STRK;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-7cf27314f50efbf747e7;;Spital Nidwalden AG - Spital Nidwalden AG;;;CARD|CAT|GYNO|NEUR|OBST|ONKO|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-910f73f5fa92e37711bd;;Clinique Generale-Beaulieu - Clinique Générale Beaulieu;;;GYNO|NECH|OBST|STRK;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-dceb0d4e8603855b9306;;Spital Zofingen AG - Spital Zofingen AG;;;CARD|CAT|GERI|PALL|STRK|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-9e6ce3a26ff208c5c630;1085;Clinique Cecil - Clinique Cecil;46.52030563354492;6.621953964233398;CARD|DERM|GYNO|OBST|ONKO|PED|STRK|VASG;
+unvollständig;ch-bag-b9fb36de2611ad9a70ee;;Andreas Klinik - Andreas Klinik;;;CARD|DERM|GYNO|OBST|ONKO|STRK|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-104cee56b9df0f135682;1086;Asana Spital Leuggern AG - Asana Spital Leuggern AG;47.580684661865234;8.217353820800781;GYNO|OBST|STRK;
+unvollständig;ch-bag-4286b139cc7d59d8373e;;Clinique de la Source - Clinique de la Source;;;CARD|DERM|GYNO|NECH|OBST|ONKO|STRK|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-4af33fd52d40edeb4959;;Kantonsspital Uri - Kantonsspital Uri;;;CARD|CAT|GERI|GYNO|NEUR|OBST|ONKO|STRK|UROL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-fde3d2ae7e5447954a09;1087;GSMN Schweiz AG Privatklinik Bethanien - Privatklinik Bethanien;47.38100814819336;8.557256698608398;CARD|CAT|DERM|GYNO|OBST|ONKO|VASG;
+angelegt;ch-bag-fa01e4d0075f3d414a5f;1088;Clinique Bois-Cerf - Clinique Bois-Cerf;46.5120735168457;6.630589962005615;;
+unvollständig;ch-bag-faaf64469011cd1d0afc;;AMEOS Spital Einsiedeln AG - AMEOS Spital Einsiedeln AG;;;CARD|CAT|DERM|GERI|GYNO|OBST|ONKO|STRK|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-a1ffd8765966f8c113b2;1089;Asana Spital Menziken AG - Asana Spital Menziken AG;47.24613571166992;8.189313888549805;CARD|STRK;
+angelegt;ch-bag-0444076a0684f3f5114b;1090;Spital Oberengadin - Spital Oberengadin;46.53997802734375;9.878914833068848;CARD|CAT|GYNO|NEUR|OBST|ONKO|STRK|UROL|VASG;
+unvollständig;ch-bag-04dfe21bd04500c1dd2b;;Spital Affoltern AG - Spital Affoltern AG;;;GERI|PALL|STRK;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-41da27f98d0c5de7f204;1091;Regionalspital Surselva AG - Regionalspital Surselva;46.776947021484375;9.205327033996582;CARD|CAT|DERM|OBST|ONKO|STRK;
+unvollständig;ch-bag-a92d524bd5fdcb8312e3;;GSMN Schweiz SA Clinique de Genolier - Clinique de Genolier;;;CARD|DERM|GYNO|NECH|ONKO|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-683ad5cfb0280078e049;;Spital Davos AG Akutabteilung - Spital Davos;;;CARD|CAT|OBST|STRK;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-f1b57699aed7906b3e1f;1092;Swiss Medical Network Hospitals SA Clinica Sant'Anna - Clinica Sant'Anna;46.000213623046875;8.939435958862305;GYNO|STRK;
+unvollständig;ch-bag-9d7bb0ed480554570ffe;;Klinik Arlesheim AG - Klinik Arlesheim;;;DERM|ONKO|PALL|STRK|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-c9621dcfd87f11a052a8;1093;Herz-Neuro-Zentrum Bodensee AG - Herz-Neuro-Zentrum Münsterlingen;47.629554748535156;9.238059043884277;CARD|CAT|NECH|STRK|VASG;
+unvollständig;ch-bag-08f82c2e40d0ae7f5ef1;;Spital Thusis - Spital Thusis;;;OBST|STRK|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-0c457b72be5d50b11d8c;1094;Center da Sanda Engiadina Bassa Ospidal d'Engiadina Bassa - Ospidal d'Engiadina Bassa;46.80006408691406;10.303679466247559;GYNO|NEUR|OBST|STRK|UROL;
+unvollständig;ch-bag-44c702321552d17b2ddd;;Réseau Santé Balcon du Jura.vd (RSBJ) - Les Rosiers;;;GERI|STRK;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-ad6fa166c42f41e3283a;;Pôle santé Vallée de Joux Hôpital de la Vallée de Joux - Hôpital de la Vallée de Joux;;;STRK;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-4408179f55f3c7618547;1095;ArKa SA - UATm - Clinique d'Onex;46.185665130615234;6.104940414428711;STRK;
+unvollständig;ch-bag-63d9aee768f544f95c41;;ArKa SA - UATm - Clinique de Carouge;;;STRK;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-03ac5b1f115762d528fe;1096;Center da Sanadad Savognin SA - Center da Sanadad Savognin;46.595272064208984;9.600570678710938;STRK;
+unvollständig;ch-bag-9976b0187fbecc6a07fb;;Centro Sanitario Valposchiavo Ospedale San Sisto - Centro Sanitario Valposchiavo Ospedale San Sisto;;;STRK;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-b0d09d28c984c0c24acb;;Pôle santé du Pays-d’Enhaut - Pôle santé du Pays-d’Enhaut;;;STRK;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-fbfa25f688765e9af67a;1097;Stiftung Diaconis Palliative Care - Station Oranienburg;46.95237731933594;7.456482410430908;PALL|STRK;
+unvollständig;ch-bag-5dd83facf001f64ff227;;Center da Sanda Val Müstair Akutabteilung - Center da Sanda Val Müstair;;;CARD|STRK;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-f410519eb07f3e97e358;1098;PALLIATIVKLINIK IM PARK - PALLIATIVKLINIK IM PARK;47.4919319152832;7.613457679748535;PALL|STRK;
+unvollständig;ch-bag-41b29fe75ead5698b452;;Centro Sanitario Bregaglia Reparto Acuto - Centro Sanitario Bregaglia Reparto Acuto;;;;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-16ad746863b427dfa41f;1099;Clinique CIC Riviera - CIC;46.441070556640625;6.892035484313965;GYNO;
+angelegt;ch-bag-0ef92015833ce51399ee;1100;Schulthess Klinik - Schulthess Klinik;47.35210418701172;8.57321548461914;CARD;
+angelegt;ch-bag-2d1e50507f59147156e5;1101;Merian Iselin Klinik AG - Merian Iselin Klinik AG;47.55549621582031;7.57003927230835;DERM|ONKO|STRK|VASG;
+angelegt;ch-bag-47470f4b22841555028c;1102;Universitätsklinik Balgrist - Universitätsklinik Balgrist;47.35299301147461;8.575407981872559;CARD|NECH|ONKO|STRK|VASG;
+angelegt;ch-bag-5eba55bf103ace0187a7;1103;Clinique CIC Saxon SA - Clinique CIC Saxon SA;46.14376449584961;7.164407253265381;;
+angelegt;ch-bag-874ed1bb06e7aca40f56;1104;Berit Klinik AG - Berit Klinik AG;47.41545486450195;9.437500953674316;OBST|VASG;
+unvollständig;ch-bag-a25c8d382389153db00e;;Clinique la Colline - Clinique La Colline;;;NECH|STRK|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-928fc53e766fa9b087ee;1105;Hirslanden Klinik Birshof - Hirslanden Klinik Birshof;47.52766036987305;7.604982376098633;STRK;
+angelegt;ch-bag-108af827e0a3ca269a23;1106;Swiss Medical Network Hospitals SA Clinica Ars Medica - Clinica Ars Medica;46.03986358642578;8.923990249633789;VASG;
+angelegt;ch-bag-399fb410dccf8e21972e;1107;Klinik Gut St. Moritz AG - Klinik Gut St. Moritz;46.49660873413086;9.838174819946289;STRK;
+unvollständig;ch-bag-51d3c4fbfafc69a4c7cf;;Klinik Gut St. Moritz AG - Klinik Gut Fläsch;;;;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-737221a8889d33c194c3;1108;Swiss Medical Network Hospitals SA Clinique Générale Ste-Anne - Clinique Générale Ste-Anne;46.79974365234375;7.154477596282959;GYNO;
+angelegt;ch-bag-3fc2513261854fdfa0fe;1109;Limmatklinik AG - Limmatklinik AG;47.3930549621582;8.513496398925781;;
+unvollständig;ch-bag-b0928f2fcd957c8eff9e;;Swiss Medical Network Hospitals SA Clinique de Valère - Clinique de Valère;;;CARD|GYNO|STRK;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-626b82d1da27880298f6;1110;Hirslanden Klinik Am Rosenberg AG - Hirslanden Klinik Am Rosenberg AG;47.446346282958984;9.527130126953125;;
+unvollständig;ch-bag-bbf37c3cc7852e709b75;;Klinik Seeschau AG - Seeschau Kreuzlingen;;;DERM|ONKO;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-1d4edb86b2cb1cc34264;1111;Swiss Medical Network Hospitals SA Privatklinik Obach - Privatklinik Obach;47.20498275756836;7.531261444091797;GYNO;
+unvollständig;ch-bag-65be57ff2610d07555ef;;Swiss Medical Network Hospitals SA Neuchâtel - Hôpital de La Providence;;;STRK|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-2fcdbb5668176f989fca;1112;Swiss Medical Network Hospitals SA Privatklinik Siloah - Privatklinik Siloah;46.93201446533203;7.517735004425049;DERM|ONKO;
+unvollständig;ch-bag-ab1712f383c09d863745;;Swiss Medical Network Hospitals SA Privatklinik Villa im Park - Privatklinik Villa im Park;;;OBST;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-13fda4943b16b98361cd;1113;Praxisklinik Rennbahn AG - Praxisklinik Rennbahn;47.535491943359375;7.634092330932617;;
+angelegt;ch-bag-57e76d4d7cefbfadd69f;1114;Medaxo Klinik AG - Hohmad Thun;46.74966812133789;7.6248250007629395;GYNO;
+angelegt;ch-bag-317c8b052b9868f97635;1115;Uroviva Klinik AG - Uroviva Klinik AG;47.515480041503906;8.542397499084473;;
+unvollständig;ch-bag-d0f160f8f22fe9905610;;GSMN Schweiz AG Privatklinik Lindberg - Privatklinik Lindberg;;;;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-d1dde18aafa416484fa8;;Rosenklinik AG - Rosenklinik AG;;;;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-cd54d2b972c1519cb646;;Swiss Medical Network Hospitals SA Privatklinik Belair - Privatklinik Belair;;;;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-43c743e46d7c786d85c1;;Berit Klinik Wattwil - Berit Klinik Wattwil;;;STRK;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-00b4c22e5e3b2189841a;;GSMN Schweiz SA Clinique de Montchoisi - Clinique de Montchoisi;;;;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-5216e1145bb9c4e19f69;1116;Klinik Pyramide am See AG - Klinik Pyramide am See;47.358097076416016;8.548999786376953;DERM|GYNO|ONKO;
+unvollständig;ch-bag-5e83b9d4ecc99947b91d;;Adus Medica AG - Adus Medica AG;;;;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-e32838f270690221dbd5;;Thurklinik AG - Thurklinik AG;;;OBST;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-a69f9f489e881f279926;1117;Clinique de la Plaine - Clinique de la Plaine;46.20010757446289;6.13839864730835;GYNO;
+unvollständig;ch-bag-93f9319871bfbf54d3ed;;SMN Ambulatory Services SA La Chaux-de-Fonds - Clinique Montbrillant;;;STRK;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-298f29396bcc169675ed;;Venenklinik Bellevue AG - Venenklinik Bellevue Kreuzlingen;;;;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-391fd4d8d1e80a6389c8;;Nouvelle Clinique Vert-Pré - NCVP Conches;;;;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-a142b272fd49eb32addc;1118;Klinik Tiefenbrunnen AG - Klinik Tiefenbrunnen;47.343597412109375;8.568154335021973;;
+unvollständig;ch-bag-a730cc8d83cbe6749931;;Berit Klinik Goldach - Berit Klinik Goldach;;;;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-d1f9411f5fe553191614;1119;Eulachklinik AG - Eulachklinik AG;47.50516891479492;8.72536849975586;;
+angelegt;ch-bag-8902e07278348c461b5b;1120;Geburtshaus Terra Alta - Geburtshaus Terra Alta Oberkirch;47.16183853149414;8.0994291305542;OBST;
+unvollständig;ch-bag-afb831141d4c58b93074;;Geburtshaus Terra Alta - Geburtshaus Terra Alta Luzern;;;OBST;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-a8890f9d38011c4431dc;;Matthea Geburtshaus - Matthea Geburtshaus;;;OBST;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-969586b3e7a5bfc6f8ce;1121;Geburtshaus St. Gallen AG - Geburtshaus St. Gallen AG;47.433074951171875;9.393271446228027;OBST;
+angelegt;ch-bag-22a49e4b80e725da686d;1122;Geburtshaus Luna AG - Geburtshaus Luna Bern;46.95437240600586;7.49057149887085;OBST;
+angelegt;ch-bag-a44b3e9e2a718009514a;1123;Geburtshaus Winterthur AG - Geburtshaus Winterthur AG;47.50502395629883;8.72944450378418;OBST;
+angelegt;ch-bag-c25d9127ada4324a1041;1124;Geburtshaus Zürcher Oberland AG - Geburtshaus Zürcher Oberland  AG;47.33232498168945;8.847349166870117;OBST;
+angelegt;ch-bag-12b3a3007c87baa33b1f;1125;Geburtshaus Delphys - Geburtshaus Delphys;47.374656677246094;8.519956588745117;OBST;
+angelegt;ch-bag-f50cf3d859565cf8f966;1126;Maison de Naissance le Petit Prince - Le Petit Prince;46.798797607421875;7.119243144989014;OBST;
+angelegt;ch-bag-fc786b399ee96b1fb027;1127;Geburtshaus Tagmond GmbH - Geburtshaus Tagmond;47.517608642578125;7.701967239379883;OBST;
+unvollständig;ch-bag-d4f2418df79acd45344f;;Maison de naissance La Roseraie - Maison de naissance La Roseraie;;;OBST;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-78441880feb95ac3f609;1128;Geburtshaus Stans GmbH - Geburtshaus Stans GmbH;46.967262268066406;8.354208946228027;OBST;
+angelegt;ch-bag-e86cd9978413f5534916;1129;Genossenschaft Geburtshaus Simmental-Saanenland Maternité Alpine - Geburtshaus Maternité Alpine;46.56067657470703;7.374022483825684;OBST;
+angelegt;ch-bag-7ae9633b0c30186ef095;1130;Maison de Naissance Tilia Sàrl - Maison de Naissance Tilia Sàrl;46.991947174072266;6.912419319152832;OBST;
+angelegt;ch-bag-885c1997c0b791627190;1131;Maison de naissance Les Cigognes - Maison de naissance Les Cigognes;47.348724365234375;7.411528587341309;OBST;
+unvollständig;ch-bag-64b2900e583b0299f772;;Geburtshaus ambra GmbH - Geburtshaus ambra GmbH;;;;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+angelegt;ch-bag-a79ca0eefcfc58f73173;1132;Universitäts-Kinderspital Zürich das Spital der Eleonorenstiftung - Universitäts-Kinderspital Zürich Eleonorenstiftung;47.352012634277344;8.570621490478516;CARD|CAT|NECH|ONKO|PALL|PED|VASG;
+angelegt;ch-bag-ba69660e56fe93d442b2;1133;Universitäts-Kinderspital beider Basel (UKBB) - UKBB;47.56377029418945;7.5818634033203125;CAT|NECH|PALL|VASG;
+unvollständig;ch-bag-2e6a8a1892de9f352f39;;Stiftung Ostschweizer Kinderspital - Ostschweizer Kinderspital;;;GYNO|NECH|PALL|VASG;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"
+unvollständig;ch-bag-4d2228f6943e5692d1e8;;Stiftung Ostschweizer Kinderspital - Romerhuus;;;;"Breitengrad fehlt oder ist ungültig; Längengrad fehlt oder ist ungültig"

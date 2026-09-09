@@ -926,6 +926,31 @@ tr {
   pointer-events: none;
 }
 
+.lst-wachen-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 8px 12px;
+}
+
+.lst-wachen-loading[hidden] {
+  display: none;
+}
+
+.lst-wachen-loading .spinner {
+  float: none;
+  margin: 0;
+  visibility: visible;
+}
+
+#wachen-map.is-loading,
+#wachen-table.is-loading {
+  opacity: .58;
+  pointer-events: none;
+  transition: opacity .15s ease;
+}
+
 .lst-fahrzeuge-summary {
   margin: 12px 0;
 }

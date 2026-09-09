@@ -169,6 +169,7 @@
       if (!hasSelect2()) return;
 
       const $modal = $('#wache-edit-modal');
+      const $dropdownParent = $modal.find('.wache-edit-content').first();
       const opts = {
         width: '100%',
         placeholder: 'Auswählen …',
@@ -176,8 +177,14 @@
         sorter: select2PrefixAwareSorter,
         minimumResultsForSearch: 0,
         closeOnSelect: false,
-        dropdownParent: $modal
+        dropdownParent: $dropdownParent.length ? $dropdownParent : $modal
       };
+      $('#mw-leitstellen, #mw-nebenleitstellen').each(function () {
+        const $select = $(this);
+        if ($select.data('select2')) {
+          $select.select2('destroy');
+        }
+      });
       $('#mw-leitstellen').select2(opts);
       $('#mw-nebenleitstellen').select2(opts);
     }
@@ -417,6 +424,21 @@ $('body').on('click', '#wache-fahrzeuge-toggle', function (e) {
       }).join('');
     }
 
+    function setWachenLoading(isLoading) {
+      const loading = document.getElementById('wachen-loading');
+      const table = document.getElementById('wachen-table');
+      const mapEl = document.getElementById('wachen-map');
+      if (loading) {
+        loading.hidden = !isLoading;
+      }
+      if (table) {
+        table.classList.toggle('is-loading', !!isLoading);
+      }
+      if (mapEl) {
+        mapEl.classList.toggle('is-loading', !!isLoading);
+      }
+    }
+
     function loadWachen(ls, nls, bl) {
       const hasFilter =
         (parseInt(ls, 10) || 0) ||
@@ -424,6 +446,7 @@ $('body').on('click', '#wache-fahrzeuge-toggle', function (e) {
         ((bl || '') !== '');
 
       if (!hasFilter) {
+        setWachenLoading(false);
         renderMarkers([]);
         renderTable([]);
         return Promise.resolve({ count: 0, wachen: [] });
@@ -431,6 +454,7 @@ $('body').on('click', '#wache-fahrzeuge-toggle', function (e) {
 
       if (!AJAX_URL) {
         console.error('wachen.js: AJAX_URL fehlt (lstWachenAjax.ajax_url oder window.ajaxurl).');
+        setWachenLoading(false);
         renderMarkers([]);
         renderTable([]);
         return Promise.resolve({ count: 0, wachen: [] });
@@ -447,6 +471,7 @@ $('body').on('click', '#wache-fahrzeuge-toggle', function (e) {
         params.set('land', String($('#land').val() || ''));
       }
 
+      setWachenLoading(true);
       return fetch(AJAX_URL + '?' + params.toString(), { credentials: 'same-origin' })
         .then(res => res.json())
         .then(json => {
@@ -462,6 +487,10 @@ $('body').on('click', '#wache-fahrzeuge-toggle', function (e) {
         .catch(err => {
           console.error('Fehler beim Laden der Wachen:', err);
           renderMarkers([]);
+          renderTable([]);
+        })
+        .finally(() => {
+          setWachenLoading(false);
         });
     }
 
@@ -818,9 +847,9 @@ $('body').on('click', '#wache-fahrzeuge-toggle', function (e) {
       openNewWacheModal();
     });
 
-    $(document).on('click', '.delete-wache', function (e) {
+    $(document).on('click', '.delete-wache, .button-delete-wache', function (e) {
       e.preventDefault();
-      const id = Number($(this).data('id') || 0);
+      const id = Number($(this).data('id') || $('#wache-edit-form input[name="id"]').val() || 0);
       if (!id || !window.confirm('Wache wirklich löschen?')) return;
       $.post((window.lstWachenAjax && window.lstWachenAjax.ajax_url) || AJAX_URL, {
         action: 'lsttraining_delete_wache',

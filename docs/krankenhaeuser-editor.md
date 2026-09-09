@@ -17,16 +17,19 @@ Krankenhäuser sind globale Stammdatensätze. Damit ein Haus regulär als Ziel e
 Die Seite zeigt:
 
 - Karte aller geladenen Krankenhäuser;
-- Tabelle mit ID, Name, Versorgungsstufe, Trauma-Level und Koordinaten;
+- kombinierbare Suche und Auswahl nach Land;
+- Tabelle mit ID, Name, Land, Versorgungsstufe, Trauma-Level und Koordinaten;
 - Aktionen zum Anlegen, Bearbeiten und Löschen.
 
-Tabellenspalten können zur Orientierung sortiert werden.
+Tabellenspalten können zur Orientierung sortiert werden. Der Länderfilter
+begrenzt gleichzeitig die Tabelle und die Marker auf der Karte.
 
 ## Editorfelder
 
 | Feld | Verwendung |
 |---|---|
 | Name | sichtbarer Klinikname und Pflichtfeld |
+| Land | Land des Krankenhausstandorts |
 | Versorgungsstufe | Grundversorgung, Schwerpunktversorger oder Maximalversorger |
 | Trauma-Level | numerische Einstufung des Traumazentrums |
 | Koordinaten | Position von Notaufnahme beziehungsweise RTW-Anfahrt |

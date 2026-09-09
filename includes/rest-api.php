@@ -10,11 +10,53 @@ add_action('rest_api_init', function () {
         'args' => [
             'leitstelle_id' => [
                 'required' => false,
-                'validate_callback' => fn($p) => is_numeric($p),
+                'validate_callback' => static fn($p): bool => $p === null || $p === '' || (is_numeric($p) && (int) $p > 0),
+                'sanitize_callback' => 'absint',
             ],
             'nebenleitstelle_id' => [
                 'required' => false,
-                'validate_callback' => fn($p) => is_numeric($p),
+                'validate_callback' => static fn($p): bool => $p === null || $p === '' || (is_numeric($p) && (int) $p > 0),
+                'sanitize_callback' => 'absint',
+            ],
+            'search' => [
+                'required' => false,
+                'sanitize_callback' => 'sanitize_text_field',
+            ],
+        ],
+    ]);
+
+    register_rest_route('lst/v1', '/fahrzeuge', [
+        'methods'  => WP_REST_Server::READABLE,
+        'callback' => 'lst_rest_get_fahrzeuge',
+        'permission_callback' => 'lst_rest_can_read_fahrzeuge',
+        'args' => [
+            'leitstelle_id' => [
+                'required' => false,
+                'validate_callback' => static fn($p): bool => $p === null || $p === '' || (is_numeric($p) && (int) $p > 0),
+                'sanitize_callback' => 'absint',
+            ],
+            'nebenleitstelle_id' => [
+                'required' => false,
+                'validate_callback' => static fn($p): bool => $p === null || $p === '' || (is_numeric($p) && (int) $p > 0),
+                'sanitize_callback' => 'absint',
+            ],
+            'wache_id' => [
+                'required' => false,
+                'validate_callback' => static fn($p): bool => $p === null || $p === '' || (is_numeric($p) && (int) $p > 0),
+                'sanitize_callback' => 'absint',
+            ],
+            'search' => [
+                'required' => false,
+                'sanitize_callback' => 'sanitize_text_field',
+            ],
+            'fahrzeugtyp' => [
+                'required' => false,
+                'sanitize_callback' => 'sanitize_text_field',
+            ],
+            'fms_status' => [
+                'required' => false,
+                'validate_callback' => static fn($p): bool => $p === null || $p === '' || preg_match('/^[1-6]$/', (string) $p) === 1,
+                'sanitize_callback' => 'sanitize_key',
             ],
         ],
     ]);
@@ -102,19 +144,33 @@ function lst_rest_validation_response(InvalidArgumentException $error): WP_REST_
     return $response;
 }
 
+function lst_rest_can_read_area(WP_REST_Request $request, string $area) {
+    if ( ! is_user_logged_in() ) {
+        return new WP_Error('lst_rest_not_logged_in', 'Anmeldung erforderlich.', ['status' => 401]);
+    }
+
+    $ls_id = absint($request->get_param('leitstelle_id'));
+    if ( $ls_id > 0 ) {
+        return lsttraining_user_can($area, $ls_id)
+            ? true
+            : new WP_Error('lst_rest_forbidden', 'Keine Berechtigung fuer diese Leitstelle.', ['status' => 403]);
+    }
+
+    return lsttraining_user_can($area)
+        ? true
+        : new WP_Error('lst_rest_forbidden', 'Keine Berechtigung fuer diesen Bereich.', ['status' => 403]);
+}
+
 /**
  * Permission: Wachen lesen
  * Nutzt dein Rechtesystem plus optional Leitstellen-Scope.
  */
-function lst_rest_can_read_wachen( WP_REST_Request $request ) : bool {
-    if ( ! is_user_logged_in() ) { return false; }
+function lst_rest_can_read_wachen( WP_REST_Request $request ) {
+    return lst_rest_can_read_area($request, 'wachen');
+}
 
-    $ls_id = $request->get_param('leitstelle_id');
-    $ls_id = ($ls_id !== null && $ls_id !== '') ? (int)$ls_id : null;
-
-    // Zugriff erlauben, wenn der User in deinem System Wachen sehen darf.
-    // Wenn leitstelle_id gesetzt ist, wird zusätzlich der Scope geprüft (leitstellen_ids).
-    return lsttraining_user_can('wachen', $ls_id);
+function lst_rest_can_read_fahrzeuge( WP_REST_Request $request ) {
+    return lst_rest_can_read_area($request, 'fahrzeuge');
 }
 
 /**
@@ -629,6 +685,55 @@ function lst_rest_update_instance_vehicle( WP_REST_Request $request ) {
     }
 }
 
+function lst_rest_stammdaten_response(array $data): WP_REST_Response {
+    $response = new WP_REST_Response(['ok' => true, 'data' => $data], 200);
+    $response->header('Cache-Control', 'no-store, private');
+    return $response;
+}
+
+function lst_rest_restricted_leitstellen_for_area(string $area): array {
+    if ( current_user_can('manage_options') || lsttraining_user_can_global_area($area) ) {
+        return [];
+    }
+
+    return array_values(array_filter(array_map('intval', lsttraining_user_allowed_leitstellen($area))));
+}
+
+function lst_rest_add_station_scope(array &$where, array &$params, string $area, string $station_alias = 'w'): void {
+    $allowed = lst_rest_restricted_leitstellen_for_area($area);
+    if ( current_user_can('manage_options') || lsttraining_user_can_global_area($area) ) {
+        return;
+    }
+    if ( ! $allowed ) {
+        $where[] = '0 = 1';
+        return;
+    }
+
+    $keys = [];
+    foreach ( $allowed as $index => $leitstelle_id ) {
+        $key = ':allowed_lsid_' . $index;
+        $keys[] = $key;
+        $params[$key] = $leitstelle_id;
+    }
+    $in = implode(',', $keys);
+    $where[] = "(
+        EXISTS (
+            SELECT 1
+            FROM wache_leitstellen scope_wl
+            WHERE scope_wl.wache_id = {$station_alias}.id
+              AND scope_wl.leitstelle_id IN ({$in})
+        )
+        OR EXISTS (
+            SELECT 1
+            FROM wache_nebenleitstellen scope_wn
+            INNER JOIN leitstelle_nebenleitstellen scope_ln
+              ON scope_ln.nebenleitstelle_id = scope_wn.nebenleitstelle_id
+            WHERE scope_wn.wache_id = {$station_alias}.id
+              AND scope_ln.leitstelle_id IN ({$in})
+        )
+    )";
+}
+
 function lst_rest_get_wachen( WP_REST_Request $request ) {
     require_once plugin_dir_path(__FILE__) . 'db.php';
 
@@ -637,54 +742,175 @@ function lst_rest_get_wachen( WP_REST_Request $request ) {
         return new WP_REST_Response(['ok' => false, 'error' => 'db_connection_failed'], 500);
     }
 
-    $leitId   = $request->get_param('leitstelle_id');
-    $nebenlId = $request->get_param('nebenleitstelle_id');
-
-    $leitId   = ($leitId !== null && $leitId !== '') ? (int)$leitId : null;
-    $nebenlId = ($nebenlId !== null && $nebenlId !== '') ? (int)$nebenlId : null;
+    $leitId = absint($request->get_param('leitstelle_id'));
+    $nebenlId = absint($request->get_param('nebenleitstelle_id'));
+    $search = trim((string) ($request->get_param('search') ?? ''));
 
     try {
-        if ( $leitId ) {
-            $sql = "
-                SELECT w.id, w.name, w.typ, w.latitude, w.longitude, w.bild_datei
-                FROM wachen AS w
-                LEFT JOIN wache_leitstellen AS wl ON w.id = wl.wache_id
-                WHERE wl.leitstelle_id = :lid
-                  AND w.latitude  IS NOT NULL
-                  AND w.longitude IS NOT NULL
-                ORDER BY w.name
-            ";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([':lid' => $leitId]);
+        $where = [];
+        $params = [];
 
-        } elseif ( $nebenlId ) {
-            $sql = "
-                SELECT w.id, w.name, w.typ, w.latitude, w.longitude, w.bild_datei
-                FROM wachen AS w
-                LEFT JOIN wache_nebenleitstellen AS wn ON w.id = wn.wache_id
-                WHERE wn.nebenleitstelle_id = :nlid
-                  AND w.latitude  IS NOT NULL
-                  AND w.longitude IS NOT NULL
-                ORDER BY w.name
-            ";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([':nlid' => $nebenlId]);
-
-        } else {
-            $stmt = $pdo->query("
-                SELECT id, name, typ, latitude, longitude, bild_datei
-                FROM wachen
-                WHERE latitude  IS NOT NULL
-                  AND longitude IS NOT NULL
-                ORDER BY name
-            ");
+        if ( $leitId > 0 ) {
+            $where[] = 'EXISTS (SELECT 1 FROM wache_leitstellen wl WHERE wl.wache_id = w.id AND wl.leitstelle_id = :leitstelle_id)';
+            $params[':leitstelle_id'] = $leitId;
         }
+        if ( $nebenlId > 0 ) {
+            $where[] = 'EXISTS (SELECT 1 FROM wache_nebenleitstellen wn WHERE wn.wache_id = w.id AND wn.nebenleitstelle_id = :nebenleitstelle_id)';
+            $params[':nebenleitstelle_id'] = $nebenlId;
+        }
+        if ( $search !== '' ) {
+            $where[] = '(w.name LIKE :search OR w.typ LIKE :search)';
+            $params[':search'] = '%' . $search . '%';
+        }
+        lst_rest_add_station_scope($where, $params, 'wachen', 'w');
 
+        $stmt = $pdo->prepare('
+            SELECT
+                w.id,
+                w.name,
+                w.typ,
+                w.bundesland,
+                w.land,
+                w.latitude,
+                w.longitude,
+                w.arrival_pos,
+                w.departure_pos,
+                w.bild_datei,
+                w.exists_in_reality,
+                COALESCE(v.fahrzeuge_count, 0) AS fahrzeuge_count
+            FROM wachen w
+            LEFT JOIN (
+                SELECT wache_id, COUNT(*) AS fahrzeuge_count
+                FROM fahrzeuge
+                GROUP BY wache_id
+            ) v ON v.wache_id = w.id
+            ' . ($where ? 'WHERE ' . implode(' AND ', $where) : '') . '
+            ORDER BY w.name ASC, w.id ASC
+        ');
+        $stmt->execute($params);
         $wachen = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        return new WP_REST_Response(['ok' => true, 'data' => $wachen], 200);
+
+        foreach ( $wachen as &$wache ) {
+            foreach (['id', 'fahrzeuge_count'] as $field) {
+                $wache[$field] = (int) ($wache[$field] ?? 0);
+            }
+            foreach (['latitude', 'longitude'] as $field) {
+                $wache[$field] = $wache[$field] !== null ? (float) $wache[$field] : null;
+            }
+            $wache['exists_in_reality'] = (bool) ($wache['exists_in_reality'] ?? false);
+        }
+        unset($wache);
+
+        return lst_rest_stammdaten_response([
+            'count' => count($wachen),
+            'wachen' => $wachen,
+            'generated_at' => gmdate('c'),
+        ]);
 
     } catch (Throwable $e) {
         error_log('REST /wachen ERROR: ' . $e->getMessage());
+        return new WP_REST_Response(['ok' => false, 'error' => 'db_query_failed'], 500);
+    }
+}
+
+function lst_rest_get_fahrzeuge( WP_REST_Request $request ) {
+    require_once plugin_dir_path(__FILE__) . 'db.php';
+
+    $pdo = lsttraining_get_connection();
+    if ( ! $pdo instanceof PDO ) {
+        return new WP_REST_Response(['ok' => false, 'error' => 'db_connection_failed'], 500);
+    }
+
+    $leitId = absint($request->get_param('leitstelle_id'));
+    $nebenlId = absint($request->get_param('nebenleitstelle_id'));
+    $wacheId = absint($request->get_param('wache_id'));
+    $search = trim((string) ($request->get_param('search') ?? ''));
+    $fahrzeugtyp = trim((string) ($request->get_param('fahrzeugtyp') ?? ''));
+    $fmsStatus = sanitize_key((string) ($request->get_param('fms_status') ?? ''));
+
+    try {
+        $where = [];
+        $params = [];
+
+        if ( $wacheId > 0 ) {
+            $where[] = 'f.wache_id = :wache_id';
+            $params[':wache_id'] = $wacheId;
+        }
+        if ( $leitId > 0 ) {
+            $where[] = 'EXISTS (SELECT 1 FROM wache_leitstellen wl WHERE wl.wache_id = w.id AND wl.leitstelle_id = :leitstelle_id)';
+            $params[':leitstelle_id'] = $leitId;
+        }
+        if ( $nebenlId > 0 ) {
+            $where[] = 'EXISTS (SELECT 1 FROM wache_nebenleitstellen wn WHERE wn.wache_id = w.id AND wn.nebenleitstelle_id = :nebenleitstelle_id)';
+            $params[':nebenleitstelle_id'] = $nebenlId;
+        }
+        if ( $search !== '' ) {
+            $where[] = '(f.rufname LIKE :search OR f.fahrzeugtyp LIKE :search OR w.name LIKE :search)';
+            $params[':search'] = '%' . $search . '%';
+        }
+        if ( $fahrzeugtyp !== '' ) {
+            $where[] = 'f.fahrzeugtyp = :fahrzeugtyp';
+            $params[':fahrzeugtyp'] = $fahrzeugtyp;
+        }
+        if ( $fmsStatus !== '' ) {
+            $where[] = 'f.fms_status = :fms_status';
+            $params[':fms_status'] = $fmsStatus;
+        }
+        lst_rest_add_station_scope($where, $params, 'fahrzeuge', 'w');
+
+        $stmt = $pdo->prepare('
+            SELECT
+                f.id,
+                f.wache_id,
+                f.rufname,
+                f.fahrzeugtyp,
+                f.status,
+                f.fms_status,
+                f.sondersignal,
+                f.is_first_responder,
+                f.dienstzeiten,
+                f.latitude,
+                f.longitude,
+                f.bild_datei,
+                f.signal_lights_json,
+                w.name AS wache_name,
+                w.typ AS wache_typ,
+                w.bundesland AS wache_bundesland,
+                w.land AS wache_land
+            FROM fahrzeuge f
+            INNER JOIN wachen w ON w.id = f.wache_id
+            ' . ($where ? 'WHERE ' . implode(' AND ', $where) : '') . '
+            ORDER BY w.name ASC, f.rufname ASC, f.id ASC
+        ');
+        $stmt->execute($params);
+        $fahrzeuge = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+        foreach ( $fahrzeuge as &$fahrzeug ) {
+            foreach (['id', 'wache_id'] as $field) {
+                $fahrzeug[$field] = (int) ($fahrzeug[$field] ?? 0);
+            }
+            foreach (['latitude', 'longitude'] as $field) {
+                $fahrzeug[$field] = $fahrzeug[$field] !== null ? (float) $fahrzeug[$field] : null;
+            }
+            foreach (['sondersignal', 'is_first_responder'] as $field) {
+                $fahrzeug[$field] = (bool) ($fahrzeug[$field] ?? false);
+            }
+            if ( isset($fahrzeug['signal_lights_json']) && $fahrzeug['signal_lights_json'] !== '' ) {
+                $decoded = json_decode((string) $fahrzeug['signal_lights_json'], true);
+                if ( json_last_error() === JSON_ERROR_NONE ) {
+                    $fahrzeug['signal_lights_json'] = $decoded;
+                }
+            }
+        }
+        unset($fahrzeug);
+
+        return lst_rest_stammdaten_response([
+            'count' => count($fahrzeuge),
+            'fahrzeuge' => $fahrzeuge,
+            'generated_at' => gmdate('c'),
+        ]);
+    } catch (Throwable $e) {
+        error_log('REST /fahrzeuge ERROR: ' . $e->getMessage());
         return new WP_REST_Response(['ok' => false, 'error' => 'db_query_failed'], 500);
     }
 }

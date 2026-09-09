@@ -163,7 +163,7 @@ function lsttraining_get_wachen() {
     if ($where) {
         $sql .= ' WHERE ' . implode(' AND ', $where);
     }
-    $sql .= ' ORDER BY w.name ASC LIMIT 2000';
+    $sql .= ' ORDER BY w.name ASC';
 
     try {
         $stmt = $pdo->prepare($sql);

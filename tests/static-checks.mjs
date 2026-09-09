@@ -146,9 +146,34 @@ check('Nonce und Methoden für Kern-Schreibwege', () => {
   assert.match(read('includes/schema_import.php'), /check_admin_referer/);
 });
 
+check('Krankenhaus-JSON wird server- und clientseitig validiert', () => {
+  const ajax = read('includes/ajax/ajax_hospitals.php');
+  const client = read('js/hospitals.js');
+  assert.match(ajax, /lsttraining_hospital_departments_json/);
+  assert.match(ajax, /lsttraining_rest_departments\('departments'/);
+  assert.match(ajax, /lsttraining_hospital_ajax_exception/);
+  assert.match(ajax, /dirname\(__DIR__\) \. '\/departments\.json'/);
+  assert.match(client, /async function parseJsonResponse/);
+  assert.doesNotMatch(client, /\.then\([^\n]*=>[^\n]*\.json\(\)\)/);
+});
+
+check('Krankenhausfilter enthält die drei Zielländer', () => {
+  const page = read('includes/hospitals.php');
+  const client = read('js/hospitals.js');
+  for (const country of ['Deutschland', 'Österreich', 'Schweiz']) {
+    assert.match(page, new RegExp(`<option value="${country}">${country}<\\/option>`));
+    assert.match(client, new RegExp(`'${country}'`));
+  }
+});
+
+check('Wachenkarte ohne feste Ergebnis-Kappung', () => {
+  const wachen = read('includes/ajax/ajax_wachen.php');
+  assert.doesNotMatch(wachen, /ORDER BY w\.name ASC LIMIT 2000/);
+});
+
 check('Versionierte Migration', () => {
   const migrations = read('includes/migrations.php');
-  assert.match(migrations, /LSTTRAINING_SCHEMA_VERSION\s*=\s*2026082601/);
+  assert.match(migrations, /LSTTRAINING_SCHEMA_VERSION\s*=\s*2026090902/);
   assert.match(migrations, /lsttraining_schema_store_version\(LSTTRAINING_SCHEMA_VERSION\)/);
   assert.match(read('lsttraining-plugin.php'), /register_activation_hook\(LSTTRAINING_PLUGIN_FILE, 'lsttraining_run_migrations'\)/);
 });

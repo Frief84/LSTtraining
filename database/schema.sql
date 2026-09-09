@@ -278,6 +278,7 @@ CREATE TABLE IF NOT EXISTS `krankenhaeuser` (
   `id`               INT NOT NULL AUTO_INCREMENT,
   `poi_id`           VARCHAR(50) COLLATE utf8mb4_general_ci NOT NULL UNIQUE COMMENT 'Externe POI-ID',
   `name`             VARCHAR(255) COLLATE utf8mb4_general_ci NOT NULL COMMENT 'Name des Krankenhauses',
+  `land`             VARCHAR(100) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'Deutschland',
   `latitude`         DOUBLE NOT NULL,
   `longitude`        DOUBLE NOT NULL,
   `versorgungsstufe` ENUM('Grundversorgung','Schwerpunktversorger','Maximalversorger')

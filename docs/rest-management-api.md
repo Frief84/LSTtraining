@@ -213,6 +213,7 @@ laufenden Simulation wird ueber die Status-API geschrieben.
 |---|---|---|
 | `poi_id` | Kennung | maximal 50 Zeichen, festes Zeichenformat und eindeutig; beim Anlegen optional |
 | `name` | String | Pflicht, maximal 255 Zeichen |
+| `land` | String | maximal 100 Zeichen, Standard `Deutschland` |
 | `latitude` | Zahl | Pflicht, -90 bis 90 |
 | `longitude` | Zahl | Pflicht, -180 bis 180 |
 | `versorgungsstufe` | Enum | `Grundversorgung`, `Schwerpunktversorger`, `Maximalversorger` |

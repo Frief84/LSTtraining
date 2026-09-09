@@ -22,6 +22,7 @@
 
 - [Einsatz-Ortsbindung](einsatz-ortsbindung.md)
 - [Krankenhäuser im Workspace](simulation-workspace-hospitals.md)
+- [Schweizer Krankenhäuser importieren](schweizer-krankenhaeuser-import.md)
 - [Wetter und Nachbarleitstellen](wetter-und-nachbarleitstellen-auslastung.md)
 - [OSM-Tile-Architektur](osm_tile_architecture.md)
 - [REST-API Praxisanleitung](rest-api-praxis.md)
