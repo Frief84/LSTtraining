@@ -1,7 +1,6 @@
 # LSTtraining
 
-**LSTtraining** ist ein spezialisiertes WordPress-Plugin zur Simulation und Schulung von Dispositionsabläufen für Feuerwehr- und Rettungsdiensten. Es richtet sich an Ausbilder:innen und Trainingsleiter:innen, die realistische, kartengestützte Einsatzszenarien abbilden möchten – mit Fokus auf Visualisierung, Taktik und Wegesimulation.
----
+**LSTtraining** ist ein spezialisiertes WordPress-Plugin zur Simulation und Schulung von Dispositionsabläufen für Feuerwehr und Rettungsdienst. Es richtet sich an Ausbilder:innen und Trainingsleiter:innen, die realistische, kartengestützte Einsatzszenarien abbilden möchten – mit Fokus auf Visualisierung, Taktik und Wegesimulation.
 
 ---
 
@@ -18,11 +17,14 @@
 ## 🔍 Features
 
 * Echtzeit-Kartendarstellung mit **OpenLayers**
-* Dynamische Anzeige von **Feuerwachen** und **Rettungswachen**
+* Dynamische Anzeige von **Feuerwachen**, **Rettungswachen** und **Luftrettungsstationen**
 * Interaktiver Einsatzgebiets-Editor (Polygon zeichnen, ändern, importieren)
 * Live-Simulation von **Fahrzeugbewegungen** auf berechneten Routen
 * Integration mit **OpenRouteService** zur Wegberechnung
 * Admin-Interface zur Verwaltung von Leitstellen, Nebenwachen und Fahrzeugen
+* DACH-Luftrettungskatalog mit 142 Stationen und 150 öffentlich dokumentierten RTH-, ITH- und SAR-Rufnamen
+* Dienstzeitabhängige Fahrzeugverfügbarkeit einschließlich Sonnenstands- und Saisonregeln
+* Geschützte REST-Verwaltungs- und Status-API für externe Werkzeuge
 
 ## ⚙️ Installation
 
@@ -110,9 +112,48 @@ Erlaubte Werte:
 | SEG    | Sondereinsatzgruppe              | Spezialisierte Sanitäts- oder Katastrophenschutzeinheit |
 | RD     | Rettungswache                    | Standort für Rettungsdienstfahrzeuge |
 | FRRD   | Rettungsdienst + Feuerwehr       | Kombination aus Rettungswache und Feuerwehrstandort |
+| AIR    | Luftrettungswache                | Station für RTH-, ITH- oder SAR-Hubschrauber |
 
 **Hinweis:**  
 Der Typ beeinflusst u. a. die Symbolfarbe auf der Karte und kann für Auswertungen oder Filter verwendet werden.
+
+`AIR`-Wachen werden in den Wachen- und Simulationskarten goldgelb dargestellt. Die übrigen Wachenfarben bleiben davon eindeutig unterscheidbar.
+
+## 🚁 DACH-Luftrettung
+
+Der versionierte Katalog [`data/dach-air-rescue.json`](data/dach-air-rescue.json) enthält den geprüften Stand vom 10. September 2026:
+
+| Land | Luftrettungswachen | Erfasste Regionen |
+|------|-------------------:|------------------:|
+| Deutschland | 85 | 16 Bundesländer |
+| Österreich | 39 | 9 Bundesländer |
+| Schweiz | 18 | 12 Kantone |
+| **Gesamt** | **142** | **37 Regionen** |
+
+Jedem Standort ist ein Bundesland beziehungsweise Schweizer Kanton zugeordnet. Pro öffentlichem Rufnamen wird ein Fahrzeug mit der einsatztaktischen Rolle `RTH`, `ITH` oder `SAR` angelegt. Die Fahrzeugidentität folgt dem Rufnamen und nicht der wechselnden Luftfahrzeugregistrierung.
+
+Die Verfügbarkeit wird aus einer lesbaren Dienstzeit und einer strukturierten Regel berechnet. Unterstützt werden `24/7`, feste Wochen- und Uhrzeiten, Sonnenaufgang/Sonnenuntergang sowie jahresübergreifende Saisonfenster. Ein Hubschrauber außerhalb seiner Vorhaltezeit wird als außer Dienst angezeigt und kann nicht neu alarmiert werden; ein bereits laufender Einsatz wird bei Dienstende nicht abgebrochen. Die 13 ausdrücklich saisonalen österreichischen Mittel sind enthalten und im Prüfbericht als manuell zu kontrollierende Datensätze gekennzeichnet, wenn kein exaktes veröffentlichtes Saisonfenster vorliegt.
+
+Die fachlichen Angaben stammen vorrangig aus Betreiberinformationen und dem Stationsverzeichnis von [rth.info](https://www.rth.info/stationen.db/stationen.php). OpenStreetMap wird nur zur Koordinaten- und Regionsprüfung verwendet; gewöhnliche Krankenhauslandeplätze gelten nicht als stationierte Luftrettungsmittel.
+
+### Katalog prüfen und importieren
+
+```bash
+npm run build:dach-air-rescue
+npm run enrich:dach-air-rescue-regions
+npm run import:dach-air-rescue -- --dry-run
+```
+
+Der Import erfolgt ausschließlich über die geschützte Verwaltungs-API. Zugangsdaten werden als Umgebungsvariablen bereitgestellt und niemals im Repository gespeichert:
+
+```bash
+LSTTRAINING_API_BASE_URL=https://example.org/wp-json/lst/v1 \
+LSTTRAINING_API_USER=benutzer \
+LSTTRAINING_API_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx \
+npm run import:dach-air-rescue -- --apply --update-existing
+```
+
+Stabile `source_key`-Werte machen Wiederholungsläufe idempotent. Manuell angelegte Datensätze ohne Quellschlüssel werden nicht aufgrund einer bloßen Namensähnlichkeit überschrieben. Jeder Lauf erzeugt einen JSON- und CSV-Prüfbericht im Ordner [`reports/`](reports/). Ausführliche Hinweise stehen in [`docs/dach-luftrettung-import.md`](docs/dach-luftrettung-import.md).
 
 
 ## 🏥 Krankenhäuser
