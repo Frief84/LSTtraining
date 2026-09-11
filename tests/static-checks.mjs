@@ -173,7 +173,9 @@ check('Wachenkarte ohne feste Ergebnis-Kappung', () => {
 
 check('Versionierte Migration', () => {
   const migrations = read('includes/migrations.php');
-  assert.match(migrations, /LSTTRAINING_SCHEMA_VERSION\s*=\s*2026090902/);
+  assert.match(migrations, /LSTTRAINING_SCHEMA_VERSION\s*=\s*2026090904/);
+  assert.match(migrations, /function lsttraining_migration_2026090903/);
+  assert.match(migrations, /'legacy-950', 'legacy-970'/);
   assert.match(migrations, /lsttraining_schema_store_version\(LSTTRAINING_SCHEMA_VERSION\)/);
   assert.match(read('lsttraining-plugin.php'), /register_activation_hook\(LSTTRAINING_PLUGIN_FILE, 'lsttraining_run_migrations'\)/);
 });

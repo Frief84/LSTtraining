@@ -94,6 +94,9 @@ CREATE TABLE IF NOT EXISTS `wachen` (
   `updated_by_user_id` BIGINT UNSIGNED NULL DEFAULT NULL,
   `updated_at`         DATETIME NULL DEFAULT NULL,
   `source_note`        VARCHAR(255) COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `source_key`         VARCHAR(100) COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `source_url`         VARCHAR(500) COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `source_checked_at`  DATETIME NULL DEFAULT NULL,
   `verified_by`        BIGINT UNSIGNED NULL DEFAULT NULL,
   `verified_at`        DATETIME NULL DEFAULT NULL,
 
@@ -102,7 +105,8 @@ CREATE TABLE IF NOT EXISTS `wachen` (
   KEY `bundesland` (`bundesland`),
   KEY `land` (`land`),
   KEY `exists_in_reality` (`exists_in_reality`),
-  KEY `placed_by_user_id` (`placed_by_user_id`)
+  KEY `placed_by_user_id` (`placed_by_user_id`),
+  UNIQUE KEY `uk_wachen_source_key` (`source_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `wache_leitstellen` (
@@ -158,6 +162,10 @@ CREATE TABLE IF NOT EXISTS `fahrzeuge` (
                        COLLATE utf8mb4_general_ci NULL DEFAULT '2',
   `sondersignal`       TINYINT(1) NULL DEFAULT 0,
   `dienstzeiten`       VARCHAR(255) COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `availability_rule_json` LONGTEXT COLLATE utf8mb4_general_ci NULL,
+  `source_key`         VARCHAR(100) COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `source_url`         VARCHAR(500) COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `source_checked_at`  DATETIME NULL DEFAULT NULL,
   `latitude`           DOUBLE NULL DEFAULT NULL,
   `longitude`          DOUBLE NULL DEFAULT NULL,
   `bild_datei`         VARCHAR(255) COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
@@ -167,6 +175,7 @@ CREATE TABLE IF NOT EXISTS `fahrzeuge` (
   PRIMARY KEY (`id`),
   KEY `wache_id` (`wache_id`),
   KEY `rufname` (`rufname`),
+  UNIQUE KEY `uk_fahrzeuge_source_key` (`source_key`),
 
   CONSTRAINT `fk_fahrzeuge_wache`
     FOREIGN KEY (`wache_id`) REFERENCES `wachen`(`id`) ON DELETE CASCADE

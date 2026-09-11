@@ -256,9 +256,11 @@
         const isRD = (typ === 'RD' || typ === 'FRRD');
         const isFFW = (typ === 'FFW');
         const isSEG = (typ === 'SEG');
+        const isAIR = (typ === 'AIR');
 
         let fillColor = '#999';
-        if (isFW && !isRD && !isFFW && !isSEG) fillColor = 'red';
+        if (isAIR) fillColor = '#f5b301';
+        else if (isFW && !isRD && !isFFW && !isSEG) fillColor = 'red';
         else if (!isFW && isRD && !isFFW && !isSEG) fillColor = 'blue';
         else if (isFW && isRD) fillColor = '#b700ff';
         else if (isFFW) fillColor = '#ff9999';

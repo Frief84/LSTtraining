@@ -1,7 +1,7 @@
 <?php
 if (!defined('ABSPATH')) { exit; }
 
-const LSTTRAINING_SCHEMA_VERSION = 2026090902;
+const LSTTRAINING_SCHEMA_VERSION = 2026090904;
 const LSTTRAINING_SCHEMA_OPTION = 'lsttraining_schema_versions';
 
 function lsttraining_schema_fingerprint(): string {
@@ -283,6 +283,48 @@ function lsttraining_migration_2026090902(PDO $pdo): void {
 }
 
 /**
+ * Der historische Österreich-Import belegt den stabilen Legacy-ID-Bereich
+ * 918–1022. Zwei später in freie IDs eingefügte deutsche Kliniken bleiben
+ * ausdrücklich ausgenommen.
+ */
+function lsttraining_migration_2026090903(PDO $pdo): void {
+    if (
+        !lsttraining_migration_table_exists($pdo, 'krankenhaeuser')
+        || !lsttraining_migration_column_exists($pdo, 'krankenhaeuser', 'poi_id')
+        || !lsttraining_migration_column_exists($pdo, 'krankenhaeuser', 'land')
+    ) {
+        return;
+    }
+
+    $pdo->exec("
+        UPDATE krankenhaeuser
+           SET land = 'Österreich'
+         WHERE poi_id REGEXP '^legacy-(9(1[8-9]|[2-9][0-9])|10([01][0-9]|2[0-2]))$'
+           AND poi_id NOT IN ('legacy-950', 'legacy-970')
+    ");
+}
+
+function lsttraining_migration_2026090904(PDO $pdo): void {
+    foreach ([
+        ['wachen', 'source_key', "VARCHAR(100) COLLATE utf8mb4_general_ci NULL DEFAULT NULL AFTER source_note"],
+        ['wachen', 'source_url', "VARCHAR(500) COLLATE utf8mb4_general_ci NULL DEFAULT NULL AFTER source_key"],
+        ['wachen', 'source_checked_at', 'DATETIME NULL DEFAULT NULL AFTER source_url'],
+        ['fahrzeuge', 'availability_rule_json', 'LONGTEXT COLLATE utf8mb4_general_ci NULL AFTER dienstzeiten'],
+        ['fahrzeuge', 'source_key', "VARCHAR(100) COLLATE utf8mb4_general_ci NULL DEFAULT NULL AFTER source_note"],
+        ['fahrzeuge', 'source_url', "VARCHAR(500) COLLATE utf8mb4_general_ci NULL DEFAULT NULL AFTER source_key"],
+        ['fahrzeuge', 'source_checked_at', 'DATETIME NULL DEFAULT NULL AFTER source_url'],
+    ] as [$table, $column, $definition]) {
+        lsttraining_migration_add_column($pdo, $table, $column, $definition);
+    }
+    if (lsttraining_migration_table_exists($pdo, 'wachen') && !lsttraining_migration_index_exists($pdo, 'wachen', 'uk_wachen_source_key')) {
+        $pdo->exec('ALTER TABLE wachen ADD UNIQUE INDEX uk_wachen_source_key (source_key)');
+    }
+    if (lsttraining_migration_table_exists($pdo, 'fahrzeuge') && !lsttraining_migration_index_exists($pdo, 'fahrzeuge', 'uk_fahrzeuge_source_key')) {
+        $pdo->exec('ALTER TABLE fahrzeuge ADD UNIQUE INDEX uk_fahrzeuge_source_key (source_key)');
+    }
+}
+
+/**
  * MySQL-DDL führt implizite Commits aus. Deshalb sind alle Schritte idempotent;
  * die Versionsnummer wird erst gespeichert, wenn der komplette Lauf erfolgreich war.
  */
@@ -307,6 +349,12 @@ function lsttraining_run_migrations(bool $force = false): int {
     }
     if ($force || $current < 2026090902) {
         lsttraining_migration_2026090902($pdo);
+    }
+    if ($force || $current < 2026090903) {
+        lsttraining_migration_2026090903($pdo);
+    }
+    if ($force || $current < 2026090904) {
+        lsttraining_migration_2026090904($pdo);
     }
     lsttraining_schema_store_version(LSTTRAINING_SCHEMA_VERSION);
     return LSTTRAINING_SCHEMA_VERSION;

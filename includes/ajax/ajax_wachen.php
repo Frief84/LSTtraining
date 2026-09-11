@@ -260,6 +260,10 @@ $id         = (int)($_POST['id'] ?? 0);
     $bundesland = sanitize_text_field($_POST['bundesland'] ?? '');
     $bundesland = ($bundesland === '') ? null : $bundesland;
 
+    if (!in_array($typ, ['FW', 'FFW', 'SEG', 'RD', 'FRRD', 'AIR'], true)) {
+        wp_send_json_error('Ungültiger Wachentyp', 400);
+    }
+
     $leit_ids  = array_map('intval', (array)($_POST['leitstellen'] ?? []));
     $neben_ids = array_map('intval', (array)($_POST['nebenleitstellen'] ?? []));
 
@@ -434,6 +438,10 @@ $name       = sanitize_text_field($_POST['name'] ?? '');
     $land       = sanitize_text_field($_POST['land'] ?? 'Deutschland');
     $bundesland = sanitize_text_field($_POST['bundesland'] ?? '');
     $bundesland = ($bundesland === '') ? null : $bundesland;
+
+    if (!in_array($typ, ['FW', 'FFW', 'SEG', 'RD', 'FRRD', 'AIR'], true)) {
+        wp_send_json_error('Ungültiger Wachentyp', 400);
+    }
 
     $ls_ids  = array_map('intval', (array)($_POST['leitstellen'] ?? []));
     $nls_ids = array_map('intval', (array)($_POST['nebenleitstellen'] ?? []));

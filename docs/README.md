@@ -15,6 +15,7 @@ Willkommen in der zentralen Dokumentation von LSTtraining. Diese Startseite ordn
 | Krankenhäuser einrichten | [Krankenhäuser-Editor](krankenhaeuser-editor.md) |
 | Wachen einrichten | [Wachen-Editor](wachen-editor.md) |
 | Fahrzeuge einrichten | [Fahrzeuge-Editor](fahrzeuge-editor.md) |
+| DACH-Luftrettung importieren | [DACH-Luftrettungsimport](dach-luftrettung-import.md) |
 | Polizei und Unterstützungsfahrzeuge konfigurieren | [Polizei und Unterstützungsfahrzeuge](polizei-und-unterstuetzungsfahrzeuge.md) |
 | Multiplayer, Einsatzbearbeitung und Fahrzeugbewegung verstehen | [Simulation und Multiplayer](simulation-und-multiplayer.md) |
 | Rechte sicher vergeben | [Sicherheit, Migration und Berechtigungen](sicherheit-migration-multiplayer.md) |
@@ -42,6 +43,7 @@ Willkommen in der zentralen Dokumentation von LSTtraining. Diese Startseite ordn
 - [Einsatz-Ortsbindung](einsatz-ortsbindung.md): Einsatzorte, Gebietstypen, Straßen- und Autobahnlayer
 - [Krankenhäuser im Simulations-Workspace](simulation-workspace-hospitals.md): Fachabteilungen und Patientenzuweisung
 - [Schweizer Krankenhäuser importieren](schweizer-krankenhaeuser-import.md): BAG-Daten prüfen und über die Verwaltungs-API importieren
+- [DACH-Luftrettung importieren](dach-luftrettung-import.md): AIR-Wachen, RTH/ITH/SAR und Dienstzeiten prüfen und importieren
 - [Wetter und Nachbarleitstellen-Auslastung](wetter-und-nachbarleitstellen-auslastung.md)
 
 ### Administratoren und Betreiber

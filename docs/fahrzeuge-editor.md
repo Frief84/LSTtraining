@@ -43,6 +43,8 @@ Die Liste enthält nur Fahrzeuge aus erlaubten Leitstellenbereichen.
 
 Wache und Rufname sind Pflichtfelder.
 
+Importierte Luftrettungsmittel besitzen zusätzlich eine strukturierte Dienstzeitregel. Diese steuert ihre Disponierbarkeit anhand der Simulationszeit; der lesbare Dienstzeittext bleibt zur Kontrolle sichtbar. `SAR` ist eine eigene Fahrzeugklasse und wird nicht als regulärer `RTH` gewertet.
+
 ## Fahrzeugbild
 
 Ein Bild kann hochgeladen und anschließend in der Vorschau geprüft werden. Ohne individuelles Bild verwendet die Darstellung den vorgesehenen Fallback.

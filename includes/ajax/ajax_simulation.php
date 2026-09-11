@@ -490,6 +490,10 @@ function lsttraining_sim_signal_lights_raw_has_lights($raw): bool {
 function lsttraining_sim_station_kind(string $type): string {
     $normalized = strtolower(trim($type));
 
+    if ($normalized === 'air' || strpos($normalized, 'luftrett') !== false) {
+        return 'air';
+    }
+
     if (strpos($normalized, 'thw') !== false || strpos($normalized, 'technisches hilfswerk') !== false) {
         return 'thw';
     }
@@ -3629,9 +3633,13 @@ function lsttraining_sim_fetch_bootstrap_vehicles(PDO $pdo, int $instanz_id, int
             COALESCE(fs.longitude, f.longitude, w.longitude) AS longitude,
             f.rufname,
             f.fahrzeugtyp,
+            f.dienstzeiten,
+            f.availability_rule_json,
             f.bild_datei,
             ' . $signal_lights_select . ',
-            w.name AS wache_name
+            w.name AS wache_name,
+            w.latitude AS wache_latitude,
+            w.longitude AS wache_longitude
         FROM fahrzeug_status fs
         LEFT JOIN fahrzeuge f ON f.id = fs.fahrzeug_id
         LEFT JOIN wachen w ON w.id = fs.wache_id
@@ -3640,6 +3648,8 @@ function lsttraining_sim_fetch_bootstrap_vehicles(PDO $pdo, int $instanz_id, int
     ');
     $vehicle_stmt->execute([$instanz_id]);
     $vehicles = $vehicle_stmt->fetchAll(PDO::FETCH_ASSOC);
+    $runtime = lsttraining_sim_current_game_runtime($pdo, $instanz_id);
+    $sim_timestamp = (int) ($runtime['game_now_ts'] ?? time());
     foreach ($vehicles as &$vehicle) {
         $vehicle['status_id'] = (int) ($vehicle['status_id'] ?? 0);
         $vehicle['fahrzeug_id'] = (int) ($vehicle['fahrzeug_id'] ?? 0);
@@ -3649,9 +3659,22 @@ function lsttraining_sim_fetch_bootstrap_vehicles(PDO $pdo, int $instanz_id, int
         $vehicle['longitude'] = $vehicle['longitude'] !== null ? (float) $vehicle['longitude'] : null;
         $vehicle['resource_class'] = lsttraining_sim_resource_class_from_type((string) ($vehicle['fahrzeugtyp'] ?? ''));
         $vehicle['resource_class_label'] = lsttraining_sim_resource_class_label((string) ($vehicle['resource_class'] ?? ''));
+        $availability = lsttraining_vehicle_availability_from_json(
+            $vehicle['availability_rule_json'] ?? '',
+            $sim_timestamp,
+            (float) ($vehicle['wache_latitude'] ?? $vehicle['latitude'] ?? 0),
+            (float) ($vehicle['wache_longitude'] ?? $vehicle['longitude'] ?? 0)
+        );
+        $vehicle['on_duty'] = !empty($availability['available']);
+        $vehicle['duty_state'] = (string) ($availability['reason'] ?? '');
+        if (!$vehicle['on_duty']) {
+            $vehicle['dispatch_available'] = false;
+            $vehicle['dispatch_block_reason'] = $vehicle['duty_state'];
+        }
         lsttraining_sim_apply_vehicle_visual_defaults($pdo, $leitstelle_id, $vehicle);
         unset($vehicle['signal_lights_json']);
         unset($vehicle['bild_datei']);
+        unset($vehicle['availability_rule_json'], $vehicle['wache_latitude'], $vehicle['wache_longitude']);
     }
     unset($vehicle);
 
@@ -4116,6 +4139,8 @@ function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id,
             ifs.id AS delta_id,
             f.rufname,
             f.fahrzeugtyp,
+            f.dienstzeiten,
+            f.availability_rule_json,
             f.bild_datei,
             ' . $signal_lights_select . ',
             COALESCE(fs.latitude, f.latitude, w.latitude) AS base_latitude,
@@ -4146,8 +4171,15 @@ function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id,
         $vehicle['sondersignal'] = (int) ($vehicle['sondersignal'] ?? 0);
         $vehicle['resource_class'] = lsttraining_sim_resource_class_from_type((string) ($vehicle['fahrzeugtyp'] ?? ''));
         $vehicle['resource_class_label'] = lsttraining_sim_resource_class_label((string) ($vehicle['resource_class'] ?? ''));
+        $duty = lsttraining_vehicle_availability_from_json(
+            $vehicle['availability_rule_json'] ?? '', $sim_now_ts,
+            (float) ($vehicle['wache_latitude'] ?? $vehicle['latitude'] ?? 0),
+            (float) ($vehicle['wache_longitude'] ?? $vehicle['longitude'] ?? 0)
+        );
+        $vehicle['on_duty'] = !empty($duty['available']);
+        $vehicle['duty_state'] = (string) ($duty['reason'] ?? '');
         lsttraining_sim_apply_vehicle_visual_defaults($pdo, (int) ($instance['leitstelle_id'] ?? 0), $vehicle);
-        unset($vehicle['signal_lights_json']);
+        unset($vehicle['signal_lights_json'], $vehicle['availability_rule_json']);
     }
     unset($vehicle);
     $vehicles_by_status = [];
@@ -4519,6 +4551,8 @@ function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id,
         $dispatch_block_reason = '';
         if ($assigned) {
             $dispatch_block_reason = 'bereits zugeordnet';
+        } elseif (empty($vehicle['on_duty'])) {
+            $dispatch_block_reason = (string) ($vehicle['duty_state'] ?: 'außer Dienst');
         } elseif ($fms === '8') {
             $dispatch_block_reason = 'im Krankenhaus';
         } elseif ($fms === '7') {
@@ -5965,7 +5999,8 @@ add_action('wp_ajax_lsttraining_sim_alarm_vehicle', function () {
                 w.latitude AS wache_latitude,
                 w.longitude AS wache_longitude,
                 f.rufname,
-                f.fahrzeugtyp
+                f.fahrzeugtyp,
+                f.availability_rule_json
             FROM fahrzeug_status fs
             LEFT JOIN instanz_fahrzeug_status ifs
               ON ifs.instanz_id = fs.instanz_id
@@ -5979,6 +6014,22 @@ add_action('wp_ajax_lsttraining_sim_alarm_vehicle', function () {
         $vehicle = $vehicle_stmt->fetch(PDO::FETCH_ASSOC);
         if (!$vehicle) {
             wp_send_json_error(['message' => 'Fahrzeug nicht gefunden.'], 404);
+        }
+        $game_runtime = lsttraining_sim_current_game_runtime($pdo, $instanz_id);
+        $availability = lsttraining_vehicle_availability_from_json(
+            $vehicle['availability_rule_json'] ?? '',
+            (int) ($game_runtime['game_now_ts'] ?? time()),
+            (float) ($vehicle['wache_latitude'] ?? 0),
+            (float) ($vehicle['wache_longitude'] ?? 0)
+        );
+        if (empty($availability['available'])) {
+            wp_send_json_error(['message' => 'Dieses Fahrzeug kann nicht alarmiert werden: ' . ($availability['reason'] ?? 'außer Dienst') . '.'], 409);
+        }
+        if (strtoupper(trim((string) ($vehicle['fahrzeugtyp'] ?? ''))) === 'SAR') {
+            $sar_context = strtoupper((string) ($incident['einsatztyp'] ?? '') . ' ' . wp_json_encode($incident_meta));
+            if (!preg_match('/\bSAR\b|SEARCH.?AND.?RESCUE|SUCH.?UND.?RETTUNG|WINDENRETTUNG/u', $sar_context)) {
+                wp_send_json_error(['message' => 'SAR-Fahrzeuge sind nur für ausdrücklich ausgewiesene SAR- oder Sonderlagen verfügbar.'], 409);
+            }
         }
         $vehicle_fms = trim((string) ($vehicle['fms_status'] ?? ''));
         if (in_array($vehicle_fms, ['3', '4', '5', '6', '7', '8'], true)) {
@@ -6034,7 +6085,6 @@ add_action('wp_ajax_lsttraining_sim_alarm_vehicle', function () {
             }
         }
 
-        $game_runtime = lsttraining_sim_current_game_runtime($pdo, $instanz_id);
         $turnout_sec = 60;
         $alarmiert_at = (string) ($game_runtime['sim_now'] ?? wp_date('Y-m-d H:i:s'));
         $meta = [

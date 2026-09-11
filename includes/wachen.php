@@ -225,12 +225,12 @@ if ($selectedBundesland !== '') {
 }
 
 // 1) Flag + Default
-$anyFilterSet = ($selectedBundesland !== '' || $filter_leitstelle || $filter_nebenleitstelle);
+$anyFilterSet = ($selectedLand !== '' || $selectedBundesland !== '' || $filter_leitstelle || $filter_nebenleitstelle);
 $wachen = [];
 
 // 2) Wenn kein Filter: Hinweis ausgeben, aber NICHT returnen
 if (!$anyFilterSet) {
-    echo '<p><em>Bitte zunächst einen Filter (Leitstelle, Nebenleitstelle oder Bundesland) wählen.</em></p>';
+    echo '<p><em>Bitte zunächst ein Land, eine Leitstelle oder eine Nebenleitstelle wählen.</em></p>';
 } else {
     // 3) SQL aufbauen wie gehabt
 $sql = '
@@ -264,7 +264,7 @@ $where = [];
             $where[]  = 'w.bundesland = ?';
             $params[] = $selectedBundesland;
         }
-    } else {
+    } elseif ($filter_leitstelle || $filter_nebenleitstelle) {
         // 3b) LS/NLS über Pivot-Tabellen
         if ($filter_leitstelle) {
             $joins   .= ' INNER JOIN wache_leitstellen AS wl ON w.id = wl.wache_id ';
@@ -276,6 +276,11 @@ $where = [];
             $where[]  = 'wn.nebenleitstelle_id = ?';
             $params[] = (int)$filter_nebenleitstelle;
         }
+    } elseif ($selectedLand !== '') {
+        // Ein Land ist bereits ein vollständiger Filter. Das Bundesland grenzt
+        // die Ergebnisliste nur optional weiter ein.
+        $where[]  = 'w.land = ?';
+        $params[] = $selectedLand;
     }
 
     if ( ! current_user_can( 'manage_options' ) && ! $can_global_wachen ) {
@@ -441,6 +446,7 @@ $where = [];
             <option value="FFW">Freiwillige Feuerwehr</option>
             <option value="SEG">Sondereinsatzgruppe</option>
             <option value="RD">Rettungswache</option>
+            <option value="AIR">Luftrettungswache</option>
             <option value="FRRD">Rettungsdienst + Feuerwehr</option>
           </select>
         </td>

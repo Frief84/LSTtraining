@@ -637,6 +637,7 @@
 
     function vehicleGroup(vehicle) {
         var text = String((vehicle && (vehicle.fahrzeugtyp + ' ' + vehicle.rufname + ' ' + vehicle.resource_class)) || '').toLowerCase();
+        if (/\bsar\b|search.and.rescue/.test(text)) return 'sar';
         if (/rth|ith|hubschrauber|heli|christoph/.test(text)) return 'rth';
         if (/thw|technisches hilfswerk/.test(text)) return 'thw';
         if (/fw|feuer|hlf|lf|tlf|dlk|rw|gw-|elw/.test(text)) return 'fw';
@@ -1217,7 +1218,7 @@
         if (type === 'poi') return '#c084fc';
         if (type === 'station') {
             if (data && data.is_neighbor) return '#94a3b8';
-            return { rd: '#22c55e', fw: '#ef4444', thw: '#3b82f6' }[String(data && data.kind || '').toLowerCase()] || '#f59e0b';
+            return { rd: '#22c55e', fw: '#ef4444', thw: '#3b82f6', air: '#f5b301' }[String(data && data.kind || '').toLowerCase()] || '#f59e0b';
         }
         return '#94a3b8';
     }
@@ -2092,6 +2093,9 @@
             vehicle && vehicle.rufname
         ].filter(Boolean).join(' ')).toUpperCase();
 
+        if (/\bSAR\b/.test(haystack) || haystack.indexOf('SEARCH AND RESCUE') !== -1) {
+            return 'sar';
+        }
         if (/\b(RTH|ITH)\b/.test(haystack) || haystack.indexOf('HUBSCHRAUBER') !== -1 || haystack.indexOf('CHRISTOPH') !== -1) {
             return 'rth';
         }

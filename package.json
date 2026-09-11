@@ -2,7 +2,10 @@
   "name": "lsttraining-quality-gates",
   "private": true,
   "scripts": {
-    "test": "node tests/static-checks.mjs && node --test tests/swiss-hospitals-import.test.mjs",
-    "import:swiss-hospitals": "node scripts/import-swiss-hospitals.mjs"
+    "test": "node tests/static-checks.mjs && node --test tests/swiss-hospitals-import.test.mjs tests/dach-air-rescue-import.test.mjs",
+    "import:swiss-hospitals": "node scripts/import-swiss-hospitals.mjs",
+    "import:dach-air-rescue": "node scripts/import-dach-air-rescue.mjs",
+    "build:dach-air-rescue": "node scripts/build-dach-air-rescue-catalog.mjs",
+    "enrich:dach-air-rescue-regions": "node scripts/enrich-dach-air-rescue-regions.mjs"
   }
 }

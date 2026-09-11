@@ -1,0 +1,855 @@
+{
+  "48.083770,11.560124": {
+    "state": "Bayern",
+    "ISO3166-2-lvl4": "DE-BY",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "50.145467,8.710242": {
+    "state": "Hessen",
+    "ISO3166-2-lvl4": "DE-HE",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "50.861746,7.125769": {
+    "state": "Nordrhein-Westfalen",
+    "ISO3166-2-lvl4": "DE-NW",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "52.384892,9.806637": {
+    "state": "Niedersachsen",
+    "ISO3166-2-lvl4": "DE-NI",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "49.486935,8.389681": {
+    "state": "Rheinland-Pfalz",
+    "ISO3166-2-lvl4": "DE-RP",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "53.035885,8.817299": {
+    "state": "Bremen",
+    "ISO3166-2-lvl4": "DE-HB",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "51.311787,9.453461": {
+    "state": "Hessen",
+    "ISO3166-2-lvl4": "DE-HE",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "51.618776,7.515458": {
+    "state": "Nordrhein-Westfalen",
+    "ISO3166-2-lvl4": "DE-NW",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "51.380426,6.787227": {
+    "state": "Nordrhein-Westfalen",
+    "ISO3166-2-lvl4": "DE-NW",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "49.999923,6.893024": {
+    "state": "Rheinland-Pfalz",
+    "ISO3166-2-lvl4": "DE-RP",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "48.066146,8.500493": {
+    "state": "Baden-Württemberg",
+    "ISO3166-2-lvl4": "DE-BW",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "54.035117,10.562280": {
+    "state": "Schleswig-Holstein",
+    "ISO3166-2-lvl4": "DE-SH",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "51.983010,8.528575": {
+    "state": "Nordrhein-Westfalen",
+    "ISO3166-2-lvl4": "DE-NW",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "47.874202,12.631315": {
+    "state": "Bayern",
+    "ISO3166-2-lvl4": "DE-BY",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "48.885401,12.592343": {
+    "state": "Bayern",
+    "ISO3166-2-lvl4": "DE-BY",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "49.220337,7.000059": {
+    "state": "Saarland",
+    "ISO3166-2-lvl4": "DE-SL",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "47.691455,10.340796": {
+    "state": "Bayern",
+    "ISO3166-2-lvl4": "DE-BY",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "49.659864,10.086928": {
+    "state": "Bayern",
+    "ISO3166-2-lvl4": "DE-BY",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "52.973338,10.532572": {
+    "state": "Niedersachsen",
+    "ISO3166-2-lvl4": "DE-NI",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "49.984428,11.638569": {
+    "state": "Bayern",
+    "ISO3166-2-lvl4": "DE-BY",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "50.823695,6.190127": {
+    "state": "Nordrhein-Westfalen",
+    "ISO3166-2-lvl4": "DE-NW",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "48.426625,9.945330": {
+    "state": "Baden-Württemberg",
+    "ISO3166-2-lvl4": "DE-BW",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "50.367738,7.545176": {
+    "state": "Rheinland-Pfalz",
+    "ISO3166-2-lvl4": "DE-RP",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "52.277211,7.431209": {
+    "state": "Nordrhein-Westfalen",
+    "ISO3166-2-lvl4": "DE-NW",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "50.851459,8.018622": {
+    "state": "Nordrhein-Westfalen",
+    "ISO3166-2-lvl4": "DE-NW",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "53.506011,8.009310": {
+    "state": "Niedersachsen",
+    "ISO3166-2-lvl4": "DE-NI",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "49.495879,11.072705": {
+    "state": "Bayern",
+    "ISO3166-2-lvl4": "DE-BY",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "50.546132,9.704554": {
+    "state": "Hessen",
+    "ISO3166-2-lvl4": "DE-HE",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "53.596615,10.077992": {
+    "city": "Hamburg",
+    "ISO3166-2-lvl4": "DE-HH",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "52.179103,10.534150": {
+    "state": "Niedersachsen",
+    "ISO3166-2-lvl4": "DE-NI",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "52.441284,13.322410": {
+    "city": "Berlin",
+    "ISO3166-2-lvl4": "DE-BE",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "48.770802,11.372547": {
+    "state": "Bayern",
+    "ISO3166-2-lvl4": "DE-BY",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "51.534061,13.996430": {
+    "state": "Brandenburg",
+    "ISO3166-2-lvl4": "DE-BB",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "53.811753,12.199141": {
+    "state": "Mecklenburg-Vorpommern",
+    "ISO3166-2-lvl4": "DE-MV",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "52.415221,12.544517": {
+    "state": "Brandenburg",
+    "ISO3166-2-lvl4": "DE-BB",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "52.158569,11.583661": {
+    "state": "Sachsen-Anhalt",
+    "ISO3166-2-lvl4": "DE-ST",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "51.516758,10.794762": {
+    "state": "Thüringen",
+    "ISO3166-2-lvl4": "DE-TH",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "51.128226,13.762583": {
+    "state": "Sachsen",
+    "ISO3166-2-lvl4": "DE-SN",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "53.073660,11.874873": {
+    "state": "Brandenburg",
+    "ISO3166-2-lvl4": "DE-BB",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "48.384388,10.837947": {
+    "state": "Bayern",
+    "ISO3166-2-lvl4": "DE-BY",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "48.803359,8.999073": {
+    "state": "Baden-Württemberg",
+    "ISO3166-2-lvl4": "DE-BW",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "49.000367,8.378319": {
+    "state": "Baden-Württemberg",
+    "ISO3166-2-lvl4": "DE-BW",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "51.551676,9.943340": {
+    "state": "Niedersachsen",
+    "ISO3166-2-lvl4": "DE-NI",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "47.673183,9.428424": {
+    "state": "Baden-Württemberg",
+    "ISO3166-2-lvl4": "DE-BW",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "50.720164,12.430689": {
+    "state": "Sachsen",
+    "ISO3166-2-lvl4": "DE-SN",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "54.089031,13.408153": {
+    "state": "Mecklenburg-Vorpommern",
+    "ISO3166-2-lvl4": "DE-MV",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "53.382336,13.052374": {
+    "state": "Mecklenburg-Vorpommern",
+    "ISO3166-2-lvl4": "DE-MV",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "52.284695,14.060174": {
+    "state": "Brandenburg",
+    "ISO3166-2-lvl4": "DE-BB",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "50.603051,10.710784": {
+    "state": "Thüringen",
+    "ISO3166-2-lvl4": "DE-TH",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "51.351569,12.192337": {
+    "state": "Sachsen",
+    "ISO3166-2-lvl4": "DE-SN",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "52.999939,14.002569": {
+    "state": "Brandenburg",
+    "ISO3166-2-lvl4": "DE-BB",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "49.065355,10.402368": {
+    "state": "Bayern",
+    "ISO3166-2-lvl4": "DE-BY",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "50.915054,11.716231": {
+    "state": "Thüringen",
+    "ISO3166-2-lvl4": "DE-TH",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "49.678844,12.118128": {
+    "state": "Bayern",
+    "ISO3166-2-lvl4": "DE-BY",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "52.629656,13.511953": {
+    "city": "Berlin",
+    "ISO3166-2-lvl4": "DE-BE",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "54.218386,9.595562": {
+    "state": "Schleswig-Holstein",
+    "ISO3166-2-lvl4": "DE-SH",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "48.865444,9.220425": {
+    "state": "Baden-Württemberg",
+    "ISO3166-2-lvl4": "DE-BW",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "54.794042,8.844712": {
+    "state": "Schleswig-Holstein",
+    "ISO3166-2-lvl4": "DE-SH",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "49.476111,8.521763": {
+    "state": "Baden-Württemberg",
+    "ISO3166-2-lvl4": "DE-BW",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "48.020573,7.836293": {
+    "state": "Baden-Württemberg",
+    "ISO3166-2-lvl4": "DE-BW",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "51.191851,14.522830": {
+    "state": "Sachsen",
+    "ISO3166-2-lvl4": "DE-SN",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "49.607516,7.788280": {
+    "state": "Rheinland-Pfalz",
+    "ISO3166-2-lvl4": "DE-RP",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "53.994774,9.574323": {
+    "state": "Schleswig-Holstein",
+    "ISO3166-2-lvl4": "DE-SH",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "49.994172,8.254667": {
+    "state": "Rheinland-Pfalz",
+    "ISO3166-2-lvl4": "DE-RP",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "50.572555,8.652497": {
+    "state": "Hessen",
+    "ISO3166-2-lvl4": "DE-HE",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "51.550985,12.049764": {
+    "state": "Sachsen-Anhalt",
+    "ISO3166-2-lvl4": "DE-ST",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "47.672367,11.216174": {
+    "state": "Bayern",
+    "ISO3166-2-lvl4": "DE-BY",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "48.357231,7.824541": {
+    "state": "Baden-Württemberg",
+    "ISO3166-2-lvl4": "DE-BW",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "48.987126,12.092937": {
+    "state": "Bayern",
+    "ISO3166-2-lvl4": "DE-BY",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "50.333641,6.943574": {
+    "state": "Rheinland-Pfalz",
+    "ISO3166-2-lvl4": "DE-RP",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "52.519139,13.567817": {
+    "city": "Berlin",
+    "ISO3166-2-lvl4": "DE-BE",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "51.510639,7.603005": {
+    "state": "Nordrhein-Westfalen",
+    "ISO3166-2-lvl4": "DE-NW",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "53.508060,10.173402": {
+    "city": "Hamburg",
+    "ISO3166-2-lvl4": "DE-HH",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "50.335696,8.877151": {
+    "state": "Hessen",
+    "ISO3166-2-lvl4": "DE-HE",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "48.110877,11.465605": {
+    "state": "Bayern",
+    "ISO3166-2-lvl4": "DE-BY",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "52.462893,9.691488": {
+    "state": "Niedersachsen",
+    "ISO3166-2-lvl4": "DE-NI",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "54.070652,12.108990": {
+    "state": "Mecklenburg-Vorpommern",
+    "ISO3166-2-lvl4": "DE-MV",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "50.889705,11.264226": {
+    "state": "Thüringen",
+    "ISO3166-2-lvl4": "DE-TH",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "53.049078,8.787504": {
+    "state": "Bremen",
+    "ISO3166-2-lvl4": "DE-HB",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "52.123454,7.690001": {
+    "state": "Nordrhein-Westfalen",
+    "ISO3166-2-lvl4": "DE-NW",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "54.175419,7.889910": {
+    "state": "Schleswig-Holstein",
+    "ISO3166-2-lvl4": "DE-SH",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "54.181400,12.132150": {
+    "state": "Mecklenburg-Vorpommern",
+    "ISO3166-2-lvl4": "DE-MV",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "50.832017,6.662239": {
+    "state": "Nordrhein-Westfalen",
+    "ISO3166-2-lvl4": "DE-NW",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "49.390244,9.958083": {
+    "state": "Baden-Württemberg",
+    "ISO3166-2-lvl4": "DE-BW",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "51.768504,13.165348": {
+    "state": "Brandenburg",
+    "ISO3166-2-lvl4": "DE-BB",
+    "country": "Deutschland",
+    "country_code": "de"
+  },
+  "47.255047,11.345545": {
+    "state": "Tirol",
+    "ISO3166-2-lvl4": "AT-7",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "48.446009,15.630378": {
+    "state": "Niederösterreich",
+    "ISO3166-2-lvl4": "AT-3",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "47.845154,16.251575": {
+    "state": "Niederösterreich",
+    "ISO3166-2-lvl4": "AT-3",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "47.488543,12.365111": {
+    "state": "Tirol",
+    "ISO3166-2-lvl4": "AT-7",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "47.176520,10.612570": {
+    "state": "Tirol",
+    "ISO3166-2-lvl4": "AT-7",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "47.796073,12.997488": {
+    "state": "Salzburg",
+    "ISO3166-2-lvl4": "AT-5",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "46.799745,12.876832": {
+    "state": "Tirol",
+    "ISO3166-2-lvl4": "AT-7",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "47.208739,9.659828": {
+    "state": "Vorarlberg",
+    "ISO3166-2-lvl4": "AT-8",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "48.189228,16.412171": {
+    "city": "Wien",
+    "ISO3166-2-lvl4": "AT-9",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "48.238933,14.186627": {
+    "state": "Oberösterreich",
+    "ISO3166-2-lvl4": "AT-4",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "46.649528,14.327083": {
+    "state": "Kärnten",
+    "ISO3166-2-lvl4": "AT-2",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "46.984926,15.446458": {
+    "state": "Steiermark",
+    "ISO3166-2-lvl4": "AT-6",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "47.479646,14.009863": {
+    "state": "Steiermark",
+    "ISO3166-2-lvl4": "AT-6",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "47.969110,14.939298": {
+    "state": "Niederösterreich",
+    "ISO3166-2-lvl4": "AT-3",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "47.305259,16.183504": {
+    "state": "Burgenland",
+    "ISO3166-2-lvl4": "AT-1",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "47.336190,15.002205": {
+    "state": "Steiermark",
+    "ISO3166-2-lvl4": "AT-6",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "47.857129,16.939400": {
+    "state": "Burgenland",
+    "ISO3166-2-lvl4": "AT-1",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "48.400873,13.449759": {
+    "state": "Oberösterreich",
+    "ISO3166-2-lvl4": "AT-4",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "46.741044,13.664866": {
+    "state": "Kärnten",
+    "ISO3166-2-lvl4": "AT-2",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "47.473152,10.711556": {
+    "state": "Tirol",
+    "ISO3166-2-lvl4": "AT-7",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "46.568889,13.273889": {
+    "state": "Kärnten",
+    "ISO3166-2-lvl4": "AT-2",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "47.585167,12.593000": {
+    "state": "Tirol",
+    "ISO3166-2-lvl4": "AT-7",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "47.565825,12.135399": {
+    "state": "Tirol",
+    "ISO3166-2-lvl4": "AT-7",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "47.286167,11.877833": {
+    "state": "Tirol",
+    "ISO3166-2-lvl4": "AT-7",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "47.133646,11.703868": {
+    "state": "Tirol",
+    "ISO3166-2-lvl4": "AT-7",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "47.292178,12.785926": {
+    "state": "Salzburg",
+    "ISO3166-2-lvl4": "AT-5",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "47.393979,13.222028": {
+    "state": "Salzburg",
+    "ISO3166-2-lvl4": "AT-5",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "47.218859,10.769081": {
+    "state": "Tirol",
+    "ISO3166-2-lvl4": "AT-7",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "47.898611,13.939444": {
+    "state": "Oberösterreich",
+    "ISO3166-2-lvl4": "AT-4",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "46.992099,12.541997": {
+    "state": "Tirol",
+    "ISO3166-2-lvl4": "AT-7",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "47.959401,16.263964": {
+    "state": "Niederösterreich",
+    "ISO3166-2-lvl4": "AT-3",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "47.365936,12.597376": {
+    "state": "Salzburg",
+    "ISO3166-2-lvl4": "AT-5",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "47.178236,11.868116": {
+    "state": "Tirol",
+    "ISO3166-2-lvl4": "AT-7",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "46.911333,11.053601": {
+    "state": "Tirol",
+    "ISO3166-2-lvl4": "AT-7",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "47.073688,9.913296": {
+    "state": "Vorarlberg",
+    "ISO3166-2-lvl4": "AT-8",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "46.980457,10.315910": {
+    "state": "Tirol",
+    "ISO3166-2-lvl4": "AT-7",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "47.181288,10.160906": {
+    "state": "Vorarlberg",
+    "ISO3166-2-lvl4": "AT-8",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "47.200359,9.780224": {
+    "state": "Vorarlberg",
+    "ISO3166-2-lvl4": "AT-8",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "47.119299,10.241476": {
+    "state": "Tirol",
+    "ISO3166-2-lvl4": "AT-7",
+    "country": "Österreich",
+    "country_code": "at"
+  },
+  "47.396434,8.637667": {
+    "state": "Zürich",
+    "ISO3166-2-lvl4": "CH-ZH",
+    "country": "Schweiz/Suisse/Svizzera/Svizra",
+    "country_code": "ch"
+  },
+  "47.605813,7.522719": {
+    "state": "Grand Est",
+    "ISO3166-2-lvl4": "FR-GES",
+    "region": "France métropolitaine",
+    "country": "France",
+    "country_code": "fr"
+  },
+  "46.909652,7.504643": {
+    "state": "Bern/Berne",
+    "ISO3166-2-lvl4": "CH-BE",
+    "country": "Schweiz/Suisse/Svizzera/Svizra",
+    "country_code": "ch"
+  },
+  "46.547224,6.618205": {
+    "state": "Vaud",
+    "ISO3166-2-lvl4": "CH-VD",
+    "country": "Schweiz/Suisse/Svizzera/Svizra",
+    "country_code": "ch"
+  },
+  "46.912867,9.550879": {
+    "state": "Graubünden/Grischun/Grigioni",
+    "ISO3166-2-lvl4": "CH-GR",
+    "country": "Schweiz/Suisse/Svizzera/Svizra",
+    "country_code": "ch"
+  },
+  "46.162943,8.881767": {
+    "state": "Ticino",
+    "ISO3166-2-lvl4": "CH-TI",
+    "country": "Schweiz/Suisse/Svizzera/Svizra",
+    "country_code": "ch"
+  },
+  "47.405509,9.290324": {
+    "state": "St. Gallen",
+    "ISO3166-2-lvl4": "CH-SG",
+    "country": "Schweiz/Suisse/Svizzera/Svizra",
+    "country_code": "ch"
+  },
+  "46.834213,8.638252": {
+    "state": "Uri",
+    "ISO3166-2-lvl4": "CH-UR",
+    "country": "Schweiz/Suisse/Svizzera/Svizra",
+    "country_code": "ch"
+  },
+  "46.530567,9.878954": {
+    "state": "Graubünden/Grischun/Grigioni",
+    "ISO3166-2-lvl4": "CH-GR",
+    "country": "Schweiz/Suisse/Svizzera/Svizra",
+    "country_code": "ch"
+  },
+  "46.670175,7.876188": {
+    "state": "Bern/Berne",
+    "ISO3166-2-lvl4": "CH-BE",
+    "country": "Schweiz/Suisse/Svizzera/Svizra",
+    "country_code": "ch"
+  },
+  "47.078030,9.066596": {
+    "state": "Glarus",
+    "ISO3166-2-lvl4": "CH-GL",
+    "country": "Schweiz/Suisse/Svizzera/Svizra",
+    "country_code": "ch"
+  },
+  "46.555066,7.378917": {
+    "state": "Bern/Berne",
+    "ISO3166-2-lvl4": "CH-BE",
+    "country": "Schweiz/Suisse/Svizzera/Svizra",
+    "country_code": "ch"
+  },
+  "46.237075,6.101746": {
+    "state": "Genève",
+    "ISO3166-2-lvl4": "CH-GE",
+    "country": "Schweiz/Suisse/Svizzera/Svizra",
+    "country_code": "ch"
+  },
+  "46.222121,7.335994": {
+    "state": "Valais/Wallis",
+    "ISO3166-2-lvl4": "CH-VS",
+    "country": "Schweiz/Suisse/Svizzera/Svizra",
+    "country_code": "ch"
+  },
+  "47.444314,8.233641": {
+    "state": "Aargau",
+    "ISO3166-2-lvl4": "CH-AG",
+    "country": "Schweiz/Suisse/Svizzera/Svizra",
+    "country_code": "ch"
+  },
+  "46.029283,7.753272": {
+    "state": "Valais/Wallis",
+    "ISO3166-2-lvl4": "CH-VS",
+    "country": "Schweiz/Suisse/Svizzera/Svizra",
+    "country_code": "ch"
+  },
+  "46.310030,7.724816": {
+    "state": "Valais/Wallis",
+    "ISO3166-2-lvl4": "CH-VS",
+    "country": "Schweiz/Suisse/Svizzera/Svizra",
+    "country_code": "ch"
+  },
+  "46.585689,7.911334": {
+    "state": "Bern/Berne",
+    "ISO3166-2-lvl4": "CH-BE",
+    "country": "Schweiz/Suisse/Svizzera/Svizra",
+    "country_code": "ch"
+  }
+}

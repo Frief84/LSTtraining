@@ -432,6 +432,9 @@
 
     function tacticalVehicleLetter(vehicle) {
         var type = String(vehicle && (vehicle.fahrzeugtyp || vehicle.rufname) || '').toUpperCase();
+        if (type.indexOf('SAR') !== -1) {
+            return 'SAR';
+        }
         if (type.indexOf('NEF') !== -1 || type.indexOf('NAW') !== -1 || type.indexOf('RTH') !== -1 || type.indexOf('ITH') !== -1 || type.indexOf('BABY-NAW') !== -1) {
             return 'NA';
         }
@@ -458,6 +461,8 @@
                 return '#c92828';
             case 'thw':
                 return '#1f66d1';
+            case 'air':
+                return '#f5b301';
             default:
                 return '#6b7280';
         }
@@ -2601,6 +2606,9 @@
         }
         if (kind === 'thw') {
             return 'THW';
+        }
+        if (kind === 'air') {
+            return 'Luftrettung';
         }
         return fallback || 'Wache';
     }

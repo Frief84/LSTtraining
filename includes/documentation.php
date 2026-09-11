@@ -59,6 +59,12 @@ function lsttraining_documentation_catalog(): array {
             'audience' => 'admin',
             'description' => 'BAG-Standortdaten prüfen, geokodieren und über die Verwaltungs-API importieren.',
         ],
+        'dach-luftrettung-import' => [
+            'title' => 'DACH-Luftrettung importieren',
+            'path' => 'docs/dach-luftrettung-import.md',
+            'audience' => 'admin',
+            'description' => 'Luftrettungswachen, RTH, ITH, SAR und strukturierte Dienstzeiten prüfen und importieren.',
+        ],
         'wachen-editor' => [
             'title' => 'Wachen-Editor',
             'path' => 'docs/wachen-editor.md',

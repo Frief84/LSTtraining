@@ -21,7 +21,7 @@ function lst_manage_resource_configs(): array {
             'label' => 'Leitstelle',
             'search_field' => 'name',
             'order' => 'name ASC, id ASC',
-            'list_fields' => ['id', 'name', 'ort', 'bundesland', 'land', 'latitude', 'longitude', 'created_at'],
+            'list_fields' => ['id', 'name', 'ort', 'bundesland', 'land', 'latitude', 'longitude', 'geojson', 'created_at'],
             'fields' => [
                 'name' => ['type' => 'string', 'required' => true, 'max' => 255],
                 'ort' => ['type' => 'string', 'nullable' => true, 'max' => 255],
@@ -72,10 +72,10 @@ function lst_manage_resource_configs(): array {
             'label' => 'Wache',
             'search_field' => 'name',
             'order' => 'name ASC, id ASC',
-            'list_fields' => ['id', 'name', 'typ', 'bundesland', 'land', 'latitude', 'longitude', 'exists_in_reality', 'created_at'],
+            'list_fields' => ['id', 'name', 'typ', 'bundesland', 'land', 'latitude', 'longitude', 'exists_in_reality', 'source_key', 'source_url', 'source_checked_at', 'created_at'],
             'fields' => [
                 'name' => ['type' => 'string', 'required' => true, 'max' => 255],
-                'typ' => ['type' => 'string', 'required' => true, 'max' => 50],
+                'typ' => ['type' => 'enum', 'required' => true, 'allowed' => ['FW', 'FFW', 'SEG', 'RD', 'FRRD', 'AIR']],
                 'bundesland' => ['type' => 'string', 'nullable' => true, 'max' => 50],
                 'latitude' => ['type' => 'latitude', 'required' => true],
                 'longitude' => ['type' => 'longitude', 'required' => true],
@@ -85,6 +85,9 @@ function lst_manage_resource_configs(): array {
                 'bild_datei' => ['type' => 'image', 'max' => 255, 'default' => '', 'allow_empty' => true],
                 'exists_in_reality' => ['type' => 'bool', 'default' => true],
                 'source_note' => ['type' => 'string', 'nullable' => true, 'max' => 255],
+                'source_key' => ['type' => 'identifier', 'nullable' => true, 'max' => 100],
+                'source_url' => ['type' => 'string', 'nullable' => true, 'max' => 500],
+                'source_checked_at' => ['type' => 'string', 'nullable' => true, 'max' => 19],
             ],
             'relations' => [
                 'leitstellen' => ['table' => 'wache_leitstellen', 'source_col' => 'wache_id', 'target_col' => 'leitstelle_id', 'target_table' => 'leitstellen'],
@@ -98,7 +101,7 @@ function lst_manage_resource_configs(): array {
             'label' => 'Fahrzeug',
             'search_field' => 'rufname',
             'order' => 'rufname ASC, id ASC',
-            'list_fields' => ['id', 'wache_id', 'rufname', 'fahrzeugtyp', 'status', 'fms_status', 'sondersignal', 'is_first_responder', 'created_at'],
+            'list_fields' => ['id', 'wache_id', 'rufname', 'fahrzeugtyp', 'status', 'fms_status', 'sondersignal', 'is_first_responder', 'dienstzeiten', 'availability_rule_json', 'source_key', 'source_url', 'source_checked_at', 'created_at'],
             'fields' => [
                 'wache_id' => ['type' => 'id', 'required' => true],
                 'rufname' => ['type' => 'string', 'required' => true, 'max' => 100],
@@ -109,6 +112,10 @@ function lst_manage_resource_configs(): array {
                 'fms_status' => ['type' => 'enum', 'allowed' => ['1', '2', '3', '4', '5', '6'], 'default' => '2'],
                 'sondersignal' => ['type' => 'bool', 'default' => false],
                 'dienstzeiten' => ['type' => 'string', 'nullable' => true, 'max' => 255],
+                'availability_rule_json' => ['type' => 'availability_rule', 'nullable' => true],
+                'source_key' => ['type' => 'identifier', 'nullable' => true, 'max' => 100],
+                'source_url' => ['type' => 'string', 'nullable' => true, 'max' => 500],
+                'source_checked_at' => ['type' => 'string', 'nullable' => true, 'max' => 19],
                 'latitude' => ['type' => 'latitude', 'nullable' => true],
                 'longitude' => ['type' => 'longitude', 'nullable' => true],
                 'bild_datei' => ['type' => 'image', 'nullable' => true, 'max' => 255],
@@ -237,6 +244,46 @@ function lst_manage_normalize_signal_json($value): ?string {
     return $normalized ? (string) wp_json_encode($normalized, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null;
 }
 
+function lst_manage_normalize_availability_rule($value): ?string {
+    if ($value === null || $value === '') return null;
+    $rule = lsttraining_rest_json_input('availability_rule_json', $value);
+    if (!is_array($rule)) throw new InvalidArgumentException('availability_rule_json muss ein Objekt sein.');
+    $timezone = (string) ($rule['timezone'] ?? 'Europe/Berlin');
+    if (!in_array($timezone, ['Europe/Berlin', 'Europe/Vienna', 'Europe/Zurich'], true)) {
+        throw new InvalidArgumentException('Ungültige DACH-Zeitzone.');
+    }
+    $normalized = ['timezone' => $timezone];
+    if (!empty($rule['always'])) {
+        $normalized['always'] = true;
+    } else {
+        $normalized['windows'] = [];
+        foreach ((array) ($rule['windows'] ?? []) as $window) {
+            if (!is_array($window)) throw new InvalidArgumentException('Dienstzeitfenster ist ungültig.');
+            $start = strtolower(trim((string) ($window['start'] ?? '')));
+            $end = strtolower(trim((string) ($window['end'] ?? '')));
+            $valid_time = static fn(string $time): bool => in_array($time, ['sunrise', 'sunset', '24:00'], true) || preg_match('/^(?:[01]?\d|2[0-3]):[0-5]\d$/', $time) === 1;
+            if (!$valid_time($start) || !$valid_time($end)) throw new InvalidArgumentException('Start oder Ende eines Dienstzeitfensters ist ungültig.');
+            $days = array_values(array_unique(array_map('intval', (array) ($window['days'] ?? [1,2,3,4,5,6,7]))));
+            if (!$days || array_filter($days, static fn(int $day): bool => $day < 1 || $day > 7)) throw new InvalidArgumentException('Wochentage müssen zwischen 1 und 7 liegen.');
+            $normalized['windows'][] = [
+                'days' => $days, 'start' => $start, 'end' => $end,
+                'start_offset_min' => max(-180, min(180, (int) ($window['start_offset_min'] ?? 0))),
+                'end_offset_min' => max(-180, min(180, (int) ($window['end_offset_min'] ?? 0))),
+            ];
+        }
+        if (!$normalized['windows']) throw new InvalidArgumentException('Mindestens ein Dienstzeitfenster ist erforderlich.');
+    }
+    if (!empty($rule['seasons'])) {
+        $normalized['seasons'] = [];
+        foreach ((array) $rule['seasons'] as $season) {
+            $from = (string) ($season['from'] ?? ''); $to = (string) ($season['to'] ?? '');
+            if (!preg_match('/^\d{2}-\d{2}$/', $from) || !preg_match('/^\d{2}-\d{2}$/', $to)) throw new InvalidArgumentException('Saisonwerte müssen MM-TT verwenden.');
+            $normalized['seasons'][] = ['from' => $from, 'to' => $to];
+        }
+    }
+    return (string) wp_json_encode($normalized, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+}
+
 function lst_manage_normalize_field(string $name, $value, array $definition) {
     $nullable = !empty($definition['nullable']);
     if ($value === null || ($value === '' && $nullable)) {
@@ -291,6 +338,9 @@ function lst_manage_normalize_field(string $name, $value, array $definition) {
         case 'signal_json':
             $normalized = lsttraining_rest_signal_lights($name, $value);
             return $normalized ? (string) wp_json_encode($normalized, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null;
+
+        case 'availability_rule':
+            return lst_manage_normalize_availability_rule($value);
 
         case 'geojson':
             return (string) wp_json_encode(lsttraining_rest_geojson($name, $value), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -378,7 +428,7 @@ function lst_manage_decode_row(array $config, array $row): array {
             $row[$field] = (float) $row[$field];
         } elseif ($type === 'bool' && $row[$field] !== null) {
             $row[$field] = (bool) $row[$field];
-        } elseif (in_array($type, ['json', 'geojson', 'departments', 'id_list_json', 'signal_json'], true) && $row[$field] !== null && $row[$field] !== '') {
+        } elseif (in_array($type, ['json', 'geojson', 'departments', 'id_list_json', 'signal_json', 'availability_rule'], true) && $row[$field] !== null && $row[$field] !== '') {
             $decoded = json_decode((string) $row[$field], true);
             if (json_last_error() === JSON_ERROR_NONE) {
                 $row[$field] = $decoded;

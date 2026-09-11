@@ -1,0 +1,13 @@
+source_key;country;operator;name;coordinates;vehicles;status;assignment_warning
+"de-adac-christoph-01";"DE";"ADAC Luftrettung";"Luftrettungszentrum München-Harlaching";"48.0834,11.5574";"Christoph 1:RTH";"angelegt";"Keine Leitstelle enthält den Standort."
+"de-adac-christoph-26";"DE";"ADAC Luftrettung";"Luftrettungszentrum Sanderbusch";"53.5048,8.0109";"Christoph 26:RTH";"angelegt";"Keine Leitstelle enthält den Standort."
+"de-drf-bad-berka";"DE";"DRF Luftrettung";"Luftrettungsstation Bad Berka";"50.8998,11.2812";"Christoph Thüringen:ITH";"angelegt";"Keine Leitstelle enthält den Standort."
+"de-bundeswehr-sar-41";"DE";"Bundeswehr";"SAR-Kommando Nörvenich";"50.8312,6.6582";"SAR 41:SAR";"angelegt";"Keine Leitstelle enthält den Standort."
+"de-bundeswehr-sar-63";"DE";"Bundeswehr";"SAR-Kommando Niederstetten";"49.3918,9.9582";"SAR 63:SAR";"angelegt";"Keine Leitstelle enthält den Standort."
+"de-bundeswehr-sar-87";"DE";"Bundeswehr";"SAR-Kommando Holzdorf";"51.7672,13.1677";"SAR 87:SAR";"angelegt";"Keine Leitstelle enthält den Standort."
+"at-oeamtc-christophorus-02";"AT";"ÖAMTC-Flugrettung";"Christophorus-Stützpunkt Krems/Gneixendorf";"48.4464,15.6342";"Christophorus 2:RTH";"angelegt";"Keine Leitstelle enthält den Standort."
+"at-ara-rk-02";"AT";"ARA Flugrettung";"ARA-Flugrettungsstation Reutte";"47.4708,10.6922";"RK-2:RTH";"angelegt";"Keine Leitstelle enthält den Standort."
+"at-ara-nassfeld";"AT";"ARA Flugrettung";"ARA-Winterstützpunkt Nassfeld";"46.5631,13.2758";"ARA Nassfeld:RTH";"angelegt";"Keine Leitstelle enthält den Standort."
+"ch-rega-01";"CH";"Schweizerische Rettungsflugwacht Rega";"Rega-Basis Zürich";"47.3978,8.6482";"Rega 1:RTH";"angelegt";"Keine Leitstelle enthält den Standort."
+"ch-rega-08";"CH";"Schweizerische Rettungsflugwacht Rega";"Rega-Basis Erstfeld";"46.8212,8.6514";"Rega 8:RTH";"angelegt";"Keine Leitstelle enthält den Standort."
+"ch-air-zermatt";"CH";"Air Zermatt";"Air Zermatt Basis Zermatt";"46.025,7.7476";"Air Zermatt:RTH";"angelegt";"Keine Leitstelle enthält den Standort."

@@ -1,0 +1,269 @@
+{
+  "generated_at": "2026-09-09T17:56:05.752Z",
+  "source_version": "2026-09-09.1",
+  "mode": "dry-run",
+  "attribution": [
+    "Station, Rufname und Dienstzeit: jeweilige Betreiberquelle",
+    "Koordinaten: OpenStreetMap-Mitwirkende, ODbL 1.0; gegen Betreiberangaben geprüft"
+  ],
+  "items": [
+    {
+      "source_key": "de-adac-christoph-01",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungszentrum München-Harlaching",
+      "coordinates": "48.0834,11.5574",
+      "coordinate_source": "OpenStreetMap, gegen Betreiberstandort geprüft",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 1",
+          "type": "RTH",
+          "duty": "Sonnenaufgang (frühestens 07:00) bis Sonnenuntergang",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-adac-christoph-26",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungszentrum Sanderbusch",
+      "coordinates": "53.5048,8.0109",
+      "coordinate_source": "OpenStreetMap, gegen Betreiberstandort geprüft",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 26",
+          "type": "RTH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-drf-bad-berka",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Bad Berka",
+      "coordinates": "50.8998,11.2812",
+      "coordinate_source": "OpenStreetMap, gegen Betreiberstandort geprüft",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph Thüringen",
+          "type": "ITH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-bundeswehr-sar-41",
+      "country": "DE",
+      "operator": "Bundeswehr",
+      "name": "SAR-Kommando Nörvenich",
+      "coordinates": "50.8312,6.6582",
+      "coordinate_source": "OpenStreetMap, militärischer Flugplatz",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "SAR 41",
+          "type": "SAR",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-bundeswehr-sar-63",
+      "country": "DE",
+      "operator": "Bundeswehr",
+      "name": "SAR-Kommando Niederstetten",
+      "coordinates": "49.3918,9.9582",
+      "coordinate_source": "OpenStreetMap, militärischer Flugplatz",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "SAR 63",
+          "type": "SAR",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-bundeswehr-sar-87",
+      "country": "DE",
+      "operator": "Bundeswehr",
+      "name": "SAR-Kommando Holzdorf",
+      "coordinates": "51.7672,13.1677",
+      "coordinate_source": "OpenStreetMap, militärischer Flugplatz",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "SAR 87",
+          "type": "SAR",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-oeamtc-christophorus-02",
+      "country": "AT",
+      "operator": "ÖAMTC-Flugrettung",
+      "name": "Christophorus-Stützpunkt Krems/Gneixendorf",
+      "coordinates": "48.4464,15.6342",
+      "coordinate_source": "OpenStreetMap, Flugplatz Krems-Langenlois",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christophorus 2",
+          "type": "RTH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-ara-rk-02",
+      "country": "AT",
+      "operator": "ARA Flugrettung",
+      "name": "ARA-Flugrettungsstation Reutte",
+      "coordinates": "47.4708,10.6922",
+      "coordinate_source": "OpenStreetMap, Flugplatz Reutte-Höfen",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "RK-2",
+          "type": "RTH",
+          "duty": "Ganzjähriger Tagbetrieb",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-ara-nassfeld",
+      "country": "AT",
+      "operator": "ARA Flugrettung",
+      "name": "ARA-Winterstützpunkt Nassfeld",
+      "coordinates": "46.5631,13.2758",
+      "coordinate_source": "Betreiberstandort/OSM-Prüfung",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "ARA Nassfeld",
+          "type": "RTH",
+          "duty": "Skisaison, Sonnenaufgang bis Sonnenuntergang",
+          "seasonal": true,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "ch-rega-01",
+      "country": "CH",
+      "operator": "Schweizerische Rettungsflugwacht Rega",
+      "name": "Rega-Basis Zürich",
+      "coordinates": "47.3978,8.6482",
+      "coordinate_source": "Betreiberadresse Dübendorf/OSM",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Rega 1",
+          "type": "RTH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "ch-rega-08",
+      "country": "CH",
+      "operator": "Schweizerische Rettungsflugwacht Rega",
+      "name": "Rega-Basis Erstfeld",
+      "coordinates": "46.8212,8.6514",
+      "coordinate_source": "Betreiberadresse/OSM",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Rega 8",
+          "type": "RTH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "ch-air-zermatt",
+      "country": "CH",
+      "operator": "Air Zermatt",
+      "name": "Air Zermatt Basis Zermatt",
+      "coordinates": "46.025,7.7476",
+      "coordinate_source": "Betreiberstandort/OSM",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Air Zermatt",
+          "type": "RTH",
+          "duty": "24 Stunden Bereitschaft",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    }
+  ],
+  "summary": {
+    "stations": 12,
+    "vehicles": 12,
+    "incomplete": 0,
+    "unassigned": 12
+  }
+}

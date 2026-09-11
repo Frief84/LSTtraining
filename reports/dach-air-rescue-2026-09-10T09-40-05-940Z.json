@@ -1,0 +1,2982 @@
+{
+  "generated_at": "2026-09-10T09:40:05.936Z",
+  "source_version": "2026-09-10.2",
+  "mode": "dry-run",
+  "attribution": [
+    "Stationsverzeichnis und Koordinaten: rth.info Stationsinfothek/Stationskarte",
+    "Betreiber und allgemeine Dienstzeitmodelle: jeweilige Betreiberquelle",
+    "Kartenkoordinaten basieren auf OpenStreetMap-Mitwirkenden"
+  ],
+  "items": [
+    {
+      "source_key": "de-adac-christoph-01",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation München – Christoph 1",
+      "coordinates": "48.08377,11.560124",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 1), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 1",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-2",
+      "country": "DE",
+      "operator": "Bundesministerium des Innern/BBK",
+      "name": "Luftrettungsstation Frankfurt (Main) – Christoph 2",
+      "coordinates": "50.145467,8.710242",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 2), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 2",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-3",
+      "country": "DE",
+      "operator": "Bundesministerium des Innern/BBK",
+      "name": "Luftrettungsstation Köln",
+      "coordinates": "50.861746,7.125769",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 3), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 3",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        },
+        {
+          "callsign": "Christoph Rheinland",
+          "type": "ITH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-4",
+      "country": "DE",
+      "operator": "Bundesministerium des Innern/BBK",
+      "name": "Luftrettungsstation Hannover – Christoph 4",
+      "coordinates": "52.384892,9.806637",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 4), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 4",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-5",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Ludwigshafen – Christoph 5",
+      "coordinates": "49.486935,8.389681",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 5), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 5",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-6",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Bremen – Christoph 6",
+      "coordinates": "53.035885,8.817299",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 6), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 6",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-7",
+      "country": "DE",
+      "operator": "Bundesministerium des Innern/BBK",
+      "name": "Luftrettungsstation Kassel – Christoph 7",
+      "coordinates": "51.3117871,9.453461",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 7), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 7",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-8",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Lünen – Christoph 8",
+      "coordinates": "51.6187761,7.515458",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 8), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 8",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-9",
+      "country": "DE",
+      "operator": "Bundesministerium des Innern/BBK",
+      "name": "Luftrettungsstation Duisburg – Christoph 9",
+      "coordinates": "51.380426,6.787227",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 9), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 9",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-10",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Wittlich – Christoph 10",
+      "coordinates": "49.999923,6.893024",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 10), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 10",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-11",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Villingen- Schwenningen – Christoph 11",
+      "coordinates": "48.066146,8.500493",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 11), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 11",
+          "type": "RTH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-12",
+      "country": "DE",
+      "operator": "Bundesministerium des Innern/BBK",
+      "name": "Luftrettungsstation Ahrensbök – Christoph 12",
+      "coordinates": "54.035117,10.56228",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 12), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 12",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-13",
+      "country": "DE",
+      "operator": "Bundesministerium des Innern/BBK",
+      "name": "Luftrettungsstation Bielefeld- Rosenhöhe – Christoph 13",
+      "coordinates": "51.98301,8.528575",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 13), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 13",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-14",
+      "country": "DE",
+      "operator": "Bundesministerium des Innern/BBK",
+      "name": "Luftrettungsstation Traunstein – Christoph 14",
+      "coordinates": "47.874202,12.631315",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 14), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 14",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-15",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Straubing – Christoph 15",
+      "coordinates": "48.885401,12.592343",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 15), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 15",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-16",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Saarbrücken – Christoph 16",
+      "coordinates": "49.220337,7.000059",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 16), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 16",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-17",
+      "country": "DE",
+      "operator": "Bundesministerium des Innern/BBK",
+      "name": "Luftrettungsstation Kempten (Allgäu) – Christoph 17",
+      "coordinates": "47.691455,10.340796",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 17), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 17",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-18",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Ochsenfurt – Christoph 18",
+      "coordinates": "49.659864,10.086928",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 18), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 18",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-19",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Uelzen – Christoph 19",
+      "coordinates": "52.973338,10.532572",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 19), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 19",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-20",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Bayreuth – Christoph 20",
+      "coordinates": "49.984428,11.638569",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 20), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 20",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-21",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Würselen – Christoph Europa 1",
+      "coordinates": "50.823695,6.190127",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 21), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph Europa 1",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-22",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Ulm – Christoph 22",
+      "coordinates": "48.426625,9.94533",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 22), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 22",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-23",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Koblenz – Christoph 23",
+      "coordinates": "50.367738,7.545176",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 23), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 23",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-24",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Rheine – Christoph Europa 2",
+      "coordinates": "52.277211,7.431209",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 24), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph Europa 2",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-25",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Siegen – Christoph 25",
+      "coordinates": "50.8514593,8.0186222",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 25), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 25",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-adac-christoph-26",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Sande – Christoph 26",
+      "coordinates": "53.506011,8.00931",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 26), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 26",
+          "type": "RTH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-27",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Nürnberg",
+      "coordinates": "49.495879,11.072705",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 27), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 27",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        },
+        {
+          "callsign": "Christoph Nürnberg",
+          "type": "ITH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-28",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Fulda – Christoph 28",
+      "coordinates": "50.5461315,9.704554",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 28), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 28",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-29",
+      "country": "DE",
+      "operator": "Bundesministerium des Innern/BBK",
+      "name": "Luftrettungsstation Hamburg – Christoph 29",
+      "coordinates": "53.596615,10.077992",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 29), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 29",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-30",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Wolfenbüttel – Christoph 30",
+      "coordinates": "52.179103,10.53415",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 30), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 30",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-31",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Berlin – Christoph 31",
+      "coordinates": "52.441284,13.32241",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 31), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 31",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-32",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Ingolstadt – Christoph 32",
+      "coordinates": "48.770802,11.372547",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 32), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 32",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-33",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Senftenberg",
+      "coordinates": "51.534061,13.99643",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 33), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 33",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        },
+        {
+          "callsign": "Christoph Brandenburg",
+          "type": "ITH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-34",
+      "country": "DE",
+      "operator": "Bundesministerium des Innern/BBK",
+      "name": "Luftrettungsstation Güstrow – Christoph 34",
+      "coordinates": "53.811753,12.199141",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 34), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 34",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-35",
+      "country": "DE",
+      "operator": "Bundesministerium des Innern/BBK",
+      "name": "Luftrettungsstation Brandenburg (Havel) – Christoph 35",
+      "coordinates": "52.415221,12.544517",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 35), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 35",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-36",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Magdeburg – Christoph 36",
+      "coordinates": "52.158569,11.583661",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 36), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 36",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-37",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Nordhausen – Christoph 37",
+      "coordinates": "51.516758,10.794762",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 37), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 37",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-38",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Dresden – Christoph 38",
+      "coordinates": "51.128226,13.762583",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 38), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 38",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-117",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Perleberg – Christoph 39",
+      "coordinates": "53.07366,11.874873",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 117), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 39",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-143",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Augsburg – Christoph 40",
+      "coordinates": "48.384388,10.837947",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 143), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 40",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-39",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Leonberg – Christoph 41",
+      "coordinates": "48.803359,8.999073",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 39), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 41",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-41",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Karlsruhe – Christoph 43",
+      "coordinates": "49.0003673,8.3783193",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 41), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 43",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-42",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Göttingen – Christoph 44",
+      "coordinates": "51.551676,9.94334",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 42), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 44",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-43",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Friedrichshafen – Christoph 45",
+      "coordinates": "47.673183,9.428424",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 43), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 45",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-44",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Zwickau – Christoph 46",
+      "coordinates": "50.720164,12.430689",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 44), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 46",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-45",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Greifswald – Christoph 47",
+      "coordinates": "54.089031,13.408153",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 45), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 47",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-46",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Neustrelitz – Christoph 48",
+      "coordinates": "53.382336,13.052374",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 46), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 48",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-47",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Bad Saarow – Christoph 49",
+      "coordinates": "52.284695,14.060174",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 47), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 49",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-52",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Suhl – Christoph 60",
+      "coordinates": "50.603051,10.710784",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 52), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 60",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-53",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Schkeuditz- Dölzig",
+      "coordinates": "51.351569,12.192337",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 53), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 61",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        },
+        {
+          "callsign": "Christoph 63",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-161",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Angermünde – Christoph 64",
+      "coordinates": "52.999939,14.002569",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 161), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 64",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-159",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Dinkelsbühl – Christoph 65",
+      "coordinates": "49.065355,10.402368",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 159), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 65",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-55",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Jena – Christoph 70",
+      "coordinates": "50.915054,11.716231",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 55), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 70",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-121",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Weiden/Opf. – Christoph 80",
+      "coordinates": "49.678844,12.118128",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 121), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 80",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-205",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Berlin – Christoph 100",
+      "coordinates": "52.6296562,13.511953",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 205), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 100",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-40",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Hörsten bei Rendsburg – Christoph 42",
+      "coordinates": "54.218386,9.595562",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 40), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 42",
+          "type": "ITH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-48",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Stuttgart/ Ludwigsburg – Christoph 51",
+      "coordinates": "48.865444,9.220425",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 48), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 51",
+          "type": "ITH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-49",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Niebüll – Christoph Europa 5",
+      "coordinates": "54.794042,8.844712",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 49), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph Europa 5",
+          "type": "ITH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-50",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Mannheim – Christoph 53",
+      "coordinates": "49.476111,8.521763",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 50), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 53",
+          "type": "ITH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-51",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Freiburg (Breisgau) – Christoph 54",
+      "coordinates": "48.020573,7.836293",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 51), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 54",
+          "type": "ITH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-54",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Bautzen – Christoph 62",
+      "coordinates": "51.191851,14.52283",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 54), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 62",
+          "type": "ITH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-190",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Rockenhausen-Dörnbach – Christoph 66",
+      "coordinates": "49.607516,7.7882797",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 190), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 66",
+          "type": "ITH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-209",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Hohenlockstedt – Christoph 67",
+      "coordinates": "53.9947742,9.5743226",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 209), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 67",
+          "type": "ITH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-56",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Mainz – Christoph 77",
+      "coordinates": "49.9941718,8.2546671",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 56), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph 77",
+          "type": "ITH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-62",
+      "country": "DE",
+      "operator": "Johanniter Luftrettung",
+      "name": "Luftrettungsstation Gießen – Christoph Gießen",
+      "coordinates": "50.572555,8.652497",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 62), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph Gießen",
+          "type": "ITH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-60",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Halle",
+      "coordinates": "51.550985,12.049764",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 60), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph Halle",
+          "type": "ITH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        },
+        {
+          "callsign": "Christoph Sachsen-Anhalt",
+          "type": "ITH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-65",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Murnau am Staffelsee – Christoph Murnau",
+      "coordinates": "47.672367,11.216174",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 65), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph Murnau",
+          "type": "ITH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-212",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Lahr – Christoph Ortenau",
+      "coordinates": "48.3572315,7.8245407",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 212), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph Ortenau",
+          "type": "ITH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-68",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Regensburg – Christoph Regensburg",
+      "coordinates": "48.987126,12.092937",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 68), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph Regensburg",
+          "type": "ITH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-171",
+      "country": "DE",
+      "operator": "Johanniter Luftrettung",
+      "name": "Luftrettungsstation Adenau – Air Rescue Nürburgring",
+      "coordinates": "50.333641,6.943574",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 171), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Air Rescue Nürburgring",
+          "type": "ITH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-58",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Berlin – Christoph Berlin",
+      "coordinates": "52.519139,13.567817",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 58), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph Berlin",
+          "type": "ITH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-73",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Dortmund – Christoph Dortmund",
+      "coordinates": "51.510639,7.603005",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 73), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph Dortmund",
+          "type": "ITH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-61",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Hamburg – Christoph Hansa",
+      "coordinates": "53.50806,10.173402",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 61), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph Hansa",
+          "type": "ITH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-122",
+      "country": "DE",
+      "operator": "Johanniter Luftrettung",
+      "name": "Luftrettungsstation Reichelsheim (Wetterau) – Christoph Mittelhessen",
+      "coordinates": "50.335696,8.877151",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 122), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph Mittelhessen",
+          "type": "ITH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-64",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation München- Großhadern – Christoph München",
+      "coordinates": "48.110877,11.465605",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 64), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph München",
+          "type": "ITH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-66",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Hannover – Christoph Niedersachsen",
+      "coordinates": "52.462893,9.691488",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 66), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph Niedersachsen",
+          "type": "ITH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-57",
+      "country": "DE",
+      "operator": "Johanniter Luftrettung",
+      "name": "Luftrettungsstation Rostock – Christoph Rostock",
+      "coordinates": "54.070652,12.10899",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 57), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph Rostock",
+          "type": "ITH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-drf-bad-berka",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Bad Berka bei Erfurt – Christoph Thüringen",
+      "coordinates": "50.889705,11.264226",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 71), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph Thüringen",
+          "type": "ITH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-75",
+      "country": "DE",
+      "operator": "DRF Luftrettung",
+      "name": "Luftrettungsstation Bremen – Christoph Weser",
+      "coordinates": "53.049078,8.787504",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 75), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph Weser",
+          "type": "ITH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-72",
+      "country": "DE",
+      "operator": "ADAC Luftrettung",
+      "name": "Luftrettungsstation Greven – Christoph Westfalen",
+      "coordinates": "52.123454,7.690001",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 72), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christoph Westfalen",
+          "type": "ITH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-77",
+      "country": "DE",
+      "operator": "Bundeswehr",
+      "name": "Luftrettungsstation Helgoland – SAR 10",
+      "coordinates": "54.175419,7.88991",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 77), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "SAR 10",
+          "type": "SAR",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-rthinfo-78",
+      "country": "DE",
+      "operator": "Bundeswehr",
+      "name": "Luftrettungsstation Warnemünde – SAR 24",
+      "coordinates": "54.1814,12.13215",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 78), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "SAR 24",
+          "type": "SAR",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-bundeswehr-sar-41",
+      "country": "DE",
+      "operator": "Bundeswehr",
+      "name": "Luftrettungsstation Nörvenich – SAR 41",
+      "coordinates": "50.832017,6.662239",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 80), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "SAR 41",
+          "type": "SAR",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-bundeswehr-sar-63",
+      "country": "DE",
+      "operator": "Bundeswehr",
+      "name": "Luftrettungsstation Niederstetten – SAR 63",
+      "coordinates": "49.390244,9.958083",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 195), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "SAR 63",
+          "type": "SAR",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "de-bundeswehr-sar-87",
+      "country": "DE",
+      "operator": "Bundeswehr",
+      "name": "Luftrettungsstation Holzdorf – SAR 87",
+      "coordinates": "51.768504,13.165348",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 86), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "SAR 87",
+          "type": "SAR",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-rthinfo-107",
+      "country": "AT",
+      "operator": "ÖAMTC-Flugrettung",
+      "name": "Luftrettungsstation Innsbruck – Christophorus 1",
+      "coordinates": "47.255047,11.345545",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 107), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christophorus 1",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-oeamtc-christophorus-02",
+      "country": "AT",
+      "operator": "ÖAMTC-Flugrettung",
+      "name": "Luftrettungsstation Krems – Christophorus 2",
+      "coordinates": "48.446009,15.630378",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 136), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christophorus 2",
+          "type": "RTH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-rthinfo-134",
+      "country": "AT",
+      "operator": "ÖAMTC-Flugrettung",
+      "name": "Luftrettungsstation Wiener Neustadt",
+      "coordinates": "47.845154,16.251575",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 134), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christophorus 3",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        },
+        {
+          "callsign": "Christophorus ITH",
+          "type": "ITH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-rthinfo-108",
+      "country": "AT",
+      "operator": "ÖAMTC-Flugrettung",
+      "name": "Luftrettungsstation Kitzbühel – Christophorus 4",
+      "coordinates": "47.488543,12.365111",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 108), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christophorus 4",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-rthinfo-109",
+      "country": "AT",
+      "operator": "ÖAMTC-Flugrettung",
+      "name": "Luftrettungsstation Zams – Christophorus 5",
+      "coordinates": "47.17652,10.61257",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 109), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christophorus 5",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-rthinfo-110",
+      "country": "AT",
+      "operator": "ÖAMTC-Flugrettung",
+      "name": "Luftrettungsstation Salzburg – Christophorus 6",
+      "coordinates": "47.796073,12.997488",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 110), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christophorus 6",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-rthinfo-137",
+      "country": "AT",
+      "operator": "ÖAMTC-Flugrettung",
+      "name": "Luftrettungsstation Lienz/Nikolsdorf – Christophorus 7",
+      "coordinates": "46.799745,12.876832",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 137), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christophorus 7",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-rthinfo-111",
+      "country": "AT",
+      "operator": "ÖAMTC-Flugrettung",
+      "name": "Luftrettungsstation Nenzing – Christophorus 8",
+      "coordinates": "47.208739,9.659828",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 111), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christophorus 8",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-rthinfo-135",
+      "country": "AT",
+      "operator": "ÖAMTC-Flugrettung",
+      "name": "Luftrettungsstation Wien – Christophorus 9",
+      "coordinates": "48.189228,16.412171",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 135), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christophorus 9",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-rthinfo-138",
+      "country": "AT",
+      "operator": "ÖAMTC-Flugrettung",
+      "name": "Luftrettungsstation Linz – Christophorus 10",
+      "coordinates": "48.238933,14.186627",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 138), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christophorus 10",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-rthinfo-139",
+      "country": "AT",
+      "operator": "ÖAMTC-Flugrettung",
+      "name": "Luftrettungsstation Klagenfurt – Christophorus 11",
+      "coordinates": "46.649528,14.327083",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 139), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christophorus 11",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-rthinfo-131",
+      "country": "AT",
+      "operator": "ÖAMTC-Flugrettung",
+      "name": "Luftrettungsstation Graz – Christophorus 12",
+      "coordinates": "46.984926,15.446458",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 131), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christophorus 12",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-rthinfo-140",
+      "country": "AT",
+      "operator": "ÖAMTC-Flugrettung",
+      "name": "Luftrettungsstation Niederöblarn – Christophorus 14",
+      "coordinates": "47.479646,14.009863",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 140), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christophorus 14",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-rthinfo-124",
+      "country": "AT",
+      "operator": "ÖAMTC-Flugrettung",
+      "name": "Luftrettungsstation Ybbsitz/Ötscherland – Christophorus 15",
+      "coordinates": "47.96911,14.939298",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 124), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christophorus 15",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-rthinfo-133",
+      "country": "AT",
+      "operator": "ÖAMTC-Flugrettung",
+      "name": "Luftrettungsstation Oberwart – Christophorus 16",
+      "coordinates": "47.305259,16.183504",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 133), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christophorus 16",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-rthinfo-194",
+      "country": "AT",
+      "operator": "ÖAMTC-Flugrettung",
+      "name": "Luftrettungsstation St. Michael (Obersteiermark) – Christophorus 17",
+      "coordinates": "47.33619,15.002205",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 194), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christophorus 17",
+          "type": "RTH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-rthinfo-210",
+      "country": "AT",
+      "operator": "ÖAMTC-Flugrettung",
+      "name": "Luftrettungsstation Frauenkirchen – Christophorus 18",
+      "coordinates": "47.857129,16.9394",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 210), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christophorus 18",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-rthinfo-115",
+      "country": "AT",
+      "operator": "ÖAMTC-Flugrettung",
+      "name": "Luftrettungsstation Suben – Christophorus Europa 3",
+      "coordinates": "48.400873,13.449759",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 115), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Christophorus Europa 3",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-rthinfo-113",
+      "country": "AT",
+      "operator": "ARA Flugrettung",
+      "name": "Luftrettungsstation Fresach – RK 1",
+      "coordinates": "46.741044,13.664866",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 113), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "RK 1",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-ara-rk-02",
+      "country": "AT",
+      "operator": "ARA Flugrettung",
+      "name": "Luftrettungsstation Reutte – RK 2",
+      "coordinates": "47.473152,10.711556",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 112), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "RK 2",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-rthinfo-116",
+      "country": "AT",
+      "operator": "SHS",
+      "name": "Luftrettungsstation Kufstein – Heli 3",
+      "coordinates": "47.565825,12.135399",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 116), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Heli 3",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-rthinfo-175",
+      "country": "AT",
+      "operator": "SHS",
+      "name": "Luftrettungsstation Kaltenbach – Heli 4",
+      "coordinates": "47.286167,11.877833",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 175), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Heli 4",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-rthinfo-204",
+      "country": "AT",
+      "operator": "ÖAMTC-Flugrettung",
+      "name": "Luftrettungsstation Zell am See – Alpin Heli 6",
+      "coordinates": "47.292178,12.785926",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 204), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Alpin Heli 6",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-rthinfo-176",
+      "country": "AT",
+      "operator": "HELI AUSTRIA",
+      "name": "Luftrettungsstation St. Johann im Pongau – Martin 1",
+      "coordinates": "47.393979,13.222028",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 176), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Martin 1",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-rthinfo-177",
+      "country": "AT",
+      "operator": "HELI AUSTRIA",
+      "name": "Luftrettungsstation Imst-Karres – Martin 2",
+      "coordinates": "47.218859,10.769081",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 177), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Martin 2",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-rthinfo-185",
+      "country": "AT",
+      "operator": "HELI AUSTRIA",
+      "name": "Luftrettungsstation Wels – Martin 3",
+      "coordinates": "47.898611,13.939444",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 185), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Martin 3",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "at-rthinfo-198",
+      "country": "AT",
+      "operator": "HELI AUSTRIA",
+      "name": "Luftrettungsstation Bad Vöslau/Niederösterreich – Martin 5",
+      "coordinates": "47.9594013,16.263964",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 198), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Martin 5",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "ch-rega-01",
+      "country": "CH",
+      "operator": "Rega",
+      "name": "Luftrettungsstation Zürich – Rega 1",
+      "coordinates": "47.396434,8.637667",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 104), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Rega 1",
+          "type": "RTH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "ch-rthinfo-105",
+      "country": "CH",
+      "operator": "Rega",
+      "name": "Luftrettungsstation Basel – Rega 2",
+      "coordinates": "47.605813,7.522719",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 105), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Rega 2",
+          "type": "RTH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "ch-rthinfo-146",
+      "country": "CH",
+      "operator": "Rega",
+      "name": "Luftrettungsstation Bern – Rega 3",
+      "coordinates": "46.909652,7.504643",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 146), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Rega 3",
+          "type": "RTH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "ch-rthinfo-147",
+      "country": "CH",
+      "operator": "Rega",
+      "name": "Luftrettungsstation Lausanne – Rega 4",
+      "coordinates": "46.547224,6.618205",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 147), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Rega 4",
+          "type": "RTH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "ch-rthinfo-148",
+      "country": "CH",
+      "operator": "Rega",
+      "name": "Luftrettungsstation Untervaz – Rega 5",
+      "coordinates": "46.912867,9.550879",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 148), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Rega 5",
+          "type": "RTH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "ch-rthinfo-149",
+      "country": "CH",
+      "operator": "Rega",
+      "name": "Luftrettungsstation Locarno – Rega 6",
+      "coordinates": "46.162943,8.881767",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 149), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Rega 6",
+          "type": "RTH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "ch-rthinfo-106",
+      "country": "CH",
+      "operator": "Rega",
+      "name": "Luftrettungsstation St. Gallen – Rega 7",
+      "coordinates": "47.405509,9.290324",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 106), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Rega 7",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "ch-rega-08",
+      "country": "CH",
+      "operator": "Rega",
+      "name": "Luftrettungsstation Erstfeld – Rega 8",
+      "coordinates": "46.834213,8.638252",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 150), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Rega 8",
+          "type": "RTH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "ch-rthinfo-151",
+      "country": "CH",
+      "operator": "Rega",
+      "name": "Luftrettungsstation Samedan – Rega 9",
+      "coordinates": "46.530567,9.878954",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 151), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Rega 9",
+          "type": "RTH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "ch-rthinfo-152",
+      "country": "CH",
+      "operator": "Rega",
+      "name": "Luftrettungsstation Wilderswil – Rega 10",
+      "coordinates": "46.670175,7.876188",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 152), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Rega 10",
+          "type": "RTH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "ch-rthinfo-153",
+      "country": "CH",
+      "operator": "Rega",
+      "name": "Luftrettungsstation Mollis – Rega 12",
+      "coordinates": "47.07803,9.066596",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 153), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Rega 12",
+          "type": "RTH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "ch-rthinfo-154",
+      "country": "CH",
+      "operator": "Rega",
+      "name": "Luftrettungsstation Zweisimmen – Rega 14",
+      "coordinates": "46.555066,7.378917",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 154), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Rega 14",
+          "type": "RTH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "ch-rthinfo-155",
+      "country": "CH",
+      "operator": "Rega",
+      "name": "Luftrettungsstation Meyrin – Rega 15",
+      "coordinates": "46.237075,6.101746",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 155), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Rega 15",
+          "type": "RTH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "ch-rthinfo-184",
+      "country": "CH",
+      "operator": "Rega",
+      "name": "Luftrettungsstation Sion/Sitten",
+      "coordinates": "46.2221207,7.3359939",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 207), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Rega 18",
+          "type": "RTH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        },
+        {
+          "callsign": "Air Glaciers Sion",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "ch-rthinfo-158",
+      "country": "CH",
+      "operator": "AAA",
+      "name": "Luftrettungsstation Lupfig – Lions 1",
+      "coordinates": "47.444314,8.233641",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 158), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Lions 1",
+          "type": "RTH",
+          "duty": "24 Stunden",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "ch-air-zermatt",
+      "country": "CH",
+      "operator": "Air Zermatt",
+      "name": "Luftrettungsstation Zermatt – Air Zermatt",
+      "coordinates": "46.029283,7.753272",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 182), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Air Zermatt",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "ch-rthinfo-201",
+      "country": "CH",
+      "operator": "Air Zermatt",
+      "name": "Luftrettungsstation Gampel – Lima Gampel",
+      "coordinates": "46.3100298,7.7248156",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 201), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Lima Gampel",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    },
+    {
+      "source_key": "ch-rthinfo-183",
+      "country": "CH",
+      "operator": "Air-Glaciers",
+      "name": "Luftrettungsstation Lauterbrunnen – Air Glaciers Lauterbrunnen",
+      "coordinates": "46.5856886,7.911334",
+      "coordinate_source": "rth.info Stationskarte (Stations-ID 183), auf OSM-Basis",
+      "leitstellen": [],
+      "vehicles": [
+        {
+          "callsign": "Air Glaciers Lauterbrunnen",
+          "type": "RTH",
+          "duty": "Tagbetrieb; Sonnenaufgang bis Sonnenuntergang gemäß Betreiberangabe",
+          "seasonal": false,
+          "status": "würde_anlegen"
+        }
+      ],
+      "status": "würde_anlegen",
+      "errors": [],
+      "assignment_warning": "Keine Leitstelle enthält den Standort."
+    }
+  ],
+  "manual_review": [
+    {
+      "id": 202,
+      "category": "EUR",
+      "country": "AT",
+      "callsign": "ARA 3",
+      "city": "Nassfeld / Hermagor",
+      "site": "Heliport Sonnleiten im Skigebiet (LOMN)",
+      "operator": "ARA",
+      "latitude": 46.568889,
+      "longitude": 13.273889,
+      "seasonal": true,
+      "aroundTheClock": false,
+      "reason": "Saisonstandort ohne vollständig belegtes exaktes Datumsfenster; nicht automatisch importiert."
+    },
+    {
+      "id": 174,
+      "category": "EUR",
+      "country": "AT",
+      "callsign": "Heli 1",
+      "city": "Waidring / Tirol",
+      "site": "Heliport, Unterwasser 59, AT-6384 Waidring (LOIW)",
+      "operator": "SHS",
+      "latitude": 47.585167,
+      "longitude": 12.593,
+      "seasonal": true,
+      "aroundTheClock": false,
+      "reason": "Saisonstandort ohne vollständig belegtes exaktes Datumsfenster; nicht automatisch importiert."
+    },
+    {
+      "id": 211,
+      "category": "EUR",
+      "country": "AT",
+      "callsign": "Alpin 5",
+      "city": "Tux im Tuxertal (Tirol)",
+      "site": "Heliport im Ortsteil Juns (LOJT)",
+      "operator": "OAMTC",
+      "latitude": 47.1336462,
+      "longitude": 11.7038684,
+      "seasonal": true,
+      "aroundTheClock": false,
+      "reason": "Saisonstandort ohne vollständig belegtes exaktes Datumsfenster; nicht automatisch importiert."
+    },
+    {
+      "id": 197,
+      "category": "EUR",
+      "country": "AT",
+      "callsign": "Martin 4",
+      "city": "Matrei/Osttirol",
+      "site": "Heliport Matrei (LOMM)",
+      "operator": "HELI AUSTRIA",
+      "latitude": 46.9920992,
+      "longitude": 12.5419973,
+      "seasonal": true,
+      "aroundTheClock": false,
+      "reason": "Saisonstandort ohne vollständig belegtes exaktes Datumsfenster; nicht automatisch importiert."
+    },
+    {
+      "id": 178,
+      "category": "EUR",
+      "country": "AT",
+      "callsign": "Martin 6",
+      "city": "Saalbach-Hinterglemm",
+      "site": "Gerstreitweg 44, 5754 Saalbach (LOSH)",
+      "operator": "HELI AUSTRIA",
+      "latitude": 47.365936,
+      "longitude": 12.597376,
+      "seasonal": true,
+      "aroundTheClock": false,
+      "reason": "Saisonstandort ohne vollständig belegtes exaktes Datumsfenster; nicht automatisch importiert."
+    },
+    {
+      "id": 199,
+      "category": "EUR",
+      "country": "AT",
+      "callsign": "Martin 7",
+      "city": "Mayrhofen/Tirol",
+      "site": "Heliport Mayrhofen/Tirol (LOJM)",
+      "operator": "HELI AUSTRIA",
+      "latitude": 47.1782362,
+      "longitude": 11.8681161,
+      "seasonal": true,
+      "aroundTheClock": false,
+      "reason": "Saisonstandort ohne vollständig belegtes exaktes Datumsfenster; nicht automatisch importiert."
+    },
+    {
+      "id": 179,
+      "category": "EUR",
+      "country": "AT",
+      "callsign": "Martin 8",
+      "city": "Hochgurgl",
+      "site": "Heliport, Ötztal Straße, Hochgurgl (LOJH)",
+      "operator": "HELI AUSTRIA",
+      "latitude": 46.911333,
+      "longitude": 11.053601,
+      "seasonal": true,
+      "aroundTheClock": true,
+      "reason": "Saisonstandort ohne vollständig belegtes exaktes Datumsfenster; nicht automatisch importiert."
+    },
+    {
+      "id": 208,
+      "category": "EUR",
+      "country": "AT",
+      "callsign": "Martin 10",
+      "city": "St. Johann im Pongau",
+      "site": "Heliport, 5600 St. Johann i. P. (LOSJ)",
+      "operator": "HELI AUSTRIA",
+      "latitude": 47.393979,
+      "longitude": 13.222028,
+      "seasonal": true,
+      "aroundTheClock": false,
+      "reason": "Saisonstandort ohne vollständig belegtes exaktes Datumsfenster; nicht automatisch importiert."
+    },
+    {
+      "id": 181,
+      "category": "EUR",
+      "country": "AT",
+      "callsign": "Robin 1",
+      "city": "Schruns",
+      "site": "Montafonerstraße 29, A-6780 Schruns (LOIY)",
+      "operator": "SCHENK AIR",
+      "latitude": 47.073688,
+      "longitude": 9.913296,
+      "seasonal": true,
+      "aroundTheClock": false,
+      "reason": "Saisonstandort ohne vollständig belegtes exaktes Datumsfenster; nicht automatisch importiert."
+    },
+    {
+      "id": 180,
+      "category": "EUR",
+      "country": "AT",
+      "callsign": "Robin 3",
+      "city": "Ischgl Idalpe",
+      "site": "Skigebiet Ischgl (LOIP)",
+      "operator": "SCHENK AIR",
+      "latitude": 46.980457,
+      "longitude": 10.31591,
+      "seasonal": true,
+      "aroundTheClock": false,
+      "reason": "Saisonstandort ohne vollständig belegtes exaktes Datumsfenster; nicht automatisch importiert."
+    },
+    {
+      "id": 186,
+      "category": "EUR",
+      "country": "AT",
+      "callsign": "Gallus 1",
+      "city": "Zürs in Vorarlberg",
+      "site": "Heliport Zürs (LOJW)",
+      "operator": "WUCHER",
+      "latitude": 47.181288,
+      "longitude": 10.160906,
+      "seasonal": true,
+      "aroundTheClock": false,
+      "reason": "Saisonstandort ohne vollständig belegtes exaktes Datumsfenster; nicht automatisch importiert."
+    },
+    {
+      "id": 206,
+      "category": "EUR",
+      "country": "AT",
+      "callsign": "Gallus 2",
+      "city": "Ludesch in Vorarlberg",
+      "site": "Heliport Ludesch (LOIG)",
+      "operator": "WUCHER",
+      "latitude": 47.2003591,
+      "longitude": 9.7802245,
+      "seasonal": true,
+      "aroundTheClock": false,
+      "reason": "Saisonstandort ohne vollständig belegtes exaktes Datumsfenster; nicht automatisch importiert."
+    },
+    {
+      "id": 187,
+      "category": "EUR",
+      "country": "AT",
+      "callsign": "Gallus 3",
+      "city": "St. Anton am Arlberg",
+      "site": "Heliport, Verwallweg 15, 6580 St. Anton (LOIC)",
+      "operator": "WUCHER",
+      "latitude": 47.119299,
+      "longitude": 10.241476,
+      "seasonal": true,
+      "aroundTheClock": false,
+      "reason": "Saisonstandort ohne vollständig belegtes exaktes Datumsfenster; nicht automatisch importiert."
+    }
+  ],
+  "summary": {
+    "stations": 130,
+    "vehicles": 137,
+    "incomplete": 0,
+    "manual_review": 13,
+    "unassigned": 130
+  }
+}

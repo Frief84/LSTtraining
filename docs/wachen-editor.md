@@ -29,7 +29,7 @@ Die Wachenliste unterstützt:
 | Feld | Verwendung |
 |---|---|
 | Name | sichtbarer Standortname |
-| Typ | `FW`, `FFW`, `SEG`, `RD` oder `FRRD` |
+| Typ | `FW`, `FFW`, `SEG`, `RD`, `FRRD` oder `AIR` für Luftrettungswachen |
 | Land/Bundesland | regionale Filterung |
 | Leitstellen | direkte Hauptleitstellen-Zuordnung |
 | Nebenleitstellen | indirekte Bereichszuordnung |
