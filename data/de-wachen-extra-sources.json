@@ -1,0 +1,1375 @@
+{
+  "version": "2026-10-06.1",
+  "provenance": {
+    "file": "deutschland_leitstellen_quellen.json",
+    "generated_on": "2026-10-02",
+    "imported_on": "2026-10-06",
+    "note": "Quellenvorschläge, keine vollständige Aktualitätsprüfung. Eingebettete Importregeln und Ausschlusslisten ändern die vom Benutzer freigegebene BOS-/LstSim-Strategie nicht."
+  },
+  "sources": [
+    {
+      "id": "de-extra-039309bb29cb",
+      "name": "GovData Deutschland",
+      "url": "https://www.govdata.de/",
+      "state": null,
+      "regions": [],
+      "station_types": [],
+      "role": "discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "national_discovery_sources",
+      "data_types": [
+        "Datensatzsuche",
+        "Open Data",
+        "WFS",
+        "GeoJSON",
+        "CSV",
+        "Metadaten"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-bded88f069d4",
+      "name": "Deutscher Feuerwehrverband - Statistik",
+      "url": "https://www.feuerwehrverband.de/presse/statistik/",
+      "state": null,
+      "regions": [],
+      "station_types": [
+        "FW",
+        "FFW"
+      ],
+      "role": "reference",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "national_discovery_sources",
+      "data_types": [
+        "Plausibilitätskontrolle",
+        "bundesweite Feuerwehr-Gesamtzahlen"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-3bfe36caf7cc",
+      "name": "Björn-Steiger-Stiftung - Rettungslandschaft / Leitstellenanzahl",
+      "url": "https://rettungslandschaft.steiger-stiftung.de/leitstellenanzahl/",
+      "state": null,
+      "regions": [],
+      "station_types": [
+        "RD",
+        "FRRD",
+        "SEG",
+        "AIR"
+      ],
+      "role": "reference",
+      "authority": "secondary",
+      "declared_quality": "B",
+      "source_group": "national_discovery_sources",
+      "data_types": [
+        "Leitstellen-Masterliste plausibilisieren",
+        "bundesweite Struktur"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-b86bb14273f4",
+      "name": "service.bund.de",
+      "url": "https://www.service.bund.de/",
+      "state": null,
+      "regions": [],
+      "station_types": [],
+      "role": "procurement",
+      "authority": "secondary",
+      "declared_quality": "C",
+      "source_group": "national_discovery_sources",
+      "data_types": [
+        "öffentliche Ausschreibungen",
+        "Beschaffungen",
+        "Fahrzeugänderungen"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-ffe6ceac5a35",
+      "name": "TED - Tenders Electronic Daily",
+      "url": "https://ted.europa.eu/",
+      "state": null,
+      "regions": [],
+      "station_types": [],
+      "role": "procurement",
+      "authority": "secondary",
+      "declared_quality": "C",
+      "source_group": "national_discovery_sources",
+      "data_types": [
+        "EU-weite öffentliche Vergaben",
+        "RTW",
+        "HLF",
+        "DLK",
+        "ELW",
+        "Fahrzeugbeschaffung"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-14b8d344c69a",
+      "name": "daten.bw",
+      "url": "https://www.daten-bw.de/",
+      "state": "Baden-Württemberg",
+      "regions": [],
+      "station_types": [],
+      "role": "discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "state_discovery_sources",
+      "data_types": [
+        "Open-Data-Suche",
+        "kommunale und Landesdaten"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-9949a601d8f2",
+      "name": "Innenministerium Baden-Württemberg - Rettungsdienst",
+      "url": "https://im.baden-wuerttemberg.de/de/sicherheit/rettungsdienst",
+      "state": "Baden-Württemberg",
+      "regions": [],
+      "station_types": [
+        "RD",
+        "FRRD",
+        "SEG",
+        "AIR"
+      ],
+      "role": "discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "state_discovery_sources",
+      "data_types": [
+        "Rettungsdienstplanung",
+        "Landesregelungen",
+        "Rettungsdienstplan"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-600dc08dd139",
+      "name": "Notruf 112 Bayern - Integrierte Leitstellen",
+      "url": "https://www.notruf112.bayern.de/ils/index.php",
+      "state": "Bayern",
+      "regions": [],
+      "station_types": [],
+      "role": "discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "state_discovery_sources",
+      "data_types": [
+        "Leitstellen",
+        "ZRF",
+        "Betreiber",
+        "Leitstellenstruktur"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-8b2ee26cf6b0",
+      "name": "Geoportal Bayern",
+      "url": "https://geoportal.bayern.de/geoportalbayern/",
+      "state": "Bayern",
+      "regions": [],
+      "station_types": [],
+      "role": "discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "state_discovery_sources",
+      "data_types": [
+        "Geodatensuche",
+        "WMS",
+        "WFS",
+        "Download-Dienste"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-05bdc19c8039",
+      "name": "Berlin Open Data",
+      "url": "https://daten.berlin.de/",
+      "state": "Berlin",
+      "regions": [],
+      "station_types": [],
+      "role": "discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "state_discovery_sources",
+      "data_types": [
+        "Feuerwehrstandorte",
+        "Rettungswachen",
+        "WFS",
+        "Open Data"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-da245d4e2568",
+      "name": "Geoportal Brandenburg",
+      "url": "https://geoportal.brandenburg.de/",
+      "state": "Brandenburg",
+      "regions": [],
+      "station_types": [],
+      "role": "discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "state_discovery_sources",
+      "data_types": [
+        "Regionalleitstellen",
+        "Feuerwehrstandorte",
+        "Rettungswachen",
+        "NEF-Standorte",
+        "WFS",
+        "OAF",
+        "WMS"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-d79a583b77cf",
+      "name": "GeoPortal Bremen",
+      "url": "https://geoportal.bremen.de/geoportal/",
+      "state": "Bremen",
+      "regions": [],
+      "station_types": [],
+      "role": "discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "state_discovery_sources",
+      "data_types": [
+        "Geodaten",
+        "Fachdaten",
+        "Standortsuche"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-83c8dfe80c02",
+      "name": "Transparenzportal Hamburg",
+      "url": "https://transparenz.hamburg.de/",
+      "state": "Hamburg",
+      "regions": [],
+      "station_types": [],
+      "role": "discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "state_discovery_sources",
+      "data_types": [
+        "Feuerwehrwachen",
+        "Rettungswachen",
+        "WFS",
+        "OGC API Features"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-05b530420b5d",
+      "name": "Geoportal Hessen",
+      "url": "https://www.geoportal.hessen.de/",
+      "state": "Hessen",
+      "regions": [],
+      "station_types": [],
+      "role": "discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "state_discovery_sources",
+      "data_types": [
+        "Rettungswachen",
+        "Adressen",
+        "Leitstellen",
+        "Bereichspläne",
+        "WFS/OAF"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-e0c0b2d7b885",
+      "name": "GeoPortal.MV",
+      "url": "https://www.geoportal-mv.de/portal/",
+      "state": "Mecklenburg-Vorpommern",
+      "regions": [],
+      "station_types": [],
+      "role": "discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "state_discovery_sources",
+      "data_types": [
+        "Geodaten",
+        "Fachdaten",
+        "Metadatensuche"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-f079cfe86de6",
+      "name": "Geodatenportal Niedersachsen",
+      "url": "https://www.geodaten.niedersachsen.de/",
+      "state": "Niedersachsen",
+      "regions": [],
+      "station_types": [],
+      "role": "discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "state_discovery_sources",
+      "data_types": [
+        "Geodatensuche",
+        "Metadaten",
+        "Fachdaten"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-71e20de12cd6",
+      "name": "Open.NRW",
+      "url": "https://open.nrw/",
+      "state": "Nordrhein-Westfalen",
+      "regions": [],
+      "station_types": [],
+      "role": "discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "state_discovery_sources",
+      "data_types": [
+        "Open Data",
+        "kommunale Datensätze",
+        "Geodaten"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-d2ed9a9e087e",
+      "name": "GeoPortal.rlp",
+      "url": "https://www.geoportal.rlp.de/",
+      "state": "Rheinland-Pfalz",
+      "regions": [],
+      "station_types": [],
+      "role": "discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "state_discovery_sources",
+      "data_types": [
+        "Geodaten",
+        "WFS",
+        "Metadaten",
+        "Standortdaten"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-7bdd13a12871",
+      "name": "Geoportal Saarland",
+      "url": "https://geoportal.saarland.de/",
+      "state": "Saarland",
+      "regions": [],
+      "station_types": [],
+      "role": "discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "state_discovery_sources",
+      "data_types": [
+        "Geodaten",
+        "Fachdaten",
+        "Metadatensuche"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-aa4a3a4833f0",
+      "name": "Geoportal Sachsenatlas",
+      "url": "https://geoportal.sachsen.de/",
+      "state": "Sachsen",
+      "regions": [],
+      "station_types": [],
+      "role": "discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "state_discovery_sources",
+      "data_types": [
+        "Rettungswachen",
+        "Rettungsdienst",
+        "Geodaten",
+        "Metadatensuche"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-7817a20a7f69",
+      "name": "Geodatenportal Sachsen-Anhalt",
+      "url": "https://www.geodatenportal.sachsen-anhalt.de/gfds/",
+      "state": "Sachsen-Anhalt",
+      "regions": [],
+      "station_types": [],
+      "role": "discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "state_discovery_sources",
+      "data_types": [
+        "Geodatensuche",
+        "Open Data",
+        "Webdienste"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-7511d2034667",
+      "name": "DigitalerAtlasNord / GDI-SH",
+      "url": "https://danord.gdi-sh.de/viewer/resources/apps/Anonym/index.html?lang=de",
+      "state": "Schleswig-Holstein",
+      "regions": [],
+      "station_types": [],
+      "role": "discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "state_discovery_sources",
+      "data_types": [
+        "Geofachdaten",
+        "INSPIRE",
+        "Metadatensuche"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-34db0d4150d2",
+      "name": "Geoportal Thüringen",
+      "url": "https://www.geoportal-th.de/de-de/",
+      "state": "Thüringen",
+      "regions": [],
+      "station_types": [],
+      "role": "discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "state_discovery_sources",
+      "data_types": [
+        "GeoMIS.Th",
+        "Geodatensuche",
+        "Open Data",
+        "Metadaten"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-8f2315a05774",
+      "name": "Feuerwehr Standorte und Einsatzbereiche - WFS",
+      "url": "https://daten.berlin.de/datensaetze/feuerwehr-standorte-und-einsatzbereiche-wfs-31d45ce7",
+      "state": "Berlin",
+      "regions": [],
+      "station_types": [],
+      "role": "dataset_discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "machine_readable_primary_datasets",
+      "data_types": [
+        "Feuerwachen",
+        "Rettungswachen",
+        "Standorte",
+        "Einsatzbereiche"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-cf3a8702195f",
+      "name": "WFS Einrichtungen des Rettungswesens Brandenburg",
+      "url": "https://geoportal.brandenburg.de/detailansichtdienst/render?url=https%3A%2F%2Fgeoportal.brandenburg.de%2Fgs-json%2Fxml%3Ffileid%3D65ae1d1f-17b9-4ecb-9a96-4cc650f08c2b&view=gdibb",
+      "state": "Brandenburg",
+      "regions": [],
+      "station_types": [
+        "RD",
+        "FRRD",
+        "SEG",
+        "AIR"
+      ],
+      "role": "dataset_discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "machine_readable_primary_datasets",
+      "data_types": [
+        "Rettungswachen",
+        "NEF-Standorte",
+        "Notarztstandorte",
+        "Luftrettungsstationen",
+        "Rettungsdienstträger"
+      ],
+      "search_terms": [
+        "Rettungswachenverzeichnis",
+        "Rettungswachen Standorte",
+        "Notarztstandorte"
+      ],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-f0aa57eff29d",
+      "name": "WFS Einrichtungen des Brand- und Katastrophenschutzes Brandenburg",
+      "url": "https://geoportal.brandenburg.de/detailansichtdienst/render?url=https%3A%2F%2Fgeoportal.brandenburg.de%2Fgs-json%2Fxml%3Ffileid%3Df45b4199-9453-449d-9882-a4f9fe67a646&view=gdibb",
+      "state": "Brandenburg",
+      "regions": [],
+      "station_types": [],
+      "role": "dataset_discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "machine_readable_primary_datasets",
+      "data_types": [
+        "Feuerwehrstandorte",
+        "Regionalleitstellenbereiche",
+        "Katastrophenschutz",
+        "Aufgabenträger"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-8f1ceaa3d57c",
+      "name": "INSPIRE WFS Regionalleitstellen",
+      "url": "https://geoportal.brandenburg.de/detailansichtdienst/render?url=https%3A%2F%2Fgeoportal.brandenburg.de%2Fgs-json%2Fxml%3Ffileid%3D1858f5b8-f1a9-497e-9b29-8b1ca313ae1e&view=gdibb",
+      "state": "Brandenburg",
+      "regions": [],
+      "station_types": [],
+      "role": "dataset_discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "machine_readable_primary_datasets",
+      "data_types": [
+        "Regionalleitstellen",
+        "Leitstellenbereiche",
+        "Adresse",
+        "Kontaktdaten"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-7c80edcc5490",
+      "name": "Feuerwehrwachen Hamburg",
+      "url": "https://suche.transparenz.hamburg.de/dataset/feuerwehrwachen-hamburg19",
+      "state": "Hamburg",
+      "regions": [],
+      "station_types": [],
+      "role": "dataset_discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "machine_readable_primary_datasets",
+      "data_types": [
+        "staatliche Feuer- und Rettungswachen",
+        "Freiwillige Feuerwehr",
+        "Standorte"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-e660b7f5b44e",
+      "name": "Geoportal Hessen - Rettungswachen Hochtaunuskreis",
+      "url": "https://www.geoportal.hessen.de/spatial-objects/783/collections/ft2%3ARettungswachen/items",
+      "state": "Hessen",
+      "regions": [
+        "Hochtaunus",
+        "Hochtaunuskreis"
+      ],
+      "station_types": [
+        "RD",
+        "FRRD",
+        "SEG",
+        "AIR"
+      ],
+      "role": "dataset_discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "machine_readable_primary_datasets",
+      "data_types": [
+        "Rettungswachen",
+        "Adresse",
+        "Leitstelle",
+        "Kontakt",
+        "AGS"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-3cc136dc3af2",
+      "name": "Geoportal Hessen - Rettungswachen Kreis Groß-Gerau",
+      "url": "https://www.geoportal.hessen.de/spatial-objects/744/collections/ft2%3ARettungswachen/items?f=html",
+      "state": "Hessen",
+      "regions": [
+        "Groß-Gerau",
+        "Gerau"
+      ],
+      "station_types": [
+        "RD",
+        "FRRD",
+        "SEG",
+        "AIR"
+      ],
+      "role": "dataset_discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "machine_readable_primary_datasets",
+      "data_types": [
+        "Rettungswachen",
+        "NEF-Wachen",
+        "Adresse",
+        "Leitstelle",
+        "Link zum Bereichsplan"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-1cfaa3ea4294",
+      "name": "Geoportal Hessen - Rettungswachen Main-Taunus-Kreis",
+      "url": "https://www.geoportal.hessen.de/spatial-objects/810/collections/",
+      "state": "Hessen",
+      "regions": [
+        "Main-Taunus"
+      ],
+      "station_types": [
+        "RD",
+        "FRRD",
+        "SEG",
+        "AIR"
+      ],
+      "role": "dataset_discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "machine_readable_primary_datasets",
+      "data_types": [
+        "Rettungswachen",
+        "Sachinformationen",
+        "WFS"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-e02cb78a1054",
+      "name": "Geoportal Sachsen - Metadatensatz Rettungswachen Südwestsachsen",
+      "url": "https://geoportal.sachsen.de/md/1daeb9b7-8751-4b20-a6a1-fab602f611c5",
+      "state": "Sachsen",
+      "regions": [
+        "Zwickau",
+        "Südwestsachsen"
+      ],
+      "station_types": [
+        "RD",
+        "FRRD",
+        "SEG",
+        "AIR"
+      ],
+      "role": "dataset_discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "machine_readable_primary_datasets",
+      "data_types": [
+        "Rettungswachen",
+        "Standorte"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-e101782df82b",
+      "name": "DRF Luftrettung - Luftrettungsstationen",
+      "url": "https://www.drf-luftrettung.de/luftrettung/luftrettungsstationen",
+      "state": null,
+      "regions": [],
+      "station_types": [
+        "AIR"
+      ],
+      "role": "operator",
+      "authority": "operator_or_association",
+      "declared_quality": "B",
+      "source_group": "official_operator_sources",
+      "data_types": [
+        "Stationen",
+        "Rufnamen",
+        "Betriebszeiten",
+        "Hubschrauber"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-f79aedc3ecef",
+      "name": "ADAC Luftrettung - Stationen",
+      "url": "https://luftrettung.adac.de/stationen/",
+      "state": null,
+      "regions": [],
+      "station_types": [
+        "AIR"
+      ],
+      "role": "operator",
+      "authority": "operator_or_association",
+      "declared_quality": "B",
+      "source_group": "official_operator_sources",
+      "data_types": [
+        "Stationen",
+        "Rufnamen",
+        "Aufgabenträger",
+        "Leistungserbringer",
+        "Betriebszeiten",
+        "Standort"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-2c14f3bdce12",
+      "name": "Malteser Rettungsdienst Hessen",
+      "url": "https://www.malteser.de/standorte/hessen/rettungsdienst.html",
+      "state": "Hessen",
+      "regions": [],
+      "station_types": [
+        "RD",
+        "FRRD",
+        "SEG",
+        "AIR"
+      ],
+      "role": "operator",
+      "authority": "operator_or_association",
+      "declared_quality": "B",
+      "source_group": "official_operator_sources",
+      "data_types": [
+        "Rettungswachen",
+        "RTW",
+        "NEF",
+        "KTW",
+        "N-KTW",
+        "Vorhaltezeiten",
+        "Reservefahrzeuge"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-ce19a3936ad4",
+      "name": "DRK Rhein-Hunsrück - Rettungswachen",
+      "url": "https://www.rhk.drk.de/angebote/bevoelkerungsschutz-und-rettung/rettungsdienst/rettungswachen.html",
+      "state": "Rheinland-Pfalz",
+      "regions": [
+        "Rhein-Hunsrück",
+        "Hunsrück",
+        "Koblenz"
+      ],
+      "station_types": [
+        "RD",
+        "FRRD",
+        "SEG",
+        "AIR"
+      ],
+      "role": "operator",
+      "authority": "operator_or_association",
+      "declared_quality": "B",
+      "source_group": "official_operator_sources",
+      "data_types": [
+        "Rettungswachen",
+        "NEF",
+        "RTW",
+        "N-KTW",
+        "KTW",
+        "Vorhaltezeiten"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-d448afb3b94b",
+      "name": "DRK Rettungsdienst Westpfalz - RW 1 Kaiserslautern",
+      "url": "https://www.rd-westpfalz.drk.de/start/standorte/stadt-kaiserslautern/rw-1-kaiserslautern.html",
+      "state": "Rheinland-Pfalz",
+      "regions": [
+        "Kaiserslautern"
+      ],
+      "station_types": [
+        "RD",
+        "FRRD",
+        "SEG",
+        "AIR"
+      ],
+      "role": "operator",
+      "authority": "operator_or_association",
+      "declared_quality": "B",
+      "source_group": "official_operator_sources",
+      "data_types": [
+        "Adresse",
+        "NEF",
+        "RTW",
+        "N-KTW",
+        "KTW",
+        "Vorhaltezeiten",
+        "Reservefahrzeuge"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-3023acf5a0f5",
+      "name": "DRK Mayen-Koblenz - Rettungswachen",
+      "url": "https://www.mayen-koblenz.drk.de/angebote/bevoelkerungsschutz-und-rettung/rettungsdienst/rettungswachen.html",
+      "state": "Rheinland-Pfalz",
+      "regions": [
+        "Mayen",
+        "Koblenz"
+      ],
+      "station_types": [
+        "RD",
+        "FRRD",
+        "SEG",
+        "AIR"
+      ],
+      "role": "operator",
+      "authority": "operator_or_association",
+      "declared_quality": "B",
+      "source_group": "official_operator_sources",
+      "data_types": [
+        "Rettungswachenstandorte",
+        "Landesrettungsdienstplan-Bezug"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-eb560b068c67",
+      "name": "Johanniter - Rettungswache Hannover-Wasserturm",
+      "url": "https://www.johanniter.de/juh/lv-ndsbr/rv-niedersachsen-mitte/unsere-standorte-einrichtungen-in-niedersachsen-mitte/einrichtungen/rettungswache-hannover-wasserturm-4355",
+      "state": "Niedersachsen",
+      "regions": [
+        "Hannover"
+      ],
+      "station_types": [
+        "RD",
+        "FRRD",
+        "SEG",
+        "AIR"
+      ],
+      "role": "operator",
+      "authority": "operator_or_association",
+      "declared_quality": "B",
+      "source_group": "official_operator_sources",
+      "data_types": [
+        "Adresse",
+        "RTW",
+        "ITW",
+        "N-KTW",
+        "KTW",
+        "Vorhaltezeiten"
+      ],
+      "search_terms": [
+        "Rettungsmittelvorhaltung",
+        "Vorhaltung Rettungsmittel",
+        "Vorhaltezeiten Rettungsdienst"
+      ],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-2c2bab32719b",
+      "name": "Stadt Bochum - Bedarfspläne",
+      "url": "https://www.bochum.de/Feuerwehr-und-Rettungsdienst/Dienstleistungen-und-Infos/Bedarfsplaene",
+      "state": "Nordrhein-Westfalen",
+      "regions": [
+        "Bochum"
+      ],
+      "station_types": [],
+      "role": "plan",
+      "authority": "official",
+      "declared_quality": "A",
+      "source_group": "document_type_sources",
+      "data_types": [],
+      "search_terms": [
+        "Rettungsdienstbedarfsplan",
+        "Bedarfsplan Rettungsdienst",
+        "Brandschutzbedarfsplan",
+        "Brandschutz Bedarfsplan Feuerwehr",
+        "Feuerwehrbedarfsplan",
+        "Bedarfsplan Feuerwehr"
+      ],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-3fd1c840afe8",
+      "name": "Landkreis Harburg - Rettungsdienstbedarfsplan 2025",
+      "url": "https://www.landkreis-harburg.de/allris/to010?SILFDNR=1000321&TOLFDNR=1007013",
+      "state": "Niedersachsen",
+      "regions": [
+        "Harburg"
+      ],
+      "station_types": [
+        "RD",
+        "FRRD",
+        "SEG",
+        "AIR"
+      ],
+      "role": "planning_reference",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "document_type_sources",
+      "data_types": [],
+      "search_terms": [
+        "Rettungsdienstbedarfsplan",
+        "Bedarfsplan Rettungsdienst"
+      ],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-d732842760e1",
+      "name": "Landkreis Nordsachsen - Bereichsplan 2026-2032",
+      "url": "https://info.landkreis-nordsachsen.de/sessionnet/bi/vo0050.php?__kvonr=11028",
+      "state": "Sachsen",
+      "regions": [
+        "Nordsachsen",
+        "Leipzig"
+      ],
+      "station_types": [],
+      "role": "planning_reference",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "document_type_sources",
+      "data_types": [],
+      "search_terms": [
+        "Rettungsdienstbereichsplan",
+        "Bereichsplan Rettungsdienst",
+        "Vorhalteplan Rettungsdienst",
+        "Vorhalteplanung Rettungsdienst",
+        "Sollvorhaltung Rettungsdienst"
+      ],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-6efe46c29ded",
+      "name": "Landkreis Nordsachsen - Bereichsplan PDF",
+      "url": "https://info.landkreis-nordsachsen.de/sessionnet/bi/getfile.php?id=122635&type=do",
+      "state": "Sachsen",
+      "regions": [
+        "Nordsachsen",
+        "Leipzig"
+      ],
+      "station_types": [],
+      "role": "planning_reference",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "document_type_sources",
+      "data_types": [],
+      "search_terms": [
+        "Rettungsdienstbereichsplan",
+        "Bereichsplan Rettungsdienst"
+      ],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-9cdfda71440d",
+      "name": "DRK Rottweil - genehmigter Bereichsplan",
+      "url": "https://www.kv-rottweil.drk.de/fileadmin/Eigene_Bilder_und_Videos/Rettungsdienst_Medien/2023-03-24-Bereichsplan_RDB_Rottweil_genehmigte_Version.pdf",
+      "state": "Baden-Württemberg",
+      "regions": [
+        "Rottweil"
+      ],
+      "station_types": [],
+      "role": "plan",
+      "authority": "operator_or_association",
+      "declared_quality": "B",
+      "source_group": "document_type_sources",
+      "data_types": [],
+      "search_terms": [
+        "Rettungsdienstbereichsplan",
+        "Bereichsplan Rettungsdienst",
+        "Rettungsmittelvorhaltung",
+        "Vorhaltung Rettungsmittel",
+        "Vorhaltezeiten Rettungsdienst"
+      ],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-f26cfd21b774",
+      "name": "Innenministerium Baden-Württemberg - Rettungsdienstplan 2022",
+      "url": "https://im.baden-wuerttemberg.de/fileadmin/redaktion/m-im/intern/dateien/pdf/20220901_Rettungsdienstplan_2022.pdf",
+      "state": "Baden-Württemberg",
+      "regions": [],
+      "station_types": [
+        "RD",
+        "FRRD",
+        "SEG",
+        "AIR"
+      ],
+      "role": "plan",
+      "authority": "official",
+      "declared_quality": "A",
+      "source_group": "document_type_sources",
+      "data_types": [],
+      "search_terms": [
+        "Rettungsdienstplan",
+        "Landesrettungsdienstplan"
+      ],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-e023631479d5",
+      "name": "Geoportal Hessen - Rettungswachen",
+      "url": "https://www.geoportal.hessen.de/spatial-objects/",
+      "state": "Hessen",
+      "regions": [],
+      "station_types": [
+        "RD",
+        "FRRD",
+        "SEG",
+        "AIR"
+      ],
+      "role": "dataset_discovery",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "document_type_sources",
+      "data_types": [],
+      "search_terms": [
+        "Rettungswachenverzeichnis",
+        "Rettungswachen Standorte",
+        "Notarztstandorte"
+      ],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-ae8c39cd3ccd",
+      "name": "Stadt Bochum - Brandschutzbedarfsplan PDF",
+      "url": "https://www.bochum.de/C125830C0042AB74/vwContentByKey/W2BJ2F4Y903BOCMDE/%24FILE/Brandschutzbedarfsplan.pdf",
+      "state": "Nordrhein-Westfalen",
+      "regions": [
+        "Bochum"
+      ],
+      "station_types": [
+        "FW",
+        "FFW"
+      ],
+      "role": "plan",
+      "authority": "official",
+      "declared_quality": "A",
+      "source_group": "document_type_sources",
+      "data_types": [],
+      "search_terms": [
+        "Brandschutzbedarfsplan",
+        "Brandschutz Bedarfsplan Feuerwehr"
+      ],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-a4fd913d9e30",
+      "name": "Landeshauptstadt Potsdam - Feuerwehr",
+      "url": "https://www.potsdam.de/de/die-feuerwehr-potsdam",
+      "state": "Brandenburg",
+      "regions": [
+        "Potsdam"
+      ],
+      "station_types": [
+        "FW",
+        "FFW"
+      ],
+      "role": "plan",
+      "authority": "official",
+      "declared_quality": "A",
+      "source_group": "document_type_sources",
+      "data_types": [],
+      "search_terms": [
+        "Gefahrenabwehrbedarfsplan",
+        "Gefahrenabwehr Bedarfsplan Feuerwehr"
+      ],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-81c55753dacf",
+      "name": "Potsdam - Gefahrenabwehrbedarfsplan 2022-2026 PDF",
+      "url": "https://www.potsdam.de/system/files/document/Gefahrenabwehrbedarfsplan%202022%20-%202026_2.pdf",
+      "state": "Brandenburg",
+      "regions": [
+        "Potsdam"
+      ],
+      "station_types": [
+        "FW",
+        "FFW"
+      ],
+      "role": "plan",
+      "authority": "official",
+      "declared_quality": "A",
+      "source_group": "document_type_sources",
+      "data_types": [],
+      "search_terms": [
+        "Gefahrenabwehrbedarfsplan",
+        "Gefahrenabwehr Bedarfsplan Feuerwehr"
+      ],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-0518c23f2023",
+      "name": "Feuerwehr Wilhelmshaven - Fahrzeugkonzept 2026",
+      "url": "https://ratsinfoservice.de/ris/wilhelmshaven/agendaitem/details/8570",
+      "state": "Niedersachsen",
+      "regions": [
+        "Wilhelmshaven"
+      ],
+      "station_types": [
+        "FW",
+        "FFW"
+      ],
+      "role": "planning_reference",
+      "authority": "secondary",
+      "declared_quality": "A",
+      "source_group": "document_type_sources",
+      "data_types": [],
+      "search_terms": [
+        "Fahrzeugkonzept Feuerwehr",
+        "Fahrzeugkonzeption Feuerwehr"
+      ],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-3c73c5e3a1a2",
+      "name": "Berlin - Fuhrparkkonzepte / Konzept Fuhrpark für die Berliner Feuerwehr",
+      "url": "https://www.berlin.de/sen/inneres/service/publikationen/klimaschutz/umstellung-auf-e-mobilitaet/artikel.1423253.php",
+      "state": "Berlin",
+      "regions": [],
+      "station_types": [
+        "FW",
+        "FFW"
+      ],
+      "role": "plan",
+      "authority": "official",
+      "declared_quality": "A",
+      "source_group": "document_type_sources",
+      "data_types": [],
+      "search_terms": [
+        "Fuhrparkkonzept Feuerwehr",
+        "Fuhrpark Feuerwehr",
+        "Fahrzeugbestand Feuerwehr"
+      ],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-3b83f4e1ed3a",
+      "name": "Berlin - Umstellungsplan Fuhrpark für die Berliner Feuerwehr 2022",
+      "url": "https://www.berlin.de/sen/inneres/service/publikationen/klimaschutz/umstellung-auf-e-mobilitaet/umstellungsplan-fuhrpark-fuer-die-berliner-feuerwehr-2022.pdf",
+      "state": "Berlin",
+      "regions": [],
+      "station_types": [
+        "FW",
+        "FFW"
+      ],
+      "role": "plan",
+      "authority": "official",
+      "declared_quality": "A",
+      "source_group": "document_type_sources",
+      "data_types": [],
+      "search_terms": [
+        "Fuhrparkkonzept Feuerwehr",
+        "Fuhrpark Feuerwehr",
+        "Fahrzeugbestand Feuerwehr"
+      ],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-6f29293a068b",
+      "name": "BOS-Fahrzeuge.info",
+      "url": "https://bos-fahrzeuge.info/",
+      "state": null,
+      "regions": [],
+      "station_types": [],
+      "role": "crosscheck",
+      "authority": "secondary",
+      "declared_quality": "D",
+      "source_group": "crosscheck_only_sources",
+      "data_types": [
+        "Rufnamen-Crosscheck",
+        "Fahrzeug-Crosscheck",
+        "Lücken finden"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-8ca8987a667e",
+      "name": "OpenStreetMap",
+      "url": "https://www.openstreetmap.org/",
+      "state": null,
+      "regions": [],
+      "station_types": [],
+      "role": "crosscheck",
+      "authority": "secondary",
+      "declared_quality": "D",
+      "source_group": "crosscheck_only_sources",
+      "data_types": [
+        "Geokodierung",
+        "Wachenstandorte",
+        "Adressen",
+        "Betreiber-Crosscheck"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-65e4bcaa8459",
+      "name": "Overpass Turbo",
+      "url": "https://overpass-turbo.eu/",
+      "state": null,
+      "regions": [],
+      "station_types": [],
+      "role": "crosscheck",
+      "authority": "secondary",
+      "declared_quality": "D",
+      "source_group": "crosscheck_only_sources",
+      "data_types": [
+        "OSM-Abfrage fire_station/ambulance_station/control_centre"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    },
+    {
+      "id": "de-extra-b41fcf52f323",
+      "name": "Geofabrik Deutschland",
+      "url": "https://download.geofabrik.de/europe/germany.html",
+      "state": null,
+      "regions": [],
+      "station_types": [],
+      "role": "crosscheck",
+      "authority": "secondary",
+      "declared_quality": "D",
+      "source_group": "crosscheck_only_sources",
+      "data_types": [
+        "OSM-Massendaten Deutschland",
+        "Geokodierung/Standortabgleich"
+      ],
+      "search_terms": [],
+      "checked_at": null
+    }
+  ],
+  "document_queries": [
+    {
+      "document_type": "Rettungsdienstbedarfsplan",
+      "search_terms": [
+        "Rettungsdienstbedarfsplan",
+        "Bedarfsplan Rettungsdienst"
+      ]
+    },
+    {
+      "document_type": "Rettungsdienstbereichsplan",
+      "search_terms": [
+        "Rettungsdienstbereichsplan",
+        "Bereichsplan Rettungsdienst"
+      ]
+    },
+    {
+      "document_type": "Rettungsdienstplan",
+      "search_terms": [
+        "Rettungsdienstplan",
+        "Landesrettungsdienstplan"
+      ]
+    },
+    {
+      "document_type": "Rettungsmittelvorhaltung",
+      "search_terms": [
+        "Rettungsmittelvorhaltung",
+        "Vorhaltung Rettungsmittel",
+        "Vorhaltezeiten Rettungsdienst"
+      ]
+    },
+    {
+      "document_type": "Vorhalteplan Rettungsdienst",
+      "search_terms": [
+        "Vorhalteplan Rettungsdienst",
+        "Vorhalteplanung Rettungsdienst",
+        "Sollvorhaltung Rettungsdienst"
+      ]
+    },
+    {
+      "document_type": "Rettungswachenverzeichnis",
+      "search_terms": [
+        "Rettungswachenverzeichnis",
+        "Rettungswachen Standorte",
+        "Notarztstandorte"
+      ]
+    },
+    {
+      "document_type": "Brandschutzbedarfsplan",
+      "search_terms": [
+        "Brandschutzbedarfsplan",
+        "Brandschutz Bedarfsplan Feuerwehr"
+      ]
+    },
+    {
+      "document_type": "Feuerwehrbedarfsplan",
+      "search_terms": [
+        "Feuerwehrbedarfsplan",
+        "Bedarfsplan Feuerwehr"
+      ]
+    },
+    {
+      "document_type": "Gefahrenabwehrbedarfsplan",
+      "search_terms": [
+        "Gefahrenabwehrbedarfsplan",
+        "Gefahrenabwehr Bedarfsplan Feuerwehr"
+      ]
+    },
+    {
+      "document_type": "Feuerwehrentwicklungsplan",
+      "search_terms": [
+        "Feuerwehrentwicklungsplan",
+        "Feuerwehr Entwicklungskonzept",
+        "Bedarfs- und Entwicklungsplan Feuerwehr"
+      ]
+    },
+    {
+      "document_type": "Fahrzeugkonzept Feuerwehr",
+      "search_terms": [
+        "Fahrzeugkonzept Feuerwehr",
+        "Fahrzeugkonzeption Feuerwehr"
+      ]
+    },
+    {
+      "document_type": "Fuhrparkkonzept Feuerwehr",
+      "search_terms": [
+        "Fuhrparkkonzept Feuerwehr",
+        "Fuhrpark Feuerwehr",
+        "Fahrzeugbestand Feuerwehr"
+      ]
+    }
+  ],
+  "crawler_queries": [
+    "\"Rettungsdienstbedarfsplan\" filetype:pdf",
+    "\"Rettungsdienstbereichsplan\" filetype:pdf",
+    "\"Bereichsplan Rettungsdienst\" filetype:pdf",
+    "\"Rettungsdienstplan\" filetype:pdf",
+    "\"Rettungsmittelvorhaltung\" filetype:pdf",
+    "\"Vorhalteplan\" Rettungsdienst filetype:pdf",
+    "\"Rettungswachenverzeichnis\"",
+    "\"Brandschutzbedarfsplan\" filetype:pdf",
+    "\"Feuerwehrbedarfsplan\" filetype:pdf",
+    "\"Gefahrenabwehrbedarfsplan\" filetype:pdf",
+    "\"Feuerwehrentwicklungsplan\" filetype:pdf",
+    "\"Fahrzeugkonzept\" Feuerwehr filetype:pdf",
+    "\"Fuhrparkkonzept\" Feuerwehr filetype:pdf",
+    "\"Fahrzeugbestand\" Feuerwehr filetype:pdf",
+    "\"Vorhaltezeiten\" RTW NEF KTW",
+    "\"Rettungswache\" RTW NEF KTW \"24 Stunden\"",
+    "\"Integrierte Leitstelle\" Feuerwehr Rettungsdienst",
+    "\"Regionalleitstelle\" Feuerwehr Rettungsdienst"
+  ]
+}

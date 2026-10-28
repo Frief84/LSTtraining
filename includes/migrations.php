@@ -1,7 +1,9 @@
 <?php
 if (!defined('ABSPATH')) { exit; }
 
-const LSTTRAINING_SCHEMA_VERSION = 2026090904;
+require_once __DIR__ . '/regions.php';
+
+const LSTTRAINING_SCHEMA_VERSION = 2026100701;
 const LSTTRAINING_SCHEMA_OPTION = 'lsttraining_schema_versions';
 
 function lsttraining_schema_fingerprint(): string {
@@ -324,6 +326,94 @@ function lsttraining_migration_2026090904(PDO $pdo): void {
     }
 }
 
+function lsttraining_migration_2026091101(PDO $pdo): void {
+    foreach ([
+        ['nebenleitstellen', 'land', 'VARCHAR(100) COLLATE utf8mb4_general_ci NULL DEFAULT NULL AFTER name'],
+        ['nebenleitstellen', 'bundesland', 'VARCHAR(255) COLLATE utf8mb4_general_ci NULL DEFAULT NULL AFTER land'],
+    ] as [$table, $column, $definition]) {
+        lsttraining_migration_add_column($pdo, $table, $column, $definition);
+    }
+
+    if (!lsttraining_migration_table_exists($pdo, 'nebenleitstellen')) {
+        return;
+    }
+    if (!lsttraining_migration_index_exists($pdo, 'nebenleitstellen', 'idx_nebenleitstellen_land')) {
+        $pdo->exec('ALTER TABLE nebenleitstellen ADD INDEX idx_nebenleitstellen_land (land)');
+    }
+    if (!lsttraining_migration_index_exists($pdo, 'nebenleitstellen', 'idx_nebenleitstellen_bundesland')) {
+        $pdo->exec('ALTER TABLE nebenleitstellen ADD INDEX idx_nebenleitstellen_bundesland (bundesland(191))');
+    }
+
+    $rows = $pdo->query("SELECT id, name, zustandigkeit, land, bundesland FROM nebenleitstellen WHERE land IS NULL OR TRIM(land) = '' OR bundesland IS NULL OR TRIM(bundesland) = ''");
+    $update = $pdo->prepare('UPDATE nebenleitstellen SET land = ?, bundesland = ? WHERE id = ?');
+    foreach (($rows ? $rows->fetchAll(PDO::FETCH_ASSOC) : []) as $row) {
+        $current_land = trim((string) ($row['land'] ?? ''));
+        $current_bundesland = trim((string) ($row['bundesland'] ?? ''));
+        if (function_exists('lsttraining_region_backfill_values')) {
+            $backfill = lsttraining_region_backfill_values(
+                $current_land,
+                $current_bundesland,
+                (string) ($row['name'] ?? ''),
+                (string) ($row['zustandigkeit'] ?? '')
+            );
+        } else {
+            // Deployments können während eines Datei-Updates kurz gemischte
+            // PHP-/Opcode-Versionen ausführen. Die Migration darf deshalb nicht
+            // hart von dem neuen Helper abhängen.
+            $detected = function_exists('lsttraining_region_detect')
+                ? lsttraining_region_detect((string) ($row['name'] ?? ''), (string) ($row['zustandigkeit'] ?? ''))
+                : ['land' => '', 'bundesland' => ''];
+            $land = $current_land;
+            $bundesland = $current_bundesland;
+            if ($land === '' && $bundesland === '') {
+                $land = (string) ($detected['land'] ?? '');
+                $bundesland = (string) ($detected['bundesland'] ?? '');
+            } elseif ($land === '' && $bundesland !== '' && function_exists('lsttraining_region_country_for_bundesland')) {
+                $land = lsttraining_region_country_for_bundesland($bundesland);
+            } elseif ($bundesland === '' && $land === (string) ($detected['land'] ?? '')) {
+                $bundesland = (string) ($detected['bundesland'] ?? '');
+            }
+            $backfill = ['land' => $land, 'bundesland' => $bundesland];
+        }
+        $land = $backfill['land'];
+        $bundesland = $backfill['bundesland'];
+
+        if ($land !== $current_land || $bundesland !== $current_bundesland) {
+            $update->execute([$land !== '' ? $land : null, $bundesland !== '' ? $bundesland : null, (int) $row['id']]);
+        }
+    }
+}
+
+function lsttraining_migration_2026091102(PDO $pdo): void {
+    if (
+        !lsttraining_migration_table_exists($pdo, 'nebenleitstellen')
+        || !lsttraining_migration_column_exists($pdo, 'nebenleitstellen', 'land')
+        || !lsttraining_migration_column_exists($pdo, 'nebenleitstellen', 'bundesland')
+    ) {
+        return;
+    }
+
+    $german_bundeslaender = (array) (lsttraining_region_map()['Deutschland'] ?? []);
+    $rows = $pdo->query('SELECT id, name, zustandigkeit, land, bundesland FROM nebenleitstellen');
+    $update = $pdo->prepare('UPDATE nebenleitstellen SET land = ?, bundesland = ? WHERE id = ?');
+    foreach (($rows ? $rows->fetchAll(PDO::FETCH_ASSOC) : []) as $row) {
+        $current_land = trim((string) ($row['land'] ?? ''));
+        $current_bundesland = trim((string) ($row['bundesland'] ?? ''));
+        $detected_bundesland = lsttraining_region_detect_bundesland_for_land(
+            'Deutschland',
+            (string) ($row['name'] ?? ''),
+            (string) ($row['zustandigkeit'] ?? '')
+        );
+        $bundesland = $detected_bundesland !== ''
+            ? $detected_bundesland
+            : (in_array($current_bundesland, $german_bundeslaender, true) ? $current_bundesland : '');
+
+        if ($current_land !== 'Deutschland' || $current_bundesland !== $bundesland) {
+            $update->execute(['Deutschland', $bundesland !== '' ? $bundesland : null, (int) $row['id']]);
+        }
+    }
+}
+
 /**
  * MySQL-DDL führt implizite Commits aus. Deshalb sind alle Schritte idempotent;
  * die Versionsnummer wird erst gespeichert, wenn der komplette Lauf erfolgreich war.
@@ -355,6 +445,15 @@ function lsttraining_run_migrations(bool $force = false): int {
     }
     if ($force || $current < 2026090904) {
         lsttraining_migration_2026090904($pdo);
+    }
+    if ($force || $current < 2026091101) {
+        lsttraining_migration_2026091101($pdo);
+    }
+    if ($force || $current < 2026091102) {
+        lsttraining_migration_2026091102($pdo);
+    }
+    if ($force || $current < 2026100701) {
+        lsttraining_migration_add_column($pdo, 'wachen', 'adresse', 'VARCHAR(500) NULL DEFAULT NULL AFTER name');
     }
     lsttraining_schema_store_version(LSTTRAINING_SCHEMA_VERSION);
     return LSTTRAINING_SCHEMA_VERSION;

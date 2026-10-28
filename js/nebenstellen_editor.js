@@ -367,8 +367,35 @@ function getTrim(id) {
   return el ? el.value.trim() : '';
 }
 
+function setNebenRegionValues(landValue, bundeslandValue) {
+  var land = document.getElementById('neben_update_land');
+  var bundesland = document.getElementById('neben_update_bundesland');
+  if (!land || !bundesland) return;
 
-window.loadNebenstelleAndOpen = async function (id, name, zust, einwohner, flaeche, gps, nachbar) {
+  var map = {};
+  try { map = JSON.parse(bundesland.getAttribute('data-map') || '{}'); } catch (_) { map = {}; }
+
+  function fill(selected) {
+    var options = [new Option('— Bundesland wählen —', '')];
+    (map[land.value] || []).forEach(function (name) {
+      options.push(new Option(name, name));
+    });
+    bundesland.replaceChildren.apply(bundesland, options);
+    bundesland.disabled = !land.value;
+    bundesland.value = selected || '';
+  }
+
+  if (!land._lstRegionBound) {
+    land._lstRegionBound = true;
+    land.addEventListener('change', function () { fill(''); });
+  }
+
+  land.value = landValue || '';
+  fill(bundeslandValue || '');
+}
+
+
+window.loadNebenstelleAndOpen = async function (id, name, zust, einwohner, flaeche, gps, nachbar, land, bundesland) {
   let geoStr = '[]';
   try {
     const url  = `${ajaxurl}?action=lsttraining_get_neben_einsatzgebiet&neben_id=${encodeURIComponent(id)}&t=${Date.now()}`;
@@ -385,11 +412,11 @@ if (json && json.success && json.data) {
     }
   } catch (_) {}
 
-  return window.editNebenstelle(id, name, zust, einwohner, flaeche, gps, nachbar, geoStr);
+  return window.editNebenstelle(id, name, zust, einwohner, flaeche, gps, nachbar, land, bundesland, geoStr);
 };
 
 
-window.editNebenstelle = function (id, name, zust, einwohner, flaeche, gps, nachbar, geojson) {
+window.editNebenstelle = function (id, name, zust, einwohner, flaeche, gps, nachbar, land, bundesland, geojson) {
   var overlay  = document.getElementById('popup-overlay');
   var formBox  = document.getElementById('edit-nebenstelle-formular');
   var saveBtn  = document.getElementById('nebenstelle-save-button');
@@ -407,6 +434,8 @@ window.editNebenstelle = function (id, name, zust, einwohner, flaeche, gps, nach
   setVal('neben_update_flaeche',         (flaeche   != null ? String(flaeche)   : ''));
   setVal('neben_update_gps',             gps || '');
   setVal('neben_update_nachbar',         (nachbar != null ? String(nachbar) : ''));
+  setVal('neben_create',                  '0');
+  setNebenRegionValues(land || '', bundesland || '');
 
   // GeoJSON als String abspeichern
   var geoStr = (typeof geojson === 'string')
@@ -476,6 +505,8 @@ window.editNebenstelle = function (id, name, zust, einwohner, flaeche, gps, nach
       fd.append('einwohner',     getTrim('neben_update_einwohner') || '0');
       fd.append('flaeche',       getTrim('neben_update_flaeche')   || '0');
       fd.append('gps',           getTrim('neben_update_gps'));
+      fd.append('land',          getTrim('neben_update_land'));
+      fd.append('bundesland',    getTrim('neben_update_bundesland'));
 
       saveBtn.disabled = true;
       fetch(ajaxurl, { method: 'POST', body: fd })
@@ -778,6 +809,7 @@ window.createNebenstelle = function () {
   // Felder leeren
   ['neben_update_name','neben_update_zustandigkeit','neben_update_einwohner','neben_update_flaeche','neben_update_gps','neben_update_nachbar']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  setNebenRegionValues('Deutschland', '');
   if (geoField) geoField.value = '[]';
   syncNebenZuordnungButton();
 
@@ -785,6 +817,7 @@ window.createNebenstelle = function () {
   const heading = formBox.querySelector('h2');
   if (heading) heading.textContent = 'Nebenleitstelle erstellen';
   if (idField) idField.value = ''; // noch keine ID
+  setVal('neben_create', '1');
 
   // gewünschte ID (nur merken, nicht speichern)
   const desiredId = createBtn ? (createBtn.getAttribute('data-next-id') || '') : '';
@@ -827,6 +860,8 @@ window.createNebenstelle = function () {
       fd.append('einwohner', (document.getElementById('neben_update_einwohner')?.value || '0').trim());
       fd.append('flaeche', (document.getElementById('neben_update_flaeche')?.value || '0').trim());
       fd.append('gps', (document.getElementById('neben_update_gps')?.value || '').trim());
+      fd.append('land', (document.getElementById('neben_update_land')?.value || '').trim());
+      fd.append('bundesland', (document.getElementById('neben_update_bundesland')?.value || '').trim());
 
       if (!nebenId && this.dataset.desiredId) {
         fd.append('desired_id', this.dataset.desiredId);
@@ -844,6 +879,7 @@ window.createNebenstelle = function () {
 if (newId && idField) {
   idField.value = String(newId);
   idField.dispatchEvent(new Event('input'));
+  setVal('neben_create', '0');
 }
 
           if (egBtn) {
@@ -946,6 +982,8 @@ window.refreshNebenstellenListe = function () {
   const einw  = (document.getElementById('neben_update_einwohner')?.value || '').trim();
   const flae  = (document.getElementById('neben_update_flaeche')?.value || '').trim();
   const gps   = (document.getElementById('neben_update_gps')?.value || '').trim();
+  const land  = (document.getElementById('neben_update_land')?.value || '').trim();
+  const bundesland = (document.getElementById('neben_update_bundesland')?.value || '').trim();
 
   if (!id) return;
 
@@ -968,16 +1006,16 @@ window.refreshNebenstellenListe = function () {
   // 4) Zellen anpassen – ggf. Indizes an deine Spaltenreihenfolge anpassen!
   const tds = row.querySelectorAll('td');
 
-  // Beispiel: [0]=ID, [1]=Name, [2]=Zuständigkeit, [3]=Einwohner, [4]=Fläche, [5]=GPS
-  // Passe die Indizes an deine tatsächliche Tabelle an:
   if (tds[1]) tds[1].textContent = name;
-  if (tds[2]) tds[2].textContent = zust;
-  if (tds[3]) tds[3].textContent = einw;
-  if (tds[4]) tds[4].textContent = flae;
-  if (tds[5]) tds[5].textContent = gps;
+  if (tds[2]) tds[2].textContent = land || '–';
+  if (tds[3]) tds[3].textContent = bundesland || '–';
+  if (tds[4]) tds[4].textContent = zust;
+  if (tds[5]) tds[5].textContent = einw;
+  if (tds[6]) tds[6].textContent = flae;
+  if (tds[7]) tds[7].textContent = gps;
 
   // 5) Für die Suchfunktion den zusammengesetzten Text aktualisieren
-  const search = [id, name, zust, einw, flae, gps].filter(Boolean).join(' ').toLowerCase();
+  const search = [id, name, land, bundesland, zust, einw, flae, gps].filter(Boolean).join(' ').toLowerCase();
   row.dataset.search = search;
 };
 

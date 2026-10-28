@@ -31,10 +31,10 @@ check('PHP-Struktur und Bootstrap-Abhängigkeiten', () => {
   const pairs = { '(': ')', '[': ']', '{': '}' };
   const changedPhp = [
     'lsttraining-plugin.php', 'includes/admin-menu.php', 'includes/admin-ui.php', 'includes/benutzer.php', 'includes/documentation.php',
-    'includes/fahrzeuge.php', 'includes/help.php',
+    'includes/fahrzeuge.php', 'includes/help.php', 'includes/regions.php',
     'includes/instance-lifecycle.php', 'includes/leitstellen_editor.php', 'includes/migrations.php',
     'includes/nebenstellen_editor.php', 'includes/permissions.php', 'includes/schema_import.php',
-    'includes/rest-api.php', 'includes/rest-management-api.php', 'includes/rest-validation.php', 'includes/settings.php', 'includes/simulation-workspace.php', 'includes/wachen.php',
+    'includes/restapi/rest-api.php', 'includes/restapi/rest-management-api.php', 'includes/restapi/rest-validation.php', 'includes/settings.php', 'includes/simulation-workspace.php', 'includes/wachen.php',
     'includes/ajax/ajax_einsaetze.php', 'includes/ajax/ajax_fahrzeuge.php', 'includes/ajax/ajax_frontend.php',
     'includes/ajax/ajax_hospitals.php', 'includes/ajax/ajax_nebenstellen.php', 'includes/ajax/ajax_simulation.php',
     'includes/ajax/ajax_users.php', 'includes/ajax/ajax_wachen.php', 'includes/simulation/vehicle-state.php'
@@ -173,8 +173,11 @@ check('Wachenkarte ohne feste Ergebnis-Kappung', () => {
 
 check('Versionierte Migration', () => {
   const migrations = read('includes/migrations.php');
-  assert.match(migrations, /LSTTRAINING_SCHEMA_VERSION\s*=\s*2026090904/);
+  assert.match(migrations, /LSTTRAINING_SCHEMA_VERSION\s*=\s*2026100701/);
   assert.match(migrations, /function lsttraining_migration_2026090903/);
+  assert.match(migrations, /function lsttraining_migration_2026091101/);
+  assert.match(migrations, /function lsttraining_migration_2026091102/);
+  assert.match(migrations, /function_exists\('lsttraining_region_backfill_values'\)/);
   assert.match(migrations, /'legacy-950', 'legacy-970'/);
   assert.match(migrations, /lsttraining_schema_store_version\(LSTTRAINING_SCHEMA_VERSION\)/);
   assert.match(read('lsttraining-plugin.php'), /register_activation_hook\(LSTTRAINING_PLUGIN_FILE, 'lsttraining_run_migrations'\)/);
@@ -192,7 +195,7 @@ check('Serialisierter Tick und lesender Snapshot', () => {
 });
 
 check('Geschuetzte REST-Status-API', () => {
-  const api = read('includes/rest-api.php');
+  const api = read('includes/restapi/rest-api.php');
   assert.match(api, /instanzen\/\(\?P<instanz_id>\\d\+\)\/status/);
   assert.match(api, /instanzen\/\(\?P<instanz_id>\\d\+\)\/fahrzeuge/);
   assert.ok((api.match(/permission_callback' => 'lst_rest_can_read_instance_status'/g) || []).length === 2);
@@ -207,7 +210,7 @@ check('Geschuetzte REST-Status-API', () => {
 });
 
 check('Geschuetzte REST-Verwaltungs-API', () => {
-  const api = read('includes/rest-management-api.php');
+  const api = read('includes/restapi/rest-management-api.php');
   const help = read('includes/help.php');
   const managementDocs = read('docs/rest-management-api.md');
   const statusDocs = read('docs/rest-status-api.md');
@@ -224,7 +227,7 @@ check('Geschuetzte REST-Verwaltungs-API', () => {
   assert.match(api, /rollBack\(\)/);
   assert.match(api, /'confirm'.*'required' => true/);
   assert.match(api, /lsttraining_log_activity/);
-  assert.match(read('lsttraining-plugin.php'), /includes\/rest-management-api\.php/);
+  assert.match(read('lsttraining-plugin.php'), /includes\/restapi\/rest-management-api\.php/);
   assert.match(help, /REST-API – vollständige Referenz/);
   assert.match(help, /\/verwaltung\/\{ressource\}\/\{id\}/);
   assert.match(help, /\/instanzen\/\{instanz_id\}\/fahrzeuge\/\{status_id\}/);
@@ -238,9 +241,9 @@ check('Geschuetzte REST-Verwaltungs-API', () => {
 });
 
 check('Strikte REST-Eingabe- und Bildvalidierung', () => {
-  const validation = read('includes/rest-validation.php');
-  const management = read('includes/rest-management-api.php');
-  const statusApi = read('includes/rest-api.php');
+  const validation = read('includes/restapi/rest-validation.php');
+  const management = read('includes/restapi/rest-management-api.php');
+  const statusApi = read('includes/restapi/rest-api.php');
   const docs = read('docs/rest-management-api.md');
   const help = read('includes/help.php');
 
@@ -276,7 +279,7 @@ check('Strikte REST-Eingabe- und Bildvalidierung', () => {
   assert.match(management, /lst_manage_materialize_images/);
   assert.match(management, /lst_manage_cleanup_created_images/);
   assert.ok((statusApi.match(/lsttraining_rest_json_object\(/g) || []).length >= 3);
-  assert.match(read('lsttraining-plugin.php'), /includes\/rest-validation\.php/);
+  assert.match(read('lsttraining-plugin.php'), /includes\/restapi\/rest-validation\.php/);
   assert.match(docs, /vollstaendig decodiert/);
   assert.match(docs, /data_base64/);
   assert.match(help, /vollständig neu codiert/);
@@ -284,6 +287,27 @@ check('Strikte REST-Eingabe- und Bildvalidierung', () => {
   assert.match(help, /Verschieben und Zuordnungen ändern/);
   assert.match(help, /base64/);
   assert.match(help, /wache_id/);
+});
+
+check('Regionsfilter und Nebenstellen-Regionen', () => {
+  const schema = read('database/schema.sql');
+  const regions = read('includes/regions.php');
+  const leitstellen = read('includes/leitstellen_editor.php');
+  const nebenstellen = read('includes/nebenstellen_editor.php');
+  const api = read('includes/restapi/rest-management-api.php');
+  assert.match(schema, /CREATE TABLE IF NOT EXISTS `nebenleitstellen`[\s\S]*?`land`[\s\S]*?`bundesland`/);
+  assert.match(regions, /function lsttraining_region_detect/);
+  assert.match(leitstellen, /lsttraining_render_region_filter/);
+  assert.match(nebenstellen, /n\.land = \?/);
+  assert.match(nebenstellen, /n\.bundesland = \?/);
+  assert.match(api, /'nebenleitstellen'[\s\S]*?'land'[\s\S]*?'bundesland'/);
+  assert.match(leitstellen, /require_once[\s\S]*?regions\.php/);
+  assert.match(nebenstellen, /require_once[\s\S]*?regions\.php/);
+  assert.match(read('includes/migrations.php'), /require_once __DIR__ \. '\/regions\.php'/);
+  assert.match(read('includes/ajax/ajax_nebenstellen.php'), /require_once dirname\(__DIR__\) \. '\/regions\.php'/);
+  assert.match(api, /require_once dirname\(__DIR__\) \. '\/regions\.php'/);
+  assert.ok(existsSync(join(root, 'js/admin-region-filter.js')));
+  assert.ok(existsSync(join(root, 'tests/regions.test.php')));
 });
 
 check('Benutzerrechte pro Bereich und Leitstelle', () => {

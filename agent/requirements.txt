@@ -1,0 +1,4 @@
+requests>=2.32,<3
+beautifulsoup4>=4.12,<5
+ollama>=0.4,<1
+playwright>=1.49,<2

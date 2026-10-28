@@ -7,6 +7,7 @@ Die Verwaltungs-API bietet Erstellen, Lesen, Aendern und Loeschen fuer:
 - `wachen`
 - `fahrzeuge`
 - `krankenhaeuser`
+- `einsaetze` (Einsatzvorlagen)
 
 Alle Aufrufe erfordern eine WordPress-Anmeldung. Im Browser werden Sitzung und
 `X-WP-Nonce` verwendet; externe Clients koennen ueber HTTPS mit WordPress
@@ -207,6 +208,8 @@ WordPress-Administratoren anlegen.
 | Feld | Typ | Pflicht/Regel |
 |---|---|---|
 | `name` | String | Pflicht, eindeutig, maximal 255 Zeichen |
+| `land` | String/null | leer oder eines der konfigurierten DACH-Länder |
+| `bundesland` | String/null | leer oder ein Bundesland/Kanton des gewählten Landes |
 | `aufgaben` | Text/null | maximal 4.000 Zeichen, kein HTML/Code |
 | `zustandigkeit` | Text/null | maximal 4.000 Zeichen, kein HTML/Code |
 | `standorte` | Text/null | maximal 4.000 Zeichen, kein HTML/Code |
@@ -357,3 +360,17 @@ wird dessen ID ausserdem aus allen Leitstellenfreigaben entfernt.
 
 Alle Schreiboperationen werden mit Quelle `rest-management` im
 Aktivitaetsprotokoll erfasst.
+
+
+## Lokaler Rechercheagent und freigegebener Abgleich
+
+`wachen.adresse` ist optional (`null` oder maximal 500 Zeichen) und wird durch Migration 2026100701 ergänzt. Listen und Details liefern das Feld; bestehende Clients müssen es nicht senden.
+
+Der lokale Python-Agent ist in `agent/README.md` dokumentiert. Er nutzt ausschließlich lesende Verwaltungsaufrufe während einer Recherche. Ausgewählte Deltas können getrennt mit `--freigeben` und `--id` übertragen werden.
+
+- `GET /wp-json/lst/v1/abgleich/status`: Administratorzugriff; bestätigt globale Sicht und Version des geschützten Schreibwegs.
+- `POST /wp-json/lst/v1/abgleich/aktion`: Administratorzugriff; erwartet einen individuell ausgewählten Delta-Eintrag mit `action`, `freigabe_id`, `before`, `after`, `beleg`, `quelle` sowie Wachen-/Fahrzeug-ID, soweit vorhanden.
+- Aktionen: `ADD`, `UPDATE` (Fahrzeugtyp), `SET_AD` (nicht einsatzbereit/FMS 6), `ADD_WACHE` mit Zuordnung und `UPDATE_WACHE` zur Auflösung technischer Namen. Keine Löschaktion.
+- Globale Rufnamensprüfung unter datenbankbezogener Sperre, Prüfung des Vorzustands und transaktionale Änderung. Sperr-/Bestandskonflikte liefern HTTP 409; ungültige Eingaben HTTP 400.
+
+Diese Sperre koordiniert die neuen Abgleich-Aufrufe. Andere bestehende Verwaltungs-/AJAX-Schreibwege müssen während einer Freigabesitzung ruhen. Der Python-Client wiederholt einen POST nach unbekanntem Ergebnis nicht automatisch, sondern lädt den Bestand erneut und protokolliert den Prüfbedarf.

@@ -22,23 +22,17 @@ require_once __DIR__ . '/weather.php';
  */
 
 function lsttraining_sim_table_exists(PDO $pdo, string $table): bool {
-    try {
-        $stmt = $pdo->prepare('SHOW TABLES LIKE ?');
-        $stmt->execute([$table]);
-        return (bool) $stmt->fetchColumn();
-    } catch (Throwable $e) {
-        return false;
-    }
+    // Native prepared statements cannot reliably bind SHOW ... LIKE patterns.
+    // Exact metadata comparisons also keep underscores from acting as wildcards.
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?');
+    $stmt->execute([$table]);
+    return (int) $stmt->fetchColumn() > 0;
 }
 
 function lsttraining_sim_column_exists(PDO $pdo, string $table, string $column): bool {
-    try {
-        $stmt = $pdo->prepare("SHOW COLUMNS FROM `{$table}` LIKE ?");
-        $stmt->execute([$column]);
-        return (bool) $stmt->fetch(PDO::FETCH_ASSOC);
-    } catch (Throwable $e) {
-        return false;
-    }
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?');
+    $stmt->execute([$table, $column]);
+    return (int) $stmt->fetchColumn() > 0;
 }
 
 function lsttraining_sim_decode_json($raw, $fallback = []) {
@@ -189,7 +183,7 @@ function lsttraining_sim_resource_class_from_type(string $type): string {
     if (preg_match('/^(RTW|NKTW|ITW|GRTW)/', $value)) {
         return 'rettungswagen';
     }
-    if (strpos($value, 'GW-SAN') !== false || strpos($value, 'BETREU') !== false || strpos($value, 'MANV') !== false || strpos($value, 'SAN') !== false) {
+    if (strpos($value, 'GW-SAN') !== false || strpos($value, 'VERPFLEG') !== false || strpos($value, 'BETREU') !== false || strpos($value, 'MANV') !== false || strpos($value, 'SAN') !== false) {
         return 'san_betreuung';
     }
     if (strpos($value, 'DEKON') !== false || strpos($value, 'GEFAHR') !== false || strpos($value, 'GW-G') !== false) {
@@ -201,7 +195,7 @@ function lsttraining_sim_resource_class_from_type(string $type): string {
     if (preg_match('/^(DLK|DLA|TMB)/', $value)) {
         return 'hubrettung';
     }
-    if (preg_match('/^(RW|VRW|VLF)/', $value)) {
+    if (preg_match('/^(RW|VRW|VLF|GW-RETT)/', $value)) {
         return 'ruestung';
     }
     if (preg_match('/^(ELW|KDOW|KDO|ORGL|LNA)/', $value)) {
@@ -210,7 +204,7 @@ function lsttraining_sim_resource_class_from_type(string $type): string {
     if (strpos($value, 'LOGISTIK') !== false || strpos($value, 'GW-L') !== false || strpos($value, 'WLF') !== false || strpos($value, 'AB-') === 0) {
         return 'logistik';
     }
-    if (preg_match('/^(HLF|LF|TLF|FLF|LÖSCHBOOT|LOESCHBOOT|FLB)/', $value)) {
+    if (preg_match('/^(HLF|LF|TLF|TSF|KLF|MLF|STLF|FLF|LÖSCHBOOT|LOESCHBOOT|FLB)/', $value)) {
         return 'loeschfahrzeug';
     }
 

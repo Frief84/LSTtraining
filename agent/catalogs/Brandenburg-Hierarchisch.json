@@ -1,0 +1,313 @@
+{
+  "DE": {
+    "Brandenburg": {
+      "Potsdam": {
+        "Potsdam": [
+          {
+            "wachen_id": "BF Potsdam FuRW 1",
+            "name": "Berufsfeuerwehr Potsdam - Feuer- und Rettungswache 1",
+            "adresse": "Holzmarktstraße, Potsdam (FRW 1)",
+            "typ": "Berufsfeuerwehr",
+            "organisation": "BF",
+            "leitstelle": "Leitstelle Nordwest (HVL, OPR, P, PR)",
+            "dienstzeiten": "24/7 Berufsfeuerwehr + Rettungsdienst",
+            "quelle_url": "https://bos-fahrzeuge.info/ - BF Potsdam",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Potsdam 01/11-01",
+                "typ": "ELW 1",
+                "funktion": "Einsatzleitwagen",
+                "fahrgestell": "VW T5 GP TDI 4Motion Hensel",
+                "status": "aktiv",
+                "dienstzeiten": "24/7"
+              },
+              {
+                "callsign": "Florian Potsdam 01/43-02",
+                "typ": "HLF 20",
+                "funktion": "HLF 20",
+                "kennzeichen": "P-FW 41",
+                "status": "aktiv",
+                "beleg": "BF Potsdam FuRW 1 FW - BF"
+              },
+              {
+                "callsign": "Florian Potsdam 01/65-04",
+                "typ": "WLF-K",
+                "funktion": "Wechselladerfahrzeug mit Ladekran",
+                "fahrgestell": "MAN TGS 35.440 8x6 BB 440 PS",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Potsdam 01/82-02",
+                "typ": "NEF",
+                "funktion": "Notarzteinsatzfahrzeug",
+                "status": "aktiv",
+                "wache": "FRW 1"
+              },
+              {
+                "callsign": "Kater Potsdam 00 GW 03",
+                "typ": "GW-KatS",
+                "funktion": "Gerätewagen Katastrophenschutz Ford Ranger",
+                "status": "aktiv"
+              }
+            ]
+          },
+          {
+            "wachen_id": "FF Potsdam-Groß Glienicke",
+            "name": "Freiwillige Feuerwehr Potsdam - Groß Glienicke",
+            "adresse": "Groß Glienicke, Potsdam",
+            "typ": "Freiwillige Feuerwehr",
+            "organisation": "FF",
+            "leitstelle": "Leitstelle Nordwest",
+            "dienstzeiten": "24/7 ehrenamtlich",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Potsdam 12/43-01",
+                "typ": "LF",
+                "kennzeichen": "P-FW 63",
+                "status": "aktiv",
+                "wache": "FF Potsdam-Groß Glienicke"
+              },
+              {
+                "callsign": "Florian Potsdam 12/33-01 (a.D.)",
+                "typ": "LF",
+                "kennzeichen": "P-2039",
+                "status": "a.D."
+              }
+            ]
+          },
+          {
+            "wachen_id": "FF Potsdam-Bornstedt",
+            "name": "Freiwillige Feuerwehr Potsdam-Bornstedt",
+            "adresse": "Bornstedt, Potsdam",
+            "typ": "Freiwillige Feuerwehr",
+            "organisation": "FF",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Potsdam 04/19-01",
+                "typ": "MTW",
+                "kennzeichen": "P-FW 44",
+                "status": "aktiv"
+              }
+            ]
+          },
+          {
+            "wachen_id": "FF Potsdam-Zentrum",
+            "name": "Freiwillige Feuerwehr Potsdam-Zentrum",
+            "adresse": "Potsdam-Zentrum",
+            "typ": "Freiwillige Feuerwehr",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Potsdam 10/42-01",
+                "typ": "LF 8/6",
+                "kennzeichen": "P-2295",
+                "fahrgestell": "Iveco Magirus EuroFire",
+                "status": "aktiv",
+                "laufbahn": "2002-2020 FF Golm, ab 2020 Zentrum"
+              }
+            ]
+          },
+          {
+            "wachen_id": "FF Potsdam-Golm",
+            "name": "Freiwillige Feuerwehr Potsdam-Golm",
+            "typ": "Freiwillige Feuerwehr",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Potsdam 16/TSA",
+                "typ": "TSA",
+                "kennzeichen": "P-2294",
+                "status": "aktiv"
+              }
+            ]
+          },
+          {
+            "wachen_id": "FF Potsdam-Fahrland",
+            "name": "Freiwillige Feuerwehr Potsdam-Fahrland",
+            "typ": "Freiwillige Feuerwehr",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Potsdam 11/51-01",
+                "typ": "RW 1",
+                "funktion": "Rüstwagen MAN LE 180 C",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ]
+      },
+      "Potsdam-Mittelmark": {
+        "Beelitz": [
+          {
+            "wachen_id": "JUH RW Beelitz",
+            "name": "Johanniter Rettungswache Beelitz-Heilstätten",
+            "adresse": "Beelitz-Heilstätten",
+            "typ": "Rettungsdienst",
+            "organisation": "JUH",
+            "leitstelle": "Leitstelle Brandenburg (BRB, PM, TF)",
+            "dienstzeiten": "24/7",
+            "fahrzeuge": [
+              {
+                "callsign": "Rettung Mittelmark 05/82-01",
+                "typ": "NEF",
+                "funktion": "Notarzteinsatzfahrzeug Landkreis PM",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ],
+        "Kloster Lehnin": [
+          {
+            "wachen_id": "FF Kloster Lehnin OW Lehnin",
+            "name": "Freiwillige Feuerwehr Kloster Lehnin - Ortswehr Lehnin",
+            "typ": "Freiwillige Feuerwehr",
+            "organisation": "FF",
+            "leitstelle": "Leitstelle Brandenburg",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Mittelmark 12/52-01",
+                "typ": "RW?",
+                "kennzeichen": "PM-LE 112",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Mittelmark 12/76-01",
+                "typ": "MTF?",
+                "kennzeichen": "PM-PM 763",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ],
+        "Borkheide": [
+          {
+            "wachen_id": "FF Amt Brück OF Borkheide",
+            "name": "Freiwillige Feuerwehr Amt Brück - OF Borkheide",
+            "typ": "Freiwillige Feuerwehr",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Mittelmark 08/26-01",
+                "typ": "LF",
+                "kennzeichen": "PM-2259",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ],
+        "FTZ Potsdam-Mittelmark": [
+          {
+            "wachen_id": "LK Potsdam-Mittelmark FTZ",
+            "name": "Landkreis Potsdam-Mittelmark - Feuerwehrtechnische Zentrale",
+            "typ": "Feuerwehrtechnische Zentrale",
+            "organisation": "Kreis",
+            "leitstelle": "Leitstelle Brandenburg (BRB, PM, TF)",
+            "dienstzeiten": "FTZ Betrieb - Fahrzeuge 24h abrufbar",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Mittelmark 23/52-01",
+                "typ": "Fahrzeug FTZ",
+                "kennzeichen": "PM-PM 243",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Mittelmark 00/12-01",
+                "typ": "KdoW",
+                "kennzeichen": "PM-PM 1112",
+                "funktion": "Kommandowagen Brand- und KatS HDP Galloper",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ]
+      },
+      "Cottbus": {
+        "Cottbus": [
+          {
+            "wachen_id": "BF Cottbus FuRW 2",
+            "name": "Berufsfeuerwehr Cottbus - Feuer- und Rettungswache 2",
+            "adresse": "Ewald-Haase-Straße 3, 03044 Cottbus",
+            "typ": "Berufsfeuerwehr",
+            "organisation": "BF",
+            "traeger": "Stadt Cottbus",
+            "dienstzeiten": "24/7 BF + RD",
+            "quelle_url": "https://cottbus.de/verwaltung/gb_ii/feuerwehr/",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Cottbus 03/82-02",
+                "typ": "NEF",
+                "funktion": "Notarzteinsatzfahrzeug",
+                "kennzeichen": "CB-FW 556",
+                "fahrgestell": "MB Vito WAS",
+                "status": "aktiv",
+                "hinweis": "Eins von 3 neuen Fahrzeugen Mai 2025"
+              },
+              {
+                "callsign": "Florian Cottbus 00/83-08 - RTW Reserve",
+                "typ": "RTW",
+                "funktion": "RTW Reserve",
+                "status": "Reserve"
+              },
+              {
+                "funktion": "MTF",
+                "typ": "MTF",
+                "status": "aktiv",
+                "beleg": "MTF BF Cottbus Wache 2"
+              },
+              {
+                "funktion": "DLA(K) 23/12",
+                "typ": "DLK",
+                "status": "aktiv"
+              },
+              {
+                "funktion": "HLF 20",
+                "typ": "HLF 20",
+                "status": "aktiv"
+              }
+            ]
+          },
+          {
+            "wachen_id": "BF Cottbus Wache 1",
+            "name": "Berufsfeuerwehr Cottbus - Wache 1",
+            "adresse": "Dresdener Str. 46, 03050 Cottbus",
+            "typ": "Berufsfeuerwehr",
+            "organisation": "BF",
+            "dienstzeiten": "24/7",
+            "fahrzeuge": [
+              {
+                "funktion": "HLF",
+                "typ": "HLF",
+                "status": "aktiv",
+                "hinweis": "Wache 1 HLF im Einsatz"
+              }
+            ]
+          }
+        ]
+      },
+      "Brandenburg an der Havel": {
+        "Brandenburg an der Havel": [
+          {
+            "wachen_id": "Platzhalter",
+            "name": "Noch zu recherchieren - BF Brandenburg an der Havel",
+            "typ": "Berufsfeuerwehr + Freiwillige",
+            "hinweis": "Landkreis vorhanden, Fahrzeuge noch nicht geprüft ob auswertbar"
+          }
+        ]
+      },
+      "Barnim": {
+        "_hinweis": "14 Landkreise Brandenburg - Struktur steht, Fahrzeuge werden paketweise wie Stade geprüft",
+        "Orte": {}
+      },
+      "Dahme-Spreewald": {},
+      "Elbe-Elster": {},
+      "Havelland": {},
+      "Märkisch-Oderland": {},
+      "Oberhavel": {},
+      "Oberspreewald-Lausitz": {},
+      "Oder-Spree": {},
+      "Ostprignitz-Ruppin": {},
+      "Prignitz": {},
+      "Spree-Neiße": {},
+      "Teltow-Fläming": {},
+      "Uckermark": {},
+      "Frankfurt (Oder)": {}
+    }
+  }
+}

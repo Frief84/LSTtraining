@@ -1,0 +1,98 @@
+{
+  "recherchiertAm": "2026-09-15",
+  "status": "Recherche-Arbeitsliste; keine Importfreigabe und kein vollständiger Live-API-Abgleich",
+  "umfang": "Reguläre öffentliche Feuerwehr- und Rettungsleitstellen; gemeinsame Leitstellenbereiche einmal zählen, Betriebsstätten separat berücksichtigen. Keine Polizei-, Werk-, Ehrenamts-, Lehr-, Ausweich- oder nachgeordneten Einsatzzentralen.",
+  "verifikation": "Landes- und Fachverzeichnisse abgeglichen; erkennbare Fusionen anhand von Betreiber- und Behördenquellen geprüft. Nicht jeder Eintrag wurde einzeln mit einer aktuellen Betreiberbestätigung validiert. Namen sind eindeutige Arbeitsbezeichnungen, keine garantierten amtlichen Langnamen.",
+  "laender": [
+    {
+      "bundesland": "Baden-Württemberg",
+      "leitstellen": ["Biberach", "Bodensee-Oberschwaben", "Böblingen", "Calw", "Emmendingen", "Esslingen", "Freiburg/Breisgau-Hochschwarzwald", "Freudenstadt", "Göppingen", "Heidelberg/Rhein-Neckar", "Heilbronn", "Hohenlohe", "Karlsruhe", "Konstanz", "Lörrach", "Ludwigsburg", "Main-Tauber", "Mannheim", "Mittelbaden", "Neckar-Odenwald", "Ortenau", "Ostalb", "Pforzheim/Enzkreis", "Rems-Murr", "Reutlingen", "Rottweil", "Schwäbisch Hall", "Schwarzwald-Baar", "Stuttgart", "Tübingen", "Tuttlingen", "Ulm/Alb-Donau", "Waldshut", "Zollernalb"],
+      "quellen": ["https://www.sqrbw.de/rettungsdienst/leitstellen", "https://www.feuerwehr-nrw.de/bw/leitstellen/", "https://www.mannheim.de/de/presse/modernisierung-der-integrierten-leitstelle-neues-einsatzleit-und-kommunikationssystem"]
+    },
+    {
+      "bundesland": "Bayern",
+      "leitstellen": ["Allgäu", "Ansbach", "Augsburg", "Bamberg-Forchheim", "Bayerischer Untermain", "Bayreuth/Kulmbach", "Coburg", "Donau-Iller", "Erding", "Fürstenfeldbruck", "Hochfranken", "Ingolstadt", "Landshut", "Mittelfranken-Süd", "München", "Nürnberg", "Oberland", "Oberpfalz-Nord", "Passau", "Regensburg", "Rosenheim", "Schweinfurt", "Straubing", "Traunstein", "Würzburg"],
+      "quellen": ["https://www.bayernportal.de/dokumente/behoerde/5760175134101", "https://ils-on.de/ueber-uns/"],
+      "hinweis": "Oberpfalz-Nord umfasst die Betriebsstätten Amberg und Weiden. Nicht zusätzlich Amberg und Nordoberpfalz als eigenständige Leitstellenbereiche anlegen. FEZ München-Land ist eine nachgeordnete Feuerwehr-Einsatzzentrale und nicht Bestandteil dieser Hauptliste."
+    },
+    {
+      "bundesland": "Berlin",
+      "leitstellen": ["Berlin – Leitstelle der Berliner Feuerwehr"],
+      "quellen": ["https://www.berliner-feuerwehr.de/ueber-uns/behoerdenstruktur/abteilung-einsatzsteuerung/"]
+    },
+    {
+      "bundesland": "Brandenburg",
+      "leitstellen": ["Brandenburg an der Havel", "Lausitz (Cottbus)", "NordOst (Eberswalde)", "Nordwest (Potsdam)", "Oderland (Frankfurt/Oder)"],
+      "quellen": ["https://www.potsdam.de/de/regionalleitstelle-nordwest-brandenburg", "https://www.feuerwehr-nrw.de/bb/leitstellen/"]
+    },
+    {
+      "bundesland": "Bremen",
+      "leitstellen": ["Bremen", "Unterweser-Elbe (Bremerhaven)"],
+      "quellen": ["https://www.feuerwehr-nrw.de/hb/leitstellen/", "https://www.bremerhaven.de/de/verwaltung-politik-sicherheit/feuerwehr/integrierte-regionalleitstelle-unterweser-elbe.105491.html"],
+      "hinweis": "Unterweser-Elbe ist länderübergreifend auch für die niedersächsischen Landkreise Osterholz und Cuxhaven zuständig, ausgenommen Stadt Cuxhaven. Deshalb nicht nochmals unter Niedersachsen zählen."
+    },
+    {
+      "bundesland": "Hamburg",
+      "leitstellen": ["Hamburg – Rettungsleitstelle der Feuerwehr"],
+      "quellen": ["https://www.feuerwehr.hamburg/rettungsleistelle-816014"]
+    },
+    {
+      "bundesland": "Hessen",
+      "leitstellen": ["Bergstraße", "Darmstadt", "Darmstadt-Dieburg", "Frankfurt am Main", "Fulda", "Gießen", "Groß-Gerau", "Hersfeld-Rotenburg", "Hochtaunus", "Kassel (Stadt und Landkreis)", "Lahn-Dill", "Limburg-Weilburg", "Main-Kinzig", "Main-Taunus", "Marburg-Biedenkopf", "Odenwaldkreis", "Offenbach am Main (Stadt)", "Offenbach (Landkreis; Dietzenbach)", "Rheingau-Taunus", "Schwalm-Eder", "Vogelsberg", "Waldeck-Frankenberg", "Werra-Meißner", "Wetterau", "Wiesbaden"],
+      "quellen": ["https://www.feuerwehr-nrw.de/he/leitstellen/", "https://landesregierung.hessen.de/presse/landesregierung-will-rettungsdienst-zukunftsfaehig-aufstellen"],
+      "hinweis": "Darmstadt und Darmstadt-Dieburg sowie Stadt Offenbach und Landkreis Offenbach sind jeweils getrennte Leitstellen. Kassel versorgt Stadt und Landkreis gemeinsam."
+    },
+    {
+      "bundesland": "Mecklenburg-Vorpommern",
+      "leitstellen": ["Mecklenburgische Seenplatte", "Mittleres Mecklenburg (Landkreis Rostock)", "Rostock (Stadt)", "Vorpommern-Greifswald", "Vorpommern-Rügen", "Westmecklenburg"],
+      "quellen": ["https://www.feuerwehr-nrw.de/mv/leitstellen/", "https://www.regierung-mv.de/Landesregierung/sm/gesundheit/Gesundheitsversorgung/%C3%96ffentlicher-Rettungsdienst/"]
+    },
+    {
+      "bundesland": "Niedersachsen",
+      "leitstellen": ["Braunschweig/Peine/Wolfenbüttel", "Celle", "Cuxhaven (Stadt)", "Diepholz", "Emden", "Ems-Vechte", "Friesland-Wilhelmshaven", "Gifhorn", "Göttingen", "Goslar", "Hannover", "Harburg", "Heidekreis", "Hildesheim", "Lüchow-Dannenberg", "Lüneburg", "Northeim", "Oldenburg", "Osnabrück", "Ostfriesland", "Rotenburg (Wümme)", "Salzgitter", "Schaumburg", "Stade", "Uelzen", "Vechta", "Verden", "Weserbergland", "Wolfsburg/Helmstedt"],
+      "quellen": ["https://www.feuerwehr-nrw.de/ni/leitstellen/", "https://www.landkreis-helmstedt.de/portal/seiten/integrierte-einsatzleitstelle-900000894-34150.html", "https://www.wolfsburg.de/bauenwohnen/neubau-berufsfeuerwehr", "https://www.bremerhaven.de/de/verwaltung-politik-sicherheit/feuerwehr/integrierte-regionalleitstelle-unterweser-elbe.105491.html"],
+      "hinweis": "Unterweser-Elbe siehe Bremen. Helmstedt und Wolfsburg als gemeinsamen Bereich führen; die getrennten kommunalen Dispositionszuständigkeiten erhalten. Ems-Vechte statt zusätzlicher alter Leitstelle Nordhorn. Weserbergland wird auch unter Hameln geführt. Verzeichnis enthält historische Einträge und wurde entsprechend bereinigt."
+    },
+    {
+      "bundesland": "Nordrhein-Westfalen",
+      "leitstellen": ["Aachen/StädteRegion Aachen", "Bielefeld", "Bochum", "Bonn", "Borken", "Bottrop", "Coesfeld", "Dortmund", "Düren", "Düsseldorf", "Duisburg", "Ennepe-Ruhr", "Essen", "Euskirchen", "Gelsenkirchen", "Gütersloh", "Hagen", "Hamm", "Heinsberg", "Herford", "Herne", "Hochsauerlandkreis", "Höxter", "Kleve", "Köln", "Krefeld", "Leverkusen", "Lippe", "Märkischer Kreis", "Mettmann", "Minden-Lübbecke", "Mönchengladbach", "Mülheim an der Ruhr", "Münster", "Oberbergischer Kreis", "Oberhausen", "Olpe", "Paderborn", "Recklinghausen", "Remscheid", "Rhein-Erft-Kreis", "Rhein-Kreis Neuss", "Rhein-Sieg-Kreis", "Rheinisch-Bergischer Kreis", "Siegen-Wittgenstein", "Soest", "Steinfurt", "Unna", "Viersen", "Warendorf", "Wesel", "Wupper (Wuppertal/Solingen)"],
+      "quellen": ["https://de.wikipedia.org/wiki/Liste_der_BOS-Leitstellen#Nordrhein-Westfalen", "https://www.kreis-guetersloh.de/aktuelles/presse-und-oeffentlichkeitsarbeit/pressemitteilungen/29-01-2026-zukunftsorientierte-ausrichtung-der-kreisleitstelle/"],
+      "hinweis": "Wupper zählt einmal für Wuppertal und Solingen. Funknamen: Berga = Rheinisch-Bergischer Kreis; Mark = Märkischer Kreis; Sauerland = Hochsauerlandkreis; SiWi = Siegen-Wittgenstein."
+    },
+    {
+      "bundesland": "Rheinland-Pfalz",
+      "leitstellen": ["Kaiserslautern", "Koblenz", "Ludwigshafen", "Mainz (Interims-ILS)", "Montabaur", "Südpfalz/Landau", "Trier"],
+      "quellen": ["https://bks-portal.rlp.de/startseite/grundlagen/strukturen-im-bks", "https://drk-rhein-nahe.de/2025/03/31/leitstelle-kreuznach-ende/", "https://de.wikipedia.org/wiki/Liste_der_BOS-Leitstellen#Rheinland-Pfalz"],
+      "hinweis": "Bad Kreuznach ist geschlossen. Der Landkreis Bad Kreuznach gehört zur ILS Mainz, der Rhein-Hunsrück-Kreis zur ILS Koblenz. Die Betriebsstätten der Interims-ILS Mainz nicht als mehrere eigenständige Leitstellenbereiche zählen."
+    },
+    {
+      "bundesland": "Saarland",
+      "leitstellen": ["Saarland (ILS Saar)"],
+      "quellen": ["https://www.zrf-saar.de/wir-ueber-uns/stellenausschreibung"],
+      "hinweis": "Die Haupteinsatzzentrale der Feuerwehr Saarbrücken hat eine zusätzliche Feuerwehr-Dispositionsfunktion; sie ist in dieser auf reguläre zentrale Leitstellenbereiche begrenzten Liste nicht separat gezählt."
+    },
+    {
+      "bundesland": "Sachsen",
+      "leitstellen": ["Chemnitz", "Dresden", "Leipzig", "Ostsachsen (Hoyerswerda)", "Zwickau"],
+      "quellen": ["https://amt24.sachsen.de/zufi/organisationseinheiten/6009615"]
+    },
+    {
+      "bundesland": "Sachsen-Anhalt",
+      "leitstellen": ["Altmark", "Anhalt-Bitterfeld", "Börde", "Burgenlandkreis", "Dessau-Roßlau", "Halle (Saale)", "Harz", "Jerichower Land", "Magdeburg", "Mansfeld-Südharz", "Saalekreis", "Salzlandkreis", "Wittenberg"],
+      "quellen": ["https://www.feuerwehr-nrw.de/st/leitstellen/", "https://halle.de/verwaltung-stadtrat/presseportal/nachrichten/nachricht/stadt-halle-saale-und-landkreis-saalekreis-unterzeichnen-vereinbarung-zur-fusion-ihrer-leitstellen"],
+      "hinweis": "Altmark ist die gemeinsame Leitstelle für Altmarkkreis Salzwedel und Landkreis Stendal. Halle und Saalekreis bleiben vorerst getrennt; die gemeinsame Leitstelle ist für 1. Januar 2029 vorgesehen."
+    },
+    {
+      "bundesland": "Schleswig-Holstein",
+      "leitstellen": ["Nord (Harrislee)", "West (Elmshorn)", "Mitte (Kiel)", "Süd (Bad Oldesloe)", "Lübeck", "Neumünster"],
+      "quellen": ["https://www.feuerwehr-nrw.de/sh/leitstellen/", "https://www.schleswig-holstein.de/DE/landesregierung/themen/gesundheit-verbraucherschutz/gesundheitsversorgung/rettungsdienst"],
+      "hinweis": "Nord und West sind kooperative Leitstellen; hier ist jeweils nur ihr Feuerwehr-/Rettungsdienstteil gemeint. Alte Leitstelle Holstein nicht zusätzlich zählen."
+    },
+    {
+      "bundesland": "Thüringen",
+      "leitstellen": ["Eichsfeld", "Erfurt", "Gera", "Gotha", "Jena", "Nordhausen", "Schmalkalden-Meiningen", "Suhl", "Unstrut-Hainich", "Weimarer Land", "Westthüringen (Eisenach/Arnstadt)"],
+      "quellen": ["https://de.wikipedia.org/wiki/Liste_der_BOS-Leitstellen#Th%C3%BCringen", "https://leitstelle-westthueringen.de/", "https://weimarerland.de/de/rettungsdienst.html"],
+      "hinweis": "Hier 11 gemeinsame Bereiche: Westthüringen einmal, aber mit zwei aktiven Betriebsstätten Eisenach und Arnstadt. Deshalb sind Angaben von 12 Leitstellenstandorten damit vereinbar. Schmalkalden-Meiningen und Suhl vorerst getrennt belassen. Nachgeordnete Feuerwehr-Leitstände Weimar und Nordhausen nicht separat zählen."
+    }
+  ]
+}

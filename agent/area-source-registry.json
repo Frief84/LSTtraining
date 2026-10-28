@@ -1,0 +1,45 @@
+{
+  "origin": "data/de-wachen-source-registry.json",
+  "areas": {
+    "nebenleitstellen-50048": {
+      "seed_urls": [
+        "https://www.kreisfeuerwehrverband-vechta.de/?page_id=1125",
+        "https://www.kreisfeuerwehrverband-vechta.de/?page_id=10070",
+        "https://www.landkreis-vechta.de/themen/ordnung-verkehr/feuerschutz-und-rettungswesen/feuerwehrtechnische-zentrale-und-einsatzleitstelle",
+        "https://www.landkreis-vechta.de/themen/ordnung-verkehr/feuerschutz-und-rettungswesen/rettungswesen",
+        "https://rettungsdienst-lkvechta.de/rettungswachen/",
+        "https://feuerwehr-rechterfeld.de/impressum/",
+        "https://feuerwehr-rechterfeld.de/2024/12/offizielle-einweihung-des-neuen-feuerwehrhauses-am-07-12-2024/"
+      ],
+      "official_domains": [
+        "landkreis-vechta.de",
+        "vechta.de",
+        "kreisfeuerwehrverband-vechta.de",
+        "rettungsdienst-lkvechta.de",
+        "malteser.de",
+        "feuerwehr-rechterfeld.de"
+      ]
+    },
+    "nebenleitstellen-143": {
+      "seed_urls": [
+        "https://www.welver.de/fileadmin/user_upload/Dokumente/Wahlen/Wahllokalverzeichnis.pdf",
+        "https://www.welver.de/rathaus-buergerservice/pressemeldungen/pressemeldung/zweiter-bauabschnitt-einecke",
+        "https://www.welver.de/fileadmin/user_upload/Sitzungsdienst/Rat/Einladung_Rat_2019-07-10_Brandschutzbedarfsplan_aktuelle_Version.pdf"
+      ],
+      "official_domains": [
+        "welver.de",
+        "feuerwehr-welver.de"
+      ]
+    },
+    "nebenleitstellen-191": {
+      "seed_urls": [
+        "https://www.berliner-feuerwehr.de/ueber-uns/standorte/",
+        "https://www.berliner-feuerwehr.de/technik/fahrzeuge/"
+      ],
+      "official_domains": [
+        "berliner-feuerwehr.de",
+        "berlin.de"
+      ]
+    }
+  }
+}

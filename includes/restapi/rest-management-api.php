@@ -1,6 +1,8 @@
 <?php
 if (!defined('ABSPATH')) { exit; }
 
+require_once dirname(__DIR__) . '/regions.php';
+
 /**
  * Einheitliche CRUD-API fuer die zentralen Verwaltungsobjekte.
  * Alle Tabellen- und Spaltennamen stammen ausschliesslich aus den Whitelists
@@ -48,9 +50,11 @@ function lst_manage_resource_configs(): array {
             'label' => 'Nebenleitstelle',
             'search_field' => 'name',
             'order' => 'name ASC, id ASC',
-            'list_fields' => ['id', 'name', 'zustandigkeit', 'einwohner', 'flaeche_km2', 'gps', 'nachbarleitstelle', 'created_at'],
+            'list_fields' => ['id', 'name', 'land', 'bundesland', 'zustandigkeit', 'einwohner', 'flaeche_km2', 'gps', 'nachbarleitstelle', 'created_at'],
             'fields' => [
                 'name' => ['type' => 'string', 'required' => true, 'max' => 255],
+                'land' => ['type' => 'string', 'nullable' => true, 'max' => 100],
+                'bundesland' => ['type' => 'string', 'nullable' => true, 'max' => 255],
                 'aufgaben' => ['type' => 'text', 'nullable' => true, 'max' => 4000],
                 'zustandigkeit' => ['type' => 'text', 'nullable' => true, 'max' => 4000],
                 'standorte' => ['type' => 'text', 'nullable' => true, 'max' => 4000],
@@ -72,9 +76,10 @@ function lst_manage_resource_configs(): array {
             'label' => 'Wache',
             'search_field' => 'name',
             'order' => 'name ASC, id ASC',
-            'list_fields' => ['id', 'name', 'typ', 'bundesland', 'land', 'latitude', 'longitude', 'exists_in_reality', 'source_key', 'source_url', 'source_checked_at', 'created_at'],
+            'list_fields' => ['id', 'name', 'adresse', 'typ', 'bundesland', 'land', 'latitude', 'longitude', 'exists_in_reality', 'source_key', 'source_url', 'source_checked_at', 'created_at'],
             'fields' => [
                 'name' => ['type' => 'string', 'required' => true, 'max' => 255],
+                'adresse' => ['type' => 'string', 'nullable' => true, 'max' => 500],
                 'typ' => ['type' => 'enum', 'required' => true, 'allowed' => ['FW', 'FFW', 'SEG', 'RD', 'FRRD', 'AIR']],
                 'bundesland' => ['type' => 'string', 'nullable' => true, 'max' => 50],
                 'latitude' => ['type' => 'latitude', 'required' => true],
@@ -228,7 +233,7 @@ function lst_manage_error(string $code, string $message, int $status): WP_REST_R
 }
 
 function lst_manage_connection() {
-    require_once plugin_dir_path(__FILE__) . 'db.php';
+    require_once dirname(__DIR__) . '/db.php';
     return lsttraining_get_connection();
 }
 
@@ -731,6 +736,27 @@ function lst_manage_validate_hospital_ids(PDO $pdo, array $data): void {
     }
 }
 
+function lst_manage_validate_region_fields(string $resource, array $data, array $current = []): array {
+    if ($resource !== 'nebenleitstellen' || (!array_key_exists('land', $data) && !array_key_exists('bundesland', $data))) {
+        return $data;
+    }
+
+    $land = array_key_exists('land', $data) ? trim((string) ($data['land'] ?? '')) : trim((string) ($current['land'] ?? ''));
+    $bundesland = array_key_exists('bundesland', $data) ? trim((string) ($data['bundesland'] ?? '')) : trim((string) ($current['bundesland'] ?? ''));
+    $region = lsttraining_region_validate_selection($land, $bundesland);
+    if (!$region['valid']) {
+        throw new InvalidArgumentException($region['message']);
+    }
+    if (array_key_exists('land', $data)) {
+        $data['land'] = $region['land'] !== '' ? $region['land'] : null;
+    }
+    if (array_key_exists('bundesland', $data)) {
+        $data['bundesland'] = $region['bundesland'] !== '' ? $region['bundesland'] : null;
+    }
+
+    return $data;
+}
+
 function lst_manage_create_resource(WP_REST_Request $request) {
     $resource = (string) $request->get_param('resource');
     $config = lst_manage_get_config($resource);
@@ -750,6 +776,7 @@ function lst_manage_create_resource(WP_REST_Request $request) {
     $created_image_paths = [];
     try {
         $data = lst_manage_normalize_payload($config, $payload, true);
+        $data = lst_manage_validate_region_fields($resource, $data);
         $scope = lst_manage_validate_write_scope($pdo, $resource, 0, array_replace($payload, $data), true);
         if ($scope instanceof WP_REST_Response) { return $scope; }
         lst_manage_validate_hospital_ids($pdo, $data);
@@ -814,12 +841,14 @@ function lst_manage_update_resource(WP_REST_Request $request) {
 
     $created_image_paths = [];
     try {
-        if (!lst_manage_fetch_one($pdo, $resource, $id)) {
+        $current = lst_manage_fetch_one($pdo, $resource, $id);
+        if (!$current) {
             return lst_manage_error('not_found', 'Datensatz nicht gefunden.', 404);
         }
         $object_scope = lst_manage_validate_write_scope($pdo, $resource, $id, [], false);
         if ($object_scope instanceof WP_REST_Response) { return $object_scope; }
         $data = lst_manage_normalize_payload($config, $payload, false);
+        $data = lst_manage_validate_region_fields($resource, $data, $current);
         $scope = lst_manage_validate_write_scope($pdo, $resource, $id, array_replace($payload, $data), false);
         if ($scope instanceof WP_REST_Response) { return $scope; }
         lst_manage_validate_hospital_ids($pdo, $data);
@@ -929,3 +958,5 @@ function lst_manage_delete_resource(WP_REST_Request $request) {
         return lst_manage_error('db_write_failed', 'Datensatz konnte nicht geloescht werden.', 500);
     }
 }
+
+require_once __DIR__ . '/rest-abgleich.php';

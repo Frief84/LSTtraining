@@ -61,6 +61,8 @@ CREATE TABLE IF NOT EXISTS `leitstellen_pois` (
 CREATE TABLE IF NOT EXISTS `nebenleitstellen` (
   `id`                INT NOT NULL AUTO_INCREMENT,
   `name`              VARCHAR(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `land`              VARCHAR(100) COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `bundesland`        VARCHAR(255) COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   `aufgaben`          TEXT COLLATE utf8mb4_general_ci NULL,
   `zustandigkeit`     TEXT COLLATE utf8mb4_general_ci NULL,
   `standorte`         TEXT COLLATE utf8mb4_general_ci NULL,
@@ -70,7 +72,9 @@ CREATE TABLE IF NOT EXISTS `nebenleitstellen` (
   `nachbarleitstelle` TINYINT(1) NULL DEFAULT NULL,
   `geojson`           JSON NULL,
   `created_at`        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_nebenleitstellen_land` (`land`),
+  KEY `idx_nebenleitstellen_bundesland` (`bundesland`(191))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- -------------------------------------------------------------------
@@ -80,6 +84,7 @@ CREATE TABLE IF NOT EXISTS `nebenleitstellen` (
 CREATE TABLE IF NOT EXISTS `wachen` (
   `id`                 INT NOT NULL AUTO_INCREMENT,
   `name`               VARCHAR(255) COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `adresse`            VARCHAR(500) COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
   `typ`                VARCHAR(50)  COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `bundesland`         VARCHAR(50)  COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
   `latitude`           DOUBLE NOT NULL,

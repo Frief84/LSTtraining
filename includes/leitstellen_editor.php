@@ -11,12 +11,14 @@ $leitstelle_id = isset( $_GET['ls_id'] )
     : 0;
 
 require_once plugin_dir_path( __FILE__ ) . '/db.php';
+require_once plugin_dir_path( __FILE__ ) . '/regions.php';
 require_once plugin_dir_path( __FILE__ ) . '/einsatzgebiet-editor.php';
 
 $pdo         = lsttraining_get_connection();
 $leitstellen = [];
 $neighbor_ids_by_leitstelle = [];
-$suchbegriff = isset( $_GET['suchbegriff'] ) ? $_GET['suchbegriff'] : '';
+$suchbegriff = isset( $_GET['suchbegriff'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['suchbegriff'] ) ) : '';
+[ $selected_land, $selected_bundesland ] = lsttraining_region_filter_values( $_GET );
 
 if ( ! function_exists( 'lsttraining_leitstellen_column_exists' ) ) {
     function lsttraining_leitstellen_column_exists( PDO $pdo, string $table, string $column ): bool {
@@ -383,6 +385,16 @@ if ( $pdo ) {
         $list_params[] = '%' . $suchbegriff . '%';
         $list_params[] = $suchbegriff;
     }
+    if ( $selected_land !== '' ) {
+        $list_where[] = 'land = ?';
+        $list_params[] = $selected_land;
+        if ( $selected_bundesland === '__none__' ) {
+            $list_where[] = "(bundesland IS NULL OR TRIM(bundesland) = '')";
+        } elseif ( $selected_bundesland !== '' ) {
+            $list_where[] = 'bundesland = ?';
+            $list_params[] = $selected_bundesland;
+        }
+    }
     if ( ! current_user_can( 'manage_options' ) ) {
         $allowed_ids = lsttraining_user_visible_leitstellen();
         if ( $allowed_ids ) {
@@ -429,11 +441,12 @@ if ( $pdo ) {
 
     <?php settings_errors( 'lsttraining_msg' ); ?>
 
-    <form method="get" style="margin-bottom:20px;">
+    <form method="get" data-lst-region-filter-form style="margin-bottom:20px;">
         <input type="hidden" name="page" value="lsttraining_leitstellen">
         <input type="text" name="suchbegriff" placeholder="Suchen nach Name oder ID …"
                value="<?php echo esc_attr( $suchbegriff ); ?>" style="width:300px;">
         <button class="button">Suchen</button>
+        <?php lsttraining_render_region_filter( $selected_land, $selected_bundesland ); ?>
     </form>
 	
 <?php if ( lsttraining_user_can_global_area( 'leitstellen' ) ) : ?>

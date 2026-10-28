@@ -32,6 +32,7 @@ if (!defined('LSTTRAINING_URL')) {
 }
 
 require_once LSTTRAINING_PATH . 'includes/db.php';
+require_once LSTTRAINING_PATH . 'includes/regions.php';
 require_once LSTTRAINING_PATH . 'includes/migrations.php';
 require_once LSTTRAINING_PATH . 'includes/instance-lifecycle.php';
 require_once LSTTRAINING_PATH . 'includes/vehicle-availability.php';
@@ -41,9 +42,9 @@ require_once LSTTRAINING_PATH . 'includes/schema_import.php';
 require_once LSTTRAINING_PATH . 'includes/ajax-handlers.php';
 require_once LSTTRAINING_PATH . 'includes/ajax/ajax_index.php';
 require_once LSTTRAINING_PATH . 'includes/ajax/ajax_simulation.php';
-require_once LSTTRAINING_PATH . 'includes/rest-validation.php';
-require_once LSTTRAINING_PATH . 'includes/rest-api.php';
-require_once LSTTRAINING_PATH . 'includes/rest-management-api.php';
+require_once LSTTRAINING_PATH . 'includes/restapi/rest-validation.php';
+require_once LSTTRAINING_PATH . 'includes/restapi/rest-api.php';
+require_once LSTTRAINING_PATH . 'includes/restapi/rest-management-api.php';
 require_once LSTTRAINING_PATH . 'includes/restapi/rest-einsaetze-api.php';
 require_once LSTTRAINING_PATH . 'includes/simulation-workspace.php';
 require_once LSTTRAINING_PATH . 'includes/frontend.php';

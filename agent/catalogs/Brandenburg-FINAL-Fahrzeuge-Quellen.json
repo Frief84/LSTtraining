@@ -1,0 +1,899 @@
+{
+  "DE": {
+    "Brandenburg": {
+      "Barnim": {
+        "Eberswalde": [
+          {
+            "name": "Landkreis Barnim - Zentrum für Brand- und Katastrophenschutz ZFBK",
+            "adresse": "Neue Str. 3, Eberswalde",
+            "typ": "Feuerwehrtechnische Zentrale / KatS",
+            "organisation": "Kreis",
+            "dienstzeiten": "24/7 abrufbar",
+            "quelle": "https://bos-fahrzeuge.info/wachen/55307",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Barnim 00/14-01",
+                "typ": "KdoW",
+                "funktion": "KdoW KBM",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Barnim 00/11-01",
+                "typ": "ELW 1",
+                "funktion": "ELW 1",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Barnim 00/59-01",
+                "typ": "GW-L",
+                "funktion": "Gerätewagen Logistik",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Barnim 00/90-01",
+                "typ": "CBRN ErKW",
+                "funktion": "CBRN Erkundungswagen",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ],
+        "Ahrensfelde": [
+          {
+            "name": "Freiwillige Feuerwehr Ahrensfelde - Ortswehr Eiche",
+            "adresse": "Ahrensfelde OT Eiche",
+            "typ": "Freiwillige Feuerwehr",
+            "organisation": "FF",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Barnim 03/42-01",
+                "typ": "LF 10/6",
+                "funktion": "Löschgruppenfahrzeug LF 10/6 MB Atego 1328 AF Schlingmann Baujahr 2010 Indienststellung 14.05.2010",
+                "kennzeichen": "BAR-FF 243",
+                "status": "aktiv"
+              }
+            ]
+          },
+          {
+            "name": "Freiwillige Feuerwehr Ahrensfelde - Ortswehr Mehrow",
+            "typ": "Freiwillige Feuerwehr",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Barnim 03/42-02",
+                "typ": "LF 10/6",
+                "funktion": "LF 10/6",
+                "status": "aktiv",
+                "hinweis": "Zeitgleich mit 03/42-01 in Dienst"
+              }
+            ]
+          }
+        ],
+        "Wandlitz": [
+          {
+            "name": "Freiwillige Feuerwehr Wandlitz",
+            "typ": "Freiwillige Feuerwehr",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Barnim 07/24-01",
+                "typ": "TLF",
+                "kennzeichen": "BAR-FF 326",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Barnim 02/24-01",
+                "typ": "TLF",
+                "kennzeichen": "BAR-FF 236",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ]
+      },
+      "Dahme-Spreewald": {
+        "Luckau": [
+          {
+            "name": "Landkreis Dahme-Spreewald - Brand- und Katastrophenschutzzentrum BKZ Luckau",
+            "adresse": "Luckau, BKZ",
+            "typ": "Kreis / FTZ",
+            "organisation": "Kreis",
+            "leitstelle": "Leitstelle Lausitz",
+            "dienstzeiten": "24/7",
+            "quelle": "https://bos-fahrzeuge.info/wachen/50789",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Spreewald 00/10-01",
+                "typ": "KdoW",
+                "funktion": "KdoW Kreisbrandmeisterei Ford Ranger BTS",
+                "kennzeichen": "LDS-LK 835",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Spreewald 00/12-01",
+                "typ": "ELW 2",
+                "funktion": "ELW 2 MAN 8.163 LC Binz Baujahr 1998",
+                "kennzeichen": "LDS-2012",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Spreewald 00/14-01",
+                "typ": "KdoW",
+                "funktion": "KdoW KBM VW Tiguan II Allspace 2.0 TDI 4Motion BINZ",
+                "kennzeichen": "LDS-LK 112",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Spreewald 00/59-01",
+                "typ": "GW-IuK",
+                "funktion": "GW Information und Kommunikation SEG Führungsunterstützung Iveco Daily 70 C 21 BTG",
+                "kennzeichen": "LDS-LK 590",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Spreewald 20/10-01",
+                "typ": "KdoW",
+                "funktion": "KdoW BKZ Luckau Ford Ranger BTS",
+                "kennzeichen": "LDS-LK 834",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ],
+        "Königs Wusterhausen": [
+          {
+            "name": "Freiwillige Feuerwehr Königs Wusterhausen",
+            "typ": "Freiwillige Feuerwehr - Stützpunktwehr LDS",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Spreewald 10/42-01",
+                "typ": "LF",
+                "kennzeichen": "LDS-2350",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Spreewald 13/47-01",
+                "typ": "TSF",
+                "kennzeichen": "LDS-N 551",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ]
+      },
+      "Elbe-Elster": {
+        "Herzberg (Elster)": [
+          {
+            "name": "Freiwillige Feuerwehr Herzberg (Elster)",
+            "typ": "Freiwillige Feuerwehr",
+            "organisation": "FF",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Elbe-Elster 07/19-01",
+                "typ": "MTW",
+                "funktion": "MTW VW Crafter 2 Baujahr 2022 HERTZ",
+                "kennzeichen": "EE-FF 719",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Elbe-Elster 07/48-01",
+                "typ": "TSF-W",
+                "funktion": "TSF-W MAN LE 8.140 Ziegler, 2003-2017 LG Züllsdorf, heute LG Frauenhorst",
+                "kennzeichen": "EE-2259",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ],
+        "Elsterwerda": [
+          {
+            "name": "Freiwillige Feuerwehr Elsterwerda LZ1",
+            "typ": "Freiwillige Feuerwehr",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Elbe-Elster 02/26-01",
+                "typ": "TLF 20/50-W",
+                "funktion": "TLF 20/50-W Typ Brandenburg",
+                "kennzeichen": "EE-IB 29",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ],
+        "Crinitz": [
+          {
+            "name": "Freiwillige Feuerwehr Amt Kleine Elster - Ortswehr Crinitz",
+            "typ": "Freiwillige Feuerwehr",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Elbe-Elster 08/42-01",
+                "typ": "LF10 Primus",
+                "funktion": "LF10 MAN TGM 13.290 4x4 BB 290 PS Euro5",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ],
+        "Zürchel": [
+          {
+            "name": "Freiwillige Feuerwehr Zürchel Amt Kleine Elster",
+            "typ": "Freiwillige Feuerwehr",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Elbe-Elster 08/47-03",
+                "typ": "TSF",
+                "funktion": "TSF Renault Master dCi 100 Meinicke TS 8/8",
+                "kennzeichen": "EE CQ 566",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ],
+        "Falkenberg": [
+          {
+            "name": "Freiwillige Feuerwehr Falkenberg/Elster",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Elbe-Elster 06/23-01",
+                "typ": "TLF 16/25",
+                "funktion": "TLF 16/25 Iveco Magirus EuroFire AluFire 2",
+                "kennzeichen": "EE-2300",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ]
+      },
+      "Havelland": {
+        "Falkensee": [
+          {
+            "name": "Freiwillige Feuerwehr Falkensee",
+            "adresse": "Falkensee",
+            "typ": "Freiwillige Feuerwehr - größte FF im LK HVL",
+            "leitstelle": "Leitstelle Nordwest (HVL, OPR, P, PR)",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Havelland 02/11-01",
+                "typ": "ELW 1",
+                "kennzeichen": "HVL-KF 238",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Havelland 06/44-01",
+                "typ": "LF 16/12",
+                "kennzeichen": "HVL-FB 410",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Havelland 00/Krad",
+                "typ": "Krad",
+                "funktion": "Erkundungs-Krad BSE-HVL Yamaha TW125 Baujahr 2002 Bund KatS",
+                "kennzeichen": "HVL-8417",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Havelland 03/24-01",
+                "typ": "TLF",
+                "kennzeichen": "HVL-FF 211",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ],
+        "Rathenow": [
+          {
+            "name": "Landkreis Havelland - Brand- und Katastrophenschutz",
+            "typ": "Kreis",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Havelland 00/14-xx",
+                "typ": "KdoW",
+                "funktion": "KdoW KatS VW Multivan T5 GP ehemals First Responder Bayer",
+                "kennzeichen": "HVL-LK 323",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ]
+      },
+      "Märkisch-Oderland": {
+        "Strausberg": [
+          {
+            "name": "Freiwillige Feuerwehr Strausberg",
+            "typ": "Freiwillige Feuerwehr - Stützpunkt",
+            "leitstelle": "Leitstelle Oderland",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Oderland 05/11-01",
+                "typ": "ELW 1",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Oderland 05/24-01",
+                "typ": "TLF 4000-St",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Oderland 05/33-01",
+                "typ": "DLA(K) 23/12",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Oderland 05/43-01",
+                "typ": "HLF 20/16",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ],
+        "Altlandsberg": [
+          {
+            "name": "Freiwillige Feuerwehr Altlandsberg",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Oderland 06/23-01",
+                "typ": "LF 16/12",
+                "funktion": "LF 16/12",
+                "kennzeichen": "MOL-2348",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ],
+        "Fredersdorf": [
+          {
+            "name": "Freiwillige Feuerwehr Fredersdorf",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Oderland 01/44-02",
+                "typ": "LF 16/12",
+                "kennzeichen": "MOL-2283",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ],
+        "Wriezen": [
+          {
+            "name": "Freiwillige Feuerwehr Wriezen LG Biesdorf",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Oderland 19/47-02",
+                "typ": "TSF",
+                "kennzeichen": "MOL-2281",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ]
+      },
+      "Oberhavel": {
+        "Oranienburg": [
+          {
+            "name": "Freiwillige Feuerwehr Oranienburg LZ 2 Innenstadt",
+            "typ": "Freiwillige Feuerwehr",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Oberhavel 06/19-02",
+                "typ": "MTW-Fü",
+                "funktion": "MTW Führung KatS VW Crafter 35 TDI Binz",
+                "kennzeichen": "OHV-K 8013",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ],
+        "Schönfließ": [
+          {
+            "name": "Freiwillige Feuerwehr Schönfließ Gemeinde Mühlenbecker Land",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Oberhavel 15/11-04",
+                "typ": "KdoW",
+                "funktion": "KdoW VW T4 TDI syncro Baujahr 2003 ehemals ELW 15/11-03",
+                "kennzeichen": "OHV-2275",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ],
+        "Landkreis": [
+          {
+            "name": "Landkreis Oberhavel",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Oberhavel 00/14-04",
+                "typ": "KdoW",
+                "funktion": "KdoW Landkreis Skoda Octavia II Scout",
+                "kennzeichen": "OHV-LK 130",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ]
+      },
+      "Oberspreewald-Lausitz": {
+        "Großräschen": [
+          {
+            "name": "Landkreis Oberspreewald-Lausitz FKTZ Großräschen",
+            "typ": "Kreis / FKTZ",
+            "leitstelle": "Leitstelle Lausitz",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Spree-Lausitz 00/11-01",
+                "typ": "ELW",
+                "funktion": "ELW KBM Mitsubishi Pajero bis 2023",
+                "kennzeichen": "OSL-2112",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Spree-Lausitz 00/12-01",
+                "typ": "ELW 2",
+                "funktion": "ELW 2 SEG Führung MAN LE 8.180 Binz/EADS Telekom Baujahr 2004",
+                "kennzeichen": "OSL-212",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Spree-Lausitz 00/74-02",
+                "typ": "LKW",
+                "funktion": "LKW KatS MAN 8.163 LAEC",
+                "kennzeichen": "OSL-232",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ],
+        "Calau": [
+          {
+            "name": "Freiwillige Feuerwehr Calau/NL",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Spree-Lausitz 06/14-01",
+                "typ": "KdoW",
+                "funktion": "KdoW Mitsubishi Pajero V20 GLX Baujahr 1994 ehemals ELW KBM",
+                "kennzeichen": "OSL-FC 112",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ]
+      },
+      "Oder-Spree": {
+        "Beeskow": [
+          {
+            "name": "Freiwillige Feuerwehr Beeskow",
+            "typ": "Freiwillige Feuerwehr",
+            "leitstelle": "Leitstelle Oderland",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Oder-Spree 01/11-01",
+                "typ": "ELW",
+                "funktion": "ELW Suzuki Grand Vitara Eigenausbau Baujahr 2008",
+                "kennzeichen": "LOS-OX 111",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Oder-Spree 01/26-01",
+                "typ": "TLF 20/50-W",
+                "funktion": "TLF 20/50-W Mercedes Unimog U5000 EMPL Baujahr 2008",
+                "kennzeichen": "LOS-OX 110",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ],
+        "Neuzelle": [
+          {
+            "name": "Freiwillige Feuerwehr Neuzelle Ortswehr Ossendorf",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Oder-Spree 10/47-11",
+                "typ": "TSF",
+                "funktion": "TSF Mercedes 307 D T1 Bachert Baujahr 1986",
+                "kennzeichen": "LOS-2274",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ],
+        "Odervorland": [
+          {
+            "name": "Freiwillige Feuerwehr Amt Odervorland Ortswehr Beerfelde",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Oder-Spree 11/14-01",
+                "typ": "KdoW",
+                "funktion": "KdoW VW T5 1.9 TDI Eigenausbau",
+                "kennzeichen": "LOS-OX 113",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ]
+      },
+      "Prignitz": {
+        "Wittenberge": [
+          {
+            "name": "Freiwillige Feuerwehr Wittenberge",
+            "typ": "Freiwillige Feuerwehr",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Prignitz 30/44-02",
+                "typ": "LF 16/12",
+                "funktion": "LF 16/12 MAN LE 220 B Ziegler Baujahr 2002",
+                "kennzeichen": "PR-2286",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ],
+        "Perleberg": [
+          {
+            "name": "Freiwillige Feuerwehr Perleberg Ortswehr Düpow",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Prignitz 10/47-03",
+                "typ": "TSF",
+                "funktion": "TSF Mercedes Sprinter 308 CDI Ziegler Baujahr 2003",
+                "kennzeichen": "PR-2297",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ]
+      },
+      "Spree-Neiße": {
+        "Forst (Lausitz)": [
+          {
+            "name": "Freiwillige Feuerwehr Forst (Lausitz) OW Mitte",
+            "typ": "Freiwillige Feuerwehr",
+            "leitstelle": "Leitstelle Lausitz",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Spree-Neiße 01/24-01",
+                "typ": "TLF 4000 St Typ Brandenburg",
+                "funktion": "TLF 4000 St MAN TGM 18.290 Iturri Baujahr 2022",
+                "kennzeichen": "FOR-FF 111",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ],
+        "Spremberg": [
+          {
+            "name": "Freiwillige Feuerwehr Spremberg LG Terpe",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Spree-Neiße 04/47-01",
+                "typ": "TSF",
+                "funktion": "TSF VW LT 35 TDI Meinicke Baujahr 2003",
+                "kennzeichen": "SPN-2254",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ]
+      },
+      "Teltow-Fläming": {
+        "Luckenwalde": [
+          {
+            "name": "Freiwillige Feuerwehr Luckenwalde",
+            "typ": "Freiwillige Feuerwehr - Stadt",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Fläming 05/41-01",
+                "typ": "HLF 20",
+                "kennzeichen": "TF-2249",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Fläming 08/26-01",
+                "typ": "LF 10",
+                "kennzeichen": "TF-NZ 43",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Fläming 07/47-05",
+                "typ": "TSF-W",
+                "kennzeichen": "TF-2061",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ]
+      },
+      "Uckermark": {
+        "Prenzlau": [
+          {
+            "name": "Freiwillige Feuerwehr Prenzlau Ortswehr Dedelow",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Uckermark 02/41-03",
+                "typ": "LF 8",
+                "funktion": "LF 8 Mercedes 814 F LN2 Metz ex Florian Stormarn 98/41-01",
+                "kennzeichen": "UM-FW 107",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ],
+        "Schwedt": [
+          {
+            "name": "Freiwillige Feuerwehr Schwedt/Oder Ortswehr Heinersdorf",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Uckermark 03/44-03",
+                "typ": "LF 16/12",
+                "funktion": "LF 16/12 Iveco Magirus EuroFire AluFire 2 FP 16/8 1600 l/min",
+                "kennzeichen": "UM-2261",
+                "status": "aktiv"
+              }
+            ]
+          },
+          {
+            "name": "Freiwillige Feuerwehr Schwedt/Oder - Stadtbrandmeister",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Uckermark 03/14-02",
+                "typ": "KdoW",
+                "funktion": "KdoW VW Passat B5 Variant 2.0 Binz Baujahr 2003",
+                "kennzeichen": "UM-2413",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ]
+      },
+      "Potsdam (kreisfrei)": {
+        "Potsdam": [
+          {
+            "name": "Berufsfeuerwehr Potsdam - FRW 1",
+            "adresse": "Holzmarktstraße 6, Potsdam",
+            "typ": "Berufsfeuerwehr",
+            "organisation": "BF",
+            "dienstzeiten": "24/7 BF + RD",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Potsdam 01/11-01",
+                "typ": "ELW 1",
+                "funktion": "ELW 1 VW T5 GP TDI 4Motion Hensel",
+                "dienstzeiten": "24/7",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Potsdam 01/43-02",
+                "typ": "HLF 20",
+                "kennzeichen": "P-FW 41",
+                "dienstzeiten": "24/7",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Potsdam 01/65-04",
+                "typ": "WLF-K",
+                "funktion": "WLF-K MAN TGS 35.440 8x6",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Potsdam 01/82-02",
+                "typ": "NEF",
+                "funktion": "NEF FRW 1",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Potsdam 04/42-01",
+                "typ": "LF 10",
+                "funktion": "LF 10 P-FW 126 FF Bornstedt",
+                "status": "aktiv"
+              }
+            ]
+          },
+          {
+            "name": "Freiwillige Feuerwehr Potsdam - Golm, Bornim, Grube, Babelsberg, Fahrland, Satzkorn, Zentrum",
+            "typ": "Freiwillige Feuerwehr",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Potsdam 16/42-01",
+                "typ": "LF",
+                "kennzeichen": "P-FW 121",
+                "ort": "FF Golm",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Potsdam 03/42-01",
+                "typ": "LF",
+                "kennzeichen": "P-FW 122",
+                "ort": "FF Bornim",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Potsdam 09/42-01",
+                "typ": "LF",
+                "kennzeichen": "P-FW 124",
+                "ort": "FF Grube",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Potsdam 07/42-01",
+                "typ": "LF",
+                "kennzeichen": "P-FW 125",
+                "ort": "FF Babelsberg/Klein-Glienicke",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Potsdam 14/42-01",
+                "typ": "LF",
+                "kennzeichen": "P-FW 127",
+                "ort": "FF Neu Fahrland",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Potsdam 17/42-01",
+                "typ": "LF",
+                "kennzeichen": "P-FW 128",
+                "ort": "FF Satzkorn",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Potsdam 10/42-01",
+                "typ": "LF 8/6",
+                "kennzeichen": "P-2295",
+                "ort": "FF Zentrum Iveco Magirus",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Potsdam 11/51-01",
+                "typ": "RW 1",
+                "funktion": "RW 1 MAN LE 180 C Metz",
+                "ort": "FF Fahrland",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ]
+      },
+      "Potsdam-Mittelmark": {
+        "Beelitz-Heilstätten": [
+          {
+            "name": "Landkreis Potsdam-Mittelmark FTZ + JUH RW Beelitz",
+            "adresse": "Beelitz-Heilstätten FTZ",
+            "typ": "Kreis + Rettungsdienst",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Mittelmark 23/72-01",
+                "typ": "GW-Höhenrettung",
+                "funktion": "GW-Höhenrettung FTZ",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Mittelmark 23/52-01",
+                "typ": "Fahrzeug",
+                "kennzeichen": "PM-PM 243",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Rettung Mittelmark 05/82-01",
+                "typ": "NEF",
+                "funktion": "NEF JUH Beelitz",
+                "dienstzeiten": "24/7",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ],
+        "Kloster Lehnin": [
+          {
+            "name": "FF Kloster Lehnin",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Mittelmark 12/52-01",
+                "typ": "Fahrzeug",
+                "kennzeichen": "PM-LE 112",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Mittelmark 12/76-01",
+                "typ": "Fahrzeug",
+                "kennzeichen": "PM-PM 763",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ]
+      },
+      "Cottbus (kreisfrei)": {
+        "Cottbus": [
+          {
+            "name": "Berufsfeuerwehr Cottbus FuRW 2 + Wache 1",
+            "adresse": "Ewald-Haase-Str. 3 + Dresdener Str. 46, Cottbus",
+            "typ": "Berufsfeuerwehr",
+            "dienstzeiten": "24/7",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Cottbus 03/82-02",
+                "typ": "NEF",
+                "kennzeichen": "CB-FW 556",
+                "funktion": "NEF MB Vito WAS Baujahr 2025",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Cottbus 11/24-01",
+                "typ": "TLF-W BB",
+                "funktion": "TLF-W BB Tatra Force T815 Gerätehaus Süd",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Cottbus 01/91-01",
+                "typ": "GW-Dekon P",
+                "funktion": "GW-Dekon P MAN TGM 18.340",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Cottbus 00/83-08",
+                "typ": "RTW",
+                "funktion": "RTW Reserve",
+                "status": "Reserve"
+              }
+            ]
+          }
+        ]
+      },
+      "Brandenburg an der Havel (kreisfrei)": {
+        "Brandenburg": [
+          {
+            "name": "Berufsfeuerwehr + Freiwillige Feuerwehr Brandenburg an der Havel",
+            "adresse": "Fontanestraße 1, Brandenburg",
+            "typ": "BF + FF",
+            "fahrzeuge": [
+              {
+                "kurz": "HLF20",
+                "funktion": "HLF20 - noch zu verifizieren BOS",
+                "status": "vermutlich aktiv"
+              },
+              {
+                "kurz": "DLK 23/12",
+                "funktion": "Drehleiter",
+                "status": "aktiv"
+              }
+            ],
+            "hinweis": "Offizielle Seite nur Einsatzberichte, BOS Seite FF Brandenburg a.d. Havel muss noch vollständig geparst werden"
+          }
+        ]
+      },
+      "Frankfurt (Oder) (kreisfrei)": {
+        "Frankfurt": [
+          {
+            "name": "Berufsfeuerwehr Frankfurt (Oder) + FF",
+            "typ": "BF + FF",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Frankfurt 01/44-02",
+                "typ": "LF 16/12",
+                "funktion": "LF 16/12 Iveco EuroFire 1996",
+                "kennzeichen": "FF-2204",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Frankfurt 01/52-01",
+                "typ": "RW 2 / GW-AS",
+                "funktion": "RW2 Mercedes 1222 AF Metz 1992",
+                "kennzeichen": "FF-2562",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Frankfurt 01/65-01",
+                "typ": "WLF",
+                "funktion": "WLF Mercedes Axor 1829 Ziegler 2010",
+                "kennzeichen": "FF-O 2017",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ]
+      },
+      "Ostprignitz-Ruppin": {
+        "Hinweis": "Rufname Florian Ostprignitz-Ruppin / Florian OPR - BOS noch zu parsen"
+      },
+      "Barnim_Ergänzung": {
+        "quelle": "BOS Standort Barnim BAR BER EW - über 30 Fahrzeuge"
+      }
+    }
+  }
+}

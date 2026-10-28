@@ -190,7 +190,7 @@ function lst_rest_can_route( WP_REST_Request $request ) : bool {
     if ( is_array($body) && isset($body['instanz_id']) && is_numeric($body['instanz_id']) ) {
         $instanz_id = (int) $body['instanz_id'];
         if ( $instanz_id > 0 ) {
-            require_once plugin_dir_path(__FILE__) . 'db.php';
+            require_once dirname(__DIR__) . '/db.php';
 
             $pdo = lsttraining_get_connection();
             if ( $pdo instanceof PDO ) {
@@ -252,7 +252,7 @@ function lst_rest_can_read_instance_status( WP_REST_Request $request ) {
         return true;
     }
 
-    require_once plugin_dir_path(__FILE__) . 'db.php';
+    require_once dirname(__DIR__) . '/db.php';
     $pdo = lsttraining_get_connection();
     if ( ! $pdo instanceof PDO ) {
         return new WP_Error(
@@ -301,7 +301,7 @@ function lst_rest_can_write_instance_status( WP_REST_Request $request ) {
         return true;
     }
 
-    require_once plugin_dir_path(__FILE__) . 'db.php';
+    require_once dirname(__DIR__) . '/db.php';
     $pdo = lsttraining_get_connection();
     if ( ! $pdo instanceof PDO ) {
         return new WP_Error('lst_rest_db_connection_failed', 'Datenbankverbindung fehlgeschlagen.', ['status' => 500]);
@@ -396,7 +396,7 @@ function lst_rest_live_response(array $data): WP_REST_Response {
 }
 
 function lst_rest_get_instance_vehicles( WP_REST_Request $request ) {
-    require_once plugin_dir_path(__FILE__) . 'db.php';
+    require_once dirname(__DIR__) . '/db.php';
 
     $pdo = lsttraining_get_connection();
     if ( ! $pdo instanceof PDO ) {
@@ -425,7 +425,7 @@ function lst_rest_get_instance_vehicles( WP_REST_Request $request ) {
 }
 
 function lst_rest_get_instance_status( WP_REST_Request $request ) {
-    require_once plugin_dir_path(__FILE__) . 'db.php';
+    require_once dirname(__DIR__) . '/db.php';
 
     $pdo = lsttraining_get_connection();
     if ( ! $pdo instanceof PDO ) {
@@ -544,7 +544,7 @@ function lst_rest_update_instance_status( WP_REST_Request $request ) {
         return new WP_REST_Response(['ok' => false, 'error' => 'no_changes'], 400);
     }
 
-    require_once plugin_dir_path(__FILE__) . 'db.php';
+    require_once dirname(__DIR__) . '/db.php';
     $pdo = lsttraining_get_connection();
     if ( ! $pdo instanceof PDO ) {
         return new WP_REST_Response(['ok' => false, 'error' => 'db_connection_failed'], 500);
@@ -609,8 +609,8 @@ function lst_rest_update_instance_vehicle( WP_REST_Request $request ) {
         return lst_rest_validation_response($e);
     }
 
-    require_once plugin_dir_path(__FILE__) . 'db.php';
-    require_once plugin_dir_path(__FILE__) . 'simulation/vehicle-state.php';
+    require_once dirname(__DIR__) . '/db.php';
+    require_once dirname(__DIR__) . '/simulation/vehicle-state.php';
     $pdo = lsttraining_get_connection();
     if ( ! $pdo instanceof PDO ) {
         return new WP_REST_Response(['ok' => false, 'error' => 'db_connection_failed'], 500);
@@ -735,7 +735,7 @@ function lst_rest_add_station_scope(array &$where, array &$params, string $area,
 }
 
 function lst_rest_get_wachen( WP_REST_Request $request ) {
-    require_once plugin_dir_path(__FILE__) . 'db.php';
+    require_once dirname(__DIR__) . '/db.php';
 
     $pdo = lsttraining_get_connection();
     if ( ! $pdo instanceof PDO ) {
@@ -814,7 +814,7 @@ function lst_rest_get_wachen( WP_REST_Request $request ) {
 }
 
 function lst_rest_get_fahrzeuge( WP_REST_Request $request ) {
-    require_once plugin_dir_path(__FILE__) . 'db.php';
+    require_once dirname(__DIR__) . '/db.php';
 
     $pdo = lsttraining_get_connection();
     if ( ! $pdo instanceof PDO ) {

@@ -140,6 +140,16 @@ add_action('admin_enqueue_scripts', function ($hook) {
     wp_enqueue_style('lst-admin-css', $root_url . 'css/admin-ui.css', [], $asset_version('css/admin-ui.css'));
     wp_enqueue_script('lst-admin-ui', $root_url . 'js/admin-ui.js', ['jquery', 'lst-openlayers'], $asset_version('js/admin-ui.js'), true);
 
+    if (in_array($page, ['lsttraining_leitstellen', 'lsttraining_nebenstellen'], true)) {
+        wp_enqueue_script(
+            'lst-admin-region-filter',
+            $root_url . 'js/admin-region-filter.js',
+            [],
+            $asset_version('js/admin-region-filter.js'),
+            true
+        );
+    }
+
     // ───────────────────────────────────────────
     // Leitstellen (Top-Level)
     // ───────────────────────────────────────────

@@ -1,0 +1,66 @@
+{
+  "DE": {
+    "Baden-Württemberg": [
+      {"url": "https://www.stuttgart.de/leben/sicherheit/feuerwehr/berufsfeuerwehr/", "typ": "Behoerde", "bewertung": "ja", "hinweis": "BF Stuttgart 5 Wachen, Fahrzeuglisten pro Wache"},
+      {"url": "https://www.feuerwehr-karlsruhe.de/", "typ": "Behoerde", "bewertung": "bedingt", "hinweis": "BF Karlsruhe"}
+    ],
+    "Bayern": [
+      {"url": "https://www.muenchen.[STRIPPED 74 bytes].html", "typ": "Behoerde", "bewertung": "ja", "hinweis": "BF Muenchen 10 FW, je Wache HLF, DLK, RTW Listen"},
+      {"url": "https://www.feuerwehr-nuernberg.de/", "typ": "Behoerde", "bewertung": "bedingt", "hinweis": "BF Nuernberg 5 Wachen"}
+    ],
+    "Berlin": [
+      {"url": "https://www.berliner-feuerwehr.de/ueber-uns/standorte/", "typ": "Behoerde", "bewertung": "ja", "hinweis": "Alle 36 Wachen, je Seite Fahrzeuge: LHF, DLK 23-12, RTW, NEF - Muster Tempelhof 4300"},
+      {"url": "https://www.berliner-feuerwehr.de/technik/fahrzeuge/", "typ": "Behoerde", "bewertung": "bedingt", "hinweis": "Zentrale Fuhrpark-Uebersicht"}
+    ],
+    "Brandenburg": [
+      {"url": "https://www.potsdam.de/de/die-feuerwehr-potsdam", "typ": "Behoerde", "bewertung": "ja", "hinweis": "BF Potsdam 2 FRW Holzmarktstr + Fritz-Zubeil-Str + RW Neu Fahrland, Gefahrenabwehrbedarfsplan Tab 15"},
+      {"url": "https://cottbus.de/fachbereich-37-feuerwehr/", "typ": "Behoerde", "bewertung": "ja", "hinweis": "Jahresbericht 2023 mit Fahrzeugbestand BF Cottbus"}
+    ],
+    "Bremen": [
+      {"url": "https://www.feuerwehr.bremen.de/", "typ": "Behoerde", "bewertung": "ja", "hinweis": "7 FuRW, je Wache HLF + DLK, z.B. FuRW 1 HLF 20 + DLAK 23/12"},
+      {"url": "https://www.bremerhaven.de/de/verwaltung-politik-sicherheit/sicherheit/feuerwehr/", "typ": "Behoerde", "bewertung": "bedingt", "hinweis": "BF + 3 FF Standorte"}
+    ],
+    "Hamburg": [
+      {"url": "https://www.feuerwehr.hamburg/wachen-815550", "typ": "Behoerde", "bewertung": "ja", "hinweis": "17 FuRW + TUUW, Detail F11 Innenstadt ELW HLF DLK 2 RTW"},
+      {"url": "https://www.feuerwehr.hamburg/furw11-815446", "typ": "Behoerde", "bewertung": "ja", "hinweis": "Muster F11, F22 Berliner Tor, F32 Technik, F33 Veddel"}
+    ],
+    "Hessen": [
+      {"url": "https://feuerwehr-frankfurt.de/berufsfeuerwehr/standorte", "typ": "Behoerde", "bewertung": "ja", "hinweis": "12 FRW, je Wache HLF DLK GTLF RW WLF RTW - FRW1 HLF DLK GTLF10 RW"},
+      {"url": "https://www.kassel.de/einrichtungen/feuerwehr/rubrik2-2/fe-fahrzeuge-bf.php", "typ": "Behoerde", "bewertung": "ja", "hinweis": "BF Kassel Funkrufname + Stationierung RW auf FRW1"}
+    ],
+    "Mecklenburg-Vorpommern": [
+      {"url": "https://rathaus.rostock.[STRIPPED 106 bytes]", "typ": "Behoerde", "bewertung": "ja", "hinweis": "BF Rostock 3 FW: FW1 ELW-A ELW-B HLF20 DLK23, FW2 DLK42, FW3 GTLF WLF"}
+    ],
+    "Niedersachsen": [
+      {"url": "https://www.hannover.[STRIPPED 124 bytes]", "typ": "Behoerde", "bewertung": "ja", "hinweis": "BF Hannover 5 FuRW, GW Rettung auf FuRW 1 2 3 stationiert"},
+      {"url": "https://www.feuerwehr-oldenburg.de/", "typ": "Behoerde", "bewertung": "bedingt", "hinweis": "BF Oldenburg"}
+    ],
+    "Nordrhein-Westfalen": [
+      {"url": "https://www.feuerwehr.koeln/einsaetze-und-technik/standorte/", "typ": "Behoerde", "bewertung": "ja", "hinweis": "BF Koeln 11 FuRW + 30 LG, je Wache HLF DLK"},
+      {"url": "https://www.feuerwehr.duesseldorf.de/berufsfeuerwehr/standorte", "typ": "Behoerde", "bewertung": "ja", "hinweis": "BF Duesseldorf 8 FuRW"}
+    ],
+    "Rheinland-Pfalz": [
+      {"url": "https://feuerwehr-kaiserslautern.de/fahrzeuge/", "typ": "Behoerde", "bewertung": "ja", "hinweis": "Tabelle Bezeichnung Typ Standort Baujahr, z.B. Florian Kaiser 1/34-1 DLK Hauptfw"},
+      {"url": "https://feuerwehr.trier.de/berufsfeuerwehr/fahrzeuge-und-technik/", "typ": "Behoerde", "bewertung": "ja", "hinweis": "FF Standorte mit Fahrzeugen Olewig HLF20 LF20KatS"}
+    ],
+    "Saarland": [
+      {"url": "https://www.saarbruecken.[STRIPPED 95 bytes]", "typ": "Behoerde", "bewertung": "ja", "hinweis": "BF Saarbruecken 2 Wachen Liste Funkrufname 1/46-1 HLF Wache1 2/46-1 HLF Wache2"}
+    ],
+    "Sachsen": [
+      {"url": "https://www.dresden.[STRIPPED 93 bytes].php", "typ": "Behoerde", "bewertung": "ja", "hinweis": "BF Dresden 5 FuRW Aufstellung Einsatztechnik Loeschzug KdoW HLF20 DLAK"},
+      {"url": "https://www.leipzig.[STRIPPED 90 bytes]", "typ": "Behoerde", "bewertung": "bedingt", "hinweis": "BF Leipzig 6 Wachen"}
+    ],
+    "Sachsen-Anhalt": [
+      {"url": "https://www.magdeburg.de/Start/B%C3%[STRIPPED 65 bytes]%C3%BCber-uns/Berufsfeuerwehr/", "typ": "Behoerde", "bewertung": "bedingt", "hinweis": "BF Magdeburg 2 Wachen Nord Peter-Paul-Str + Sued"},
+      {"url": "https://www.feuerwehr-halle.de/berufsfeuerwehr", "typ": "Behoerde", "bewertung": "bedingt", "hinweis": "BF Halle 3 Wachen"}
+    ],
+    "Schleswig-Holstein": [
+      {"url": "https://www.kiel.de/de/umwelt_verkehr/berufsfeuerwehr/standorte.php", "typ": "Behoerde", "bewertung": "ja", "hinweis": "BF Kiel 2 Wachen + FF"},
+      {"url": "https://www.luebeck.de/de/stadtverwaltung/sicherheit/feuerwehr/", "typ": "Behoerde", "bewertung": "bedingt", "hinweis": "BF Luebeck"}
+    ],
+    "Thüringen": [
+      {"url": "https://feuerwehr.jena.de/de/feuerwehren/berufsfeuerwehr/fahrzeuge/690044", "typ": "Behoerde", "bewertung": "ja", "hinweis": "BF Jena Nord MZF B-Dienst ELW1 DLAK HLF20 RTW + RW1 GW-Wasserrettung Sued HLF TLF4000"},
+      {"url": "https://www.erfurt.de/ef/de/leben/feuerwehr/technikservice/kfz/index.html", "typ": "Behoerde", "bewertung": "bedingt", "hinweis": "BF Erfurt 119 Kfz"}
+    ]
+  }
+}

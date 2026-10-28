@@ -1,0 +1,416 @@
+{
+  "DE": {
+    "Niedersachsen": {
+      "Stade": {
+        "Stade": [
+          {
+            "wachen_id": "FF Stade OF Stade Zug I Altstadt",
+            "name": "Freiwillige Feuerwehr Stade - Ortsfeuerwehr Stade Zug I Altstadt",
+            "adresse": "Hansestraße 22, 21684 Stade",
+            "koordinaten": {
+              "lat": 53.606927,
+              "lon": 9.47734
+            },
+            "typ": "Freiwillige Feuerwehr",
+            "organisation": "FF",
+            "traeger": "Hansestadt Stade",
+            "dienstzeiten": "24 Stunden / 365 Tage ehrenamtlich über 112 erreichbar - ca. 250 Mitglieder",
+            "quelle_typ": "Betreiber + BOS",
+            "quelle_url": "https://feuerwehr-stade.de/ + https://bos-fahrzeuge.info/",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Stade 20/65-01",
+                "typ": "WLF",
+                "funktion": "Wechselladerfahrzeug",
+                "kennzeichen": "STD-J 4281",
+                "status": "aktiv",
+                "baujahr": 1991,
+                "dienstzeiten": "Einsatzbereit - ehrenamtlich",
+                "beleg": "WLF FF Stade Zug I Altstadt MB 1722"
+              },
+              {
+                "callsign": "Florian Stade 20/48-01",
+                "typ": "WLF",
+                "funktion": "Wechselladerfahrzeug",
+                "kennzeichen": "STD-J 4222",
+                "status": "aktiv",
+                "dienstzeiten": null
+              },
+              {
+                "callsign": "Florian Stade 20/45-01",
+                "typ": "LF 8/6 / LF 16/6",
+                "funktion": "Löschgruppenfahrzeug",
+                "status": "aktiv",
+                "baujahr": 2001,
+                "fahrgestell": "MB Atego 1018 AF Schlingmann",
+                "dienstzeiten": null
+              },
+              {
+                "callsign": null,
+                "name": "HLB Henry Köpcke",
+                "typ": "HLB",
+                "funktion": "Hilfeleistungs-Löschboot",
+                "baujahr": 2008,
+                "status": "aktiv",
+                "dienstzeiten": null,
+                "hinweis": "Kein BOS-Rufname im Snippet"
+              },
+              {
+                "callsign": null,
+                "name": "MZB Florian I",
+                "typ": "MZB",
+                "funktion": "Mehrzweckboot",
+                "baujahr": 1981,
+                "status": "aktiv"
+              },
+              {
+                "callsign": null,
+                "name": "KB Florian II",
+                "typ": "KB",
+                "funktion": "Kleinboot",
+                "baujahr": 1975,
+                "status": "aktiv"
+              },
+              {
+                "callsign": null,
+                "name": "WLF Landkreis Stade",
+                "typ": "WLF",
+                "funktion": "Wechselladerfahrzeug Landkreis",
+                "baujahr": 2017,
+                "status": "aktiv"
+              }
+            ]
+          },
+          {
+            "wachen_id": "FTZ Landkreis Stade",
+            "name": "Feuerwehr Technische Zentrale Landkreis Stade",
+            "adresse": "Ohle Kamp 3, 21684 Stade-Wiepenkathen",
+            "koordinaten": {
+              "lat": 53.578627,
+              "lon": 9.408404
+            },
+            "typ": "Feuerwehrtechnische Zentrale / Kreisfeuerwehr",
+            "organisation": "Kreis",
+            "traeger": "Landkreis Stade",
+            "dienstzeiten": "Mo-Do 07:00-16:00, Fr 07:00-12:00 - FTZ Betrieb, Fahrzeuge 24h abrufbar",
+            "quelle_url": "https://www.kfv-stade.de",
+            "fahrzeuge": [
+              {
+                "funktion": "ELW 2",
+                "hinweis": "Kreis-Fahrzeug stationiert FTZ, bei Bedarf hinzuziehbar",
+                "status": "aktiv"
+              },
+              {
+                "funktion": "WLF mit AB",
+                "hinweis": "2 WLF Landkreis werden durch Zug 2 Stade besetzt"
+              }
+            ]
+          },
+          {
+            "wachen_id": "DRK Rettungswache Stade",
+            "name": "DRK Rettungswache Stade",
+            "adresse": "Ohle Kamp 3B, Stade",
+            "koordinaten": {
+              "lat": 53.578938,
+              "lon": 9.407714
+            },
+            "typ": "Rettungsdienst",
+            "organisation": "DRK",
+            "traeger": "DRK Kreisverband Stade",
+            "dienstzeiten": "24/7 Rettungsdienst",
+            "quelle_url": "https://bos-fahrzeuge.info/",
+            "fahrzeuge": [
+              {
+                "callsign": "Rotkreuz Stade 40/83-11",
+                "typ": "RTW",
+                "funktion": "Rettungswagen",
+                "status": "aktiv/a.D. je Baujahr",
+                "fahrgestell": "MB Sprinter Miesen",
+                "dienstzeiten": "24/7"
+              },
+              {
+                "callsign": "Rotkreuz Stade 40/83-21",
+                "typ": "RTW",
+                "funktion": "Rettungswagen",
+                "baujahr": 2010,
+                "fahrgestell": "MB Sprinter 515 CDI Fahrtec",
+                "status": "aktiv",
+                "dienstzeiten": "24/7",
+                "hinweis": "Funkrufname 2012 auf neue Systematik geändert"
+              },
+              {
+                "callsign": "Rotkreuz Stade 40/84-21",
+                "typ": "RTW",
+                "funktion": "Reserve-RTW Landkreis",
+                "status": "Reserve",
+                "dienstzeiten": "Reserve für gesamten Landkreis"
+              }
+            ]
+          },
+          {
+            "wachen_id": "WF Airbus Stade",
+            "name": "Werkfeuerwehr Airbus Stade",
+            "adresse": "Airbus Werk, Stade",
+            "typ": "Werkfeuerwehr",
+            "organisation": "WF",
+            "traeger": "Airbus",
+            "dienstzeiten": "Werk - 24/7",
+            "quelle_url": "Wikipedia Liste Werkfeuerwehren",
+            "fahrzeuge": []
+          }
+        ],
+        "Buxtehude": [
+          {
+            "wachen_id": "FF Buxtehude Zug I",
+            "name": "Freiwillige Feuerwehr Buxtehude - Ortsfeuerwehr Buxtehude Zug I",
+            "adresse": "Westmoor 2a, 21684 Buxtehude",
+            "koordinaten": {
+              "lat": 53.48092,
+              "lon": 9.697237
+            },
+            "typ": "Freiwillige Feuerwehr",
+            "organisation": "FF",
+            "traeger": "Hansestadt Buxtehude - 8 Orts- + 4 Jugendfeuerwehren",
+            "dienstzeiten": "24/7 ehrenamtlich",
+            "quelle_url": "https://www.feuerwehr-buxtehude.de/ + BOS",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Stade 10/52-01",
+                "typ": "RW",
+                "funktion": "Rüstwagen",
+                "status": "aktiv",
+                "beleg": "RW FF Buxtehude Zug I"
+              },
+              {
+                "callsign": "Florian Stade 10/47-01",
+                "typ": "LF 16/12",
+                "funktion": "Löschgruppenfahrzeug",
+                "fahrgestell": "MB Atego 1328 AF Magirus AluFire 2",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Stade 41/61 (a.D.)",
+                "typ": "ELW 1",
+                "funktion": "Einsatzleitwagen Swinegel",
+                "status": "a.D. - nicht schreiben"
+              },
+              {
+                "callsign": "Florian Stade 41/21 (a.D.)",
+                "typ": "LF 8",
+                "funktion": "LF 8 MB LAF 911 B Metz",
+                "status": "a.D."
+              }
+            ]
+          },
+          {
+            "wachen_id": "DRK Rettungswache Buxtehude",
+            "name": "DRK Rettungswache Buxtehude",
+            "adresse": "Buxtehude",
+            "typ": "Rettungsdienst",
+            "organisation": "DRK",
+            "dienstzeiten": "24/7",
+            "quelle_url": "BOS",
+            "fahrzeuge": [
+              {
+                "callsign": "Rotkreuz Stade 40/84-12 (a.D.)",
+                "typ": "RTW",
+                "funktion": "RTW DRK KV Stade Rettungswache Buxtehude",
+                "status": "a.D."
+              }
+            ]
+          }
+        ],
+        "Drochtersen": [
+          {
+            "wachen_id": "FF Drochtersen OF Drochtersen",
+            "name": "Freiwillige Feuerwehr Drochtersen - Ortsfeuerwehr Drochtersen",
+            "adresse": "Sietwender Straße 88, 21706 Drochtersen",
+            "typ": "Freiwillige Feuerwehr",
+            "organisation": "FF",
+            "traeger": "Gemeinde Drochtersen",
+            "dienstzeiten": "24/7 ehrenamtlich",
+            "quelle_url": "https://www.feuerwehr-drochtersen.de/ + BOS Wache",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Stade 31/11-03",
+                "typ": "ELW 1",
+                "funktion": "Einsatzleitwagen",
+                "fahrgestell": "MB Sprinter 416 CDI VS30 Redcar",
+                "status": "aktiv",
+                "dienstzeiten": "Einsatzbereit"
+              },
+              {
+                "callsign": "Florian Stade 31/17-03",
+                "typ": "MTW",
+                "funktion": "Mannschaftstransportwagen",
+                "status": "aktiv",
+                "dienstzeiten": null
+              },
+              {
+                "callsign": "Florian Stade 31/23-03",
+                "typ": "TLF 16/25",
+                "funktion": "Tanklöschfahrzeug",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Stade 31/30-03",
+                "typ": "DLK 23/12",
+                "funktion": "Drehleiter",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Stade 31/48-03",
+                "typ": "HLF 20/16",
+                "funktion": "Hilfeleistungslöschgruppenfahrzeug",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Stade 31/69-03",
+                "typ": "GW-Logistik/Hygiene",
+                "funktion": "Gerätewagen Logistik/Hygiene",
+                "status": "aktiv"
+              }
+            ]
+          },
+          {
+            "wachen_id": "FF Drochtersen OF Assel",
+            "name": "Freiwillige Feuerwehr Drochtersen - Ortsfeuerwehr Assel",
+            "adresse": "Assel, Drochtersen",
+            "typ": "Freiwillige Feuerwehr",
+            "organisation": "FF",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Stade 31/51-01",
+                "typ": "RW 1",
+                "funktion": "Rüstwagen",
+                "status": "aktiv"
+              }
+            ]
+          }
+        ],
+        "Jork": [
+          {
+            "wachen_id": "FF Jork",
+            "name": "Freiwillige Feuerwehr Jork",
+            "adresse": "Jork",
+            "typ": "Freiwillige Feuerwehr",
+            "organisation": "FF",
+            "dienstzeiten": "24/7 ehrenamtlich",
+            "fahrzeuge": [
+              {
+                "callsign": "Florian Stade 37/17-03",
+                "typ": "MTW",
+                "funktion": "MTW FF Jork OF Hove",
+                "kennzeichen": "STD-J 3773",
+                "status": "aktiv",
+                "dienstzeiten": null,
+                "hinweis": "ersetzte 2010 älteren Transit"
+              },
+              {
+                "callsign": "Florian Stade 37/45-05",
+                "typ": "LF",
+                "funktion": "Löschgruppenfahrzeug OF Königreich",
+                "kennzeichen": "STD-J 3725",
+                "status": "aktiv"
+              },
+              {
+                "callsign": "Florian Stade 37/17-04",
+                "typ": "MTW",
+                "funktion": "MTW ex ELW",
+                "status": "aktiv",
+                "hinweis": "Nachfolger von 37/11-04"
+              },
+              {
+                "callsign": "Florian Stade 37/11-04 (a.D.)",
+                "typ": "ELW 1",
+                "funktion": "ELW 1 VW T4 TDI Baujahr 2000",
+                "status": "a.D. - jetzt MTW"
+              },
+              {
+                "callsign": "Florian Stade 37/73 (a.D.)",
+                "typ": "MTW",
+                "funktion": "MTW Ford Transit",
+                "status": "a.D."
+              }
+            ]
+          }
+        ],
+        "Harsefeld": [
+          {
+            "wachen_id": "FF Harsefeld",
+            "name": "Freiwillige Feuerwehr Harsefeld",
+            "adresse": "Auf der Herde 5a, 21698 Harsefeld",
+            "koordinaten": {
+              "lat": 53.448092,
+              "lon": 9.512704
+            },
+            "typ": "Freiwillige Feuerwehr - gegründet 14.07.1893",
+            "organisation": "FF",
+            "traeger": "Samtgemeinde Harsefeld",
+            "mitglieder": "81 Einsatzabteilung, davon 11 weiblich, ca. 230 Gesamt",
+            "dienstzeiten": "24 Stunden / 365 Tage über 112 erreichbar - ehrenamtlich",
+            "quelle_url": "https://feuerwehr-harsefeld.de/ + Wikipedia",
+            "fahrzeuge_kurzform_ohne_vollen_rufnamen": [
+              {
+                "kurz": "ELW 1",
+                "funktion": "Einsatzleitwagen",
+                "dienstzeiten": null
+              },
+              {
+                "kurz": "LF 16/12",
+                "funktion": "Löschgruppenfahrzeug",
+                "dienstzeiten": null
+              },
+              {
+                "kurz": "HLF 20/16",
+                "funktion": "Hilfeleistungslöschgruppenfahrzeug"
+              },
+              {
+                "kurz": "DLAK 23/12",
+                "funktion": "Drehleiter mit Korb"
+              },
+              {
+                "kurz": "Dekon-P",
+                "funktion": "Dekontaminationslastkraftwagen Personen"
+              },
+              {
+                "kurz": "MTF",
+                "funktion": "Mannschaftstransportfahrzeug"
+              },
+              {
+                "kurz": "MZF",
+                "funktion": "Mehrzweckfahrzeug"
+              },
+              {
+                "kurz": "Oldtimer TLF",
+                "funktion": "Oldtimer Tanklöschfahrzeug",
+                "status": "a.D./Museum - nicht schreiben"
+              }
+            ],
+            "hinweis": "Voller Rufname Florian Stade xx/xx nicht im Index, Detailseiten blockiert. Braucht direkten Abruf."
+          }
+        ],
+        "Himmelpforten": [
+          {
+            "wachen_id": "DRK Rettungswache Himmelpforten",
+            "name": "DRK Rettungswache Himmelpforten",
+            "adresse": "Himmelpforten",
+            "typ": "Rettungsdienst",
+            "organisation": "DRK",
+            "dienstzeiten": "24/7",
+            "fahrzeuge": [
+              {
+                "callsign": "Rotkreuz Stade 11/43 (a.D.)",
+                "typ": "RTW",
+                "funktion": "RTW DRK Stade",
+                "kennzeichen": "STD-R 1143",
+                "status": "a.D.",
+                "dienstzeiten": "ehemals Rettungswache Himmelpforten"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

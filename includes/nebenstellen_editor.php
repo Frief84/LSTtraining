@@ -16,6 +16,7 @@ add_action('wp_ajax_lsttraining_get_next_neben_id', function() {
 
 
 require_once plugin_dir_path( __FILE__ ) . '/db.php';
+require_once plugin_dir_path( __FILE__ ) . '/regions.php';
 require_once plugin_dir_path( __FILE__ ) . '/einsatzgebiet-editor.php';
 
 $pdo          = lsttraining_get_connection();
@@ -23,39 +24,9 @@ $nebenstellen = [];
 $suchbegriff  = isset($_GET['suchbegriff']) ? sanitize_text_field(wp_unslash((string) $_GET['suchbegriff'])) : '';
 $orderby      = isset($_GET['orderby']) ? sanitize_key((string) $_GET['orderby']) : 'id';
 $order        = isset($_GET['order']) ? strtolower((string) $_GET['order']) : 'asc';
-
-if ( ! function_exists( 'lsttraining_nebenstellen_detect_land' ) ) {
-    function lsttraining_nebenstellen_detect_land( string $name, string $zustandigkeit ): string {
-        $haystack = str_replace(
-            [ 'Ä', 'Ö', 'Ü' ],
-            [ 'ä', 'ö', 'ü' ],
-            strtolower( $name . ' ' . $zustandigkeit )
-        );
-        $countries = [
-            'Österreich' => [
-                'österreich', 'austria', 'burgenland', 'kärnten', 'kaernten', 'niederösterreich',
-                'niederoesterreich', 'oberösterreich', 'oberoesterreich', 'salzburg', 'steiermark',
-                'tirol', 'vorarlberg', 'wien',
-            ],
-            'Deutschland' => [
-                'deutschland', 'germany', 'baden-württemberg', 'baden-wuerttemberg', 'bayern',
-                'berlin', 'brandenburg', 'bremen', 'hamburg', 'hessen', 'mecklenburg-vorpommern',
-                'niedersachsen', 'nordrhein-westfalen', 'rheinland-pfalz', 'saarland', 'sachsen',
-                'sachsen-anhalt', 'schleswig-holstein', 'thüringen', 'thueringen',
-            ],
-        ];
-
-        foreach ( $countries as $country => $needles ) {
-            foreach ( $needles as $needle ) {
-                if ( $needle !== '' && strpos( $haystack, $needle ) !== false ) {
-                    return $country;
-                }
-            }
-        }
-
-        return '';
-    }
-}
+[ $selected_land, $selected_bundesland ] = lsttraining_region_filter_values( $_GET );
+$region_map = lsttraining_region_map();
+$is_direct_create = $_SERVER['REQUEST_METHOD'] === 'POST' && (string) ( $_POST['neben_create'] ?? '' ) === '1';
 
 if ( ! function_exists( 'lsttraining_nebenstellen_sort_link' ) ) {
     function lsttraining_nebenstellen_sort_link( string $label, string $key, string $current_key, string $current_order ): string {
@@ -73,7 +44,7 @@ if ( ! function_exists( 'lsttraining_nebenstellen_sort_link' ) ) {
 
 $nextId = (int) $pdo->query('SELECT MAX(id)+1 FROM nebenleitstellen')->fetchColumn() ?: 1;
 
-if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['neben_update_id'] ) && $pdo ) {
+if ( $_SERVER['REQUEST_METHOD'] === 'POST' && ! $is_direct_create && ! empty( $_POST['neben_update_id'] ) && $pdo ) {
     $update_id = absint( $_POST['neben_update_id'] );
     if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['lsttraining_nonce'] ?? '' ) ), 'lsttraining_nebenstelle_form' ) ) {
         wp_die( 'Ungültiger Sicherheits-Token.', 403 );
@@ -81,13 +52,22 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['neben_update_id'] )
     if ( $update_id > 0 && ! lsttraining_user_can_object( $pdo, 'nebenstellen', 'nebenstelle', $update_id ) ) {
         wp_die( 'Keine Berechtigung.', 403 );
     }
+    $region = lsttraining_region_validate_selection(
+        sanitize_text_field( wp_unslash( (string) ( $_POST['neben_update_land'] ?? '' ) ) ),
+        sanitize_text_field( wp_unslash( (string) ( $_POST['neben_update_bundesland'] ?? '' ) ) )
+    );
+    if ( ! $region['valid'] ) {
+        wp_die( esc_html( $region['message'] ), 400 );
+    }
     $pdo->prepare(
         'UPDATE nebenleitstellen
-            SET name = ?, zustandigkeit = ?, einwohner = ?, flaeche_km2 = ?,
+            SET name = ?, land = ?, bundesland = ?, zustandigkeit = ?, einwohner = ?, flaeche_km2 = ?,
                 gps = ?, nachbarleitstelle = ?, geojson = ?
           WHERE id = ?'
     )->execute( [
         sanitize_text_field( $_POST['neben_update_name'] ),
+        $region['land'] !== '' ? $region['land'] : null,
+        $region['bundesland'] !== '' ? $region['bundesland'] : null,
         sanitize_text_field( $_POST['neben_update_zustandigkeit'] ),
         intval   ( $_POST['neben_update_einwohner'] ),
         floatval ( $_POST['neben_update_flaeche'] ),
@@ -96,6 +76,14 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['neben_update_id'] )
         stripslashes( $_POST['geojson_edit'] ?? '' ),
         $update_id
     ] );
+    if ( function_exists( 'lsttraining_log_activity' ) ) {
+        lsttraining_log_activity( [
+            'entity_type' => 'nebenstelle',
+            'action'      => 'update',
+            'entity_id'   => $update_id,
+            'meta'        => [ 'page' => 'nebenstellen_editor.php', 'land' => $region['land'], 'bundesland' => $region['bundesland'] ],
+        ] );
+    }
 }
 
 /* -------------------------------------------------------------------------
@@ -119,6 +107,8 @@ if ($pdo) {
         SELECT DISTINCT
             n.id,
             n.name,
+            n.land,
+            n.bundesland,
             n.zustandigkeit,
             n.einwohner,
             n.flaeche_km2,
@@ -138,6 +128,16 @@ if ($pdo) {
         $args[] = "%$suchbegriff%";
         $args[] = $suchbegriff;
     }
+    if ($selected_land !== '') {
+        $where_parts[] = 'n.land = ?';
+        $args[] = $selected_land;
+        if ($selected_bundesland === '__none__') {
+            $where_parts[] = "(n.bundesland IS NULL OR TRIM(n.bundesland) = '')";
+        } elseif ($selected_bundesland !== '') {
+            $where_parts[] = 'n.bundesland = ?';
+            $args[] = $selected_bundesland;
+        }
+    }
     if ($where_parts) {
         $sql .= ' WHERE ' . implode(' AND ', $where_parts);
     }
@@ -146,22 +146,15 @@ if ($pdo) {
     $stmt->execute($args);
     $nebenstellen = $stmt->fetchAll(PDO::FETCH_OBJ);
 
-    foreach ($nebenstellen as $n) {
-        $n->land = lsttraining_nebenstellen_detect_land(
-            (string) ($n->name ?? ''),
-            (string) ($n->zustandigkeit ?? '')
-        );
-    }
-
     $order_factor = ($order === 'desc') ? -1 : 1;
-    $sort_key = in_array($orderby, ['id', 'name', 'land', 'wachen'], true) ? $orderby : 'id';
+    $sort_key = in_array($orderby, ['id', 'name', 'land', 'bundesland', 'wachen'], true) ? $orderby : 'id';
     usort($nebenstellen, static function ($a, $b) use ($sort_key, $order_factor) {
         if ($sort_key === 'id') {
             $cmp = (int) $a->id <=> (int) $b->id;
         } elseif ($sort_key === 'wachen') {
             $cmp = (int) $a->wachen_cnt <=> (int) $b->wachen_cnt;
         } else {
-            $field = $sort_key === 'land' ? 'land' : 'name';
+            $field = in_array($sort_key, ['land', 'bundesland'], true) ? $sort_key : 'name';
             $cmp = strnatcasecmp((string) ($a->{$field} ?? ''), (string) ($b->{$field} ?? ''));
         }
 
@@ -169,17 +162,26 @@ if ($pdo) {
     });
 }
 
-if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['neben_create'] ) && $pdo ) {
+if ( $is_direct_create && $pdo ) {
     if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['lsttraining_nonce'] ?? '' ) ), 'lsttraining_nebenstelle_form' ) ) {
         wp_die( 'Ungültiger Sicherheits-Token.', 403 );
     }
+    $region = lsttraining_region_validate_selection(
+        sanitize_text_field( wp_unslash( (string) ( $_POST['neben_update_land'] ?? '' ) ) ),
+        sanitize_text_field( wp_unslash( (string) ( $_POST['neben_update_bundesland'] ?? '' ) ) )
+    );
+    if ( ! $region['valid'] ) {
+        wp_die( esc_html( $region['message'] ), 400 );
+    }
     $stmt = $pdo->prepare(
         'INSERT INTO nebenleitstellen
-         (name,zustandigkeit,einwohner,flaeche_km2,gps,nachbarleitstelle,geojson)
-         VALUES (?, ?, ?, ?, ?, ?, ?)'
+         (name,land,bundesland,zustandigkeit,einwohner,flaeche_km2,gps,nachbarleitstelle,geojson)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
     );
     $stmt->execute([
         sanitize_text_field( $_POST['neben_update_name'] ),
+        $region['land'] !== '' ? $region['land'] : null,
+        $region['bundesland'] !== '' ? $region['bundesland'] : null,
         sanitize_text_field( $_POST['neben_update_zustandigkeit'] ),
         intval( $_POST['neben_update_einwohner'] ),
         floatval( $_POST['neben_update_flaeche'] ),
@@ -187,6 +189,15 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['neben_create'] ) &&
         intval( $_POST['neben_update_nachbar'] ?? 0 ),
         stripslashes( $_POST['geojson_edit'] ?? '[]' ),
     ]);
+    $new_id = (int) $pdo->lastInsertId();
+    if ( function_exists( 'lsttraining_log_activity' ) ) {
+        lsttraining_log_activity( [
+            'entity_type' => 'nebenstelle',
+            'action'      => 'create',
+            'entity_id'   => $new_id,
+            'meta'        => [ 'page' => 'nebenstellen_editor.php', 'land' => $region['land'], 'bundesland' => $region['bundesland'] ],
+        ] );
+    }
     wp_safe_redirect( admin_url( 'admin.php?page=lsttraining_nebenstellen' ) );
     exit;
 }
@@ -196,15 +207,19 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['neben_create'] ) &&
 <div class="wrap">
     <h1>Nebenleitstellen verwalten</h1>
 
-    <div style="margin-bottom:20px;">
-        <input id="nebenstellen-search" data-target="#nebenstellen-table" type="text" placeholder="Suchen nach Name oder ID …" value="<?php echo esc_attr($suchbegriff); ?>" style="width:300px;">
-		<button    id="create-nebenstelle"    class="button"     data-next-id="<?php echo esc_attr( $nextId ); ?>"    style="margin-left:10px;"
->+ Nebenstelle erstellen</button>
-	</div>
+    <form method="get" data-lst-region-filter-form style="margin-bottom:20px;">
+        <input type="hidden" name="page" value="lsttraining_nebenstellen">
+        <input type="hidden" name="orderby" value="<?php echo esc_attr( $orderby ); ?>">
+        <input type="hidden" name="order" value="<?php echo esc_attr( $order ); ?>">
+        <input id="nebenstellen-search" name="suchbegriff" data-target="#nebenstellen-table" type="text" placeholder="Suchen nach Name oder ID …" value="<?php echo esc_attr($suchbegriff); ?>" style="width:300px;">
+        <button class="button">Suchen</button>
+        <?php lsttraining_render_region_filter( $selected_land, $selected_bundesland ); ?>
+    </form>
+    <button type="button" id="create-nebenstelle" class="button" data-next-id="<?php echo esc_attr( $nextId ); ?>" style="margin-bottom:20px;">+ Nebenstelle erstellen</button>
 
     <table class="widefat" id="nebenstellen-table">
         <thead>
-            <tr><th><?php echo lsttraining_nebenstellen_sort_link('ID', 'id', $orderby, $order); ?></th><th><?php echo lsttraining_nebenstellen_sort_link('Name', 'name', $orderby, $order); ?></th><th><?php echo lsttraining_nebenstellen_sort_link('Land', 'land', $orderby, $order); ?></th><th>Zuständigkeit</th><th>Einwohner</th>
+            <tr><th><?php echo lsttraining_nebenstellen_sort_link('ID', 'id', $orderby, $order); ?></th><th><?php echo lsttraining_nebenstellen_sort_link('Name', 'name', $orderby, $order); ?></th><th><?php echo lsttraining_nebenstellen_sort_link('Land', 'land', $orderby, $order); ?></th><th><?php echo lsttraining_nebenstellen_sort_link('Bundesland', 'bundesland', $orderby, $order); ?></th><th>Zuständigkeit</th><th>Einwohner</th>
                 <th>Fläche</th><th>Standort</th><th>Einsatzgebiet</th><th><?php echo lsttraining_nebenstellen_sort_link('Wachen', 'wachen', $orderby, $order); ?></th><th>Aktionen</th></tr>
         </thead>
         <tbody>
@@ -216,20 +231,23 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['neben_create'] ) &&
                : (!$n->has_geojson ? 'missing-geojson' : ''));
 
     $onclick = sprintf(
-      "loadNebenstelleAndOpen(%d, %s, %s, %d, %f, %s, %d); return false;",
+      "loadNebenstelleAndOpen(%d, %s, %s, %d, %f, %s, %d, %s, %s); return false;",
       $n->id,
       json_encode($n->name),
       json_encode($n->zustandigkeit),
       (int)$n->einwohner,
       (float)$n->flaeche_km2,
       json_encode($n->gps),
-      0
+      0,
+      json_encode($n->land ?? ''),
+      json_encode($n->bundesland ?? '')
     );
   ?>
   <tr class="<?php echo esc_attr($rowClass); ?>">
     <td><?php echo esc_html($n->id); ?></td>
     <td><?php echo esc_html($n->name); ?></td>
     <td><?php echo esc_html($n->land ?: '–'); ?></td>
+    <td><?php echo esc_html($n->bundesland ?: '–'); ?></td>
     <td><?php echo esc_html($n->zustandigkeit); ?></td>
     <td><?php echo esc_html($n->einwohner); ?></td>
     <td><?php echo esc_html($n->flaeche_km2); ?></td>
@@ -278,6 +296,23 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['neben_create'] ) &&
             <label class="lst-nebenstelle-field">
                 <span>Zuständigkeit</span>
                 <input type="text" name="neben_update_zustandigkeit" id="neben_update_zustandigkeit">
+            </label>
+
+            <label class="lst-nebenstelle-field">
+                <span>Land</span>
+                <select name="neben_update_land" id="neben_update_land">
+                    <option value="">— Land wählen —</option>
+                    <?php foreach ( array_keys( $region_map ) as $land ) : ?>
+                        <option value="<?php echo esc_attr( $land ); ?>"><?php echo esc_html( $land ); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+
+            <label class="lst-nebenstelle-field">
+                <span>Bundesland</span>
+                <select name="neben_update_bundesland" id="neben_update_bundesland" data-map='<?php echo esc_attr( (string) wp_json_encode( $region_map, JSON_UNESCAPED_UNICODE | JSON_HEX_APOS | JSON_HEX_QUOT ) ); ?>' disabled>
+                    <option value="">— Bundesland wählen —</option>
+                </select>
             </label>
 
             <label class="lst-nebenstelle-field">

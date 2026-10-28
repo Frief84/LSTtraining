@@ -1,5 +1,7 @@
 <?php
 // Nebenleitstellen CRUD
+require_once dirname(__DIR__) . '/regions.php';
+
 /**
  * Speichern einer Nebenleitstelle (Insert oder Update)
  * @action wp_ajax_lsttraining_save_nebenleitstelle
@@ -31,6 +33,10 @@ add_action('wp_ajax_lsttraining_save_nebenleitstelle', function () {
     $einwohner   = (int)($_POST['einwohner'] ?? 0);
     $flaeche_km2 = (float)($_POST['flaeche'] ?? 0);
     $gps         = sanitize_text_field($_POST['gps'] ?? '');
+    $region      = lsttraining_region_validate_selection(
+        sanitize_text_field(wp_unslash((string) ($_POST['land'] ?? ''))),
+        sanitize_text_field(wp_unslash((string) ($_POST['bundesland'] ?? '')))
+    );
 
     if ($id > 0 && !lsttraining_user_can_object($pdo, 'nebenstellen', 'nebenstelle', $id)) {
         wp_send_json_error(['code' => 'permission', 'msg' => 'Keine Berechtigung für diese Nebenstelle'], 403);
@@ -39,6 +45,11 @@ add_action('wp_ajax_lsttraining_save_nebenleitstelle', function () {
     if ($name === '') {
         wp_send_json_error(['code' => 'validation', 'msg' => 'Name darf nicht leer sein'], 400);
     }
+    if (!$region['valid']) {
+        wp_send_json_error(['code' => 'validation', 'msg' => $region['message']], 400);
+    }
+    $land = $region['land'] !== '' ? $region['land'] : null;
+    $bundesland = $region['bundesland'] !== '' ? $region['bundesland'] : null;
 
     // Normalisierung für Diffs
     $norm = static function ($v) {
@@ -73,7 +84,7 @@ add_action('wp_ajax_lsttraining_save_nebenleitstelle', function () {
             $old = [];
             try {
                 $sel = $pdo->prepare('
-                    SELECT name, zustandigkeit, einwohner, flaeche_km2, gps
+                    SELECT name, land, bundesland, zustandigkeit, einwohner, flaeche_km2, gps
                     FROM nebenleitstellen WHERE id = :id
                 ');
                 $sel->execute([':id' => $id]);
@@ -85,6 +96,8 @@ add_action('wp_ajax_lsttraining_save_nebenleitstelle', function () {
             $stmt = $pdo->prepare('
                 UPDATE nebenleitstellen
                    SET name = :name,
+                       land = :land,
+                       bundesland = :bundesland,
                        zustandigkeit = :zust,
                        einwohner = :einwohner,
                        flaeche_km2 = :flaeche_km2,
@@ -93,6 +106,8 @@ add_action('wp_ajax_lsttraining_save_nebenleitstelle', function () {
             ');
             $stmt->execute([
                 ':name'        => $name,
+                ':land'        => $land,
+                ':bundesland'  => $bundesland,
                 ':zust'        => $zust,
                 ':einwohner'   => $einwohner,
                 ':flaeche_km2' => $flaeche_km2,
@@ -102,6 +117,8 @@ add_action('wp_ajax_lsttraining_save_nebenleitstelle', function () {
 
             $new = [
                 'name'         => $name,
+                'land'         => $land,
+                'bundesland'   => $bundesland,
                 'zustandigkeit'=> $zust,
                 'einwohner'    => $einwohner,
                 'flaeche_km2'  => $flaeche_km2,
@@ -137,12 +154,14 @@ add_action('wp_ajax_lsttraining_save_nebenleitstelle', function () {
             }
 
             $stmt = $pdo->prepare('
-                INSERT INTO nebenleitstellen (id, name, zustandigkeit, einwohner, flaeche_km2, gps)
-                VALUES (:id, :name, :zust, :einwohner, :flaeche_km2, :gps)
+                INSERT INTO nebenleitstellen (id, name, land, bundesland, zustandigkeit, einwohner, flaeche_km2, gps)
+                VALUES (:id, :name, :land, :bundesland, :zust, :einwohner, :flaeche_km2, :gps)
             ');
             $stmt->execute([
                 ':id'          => $desired_id,
                 ':name'        => $name,
+                ':land'        => $land,
+                ':bundesland'  => $bundesland,
                 ':zust'        => $zust,
                 ':einwohner'   => $einwohner,
                 ':flaeche_km2' => $flaeche_km2,
@@ -157,6 +176,8 @@ add_action('wp_ajax_lsttraining_save_nebenleitstelle', function () {
                     'meta'        => [
                         'created' => [
                             'name'          => $name,
+                            'land'          => $land,
+                            'bundesland'    => $bundesland,
                             'zustandigkeit' => $zust,
                             'einwohner'     => $einwohner,
                             'flaeche_km2'   => $flaeche_km2,
@@ -170,11 +191,13 @@ add_action('wp_ajax_lsttraining_save_nebenleitstelle', function () {
         }
 
         $stmt = $pdo->prepare('
-            INSERT INTO nebenleitstellen (name, zustandigkeit, einwohner, flaeche_km2, gps)
-            VALUES (:name, :zust, :einwohner, :flaeche_km2, :gps)
+            INSERT INTO nebenleitstellen (name, land, bundesland, zustandigkeit, einwohner, flaeche_km2, gps)
+            VALUES (:name, :land, :bundesland, :zust, :einwohner, :flaeche_km2, :gps)
         ');
         $stmt->execute([
             ':name'        => $name,
+            ':land'        => $land,
+            ':bundesland'  => $bundesland,
             ':zust'        => $zust,
             ':einwohner'   => $einwohner,
             ':flaeche_km2' => $flaeche_km2,
@@ -190,6 +213,8 @@ add_action('wp_ajax_lsttraining_save_nebenleitstelle', function () {
                 'meta'        => [
                     'created' => [
                         'name'          => $name,
+                        'land'          => $land,
+                        'bundesland'    => $bundesland,
                         'zustandigkeit' => $zust,
                         'einwohner'     => $einwohner,
                         'flaeche_km2'   => $flaeche_km2,

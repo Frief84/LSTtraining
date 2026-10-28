@@ -1537,12 +1537,11 @@
             stroke: new ol.style.Stroke({ color: selected ? '#fef08a' : '#ffffff', width: selected ? 3 : 2 })
         });
         if (type === 'station') {
-            shape = new ol.style.RegularShape({
-                points: 4,
-                radius: radius,
-                angle: Math.PI / 4,
+            var smallStation = data && (data.is_neighbor || String(data.typ || '').trim().toUpperCase() === 'FFW');
+            shape = new ol.style.Circle({
+                radius: smallStation ? 6 : 9,
                 fill: new ol.style.Fill({ color: color }),
-                stroke: new ol.style.Stroke({ color: data && data.is_neighbor ? '#cbd5e1' : '#ffffff', width: data && data.is_neighbor ? 1 : 2 })
+                stroke: new ol.style.Stroke({ color: data && data.is_neighbor ? '#cbd5e1' : '#ffffff', width: 2 })
             });
         }
         if (type === 'incident') {

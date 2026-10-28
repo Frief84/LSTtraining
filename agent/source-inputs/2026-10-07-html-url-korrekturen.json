@@ -1,0 +1,82 @@
+{
+  "provided_on": "2026-10-07",
+  "origin": "Sieben vollständige URLs aus dem HTML-Code der Nutzer-Nachricht",
+  "sources": [
+    {
+      "town": "München",
+      "url": "https://www.muenchen.de/rathaus/Stadtverwaltung/Kreisverwaltungsreferat/Branddirektion-Muenchen.html",
+      "check": {
+        "http_status": 200,
+        "content_status": "official_department",
+        "final_url": "https://stadt.muenchen.de/rathaus/verwaltung/kreisverwaltungsreferat/branddirektion.html",
+        "note": "Weiterleitung zur Branddirektion bestätigt. Spezifischer Feuerwachen-Einstieg bleibt im Register."
+      }
+    },
+    {
+      "town": "Hannover",
+      "url": "https://www.hannover.de/Leben-in-der-Region-Hannover/Sicherheit-Ordnung/Feuerwehr-Hannover/Standorte/Feuer-und-Rettungswachen-der-Berufsfeuerwehr",
+      "check": {
+        "http_status": 200,
+        "content_status": "official_directory",
+        "note": "Übersicht der Feuer- und Rettungswachen bestätigt."
+      }
+    },
+    {
+      "town": "Saarbrücken",
+      "url": "https://www.saarbruecken.de/leben_in_saarbruecken/gesundheit_sicherheit/feuerwehr_saarbruecken/fahrzeuge/loeschfahrzeuge",
+      "check": {
+        "http_status": 200,
+        "content_status": "official_vehicle_overview",
+        "note": "Löschfahrzeugseite erreichbar; Schreibfähigkeit muss je Fahrzeugeintrag geprüft werden."
+      }
+    },
+    {
+      "town": "Dresden",
+      "url": "https://www.dresden.de/de/rathaus/aemter-und-einrichtungen/unternehmen/feuerwehr/brandschutz/berufsfeuerwehr/c_01.php",
+      "check": {
+        "http_status": 200,
+        "content_status": "official_station_page",
+        "note": "Wache 1 Albertstadt; keine Gesamtliste aller Dresdner Wachen."
+      }
+    },
+    {
+      "town": "Leipzig",
+      "url": "https://www.leipzig.de/service-portal/themen-und-lebenslagen/sicherheit-und-ordnung/feuerwehr/einsatzabteilung",
+      "check": {
+        "content_status": "fetch_failed",
+        "retryable": true,
+        "note": "Direktabruf: RemoteDisconnected; Webabruf: 502. URL vollständig, Inhalt und Herausgeber noch nicht bestätigt."
+      }
+    },
+    {
+      "town": "Rostock",
+      "url": "https://rathaus.rostock.de/de/service/aemter/amt_fuer_brandschutz_rettungsdienst_und_katastrophenschutz/feuerwehr/fahrzeuge/330453",
+      "check": {
+        "http_status": 200,
+        "content_status": "invalid_template",
+        "note": "Antwort besteht aus invalid template; funktionierender Einstieg /350502 bleibt erhalten."
+      }
+    },
+    {
+      "town": "Magdeburg",
+      "url": "https://www.magdeburg.de/Start/Buerger-Stadt/Verwaltung-Service/Feuerwehr-Katastrophenschutz/Wir-ueber-uns/Berufsfeuerwehr/",
+      "check": {
+        "http_status": 200,
+        "content_status": "generic_administration_page",
+        "note": "Titel und Hauptüberschrift Verwaltung + Service; kein passender Feuerwehr-Einstieg."
+      }
+    }
+  ],
+  "researched_replacements": [
+    {
+      "town": "Magdeburg",
+      "url": "https://www.magdeburg.de/B%C3%BCrger-Stadt/Verwaltung-Service/Feuerwehr/Feuerwehr/index.php?La=&NavID=37.1577&oNavID=37.1577&object=tx%2C37.21825.1",
+      "check": {
+        "http_status": 200,
+        "content_status": "official_department",
+        "title": "Berufsfeuerwehr / Landeshauptstadt Magdeburg - magdeburg.de",
+        "note": "Amtliche Berufsfeuerwehr-Seite mit Navigation zu Feuerwachen, Fahrzeugen und Technik."
+      }
+    }
+  ]
+}

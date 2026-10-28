@@ -26,8 +26,8 @@ Diese Seite beschreibt die technische Orientierung im Repository. Sie enthält k
 | `includes/simulation-workspace.php` | HTML und Assets des aktuellen Workspaces |
 | `includes/ajax-handlers.php` | kompatibler Einstieg in die AJAX-Module |
 | `includes/ajax/ajax_index.php` | modulare AJAX-Registrierung |
-| `includes/rest-api.php` | Routing- sowie Instanz-/Status-Routen |
-| `includes/rest-management-api.php` | geschützte Stammdatenverwaltung per REST |
+| `includes/restapi/rest-api.php` | Routing- sowie Instanz-/Status-Routen |
+| `includes/restapi/rest-management-api.php` | geschützte Stammdatenverwaltung per REST |
 
 ## Verzeichnisübersicht
 

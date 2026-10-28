@@ -155,7 +155,6 @@ npm run import:dach-air-rescue -- --apply --update-existing
 
 Stabile `source_key`-Werte machen Wiederholungsläufe idempotent. Manuell angelegte Datensätze ohne Quellschlüssel werden nicht aufgrund einer bloßen Namensähnlichkeit überschrieben. Jeder Lauf erzeugt einen JSON- und CSV-Prüfbericht im Ordner [`reports/`](reports/). Ausführliche Hinweise stehen in [`docs/dach-luftrettung-import.md`](docs/dach-luftrettung-import.md).
 
-
 ## 🏥 Krankenhäuser
 
 Wir haben jetzt eine vollständige statische „Hospitalkatalog“-Tabelle für die Simulation definiert. Die SQL-Definition dient nur als Referenz – in der README beschreiben wir die Felder:

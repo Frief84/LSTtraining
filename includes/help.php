@@ -284,7 +284,7 @@ foreach ([
                 <details>
                     <summary><?php esc_html_e('Nebenleitstellen', 'lsttraining'); ?></summary>
                     <p><code>ressource = nebenleitstellen</code></p>
-                    <p><strong><?php esc_html_e('Felder:', 'lsttraining'); ?></strong> <code>name</code>, <code>aufgaben</code>, <code>zustandigkeit</code>, <code>standorte</code>, <code>einwohner</code>, <code>flaeche_km2</code>, <code>gps</code>, <code>nachbarleitstelle</code>, <code>geojson</code>.</p>
+                    <p><strong><?php esc_html_e('Felder:', 'lsttraining'); ?></strong> <code>name</code>, <code>land</code>, <code>bundesland</code>, <code>aufgaben</code>, <code>zustandigkeit</code>, <code>standorte</code>, <code>einwohner</code>, <code>flaeche_km2</code>, <code>gps</code>, <code>nachbarleitstelle</code>, <code>geojson</code>.</p>
                     <p><strong><?php esc_html_e('Beziehungen:', 'lsttraining'); ?></strong> <code>leitstellen</code> und <code>wachen</code> als ID-Listen.</p>
                 </details>
 

@@ -1,0 +1,33 @@
+{
+  "provided_on": "2026-10-07",
+  "origin": "Nutzer-Nachricht mit drei vollständigen URL-Vorschlägen",
+  "sources": [
+    {
+      "town": "Rostock",
+      "url": "https://rathaus.rostock.de/de/service/aemter/amt_fuer_brandschutz_rettungsdienst_und_katastrophenschutz/feuerwehr/fahrzeuge/330453",
+      "check": {
+        "http_status": 200,
+        "content_status": "invalid_template",
+        "note": "Antwort enthält lediglich invalid template; keine auswertbare Quellseite."
+      }
+    },
+    {
+      "town": "Hannover",
+      "url": "https://www.hannover.de/Leben-in-der-Region-Hannover/Sicherheit-Ordnung/Feuerwehr-Hannover/Standorte/Feuer-und-Rettungswachen-der-Berufsfeuerwehr",
+      "check": {
+        "content_status": "official_directory",
+        "note": "Offizielle Übersicht der Feuer- und Rettungswachen; bereits im Register vorhanden."
+      }
+    },
+    {
+      "town": "Dresden",
+      "url": "https://www.dresden.de/de/rathaus/aemter-und-einrichtungen/unternehmen/feuerwehr/brandschutz/berufsfeuerwehr/c_01.php",
+      "check": {
+        "http_status": 200,
+        "content_status": "official_station_page",
+        "title": "Feuer- und Rettungswache 1 Albertstadt",
+        "note": "Einzelne Wachenseite mit Aufstellung der Einsatztechnik, keine vollständige Dresden-Gesamtliste."
+      }
+    }
+  ]
+}

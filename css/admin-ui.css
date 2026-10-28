@@ -735,7 +735,8 @@ tr {
   color: #1d2327;
 }
 
-.lst-nebenstelle-field input {
+.lst-nebenstelle-field input,
+.lst-nebenstelle-field select {
   width: 100%;
   max-width: none;
   box-sizing: border-box;
