@@ -27,6 +27,58 @@ Listen unterstuetzen `search`, `page` und `per_page` (maximal 200).
 `POST` und `PATCH` erwarten ein JSON-Objekt. Unbekannte Felder werden mit HTTP
 `400` abgelehnt und nicht still ignoriert.
 
+### Einsatzvorlagen
+
+`/wp-json/lst/v1/verwaltung/einsaetze` verwaltet Vorlagen, keine konkreten
+Einsaetze einer Spielinstanz. Die Rechte entsprechen dem Einsatzeditor
+(`leitstellen`-Berechtigung). Die Liste liefert kompakte Eintraege; `GET` mit
+ID liefert auch Anrufbausteine und weitere Kinddaten.
+
+Beim Anlegen sind `title`, `einsatzart` (`RD` oder `FW`), `einsatztyp`,
+`lagemeldung` und mindestens ein `caller_parts.problem`-Baustein erforderlich.
+Ein Beispiel:
+
+```http
+POST /wp-json/lst/v1/verwaltung/einsaetze
+Content-Type: application/json
+
+{
+  "title": "Verkehrsunfall mit Verletzten",
+  "einsatzart": "RD",
+  "einsatztyp": "VU",
+  "lagemeldung": "Zwei verletzte Personen an einer Kreuzung.",
+  "enabled": true,
+  "scope_type": "anywhere",
+  "caller_parts": {
+    "problem": [{"text": "Hier hat es einen Unfall gegeben!", "sort_order": 0, "enabled": true}]
+  },
+  "seasons": ["spring", "summer"]
+}
+```
+
+Weitere Hauptfelder sind `description`, `landscape_tags_json`, `poi_type`,
+`fixed_latitude`, `fixed_longitude`, `fixed_radius_m`, `patientenzahl`,
+`patient_anforderung`, `notarzt_benoetigt`, `feuerwehr_benoetigt`, `poi_tag`,
+`tags_json`, `base_required_resources_json` und `patient_profile_json`.
+JSON-Felder koennen als JSON-Liste oder als kodierte JSON-Liste uebergeben werden.
+`scope_type` erlaubt `anywhere`, `landscape`, `poi_type`, `fixed_point`;
+fuer die letzten drei Modi sind die passenden Tags, der POI-Typ beziehungsweise
+beide Koordinaten erforderlich.
+
+`seasons`, `weather_conditions`, `caller_parts`, `caller_profiles` und
+`followups` sind optionale Kinddaten. `caller_parts` enthaelt die Gruppen
+`problem`, `observation` und `extra`; jede Zeile hat `text` sowie optional
+`sort_order` und `enabled`. `caller_profiles` enthaelt Zeilen mit `profile_id`
+und optional `weight`. `followups` enthaelt mindestens `step_no` und `text`
+pro Zeile sowie optional `label`, `kind`, `min_after_sec`, `max_after_sec`,
+`condition_json`, `probability_percent`, `speaker_type`, `trigger_mode`,
+`required_resources_json` und `effect_json`.
+
+Bei `PATCH` werden nur uebermittelte Hauptfelder und Kindgruppen geaendert.
+Eine uebermittelte Kindliste ersetzt ihre bisherige Liste vollstaendig;
+bei `caller_parts` gilt das pro uebermittelter Gruppe. Loeschen erfordert
+`DELETE /wp-json/lst/v1/verwaltung/einsaetze/{id}?confirm=true`.
+
 Erfolgreiche Antworten verwenden immer diese Huelle:
 
 ```json

@@ -62,7 +62,7 @@ effektiven Fahrzeugzustaende bereit. Nutzung, Authentifizierung und Filter sind
 in [`docs/rest-status-api.md`](docs/rest-status-api.md) beschrieben.
 
 Die vollstaendige, schreibende Verwaltungs-API fuer Leitstellen,
-Nebenleitstellen, Wachen, Fahrzeuge, Krankenhaeuser und ihre Zuordnungen ist in
+Nebenleitstellen, Wachen, Fahrzeuge, Krankenhaeuser, Einsatzvorlagen und ihre Zuordnungen ist in
 [`docs/rest-management-api.md`](docs/rest-management-api.md) dokumentiert.
 
 ## Gespeicherte Spielinstanzen
