@@ -66,7 +66,7 @@ JSON-Felder koennen als JSON-Liste oder als kodierte JSON-Liste uebergeben werde
 fuer die letzten drei Modi sind die passenden Tags, der POI-Typ beziehungsweise
 beide Koordinaten erforderlich.
 
-`seasons`, `weather_conditions`, `caller_parts`, `caller_profiles` und
+`time_windows`, `seasons`, `weather_conditions`, `caller_parts`, `caller_profiles` und
 `followups` sind optionale Kinddaten. `caller_parts` enthaelt die Gruppen
 `problem`, `observation` und `extra`; jede Zeile hat `text` sowie optional
 `sort_order` und `enabled`. `caller_profiles` enthaelt Zeilen mit `profile_id`
@@ -74,6 +74,9 @@ und optional `weight`. `followups` enthaelt mindestens `step_no` und `text`
 pro Zeile sowie optional `label`, `kind`, `min_after_sec`, `max_after_sec`,
 `condition_json`, `probability_percent`, `speaker_type`, `trigger_mode`,
 `required_resources_json` und `effect_json`.
+`time_windows` enthaelt Zeilen mit `day_type` (z. B. `any`), `start_time`
+und `end_time` im Format `HH:MM` oder `HH:MM:SS`. Eine leere Liste hebt
+die zeitliche Beschraenkung auf.
 
 Bei `PATCH` werden nur uebermittelte Hauptfelder und Kindgruppen geaendert.
 Eine uebermittelte Kindliste ersetzt ihre bisherige Liste vollstaendig;

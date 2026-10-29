@@ -410,6 +410,7 @@ CREATE TABLE IF NOT EXISTS `einsaetze` (
   `patientenzahl` INT NULL DEFAULT 0,
   `patient_anforderung` VARCHAR(255) NULL,
   `patient_profile_json` LONGTEXT NULL,
+  `base_required_resources_json` LONGTEXT NULL,
   `notarzt_benoetigt` TINYINT(1) NULL DEFAULT 0,
   `feuerwehr_benoetigt` TINYINT(1) NULL DEFAULT 0,
   `poi_tag` VARCHAR(50) NULL,

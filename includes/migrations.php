@@ -3,7 +3,7 @@ if (!defined('ABSPATH')) { exit; }
 
 require_once __DIR__ . '/regions.php';
 
-const LSTTRAINING_SCHEMA_VERSION = 2026100701;
+const LSTTRAINING_SCHEMA_VERSION = 2026102901;
 const LSTTRAINING_SCHEMA_OPTION = 'lsttraining_schema_versions';
 
 function lsttraining_schema_fingerprint(): string {
@@ -454,6 +454,10 @@ function lsttraining_run_migrations(bool $force = false): int {
     }
     if ($force || $current < 2026100701) {
         lsttraining_migration_add_column($pdo, 'wachen', 'adresse', 'VARCHAR(500) NULL DEFAULT NULL AFTER name');
+    }
+    if ($force || $current < 2026102901) {
+        lsttraining_migration_add_column($pdo, 'einsaetze', 'patient_profile_json', 'LONGTEXT NULL AFTER patient_anforderung');
+        lsttraining_migration_add_column($pdo, 'einsaetze', 'base_required_resources_json', 'LONGTEXT NULL AFTER patient_profile_json');
     }
     lsttraining_schema_store_version(LSTTRAINING_SCHEMA_VERSION);
     return LSTTRAINING_SCHEMA_VERSION;

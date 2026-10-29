@@ -1,0 +1,50 @@
+{
+  "title": "Kind im Klettergerüst eingeklemmt",
+  "description": "Technische Hilfeleistung, Stichwort H:KLEMM 1. Eine Mutter meldet ihren zehnjährigen Sohn auf einem Spielplatz im Park. Das Kind steckt mit Bauch und Hüfte zwischen Metallstreben eines etwa 1,5 Meter hohen Klettergerüsts fest. Initial HLF 20 und RTW; je nach Lage RW oder NEF. Vier Lagevarianten sind als manuell abrufbare Folgeschritte hinterlegt: A einfache Befreiung (5–10 Minuten, Druckstellen, Übergabe an RTW); B schwierige Rettung mit hydraulischem Spreizen (15–25 Minuten, Untersuchung in Kinderklinik); C zunehmende Atemnot (NEF nachfordern, notärztliche Versorgung und Kinderklinik); D instabiles Gerüst nach Befreiungsversuchen (Konstruktion sichern, ggf. RW, Spielplatz absperren). Rückfragen: Alter zehn Jahre; Kind bei Bewusstsein, spricht und weint; Atmung zunächst erhalten; Bauch und Hüfte klemmen zwischen Metallstangen; kein Sturz; Höhe etwa 1,5 Meter; Befreiungsversuche erfolglos. Nach Befreiung: Patientenübergabe, Transportentscheidung durch Rettungsdienst, Abschlussmeldung.",
+  "einsatzart": "FW",
+  "einsatztyp": "Person eingeklemmt",
+  "enabled": true,
+  "scope_type": "poi_type",
+  "poi_type": "Park",
+  "poi_tag": "Park",
+  "lagemeldung": "Ein zehnjähriges Kind ist auf einem Spielplatz im Park zwischen Metallstreben eines Klettergerüsts eingeklemmt. Es ist zunächst ansprechbar; der Zustand kann sich verändern.",
+  "patientenzahl": 1,
+  "patient_anforderung": "1 RTW",
+  "notarzt_benoetigt": false,
+  "feuerwehr_benoetigt": true,
+  "tags_json": ["H:KLEMM 1", "Technische Hilfeleistung", "Kind", "Spielplatz"],
+  "base_required_resources_json": [
+    {"type": "HLF 20", "count": 1},
+    {"type": "RTW", "count": 1}
+  ],
+  "patient_profile_json": [
+    {"patient_id": "p1", "label": "Kind, 10 Jahre", "triage_category": "III", "injury_summary": "Zwischen Metallstreben eingeklemmt, ansprechbar, Schmerzen im Bauch- und Hüftbereich", "requires_ktw": false, "requires_rtw": true, "requires_notarzt": false, "care_progress_percent": 50, "care_target_percent": 100}
+  ],
+  "time_windows": [
+    {"day_type": "any", "start_time": "09:00", "end_time": "20:00"}
+  ],
+  "seasons": [],
+  "weather_conditions": [],
+  "caller_parts": {
+    "problem": [
+      {"text": "Hallo, ich bin hier mit meinem Sohn auf dem Spielplatz! Mein Sohn steckt zwischen zwei Metallstangen fest. Er wollte da durchklettern und hängt jetzt mit Bauch und Hüfte dazwischen. Er schreit und weint vor Schmerzen. Wir haben versucht, ihn herauszuziehen, aber das funktioniert nicht!", "sort_order": 0, "enabled": true}
+    ],
+    "observation": [
+      {"text": "Wir sind auf dem Spielplatz im Park, direkt bei dem großen Klettergerüst aus Metall.", "sort_order": 0, "enabled": true}
+    ],
+    "extra": [
+      {"text": "Mein Sohn ist zehn Jahre alt. Er ist bei Bewusstsein und spricht mit mir.", "sort_order": 0, "enabled": true}
+    ]
+  },
+  "followups": [
+    {"step_no": 1, "label": "Eintreffen und Erkundung", "kind": "unit_report", "text": "Einsatzstelle erreicht. Ein Kind ist zwischen Metallstreben eingeklemmt und ansprechbar. Wir beginnen mit der Erkundung und bereiten die technische Rettung vor.", "speaker_type": "fire_unit", "trigger_mode": "on_unit_arrival", "probability_percent": 100},
+    {"step_no": 2, "label": "Lage A – einfache Befreiung", "kind": "unit_report", "text": "Hier HLF, Kind zwischen zwei Metallstreben eingeklemmt, keine akute Lebensgefahr. Wir leiten die technische Rettung ein. Kontrollierte Umlagerung und leichtes Spreizen reichen aus; Befreiung nach etwa fünf bis zehn Minuten. Leichte Druckstellen, Übergabe an RTW.", "speaker_type": "fire_unit", "trigger_mode": "manual", "effect_json": {"note": "Leichte Lage; RTW untersucht das Kind nach der Befreiung."}},
+    {"step_no": 3, "label": "Lage B – schwierige technische Rettung", "kind": "unit_report", "text": "Hier HLF, Patient massiv im Metallgerüst eingeklemmt. Streben müssen mit hydraulischem Gerät gespreizt werden. Wir sichern das Kind gegen Absturz. Das Kind wird zunehmend erschöpft; schonende Befreiung nach etwa 15 bis 25 Minuten, anschließend Transport zur Kinderklinik.", "speaker_type": "fire_unit", "trigger_mode": "manual", "effect_json": {"note": "Mittlere Lage; Befreiung mit hydraulischem Gerät und Transport zur Kinderklinik."}},
+    {"step_no": 4, "label": "Lage C – medizinische Verschlechterung", "kind": "unit_report", "text": "Hier HLF, Kind im Brust- und Bauchbereich eingeklemmt, zunehmende Atemnot. Wir benötigen dringend einen Notarzt an der Einsatzstelle! Rettungsdienst und Feuerwehr stimmen die Befreiung ab; danach notärztliche Versorgung und Transport in eine geeignete Kinderklinik.", "speaker_type": "fire_unit", "trigger_mode": "manual", "required_resources_json": [{"type": "NEF", "count": 1}], "effect_json": {"note": "Schwere Lage; NEF nachfordern.", "patient_requirements": {"total": 1, "rtw": 1, "notarzt": 1}, "patients": [{"patient_id": "p1", "label": "Kind, 10 Jahre", "triage_category": "II", "injury_summary": "Zunehmende Bauchschmerzen und Atemnot durch Druck auf Brust und Bauch", "requires_rtw": true, "requires_notarzt": true, "care_progress_percent": 35, "care_target_percent": 100}]}},
+    {"step_no": 5, "label": "Lage D – instabiles Klettergerüst", "kind": "unit_report", "text": "Hier HLF, Klettergerüst durch Befreiungsversuche beschädigt. Die Konstruktion ist nicht mehr standsicher. Wir müssen sie zunächst gegen Umkippen sichern; ein RW kann nachgefordert werden. Nach der Befreiung sperren wir den Spielplatzbereich ab und nehmen das Gerüst außer Betrieb.", "speaker_type": "fire_unit", "trigger_mode": "manual", "required_resources_json": [{"type": "RW", "count": 1}], "effect_json": {"note": "Mittlere bis schwere Lage; zusätzliche technische Sicherung und ggf. RW."}},
+    {"step_no": 6, "label": "Anruf nach 60 Sekunden", "kind": "caller_answer", "text": "Er schreit immer noch. Können Sie sich bitte beeilen?", "speaker_type": "caller", "trigger_mode": "manual", "min_after_sec": 60, "max_after_sec": 60},
+    {"step_no": 7, "label": "Anruf nach 120 Sekunden", "kind": "caller_answer", "text": "Er sagt, dass seine Beine langsam einschlafen.", "speaker_type": "caller", "trigger_mode": "manual", "min_after_sec": 120, "max_after_sec": 120},
+    {"step_no": 8, "label": "Nach Befreiung", "kind": "unit_report", "text": "Person befreit und an Rettungsdienst übergeben.", "speaker_type": "fire_unit", "trigger_mode": "manual"},
+    {"step_no": 9, "label": "Einsatzende", "kind": "unit_report", "text": "Technische Hilfeleistung abgeschlossen, Einsatzstelle gesichert, wir rücken wieder ein.", "speaker_type": "fire_unit", "trigger_mode": "manual"}
+  ]
+}

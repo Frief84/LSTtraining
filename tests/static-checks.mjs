@@ -108,6 +108,7 @@ check('Idempotentes Basisschema', () => {
   assert.match(schema, /INSERT IGNORE INTO anrufer_name_pool/);
   assert.match(schema, /`signal_lights_json` LONGTEXT/);
   assert.match(schema, /`patient_profile_json` LONGTEXT/);
+  assert.match(schema, /`base_required_resources_json` LONGTEXT/);
 });
 
 check('DDL nur in Schema/Migration', () => {
@@ -173,7 +174,8 @@ check('Wachenkarte ohne feste Ergebnis-Kappung', () => {
 
 check('Versionierte Migration', () => {
   const migrations = read('includes/migrations.php');
-  assert.match(migrations, /LSTTRAINING_SCHEMA_VERSION\s*=\s*2026100701/);
+  assert.match(migrations, /LSTTRAINING_SCHEMA_VERSION\s*=\s*2026102901/);
+  assert.match(migrations, /lsttraining_migration_add_column\(\$pdo, 'einsaetze', 'base_required_resources_json'/);
   assert.match(migrations, /function lsttraining_migration_2026090903/);
   assert.match(migrations, /function lsttraining_migration_2026091101/);
   assert.match(migrations, /function lsttraining_migration_2026091102/);
@@ -181,6 +183,12 @@ check('Versionierte Migration', () => {
   assert.match(migrations, /'legacy-950', 'legacy-970'/);
   assert.match(migrations, /lsttraining_schema_store_version\(LSTTRAINING_SCHEMA_VERSION\)/);
   assert.match(read('lsttraining-plugin.php'), /register_activation_hook\(LSTTRAINING_PLUGIN_FILE, 'lsttraining_run_migrations'\)/);
+});
+
+check('Einsatzeditor prueft Spalten exakt', () => {
+  const editor = read('includes/ajax/ajax_einsaetze.php');
+  assert.match(editor, /INFORMATION_SCHEMA\.COLUMNS WHERE TABLE_SCHEMA = DATABASE\(\) AND TABLE_NAME = \? AND COLUMN_NAME = \?/);
+  assert.doesNotMatch(editor, /SHOW COLUMNS FROM `\$\{table\}` LIKE \?/);
 });
 
 check('Serialisierter Tick und lesender Snapshot', () => {

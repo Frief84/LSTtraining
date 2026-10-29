@@ -64,14 +64,43 @@ function lsttraining_einsatzeditor_normalize_effect_json(?string $raw): ?string 
     return wp_json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 }
 
-function lsttraining_einsatzeditor_column_exists(PDO $pdo, string $table, string $column): bool {
-    try {
-        $stmt = $pdo->prepare("SHOW COLUMNS FROM `{$table}` LIKE ?");
-        $stmt->execute([$column]);
-        return (bool) $stmt->fetch(PDO::FETCH_ASSOC);
-    } catch (Throwable $e) {
-        return false;
+function lsttraining_einsatzeditor_normalize_time_windows($value): array {
+    if (!is_array($value) || !lsttraining_rest_is_list($value) || count($value) > 100) {
+        throw new InvalidArgumentException('time_windows muss eine Liste mit hoechstens 100 Eintraegen sein.');
     }
+    $allowed = ['any', 'weekday', 'weekend', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    $result = [];
+    $seen = [];
+    foreach ($value as $row) {
+        if (!is_array($row) || array_diff(array_keys($row), ['day_type', 'start_time', 'end_time'])) {
+            throw new InvalidArgumentException('time_windows enthaelt eine ungueltige Zeile.');
+        }
+        $day = $row['day_type'] ?? 'any';
+        $start = $row['start_time'] ?? null;
+        $end = $row['end_time'] ?? null;
+        if (!is_string($day) || !in_array($day, $allowed, true) || !is_string($start) || !is_string($end)) {
+            throw new InvalidArgumentException('time_windows enthaelt ungueltige Werte.');
+        }
+        foreach ([$start, $end] as $time) {
+            if (!preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/D', $time)) {
+                throw new InvalidArgumentException('time_windows enthaelt eine ungueltige Uhrzeit.');
+            }
+        }
+        if (strlen($start) === 5) { $start .= ':00'; }
+        if (strlen($end) === 5) { $end .= ':00'; }
+        if ($start >= $end) { throw new InvalidArgumentException('time_windows: start_time muss vor end_time liegen.'); }
+        $key = $day . '|' . $start . '|' . $end;
+        if (isset($seen[$key])) { throw new InvalidArgumentException('time_windows enthaelt doppelte Zeitfenster.'); }
+        $seen[$key] = true;
+        $result[] = ['day_type' => $day, 'start_time' => $start, 'end_time' => $end];
+    }
+    return $result;
+}
+
+function lsttraining_einsatzeditor_column_exists(PDO $pdo, string $table, string $column): bool {
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?');
+    $stmt->execute([$table, $column]);
+    return (int) $stmt->fetchColumn() > 0;
 }
 
 function lsttraining_einsatzeditor_table_exists(PDO $pdo, string $table): bool {
@@ -194,6 +223,9 @@ function lsttraining_einsatzeditor_fetch_one(PDO $pdo, int $id): array {
     $weatherStmt = $pdo->prepare('SELECT weather_type FROM einsatz_weather_conditions WHERE einsatz_id = ? ORDER BY weather_type ASC');
     $weatherStmt->execute([$id]);
 
+    $timeStmt = $pdo->prepare('SELECT day_type, start_time, end_time FROM einsatz_time_windows WHERE einsatz_id = ? ORDER BY day_type ASC, start_time ASC, id ASC');
+    $timeStmt->execute([$id]);
+
     $callerStmt = $pdo->prepare('
         SELECT part_key, text, sort_order, enabled
         FROM einsatz_caller_parts
@@ -237,6 +269,7 @@ function lsttraining_einsatzeditor_fetch_one(PDO $pdo, int $id): array {
     ');
     $followupStmt->execute([$id]);
 
+    $einsatz['time_windows'] = $timeStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     $einsatz['seasons'] = array_map('strval', $seasonsStmt->fetchAll(PDO::FETCH_COLUMN) ?: []);
     $einsatz['weather_conditions'] = array_map('strval', $weatherStmt->fetchAll(PDO::FETCH_COLUMN) ?: []);
     $einsatz['caller_parts'] = lsttraining_einsatzeditor_group_caller_parts($callerRows);
@@ -555,6 +588,7 @@ add_action('wp_ajax_lst_save_einsatz', function () {
         ? (string) wp_unslash($_POST['patient_profile_json'])
         : '';
 
+    $time_windows = isset($_POST['time_windows']) ? json_decode(wp_unslash($_POST['time_windows']), true) : [];
     $seasons = isset($_POST['seasons']) ? json_decode(wp_unslash($_POST['seasons']), true) : [];
     $weather_conditions = isset($_POST['weather_conditions']) ? json_decode(wp_unslash($_POST['weather_conditions']), true) : [];
     $caller_parts = isset($_POST['caller_parts']) ? json_decode(wp_unslash($_POST['caller_parts']), true) : [];
@@ -600,6 +634,11 @@ add_action('wp_ajax_lst_save_einsatz', function () {
         }
     }
 
+    try {
+        $time_windows = lsttraining_einsatzeditor_normalize_time_windows($time_windows);
+    } catch (InvalidArgumentException $e) {
+        wp_send_json_error(['message' => $e->getMessage()], 400);
+    }
     if (!is_array($seasons)) { $seasons = []; }
     if (!is_array($weather_conditions)) { $weather_conditions = []; }
     if (!is_array($caller_parts)) { $caller_parts = []; }
@@ -789,7 +828,7 @@ add_action('wp_ajax_lst_save_einsatz', function () {
             $id = (int) $pdo->lastInsertId();
         }
 
-        $deleteTables = ['einsatz_seasons', 'einsatz_weather_conditions', 'einsatz_caller_parts', 'einsatz_followups'];
+        $deleteTables = ['einsatz_time_windows', 'einsatz_seasons', 'einsatz_weather_conditions', 'einsatz_caller_parts', 'einsatz_followups'];
         if ($caller_profiles_loaded && lsttraining_einsatzeditor_table_exists($pdo, 'einsatz_anrufer_profiles')) {
             $deleteTables[] = 'einsatz_anrufer_profiles';
         }
@@ -797,6 +836,13 @@ add_action('wp_ajax_lst_save_einsatz', function () {
         foreach ($deleteTables as $table) {
             $del = $pdo->prepare("DELETE FROM {$table} WHERE einsatz_id = ?");
             $del->execute([$id]);
+        }
+
+        if ($time_windows) {
+            $ins = $pdo->prepare('INSERT INTO einsatz_time_windows (einsatz_id, day_type, start_time, end_time) VALUES (?, ?, ?, ?)');
+            foreach ($time_windows as $window) {
+                $ins->execute([$id, $window['day_type'], $window['start_time'], $window['end_time']]);
+            }
         }
 
         if ($seasons) {

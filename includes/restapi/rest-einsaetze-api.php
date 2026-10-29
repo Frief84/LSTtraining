@@ -78,7 +78,7 @@ function lst_rest_einsaetze_normalize_any_json(string $name, $value): string {
 
 function lst_rest_einsaetze_normalize(WP_REST_Request $request, bool $creating): array {
     $fields = lst_rest_einsaetze_fields();
-    $children = ['seasons', 'weather_conditions', 'caller_parts', 'caller_profiles', 'followups'];
+    $children = ['time_windows', 'seasons', 'weather_conditions', 'caller_parts', 'caller_profiles', 'followups'];
     $payload = lsttraining_rest_json_object($request, array_merge(array_keys($fields), $children), 16777216);
     $data = [];
     foreach ($fields as $name => $definition) {
@@ -96,6 +96,9 @@ function lst_rest_einsaetze_normalize(WP_REST_Request $request, bool $creating):
         }
     }
     $normalized = [];
+    if (array_key_exists('time_windows', $payload)) {
+        $normalized['time_windows'] = lsttraining_einsatzeditor_normalize_time_windows($payload['time_windows']);
+    }
     if (array_key_exists('seasons', $payload)) {
         $normalized['seasons'] = lst_rest_einsaetze_enum_list('seasons', $payload['seasons'], ['spring', 'summer', 'autumn', 'winter']);
     }
@@ -210,6 +213,7 @@ function lst_rest_einsaetze_fetch(PDO $pdo, int $id): ?array {
         if (isset($item[$field])) { $item[$field] = json_decode($item[$field], true); }
     }
     $relations = [
+        'time_windows' => ['einsatz_time_windows', 'day_type, start_time, end_time', 'day_type ASC, start_time ASC, id ASC'],
         'seasons' => ['einsatz_seasons', 'season', 'season ASC'],
         'weather_conditions' => ['einsatz_weather_conditions', 'weather_type', 'weather_type ASC'],
         'caller_parts' => ['einsatz_caller_parts', 'part_key, text, sort_order, enabled', 'part_key ASC, sort_order ASC, id ASC'],
@@ -239,6 +243,13 @@ function lst_rest_einsaetze_fetch(PDO $pdo, int $id): ?array {
 }
 
 function lst_rest_einsaetze_sync(PDO $pdo, int $id, array $children): void {
+    if (array_key_exists('time_windows', $children)) {
+        $pdo->prepare('DELETE FROM einsatz_time_windows WHERE einsatz_id = ?')->execute([$id]);
+        $insert = $pdo->prepare('INSERT INTO einsatz_time_windows (einsatz_id, day_type, start_time, end_time) VALUES (?, ?, ?, ?)');
+        foreach ($children['time_windows'] as $window) {
+            $insert->execute([$id, $window['day_type'], $window['start_time'], $window['end_time']]);
+        }
+    }
     foreach (['seasons' => ['einsatz_seasons', 'season'], 'weather_conditions' => ['einsatz_weather_conditions', 'weather_type']] as $name => [$table, $column]) {
         if (!array_key_exists($name, $children)) { continue; }
         $pdo->prepare("DELETE FROM {$table} WHERE einsatz_id = ?")->execute([$id]);
