@@ -2217,7 +2217,7 @@
                     '<p><strong>Einsatzort:</strong> ' + esc(place) + '</p>' +
                     '<label class="lsttraining-check-line"><input type="checkbox" name="signal_allowed" value="1" ' + (dispatchMeta(incident, 'signal_allowed', false) ? 'checked' : '') + '> Signalfahrt</label>' +
                     '<label><span>Einsatzcode:</span><input type="text" name="einsatzcode" value="' + esc(dispatchMeta(incident, 'einsatzcode', incident.einsatztyp || '')) + '"></label>' +
-                    '<label><span>Einsatzstichwörter für die Ausrückorder:</span><select name="ausrueckorder_stichwort_ids" multiple size="4" aria-describedby="lst-dispatch-stichwort-help"></select><small id="lst-dispatch-stichwort-help">Mehrere Stichwörter mit Strg oder Cmd auswählen.</small></label>' +
+                    '<label><span>Einsatzstichwörter für die Ausrückorder:</span><div class="lst-dispatch-stichwort-picker" data-stichwort-picker><input type="search" data-stichwort-search placeholder="Stichwort tippen und filtern…" autocomplete="off" aria-label="Einsatzstichwort suchen" aria-expanded="false"><div class="lst-dispatch-stichwort-selected" data-stichwort-selected></div><div class="lst-dispatch-stichwort-options" data-stichwort-options role="listbox" hidden></div><select name="ausrueckorder_stichwort_ids" multiple hidden aria-hidden="true" tabindex="-1"></select></div><small id="lst-dispatch-stichwort-help">Stichwörter eintippen, filtern und auswählen. Der Freitext bleibt separat bearbeitbar.</small></label>' +
                     '<label><span>Ausrückorder – Freitext:</span><input type="text" name="ausrueckorder" value="' + esc(dispatchMeta(incident, 'ausrueckorder', '')) + '"></label>' +
                     '<label><span>Einsatzkategorie:</span><input type="text" name="einsatzkategorie" value="' + esc(dispatchMeta(incident, 'einsatzkategorie', incident.einsatzart || '')) + '"></label>' +
                     '<label><span>Zusatz / Freitext:</span><textarea name="zusatz_text" rows="3">' + esc(dispatchZusatzText(incident)) + '</textarea></label>' +
@@ -2309,6 +2309,39 @@
         $select.data('auto-selected', autoSelected);
     }
 
+    function renderDispatchStichwortPicker($modal) {
+        var $picker = $modal.find('[data-stichwort-picker]');
+        if (!$picker.length) return;
+        var query = String($picker.find('[data-stichwort-search]').val() || '').toLocaleLowerCase();
+        var selected = ($picker.find('select[name="ausrueckorder_stichwort_ids"]').val() || []).map(String);
+        var $options = $picker.find('[data-stichwort-options]');
+        var all = $picker.find('select[name="ausrueckorder_stichwort_ids"] option').map(function() { return {id:String(this.value), text:this.text, selected:this.selected}; }).get();
+        $picker.find('[data-stichwort-selected]').html(all.filter(function(row) { return selected.indexOf(row.id) !== -1; }).map(function(row) { return '<button type="button" class="lst-dispatch-stichwort-chip" data-stichwort-remove="'+esc(row.id)+'" aria-label="Stichwort entfernen">'+esc(row.text)+' <span aria-hidden="true">×</span></button>'; }).join(''));
+        $options.html(all.filter(function(row) { return !query || row.text.toLocaleLowerCase().indexOf(query) !== -1; }).map(function(row) { return '<button type="button" role="option" aria-selected="'+(row.selected?'true':'false')+'" class="lst-dispatch-stichwort-option'+(row.selected?' is-selected':'')+'" data-stichwort-option="'+esc(row.id)+'">'+esc(row.text)+'</button>'; }).join('') || '<span class="lst-dispatch-stichwort-empty">Keine passenden Stichwörter</span>');
+    }
+
+    function bindDispatchStichwortPicker($modal) {
+        var $picker = $modal.find('[data-stichwort-picker]');
+        var $input = $picker.find('[data-stichwort-search]');
+        var $options = $picker.find('[data-stichwort-options]');
+        $picker.off('.lstStichwortPicker');
+        $input.on('focus.lstStichwortPicker input.lstStichwortPicker', function() { $options.prop('hidden', false); $input.attr('aria-expanded','true'); renderDispatchStichwortPicker($modal); });
+        $picker.on('click.lstStichwortPicker', '[data-stichwort-option]', function() {
+            var id = String($(this).attr('data-stichwort-option'));
+            var $select = $picker.find('select[name="ausrueckorder_stichwort_ids"]');
+            var $option = $select.find('option').filter(function() { return String(this.value) === id; });
+            $option.prop('selected', !$option.prop('selected'));
+            $select.trigger('change'); renderDispatchStichwortPicker($modal); $input.trigger('focus');
+        }).on('click.lstStichwortPicker', '[data-stichwort-remove]', function() {
+            var id = String($(this).attr('data-stichwort-remove'));
+            $picker.find('select[name="ausrueckorder_stichwort_ids"] option').filter(function() { return String(this.value) === id; }).prop('selected', false);
+            $picker.find('select[name="ausrueckorder_stichwort_ids"]').trigger('change'); renderDispatchStichwortPicker($modal);
+        });
+        $input.off('keydown.lstStichwortPicker').on('keydown.lstStichwortPicker', function(event) { if (event.key === 'Escape') { $options.prop('hidden', true); $input.attr('aria-expanded','false'); } });
+        $(document).off('click.lstStichwortPicker').on('click.lstStichwortPicker', function(event) { if (!$(event.target).closest($picker).length) { $options.prop('hidden', true); $input.attr('aria-expanded','false'); } });
+        renderDispatchStichwortPicker($modal);
+    }
+
     function loadDispatchStichwoerter($root, incident, $modal) {
         var $select = $modal.find('[name="ausrueckorder_stichwort_ids"]');
         simPost({action:'lsttraining_stichwoerter_for_instance', instanz_id:$root.attr('data-instance-id')}).done(function(response) {
@@ -2321,7 +2354,8 @@
                 if (selected.indexOf(String(row.id)) !== -1) option.prop('selected', true);
                 $select.append(option);
             });
-            $select.off('change.lstAusrueckorder').on('change.lstAusrueckorder', function() { applyDispatchStichwortVehicles($modal.find('[data-lst-dispatch-form]'), snapshotVehicleList()); });
+            $select.off('change.lstAusrueckorder').on('change.lstAusrueckorder', function() { applyDispatchStichwortVehicles($modal.find('[data-lst-dispatch-form]'), snapshotVehicleList()); renderDispatchStichwortPicker($modal); });
+            bindDispatchStichwortPicker($modal);
             if (selected.length) applyDispatchStichwortVehicles($modal.find('[data-lst-dispatch-form]'), snapshotVehicleList());
         });
     }
