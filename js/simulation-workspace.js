@@ -3163,7 +3163,8 @@
                 '<label class="lstw-signal-toggle"><span><i class="fa-solid fa-lightbulb lstw-toggle-icon" aria-hidden="true"></i>Sondersignale erlauben</span><input type="checkbox" name="signal_allowed" data-lstw-signal-allowed value="1"' + (signalAllowed ? ' checked' : '') + '></label>' +
                 '<label class="lstw-police-toggle"><span><i class="fa-solid fa-user-shield lstw-toggle-icon" aria-hidden="true"></i>Polizei mitverständigen</span><input type="checkbox" name="polizei_verstaendigen" value="1"' + (meta.polizei_verstaendigen ? ' checked' : '') + '></label>' +
                 '<label><span>Einsatzcode</span><input type="text" name="einsatzcode" value="' + esc(meta.einsatzcode || incident.einsatztyp || '') + '"></label>' +
-                '<label><span>Ausrückorder</span><input type="text" name="ausrueckorder" value="' + esc(meta.ausrueckorder || '') + '"></label>' +
+                '<label><span>Einsatzstichwörter für die Ausrückorder</span><select name="ausrueckorder_stichwort_ids" multiple size="4" aria-describedby="lstw-dispatch-stichwort-help"></select><small id="lstw-dispatch-stichwort-help">Mehrere Stichwörter mit Strg oder Cmd auswählen.</small></label>' +
+                '<label><span>Ausrückorder – Freitext</span><input type="text" name="ausrueckorder" value="' + esc(meta.ausrueckorder || '') + '"></label>' +
                 '<label><span>Einsatzkategorie</span><input type="text" name="einsatzkategorie" value="' + esc(meta.einsatzkategorie || incident.einsatzart || '') + '"></label>' +
                 '<label><span>Abholzeit</span><input type="time" name="abholzeit" value="' + esc(meta.abholzeit || '') + '"></label>' +
             '</div>' +
@@ -3174,6 +3175,21 @@
 
         state.$root.find('[data-lstw-modal]').removeClass('lstw-modal--map-context').html(modalHtml(title, body, 'dispatch')).prop('hidden', false);
         toggleDispatchSignalGlow(signalAllowed);
+        loadDispatchStichwoerter(incident);
+    }
+
+    function loadDispatchStichwoerter(incident) {
+        var $select = state.$root.find('[data-lstw-modal] [name="ausrueckorder_stichwort_ids"]');
+        simPost({action:'lsttraining_stichwoerter_for_instance', instanz_id:state.instanceId}).done(function(response) {
+            if (!response || !response.success || !$select.length) return;
+            var selected = asArray(incident.meta && incident.meta.ausrueckorder_stichwort_ids).map(String);
+            $select.empty();
+            asArray(response.data.items).forEach(function(row) {
+                var option = $('<option></option>').val(row.id).text(row.code + ' – ' + row.bezeichnung);
+                if (selected.indexOf(String(row.id)) !== -1) option.prop('selected', true);
+                $select.append(option);
+            });
+        });
     }
 
     function dispatchPayload(incidentId) {
@@ -3185,6 +3201,7 @@
             signal_allowed: $modal.find('[name="signal_allowed"]').is(':checked') ? 1 : 0,
             einsatzcode: $modal.find('[name="einsatzcode"]').val() || '',
             ausrueckorder: $modal.find('[name="ausrueckorder"]').val() || '',
+            ausrueckorder_stichwort_ids: $modal.find('[name="ausrueckorder_stichwort_ids"]').val() || [],
             einsatzkategorie: $modal.find('[name="einsatzkategorie"]').val() || '',
             zusatz_text: $modal.find('[name="zusatz_text"]').val() || '',
             abholzeit: $modal.find('[name="abholzeit"]').val() || '',

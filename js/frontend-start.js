@@ -2217,7 +2217,8 @@
                     '<p><strong>Einsatzort:</strong> ' + esc(place) + '</p>' +
                     '<label class="lsttraining-check-line"><input type="checkbox" name="signal_allowed" value="1" ' + (dispatchMeta(incident, 'signal_allowed', false) ? 'checked' : '') + '> Signalfahrt</label>' +
                     '<label><span>Einsatzcode:</span><input type="text" name="einsatzcode" value="' + esc(dispatchMeta(incident, 'einsatzcode', incident.einsatztyp || '')) + '"></label>' +
-                    '<label><span>Ausrückorder:</span><input type="text" name="ausrueckorder" value="' + esc(dispatchMeta(incident, 'ausrueckorder', '')) + '"></label>' +
+                    '<label><span>Einsatzstichwörter für die Ausrückorder:</span><select name="ausrueckorder_stichwort_ids" multiple size="4" aria-describedby="lst-dispatch-stichwort-help"></select><small id="lst-dispatch-stichwort-help">Mehrere Stichwörter mit Strg oder Cmd auswählen.</small></label>' +
+                    '<label><span>Ausrückorder – Freitext:</span><input type="text" name="ausrueckorder" value="' + esc(dispatchMeta(incident, 'ausrueckorder', '')) + '"></label>' +
                     '<label><span>Einsatzkategorie:</span><input type="text" name="einsatzkategorie" value="' + esc(dispatchMeta(incident, 'einsatzkategorie', incident.einsatzart || '')) + '"></label>' +
                     '<label><span>Zusatz / Freitext:</span><textarea name="zusatz_text" rows="3">' + esc(dispatchZusatzText(incident)) + '</textarea></label>' +
                     '<label><span>Abholzeit:</span><input type="time" name="abholzeit" value="' + esc(dispatchMeta(incident, 'abholzeit', '')) + '"></label>' +
@@ -2255,6 +2256,21 @@
                 '</div>' +
             '</div>'
         ).prop('hidden', false);
+        loadDispatchStichwoerter($root, incident, $modal);
+    }
+
+    function loadDispatchStichwoerter($root, incident, $modal) {
+        var $select = $modal.find('[name="ausrueckorder_stichwort_ids"]');
+        simPost({action:'lsttraining_stichwoerter_for_instance', instanz_id:$root.attr('data-instance-id')}).done(function(response) {
+            if (!response || !response.success || !$select.length) return;
+            var selected = (dispatchMeta(incident, 'ausrueckorder_stichwort_ids', []) || []).map(String);
+            $select.empty();
+            (response.data.items || []).forEach(function(row) {
+                var option = $('<option></option>').val(row.id).text(row.code + ' – ' + row.bezeichnung);
+                if (selected.indexOf(String(row.id)) !== -1) option.prop('selected', true);
+                $select.append(option);
+            });
+        });
     }
 
     function closeDispatchModal($root) {
@@ -2270,6 +2286,7 @@
             signal_allowed: $form.find('[name="signal_allowed"]').is(':checked') ? 1 : 0,
             einsatzcode: $form.find('[name="einsatzcode"]').val() || '',
             ausrueckorder: $form.find('[name="ausrueckorder"]').val() || '',
+            ausrueckorder_stichwort_ids: $form.find('[name="ausrueckorder_stichwort_ids"]').val() || [],
             einsatzkategorie: $form.find('[name="einsatzkategorie"]').val() || '',
             zusatz_text: $form.find('[name="zusatz_text"]').val() || '',
             abholzeit: $form.find('[name="abholzeit"]').val() || '',

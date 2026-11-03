@@ -6202,6 +6202,16 @@ add_action('wp_ajax_lsttraining_sim_save_dispatch', function () {
         $meta['signal_allowed'] = !empty($_POST['signal_allowed']);
         $meta['einsatzcode'] = sanitize_text_field(wp_unslash($_POST['einsatzcode'] ?? ''));
         $meta['ausrueckorder'] = sanitize_text_field(wp_unslash($_POST['ausrueckorder'] ?? ''));
+        $raw_stichwort_ids = isset($_POST['ausrueckorder_stichwort_ids']) ? wp_unslash($_POST['ausrueckorder_stichwort_ids']) : [];
+        if (!is_array($raw_stichwort_ids) || count($raw_stichwort_ids) > 100) { wp_send_json_error(['message' => 'Ungültige Stichwortauswahl.'], 400); }
+        $selected_stichwort_ids = array_values(array_unique(array_filter(array_map('absint', $raw_stichwort_ids))));
+        if ($selected_stichwort_ids) {
+            $placeholders = implode(',', array_fill(0, count($selected_stichwort_ids), '?'));
+            $valid_stmt = $pdo->prepare("SELECT COUNT(*) FROM einsatzstichwoerter es JOIN spielinstanzen si ON si.leitstelle_id = es.leitstelle_id WHERE si.id = ? AND es.aktiv = 1 AND es.id IN ($placeholders)");
+            $valid_stmt->execute(array_merge([$instanz_id], $selected_stichwort_ids));
+            if ((int) $valid_stmt->fetchColumn() !== count($selected_stichwort_ids)) { wp_send_json_error(['message' => 'Mindestens ein Stichwort gehört nicht zu dieser Leitstelle.'], 400); }
+        }
+        $meta['ausrueckorder_stichwort_ids'] = $selected_stichwort_ids;
         $meta['einsatzkategorie'] = sanitize_text_field(wp_unslash($_POST['einsatzkategorie'] ?? ''));
         $meta['zusatz_text'] = sanitize_textarea_field(wp_unslash($_POST['zusatz_text'] ?? ''));
         $meta['abholzeit'] = sanitize_text_field(wp_unslash($_POST['abholzeit'] ?? ''));
