@@ -390,7 +390,16 @@ Exportierte Dateien können direkt im Einsatzgebiets-Editor hochgeladen werden.
 
 ## 📄 Lizenz
 
-MIT License. Siehe `LICENSE.md`.
+**GPL-2.0-or-later:** Der selbst entwickelte Code von LSTtraining steht, soweit nicht anders angegeben, unter der **GNU General Public License, Version 2 oder neuer**. Der vollständige Lizenztext steht in [LICENSE.md](LICENSE.md).
+
+**Copyright © 2026 Frieder Knabe. Hauptautor des Originalprojekts: Frieder Knabe.**  
+Originalprojekt: https://github.com/Frief84/LSTtraining/
+
+Die GPL erlaubt Nutzung, Änderungen, eigene Datenquellen, Forks und die Weitergabe, einschließlich kommerzieller Verbreitung. Wer abgeleitete GPL-Software weitergibt, muss die geltenden GPL-Bedingungen einschließlich der betreffenden Quellcodepflichten und dem Erhalt vorhandener Urheberrechtsvermerke erfüllen. Eine Weitergabe des GPL-Codes ausschließlich als proprietäre Closed-Source-Software ist nicht erlaubt.
+
+Rein interne Änderungen müssen nicht allein deshalb veröffentlicht werden, weil sie vorgenommen wurden. Die GPL verpflichtet nicht dazu, alle Änderungen an das Originalrepository zurückzusenden. Wir bitten dennoch ausdrücklich darum, Verbesserungen und Erweiterungen möglichst als Pull Request für das Grundprojekt bereitzustellen.
+
+Unabhängige Bibliotheken, Kartendaten, Bilder und andere Inhalte Dritter behalten ihre jeweiligen Lizenzbedingungen.
 
 ## 🧑‍💻 Mitwirken
 
