@@ -384,15 +384,13 @@ Alle Schreiboperationen werden mit Quelle `rest-management` im
 Aktivitaetsprotokoll erfasst.
 
 
-## Lokaler Rechercheagent und freigegebener Abgleich
+## Freigegebener Abgleich
 
 `wachen.adresse` ist optional (`null` oder maximal 500 Zeichen) und wird durch Migration 2026100701 ergänzt. Listen und Details liefern das Feld; bestehende Clients müssen es nicht senden.
-
-Der lokale Python-Agent ist in `agent/README.md` dokumentiert. Er nutzt ausschließlich lesende Verwaltungsaufrufe während einer Recherche. Ausgewählte Deltas können getrennt mit `--freigeben` und `--id` übertragen werden.
 
 - `GET /wp-json/lst/v1/abgleich/status`: Administratorzugriff; bestätigt globale Sicht und Version des geschützten Schreibwegs.
 - `POST /wp-json/lst/v1/abgleich/aktion`: Administratorzugriff; erwartet einen individuell ausgewählten Delta-Eintrag mit `action`, `freigabe_id`, `before`, `after`, `beleg`, `quelle` sowie Wachen-/Fahrzeug-ID, soweit vorhanden.
 - Aktionen: `ADD`, `UPDATE` (Fahrzeugtyp), `SET_AD` (nicht einsatzbereit/FMS 6), `ADD_WACHE` mit Zuordnung und `UPDATE_WACHE` zur Auflösung technischer Namen. Keine Löschaktion.
 - Globale Rufnamensprüfung unter datenbankbezogener Sperre, Prüfung des Vorzustands und transaktionale Änderung. Sperr-/Bestandskonflikte liefern HTTP 409; ungültige Eingaben HTTP 400.
 
-Diese Sperre koordiniert die neuen Abgleich-Aufrufe. Andere bestehende Verwaltungs-/AJAX-Schreibwege müssen während einer Freigabesitzung ruhen. Der Python-Client wiederholt einen POST nach unbekanntem Ergebnis nicht automatisch, sondern lädt den Bestand erneut und protokolliert den Prüfbedarf.
+Diese Sperre koordiniert die Abgleich-Aufrufe. Andere bestehende Verwaltungs-/AJAX-Schreibwege müssen während einer Freigabesitzung ruhen.
