@@ -21,7 +21,10 @@
 * Interaktiver Einsatzgebiets-Editor (Polygon zeichnen, ändern, importieren)
 * Live-Simulation von **Fahrzeugbewegungen** auf berechneten Routen
 * Integration mit **OpenRouteService** zur Wegberechnung
-* Admin-Interface zur Verwaltung von Leitstellen, Nebenwachen und Fahrzeugen
+* Admin-Interface zur Verwaltung von Leitstellen, Nebenleitstellen, Krankenhäusern, Wachen, Fahrzeugen und Einsatzvorlagen
+* Leitstellenbezogene Einsatzstichwörter mit Beschreibung und Fahrzeugvorauswahl im Einsatz-Workspace
+* Rollen- und Leitstellenrechte mit serverseitiger Objektprüfung für Verwaltungsaktionen
+* Multiplayer mit getrennten Instanz-Spielständen, Einsatzleiterrollen und gesicherten Schreibzugriffen
 * DACH-Luftrettungskatalog mit 142 Stationen und 150 öffentlich dokumentierten RTH-, ITH- und SAR-Rufnamen
 * Dienstzeitabhängige Fahrzeugverfügbarkeit einschließlich Sonnenstands- und Saisonregeln
 * Geschützte REST-Verwaltungs- und Status-API für externe Werkzeuge
@@ -34,13 +37,21 @@
    ```
 2. Plugin im WordPress-Adminbereich unter **Plugins** aktivieren.
 3. Schreibrechte für AJAX-Endpunkte (`admin-ajax.php`) sicherstellen.
-4. Die Datenbankmigration läuft bei Aktivierung beziehungsweise beim ersten Admin-Aufruf nach einem Upgrade automatisch. Vor produktiven Upgrades immer ein Datenbank-Backup erstellen; der aktuelle Stand kann unter **LST Training → Einstellungen** erneut geprüft werden.
+4. Versionierte Datenbankmigrationen laufen bei Plugin-Aktivierung oder beim ersten berechtigten Admin-Aufruf nach einem Upgrade. Der aktuelle Schema-Stand ist `2026110303`. Migrationen lassen sich außerdem unter **LST Training → Einstellungen** erneut prüfen. Vor produktiven Upgrades ein Datenbank-Backup erstellen.
 
 Eine rollenabhängige Bedienhilfe steht im WordPress-Adminbereich unter **LST Training → Hilfe & Dokumentation** bereit. Die vollständige, wikiartig gegliederte Dokumentation beginnt unter [`docs/README.md`](docs/README.md). Über die Einstellung **Dokumentation auf Seite** oder den Shortcode `[lsttraining_docs]` werden die Markdown-Dateien sicher innerhalb des aktiven WordPress-Themes dargestellt. Normale Spieler sehen in WordPress ausschließlich die Spielerhilfe; administrative und technische Kapitel werden dort nur Administratoren beziehungsweise passend berechtigten Bearbeitern angezeigt.
 
+
+## Aktuelle Funktionen
+
+- **Einsatzstichwörter:** Pro Leitstelle verwaltbare Stichwörter ordnen Einsätze dem Bereich Feuerwehr oder Rettungsdienst zu. Beschreibungen und Hinweise unterstützen die Disposition; hinterlegte Fahrzeugklassen werden bei der Auswahl im Workspace vorausgewählt. Die Vorschläge bleiben bearbeitbar und ersetzen nicht die Entscheidung der disponierenden Person.
+- **Krankenhäuser und Transporte:** Klinikdaten, Fachbereiche, Leitstellenfreigaben und Patiententransporte werden im Workspace berücksichtigt.
+- **Luftrettung:** Der DACH-Katalog umfasst 142 Standorte in 37 Regionen. Dienstzeiten und saisonale Verfügbarkeiten steuern, wann Luftrettungsmittel alarmiert werden können.
+- **Gespeicherte Instanzen:** Verantwortliche können Spiele fortsetzen und löschen. Inaktive Instanzen erhalten eine E-Mail-Erinnerung; eine Löschung wird erst nach erfolgreichem Versand für 14 Tage später angesetzt.
+- **Dokumentation in WordPress:** Unter **LST Training → Hilfe & Dokumentation** werden Hilfeseiten rollenabhängig angezeigt. Die Quelldokumentation liegt unter [`docs/README.md`](docs/README.md).
 ## 🧱 Datenbank
 
-`database/schema.sql` enthält das idempotente Basisschema für Leitstellen, Wachen, Fahrzeuge, Krankenhäuser, Einsatzvorlagen, Anruferprofile und Spielinstanzen. Versionierte Ergänzungen und Datenmigrationen liegen in `includes/migrations.php`; die aktuelle Schema-Version wird pro verwendeter Datenbank in einer WordPress-Option gespeichert. Normale Seiten- und AJAX-Aufrufe führen kein Laufzeit-DDL aus.
+`database/schema.sql` enthält das idempotente Basisschema für Leitstellen, Nebenleitstellen, Wachen, Fahrzeuge, Krankenhäuser, Einsatzvorlagen, Einsatzstichwörter, Anruferprofile und Spielinstanzen. Versionierte Ergänzungen und Datenmigrationen liegen in `includes/migrations.php`; die aktuelle Schema-Version (`2026110303`) wird pro verwendeter Datenbank in einer WordPress-Option gespeichert. Migrationen laufen nicht bei normalen Seiten-, Snapshot- oder AJAX-Aufrufen.
 
 ## Simulationsdaten: DB-Basis, Bootstrap, Snapshot
 
