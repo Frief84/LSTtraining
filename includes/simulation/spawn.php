@@ -1337,7 +1337,10 @@ function lsttraining_sim_road_tile_state(PDO $pdo, int $leitstelle_id): array {
         $files->execute([$leitstelle_id]);
         foreach (($files->fetchAll(PDO::FETCH_COLUMN) ?: []) as $relativePath) {
             $relativePath = str_replace('\\', '/', ltrim((string) $relativePath, '/\\'));
-            if (strpos($relativePath, 'data/osm_tiles/') !== 0) {
+            if (strpos($relativePath, 'data/osm_tiles/') === 0) {
+                $relativePath = 'landuse/landuse_tiles_out/osm/' . substr($relativePath, strlen('data/osm_tiles/'));
+            }
+            if (strpos($relativePath, 'landuse/landuse_tiles_out/osm/') !== 0) {
                 $state['invalid_paths']++;
                 continue;
             }
@@ -1609,7 +1612,10 @@ function lsttraining_sim_local_road_tile_paths(PDO $pdo, int $leitstelle_id, arr
     $paths = [];
     foreach (($stmt->fetchAll(PDO::FETCH_COLUMN) ?: []) as $relative_path) {
         $relative_path = str_replace('\\', '/', ltrim((string) $relative_path, '/\\'));
-        if (strpos($relative_path, 'data/osm_tiles/') !== 0) {
+        if (strpos($relative_path, 'data/osm_tiles/') === 0) {
+            $relative_path = 'landuse/landuse_tiles_out/osm/' . substr($relative_path, strlen('data/osm_tiles/'));
+        }
+        if (strpos($relative_path, 'landuse/landuse_tiles_out/osm/') !== 0) {
             continue;
         }
         $absolute_path = LSTTRAINING_PATH . str_replace('/', DIRECTORY_SEPARATOR, $relative_path);
@@ -1912,19 +1918,20 @@ function lsttraining_sim_anywhere_layers(): array {
     ];
 }
 
-function lsttraining_sim_pick_poi(PDO $pdo, int $leitstelle_id, string $poi_type, array $area): ?array {
-    if ($poi_type === '' || !lsttraining_sim_table_exists($pdo, 'leitstellen_pois')) {
+function lsttraining_sim_pick_poi(PDO $pdo, int $leitstelle_id, array $poi_types, array $area): ?array {
+    $poi_types = array_values(array_unique(array_filter(array_map('strval', $poi_types))));
+    if (!$poi_types || !lsttraining_sim_table_exists($pdo, 'leitstellen_pois')) {
         return null;
     }
 
     $stmt = $pdo->prepare('
         SELECT id, poi_type, name, latitude, longitude
         FROM leitstellen_pois
-        WHERE leitstelle_id = ? AND poi_type = ?
+        WHERE leitstelle_id = ? AND poi_type IN (' . implode(',', array_fill(0, count($poi_types), '?')) . ')
         ORDER BY id ASC
         LIMIT 600
     ');
-    $stmt->execute([$leitstelle_id, $poi_type]);
+    $stmt->execute(array_merge([$leitstelle_id], $poi_types));
 
     $items = [];
     foreach (($stmt->fetchAll(PDO::FETCH_ASSOC) ?: []) as $row) {
@@ -1989,7 +1996,9 @@ function lsttraining_sim_resolve_location(PDO $pdo, array $einsatz, int $leitste
     }
 
     if ($scope === 'poi_type') {
-        return lsttraining_sim_pick_poi($pdo, $leitstelle_id, (string) ($einsatz['poi_type'] ?? ''), $area);
+        $poi_types = lsttraining_sim_decode_json($einsatz['poi_types_json'] ?? '', []);
+        if (!is_array($poi_types) || !$poi_types) { $poi_types = [(string) ($einsatz['poi_type'] ?? '')]; }
+        return lsttraining_sim_pick_poi($pdo, $leitstelle_id, $poi_types, $area);
     }
 
     if ($scope === 'landscape') {
@@ -2186,6 +2195,10 @@ function lsttraining_sim_fetch_candidates(PDO $pdo, int $leitstelle_id, array $s
     $candidates = [];
     foreach ($rows as $row) {
         $einsatz_id = (int) $row['id'];
+        if (!empty($row['leitstelle_id']) && (int) $row['leitstelle_id'] !== $leitstelle_id) {
+            lsttraining_sim_diag_inc($diagnostics, 'skipped_leitstelle');
+            continue;
+        }
         if (!lsttraining_sim_leitstelle_allowed($pdo, $einsatz_id, $leitstelle_id)) {
             lsttraining_sim_diag_inc($diagnostics, 'skipped_leitstelle');
             continue;
@@ -3105,6 +3118,11 @@ function lsttraining_sim_spawn_one(PDO $pdo, int $instanz_id, array $options = [
     }
 
     $leitstelle_id = (int) $instance['leitstelle_id'];
+    $requested_stichwort = null;
+    if ($force_spawn && !empty($options['stichwort_id'])) {
+        $requested_stichwort = lsttraining_stichwoerter_get($pdo, $leitstelle_id, (int) $options['stichwort_id']);
+        if (!$requested_stichwort || !(int) $requested_stichwort['aktiv']) { throw new InvalidArgumentException('Stichwort gehört nicht zu dieser Leitstelle.'); }
+    }
     $area = lsttraining_sim_load_area($pdo, $leitstelle_id);
     $runtime_state = lsttraining_sim_runtime_state($settings, $instance);
     $sim_now_ts = (int) $runtime_state['game_now_ts'];
@@ -3143,6 +3161,7 @@ function lsttraining_sim_spawn_one(PDO $pdo, int $instanz_id, array $options = [
     $diagnostics = [];
     $manual_selected_spawn = $force_spawn && $selected_einsatz_id > 0;
     $candidates = lsttraining_sim_fetch_candidates($pdo, $leitstelle_id, $settings, $sim_time, $area, $diagnostics, $selected_einsatz_id, $manual_selected_spawn);
+    if ($requested_stichwort) { $candidates = array_values(array_filter($candidates, static fn($row) => $row['einsatzart'] === $requested_stichwort['einsatzart'])); }
     $picked = null;
     while ($candidates) {
         $candidate = lsttraining_sim_weighted_pick($candidates);
@@ -3186,6 +3205,11 @@ function lsttraining_sim_spawn_one(PDO $pdo, int $instanz_id, array $options = [
         return $result;
     }
 
+    if ($requested_stichwort) {
+        $picked['einsatztyp'] = $requested_stichwort['code'];
+        $picked['title'] = $requested_stichwort['code'] . ' – ' . $requested_stichwort['bezeichnung'];
+        $picked['base_required_resources_json'] = $requested_stichwort['fahrzeuge_json'];
+    }
     $loc = $picked['_spawn_location'];
 
     $meta = [
@@ -3315,7 +3339,7 @@ function lsttraining_sim_spawn_one(PDO $pdo, int $instanz_id, array $options = [
         $sim_time->format('H:i'),
         (float) $loc['latitude'],
         (float) $loc['longitude'],
-        (string) ($picked['poi_type'] ?: ($loc['poi_type'] ?? '')),
+        (string) (($loc['poi_type'] ?? '') ?: ($picked['poi_type'] ?? '')),
         (string) ($loc['poi_name_snapshot'] ?? ''),
         $caller_text,
         $lagemeldung,

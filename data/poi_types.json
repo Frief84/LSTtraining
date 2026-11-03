@@ -384,6 +384,12 @@
       "icon": "default"
     },
     {
+      "tag": "SpiPla",
+      "color": "#E550D0",
+      "description": "Spielplatz.",
+      "icon": "default"
+    },
+    {
       "tag": "Sporthalle",
       "color": "#E550CA",
       "description": "Multifunktionshalle/Sporthalle.",

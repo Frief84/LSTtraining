@@ -10,7 +10,11 @@ jQuery(function ($) {
     let callerProfilesLoadFailed = false;
     let callerProfilesReady = false;
     let followupCardSeq = 0;
-    const wizardSteps = ['general', 'location', 'time', 'caller', 'situation', 'followups'];
+    const wizardSteps = ['general', 'location', 'time', 'caller', 'situation'];
+    let flowView = 'form';
+    let flowZoom = 1;
+    let flowSelectedKey = 'foundation';
+    function flowKey() { return 'flow_' + (window.crypto && crypto.randomUUID ? crypto.randomUUID().replace(/-/g, '') : Math.random().toString(36).slice(2) + Date.now().toString(36)); }
 
     function esc(str) {
         return String(str == null ? '' : str)
@@ -62,6 +66,72 @@ jQuery(function ($) {
         item.seasons = Array.isArray(item.seasons) ? item.seasons : [];
         item.weather_conditions = Array.isArray(item.weather_conditions) ? item.weather_conditions : [];
         item.followups = Array.isArray(item.followups) ? item.followups : [];
+        item.followups.forEach(function (row) {
+            const effect = parseJsonValue(row.effect_json || '', {});
+            const label = String(row.label || '').toLowerCase();
+            row.flow_stage = ['after_rescue', 'final_situation', 'incident_end', 'followup_call', 'arrival_default', 'arrival_variant'].includes(effect.flow_stage)
+                ? (effect.flow_stage === 'after_rescue' ? 'final_situation' : effect.flow_stage)
+                : (/nach befreiung/.test(label) ? 'final_situation' : (/einsatzende/.test(label) ? 'incident_end' : ((row.kind === 'caller_answer' || row.speaker_type === 'caller') && row.flow_role !== 'initial' ? 'followup_call' : '')));
+        });
+        item.followups.forEach(row => {
+            if (!row.flow_key) row.flow_key = flowKey();
+            if (!row.flow_role) row.flow_role = row.kind === 'unit_report' && row.trigger_mode === 'on_unit_arrival' ? 'initial' : 'development';
+        });
+        let arrivalDefault = item.followups.find(row => row.flow_stage === 'arrival_default');
+        if (!arrivalDefault) {
+            arrivalDefault = item.followups.find(row => row.flow_role === 'initial' && /eintreffen.*erkundung/i.test(String(row.label || '')));
+            if (arrivalDefault) {
+                arrivalDefault.flow_stage = 'arrival_default';
+            } else {
+                arrivalDefault = {
+                    flow_key: flowKey(), flow_role: 'initial', flow_stage: 'arrival_default',
+                    label: 'Eintreffen und Erkundung', kind: 'unit_report', speaker_type: 'fire_unit',
+                    trigger_mode: 'on_unit_arrival', probability_percent: 0, min_after_sec: 0, max_after_sec: 0,
+                    text: item.lagemeldung || '', effect_json: JSON.stringify({ radio_report_text: item.lagemeldung || '' })
+                };
+                item.followups.unshift(arrivalDefault);
+            }
+        }
+        const defaultEffect = parseJsonValue(arrivalDefault.effect_json || '', {});
+        arrivalDefault.effect_json = JSON.stringify(Object.assign({}, defaultEffect, {
+            flow_stage: 'arrival_default', flow_parent_keys: [],
+            radio_report_text: defaultEffect.radio_report_text || arrivalDefault.text || item.lagemeldung || ''
+        }));
+        arrivalDefault.probability_percent = 0;
+        const previousInitialKey = arrivalDefault.flow_key;
+        const migratedVariants = item.followups.filter(row => row !== arrivalDefault && row.flow_role === 'development'
+            && /^Lage [A-D](?:$|[\s–:-])/i.test(String(row.label || ''))
+            && (() => {
+                const effect = parseJsonValue(row.effect_json || '', {});
+                const parents = Array.isArray(effect.flow_parent_keys) ? effect.flow_parent_keys : parseJsonValue(row.applicable_initial_keys || [], []);
+                return Array.isArray(parents) && (!parents.length || parents.includes(previousInitialKey));
+            })());
+        migratedVariants.forEach(row => {
+            row.flow_role = 'initial';
+            row.flow_stage = 'arrival_variant';
+            row.kind = 'unit_report';
+            row.trigger_mode = 'on_unit_arrival';
+            row.applicable_initial_keys = [];
+            const effect = parseJsonValue(row.effect_json || '', {});
+            effect.flow_stage = 'arrival_variant';
+            effect.flow_parent_keys = (Array.isArray(effect.flow_parent_keys) ? effect.flow_parent_keys : []).filter(key => key !== previousInitialKey);
+            row.effect_json = JSON.stringify(effect);
+        });
+        item.followups.forEach(row => {
+            if (row !== arrivalDefault && row.flow_role === 'initial') {
+                row.flow_stage = 'arrival_variant';
+                const effect = parseJsonValue(row.effect_json || '', {});
+                effect.flow_stage = 'arrival_variant';
+                row.effect_json = JSON.stringify(effect);
+            }
+        });
+        if (migratedVariants.length) {
+            const existing = item.followups.filter(row => row.flow_stage === 'arrival_variant' && !migratedVariants.includes(row));
+            const reserved = existing.reduce((sum, row) => sum + Math.max(0, Number(row.probability_percent || 0)), 0);
+            const each = Math.floor(Math.max(0, 100 - reserved) / (migratedVariants.length + 1));
+            migratedVariants.forEach(row => { row.probability_percent = each; });
+        }
+        item.followups.forEach((row, index) => { row.step_no = index + 1; });
         item.caller_profiles = Array.isArray(item.caller_profiles) ? item.caller_profiles : [];
         item.base_required_resources_json = item.base_required_resources_json || '';
         item.patient_profile_json = item.patient_profile_json || '';
@@ -73,6 +143,10 @@ jQuery(function ($) {
             observation: [],
             extra: []
         };
+        item.selected_poi_types = parseJsonValue(item.poi_types_json || '', []);
+        if (!Array.isArray(item.selected_poi_types)) item.selected_poi_types = [];
+        if (!item.selected_poi_types.length && item.poi_type) item.selected_poi_types = [item.poi_type];
+        item.leitstellen = window.lstEinsatzLeitstellen || [];
         item.poi_types = currentPoiTypes;
         return item;
     }
@@ -203,7 +277,7 @@ jQuery(function ($) {
         const title = ($('#lst-title').val() || '').trim() || 'Unbenannter Einsatz';
         const scopeType = $('input[name="lst_scope_type"]:checked').val() || 'anywhere';
         const resources = collectResources('#lst-base-resource-list');
-        const followupCount = $('#lst-followup-cards .lst-followup-row').length;
+        const followupCount = $('.lst-followup-row').length;
 
         $('[data-lst-summary="title"]').text(title);
         $('[data-lst-summary="scope"]').text(scopeLabel(scopeType));
@@ -234,6 +308,7 @@ jQuery(function ($) {
             tabKey = 'general';
         }
 
+        if (tabKey !== 'situation') restoreFlowProperties();
         $('.lst-tab-panel').removeClass('is-active').hide();
 
         const $panel = $('.lst-tab-panel[data-tab-panel="' + tabKey + '"]');
@@ -241,6 +316,7 @@ jQuery(function ($) {
         $('#lst-einsatz-modal .modal-body').scrollTop(0);
         updateWizardStepState(tabKey);
         updateWizardSummary();
+        if (tabKey === 'situation') renderFlowGraph();
 
         if (tabKey === 'location' && $('input[name="lst_scope_type"]:checked').val() === 'fixed_point') {
             setTimeout(initMapIfNeeded, 50);
@@ -333,6 +409,23 @@ jQuery(function ($) {
         });
     }
 
+    let currentStichwoerter = [];
+    function loadStichwoerter(selectedId) {
+        const lsId = parseInt($('#lst-einsatz-leitstelle').val() || 0, 10);
+        const $select = $('#lst-stichwort-id');
+        $select.html('<option value="">Bitte Stichwort wählen</option>');
+        currentStichwoerter = [];
+        if (!lsId) return;
+        postAjax({action: 'lst_get_stichwoerter', leitstelle_id: lsId}).done(function (res) {
+            if (!res || !res.success) return;
+            currentStichwoerter = Array.isArray(res.data.items) ? res.data.items : [];
+            currentStichwoerter.forEach(function (row) {
+                $select.append($('<option></option>').val(row.id).text(row.code + ' – ' + row.bezeichnung + ' (' + row.einsatzart + ')'));
+            });
+            if (selectedId) $select.val(String(selectedId));
+        });
+    }
+
     function openEditor(item) {
         item = normalizeItem(item);
         const mode = item.__editor_mode || (item.id ? 'edit' : 'create');
@@ -348,6 +441,17 @@ jQuery(function ($) {
         restoreEmptyRows();
         followupCardSeq = $('.lst-followup-row').length;
         hydrateResourceEditors(item);
+        loadStichwoerter(item.stichwort_id || 0);
+        $('.lst-followup-row').each(function () {
+            const $card = $(this);
+            if (!$card.attr('data-flow-key')) $card.attr('data-flow-key', flowKey());
+            if ($card.attr('data-flow-stage') === 'arrival_default') {
+                $card.find('.lst-followup-role').val('initial').prop('disabled', true);
+                $card.find('.lst-followup-probability').val('0').closest('.lst-field').hide();
+                $card.find('.lst-remove-row').first().hide();
+            }
+        });
+        refreshFlowParents();
         queueAllPatientHospitalPreviews();
         callerProfilesReady = false;
         callerProfilesLoadFailed = false;
@@ -607,7 +711,7 @@ jQuery(function ($) {
     }
 
     function updateAllFollowupCardSummaries() {
-        $('#lst-followup-cards .lst-followup-row').each(function () {
+        $('.lst-followup-row').each(function () {
             updateFollowupCardSummary($(this));
         });
     }
@@ -912,7 +1016,10 @@ jQuery(function ($) {
     }
 
     function updateFollowupCardMode($card) {
+        const call = isFlowCall($card);
         $card.find('.lst-situation-section').prop('hidden', false);
+        $card.find('.lst-situation-section > h4').text(call ? 'Was teilt der Folgeanrufer mit?' : 'Was findet die Einheit vor?');
+        $card.find('.lst-followup-radio-report').prev('label').find('strong').text(call ? 'Wortlaut des Folgeanrufs' : 'Rückmeldung an die Leitstelle');
         updateFollowupCardSummary($card);
     }
 
@@ -933,10 +1040,13 @@ jQuery(function ($) {
         return out;
     }
 
-    function buildEffectJson(note, patientRequirements, patients) {
+    function buildEffectJson(note, patientRequirements, patients, stage, parentKeys, reportText) {
         const text = String(note || '').trim();
         const patient = patientRequirements && typeof patientRequirements === 'object' ? patientRequirements : {};
         const payload = {};
+        if (['arrival_default', 'arrival_variant', 'final_situation', 'incident_end', 'followup_call'].includes(stage)) payload.flow_stage = stage;
+        payload.flow_parent_keys = Array.isArray(parentKeys) ? parentKeys : [];
+        payload.radio_report_text = String(reportText || '').trim();
         if (text) {
             payload.note = text;
         }
@@ -1082,6 +1192,9 @@ jQuery(function ($) {
             const $card = $(this);
             const index = parseInt($card.data('followup-index'), 10);
             const row = item.followups[index] || {};
+            const effect = parseJsonValue(row.effect_json || '', {});
+            $card.data('flow-parents', Array.isArray(effect.flow_parent_keys) ? effect.flow_parent_keys : parseJsonValue(row.applicable_initial_keys || [], []));
+            $card.data('flow-parent-explicit', Array.isArray(effect.flow_parent_keys));
             const followupSplit = splitPatientAndManualResources(parseJsonValue(row.required_resources_json || '', []));
             const savedPatientRequirements = patientRequirementsFromJson(row.effect_json || '');
             const legacyText = legacySituationTextFromJson(row.effect_json || '');
@@ -1094,6 +1207,7 @@ jQuery(function ($) {
             });
             applyConditionUi($card, row.condition_json || '');
             $card.find('.lst-followup-effect-note').val(effectNoteFromJson(row.effect_json || ''));
+            $card.find('.lst-followup-radio-report').val(String(effect.radio_report_text || row.text || ''));
             const effectDecoded = parseJsonValue(row.effect_json || '', {});
             const followupPatients = normalizePatientRows(effectDecoded && effectDecoded.patients ? effectDecoded.patients : []);
             const $followupPatientList = $card.find('.lst-followup-patient-list').empty();
@@ -1133,7 +1247,11 @@ jQuery(function ($) {
         const rowText = row.text || legacySituationTextFromJson(row.effect_json || '');
 
         container.append(`
-            <div class="lst-box lst-followup-card lst-followup-row" data-followup-index="${esc(index)}">
+            <div class="lst-box lst-followup-card lst-followup-row" data-followup-index="${esc(index)}" data-flow-key="${esc(row.flow_key || flowKey())}">
+                <div class="lst-flow-role-fields">
+                    <label>Art <select class="lst-followup-role"><option value="initial" ${(row.flow_role || 'initial') === 'initial' ? 'selected' : ''} >Eintreffvariante</option><option value="followup_call">Folgeanruf</option><option value="development" ${!row.flow_stage && row.flow_role === 'development' ? 'selected' : ''}>Entwicklung</option><option value="final_situation" ${row.flow_stage === 'final_situation' ? 'selected' : ''}>Endlage</option><option value="incident_end" ${row.flow_stage === 'incident_end' ? 'selected' : ''}>Einsatzende</option></select></label>
+                    <label>Mögliche Vorgänger <select class="lst-followup-parents" multiple aria-label="Mögliche Vorgänger"></select></label>
+                </div>
                 <div class="lst-followup-card-head">
                     <div>
                         <span class="lst-wizard-kicker">Lagevariante</span>
@@ -1169,11 +1287,7 @@ jQuery(function ($) {
                         </div>
                         <div class="lst-field">
                             <label><strong>Wahrscheinlichkeit</strong></label>
-                            <select class="lst-followup-probability">
-                                ${[100, 90, 75, 50, 25, 10, 0].map(function (prob) {
-                                    return '<option value="' + prob + '"' + (String(probability) === String(prob) ? ' selected' : '') + '>' + prob + ' %</option>';
-                                }).join('')}
-                            </select>
+                            <input type="number" class="small-text lst-followup-probability" min="0" max="100" step="1" value="${esc(probability)}"> %
                         </div>
                         <div class="lst-field">
                             <label><strong>Frühestens nach Sekunden</strong></label>
@@ -1193,7 +1307,9 @@ jQuery(function ($) {
                         <label><strong>Sichtbarer Lage-/Beschreibungstext</strong></label>
                         <textarea class="large-text lst-followup-text" rows="5" placeholder="Beschreibe die Lage, die das ersteintreffende Fahrzeug per S5 meldet.">${esc(rowText)}</textarea>
                     </div>
-                    <p class="description">Dieser Text wird als S5-Lagemeldung gesendet und ersetzt beim Eintreten der Variante die sichtbare Lagebeschreibung.</p>
+                    <label><strong>Rückmeldung an die Leitstelle</strong></label>
+                    <textarea class="large-text lst-followup-radio-report" rows="4" placeholder="Was meldet die Einheit der Leitstelle?">${esc(parseJsonValue(row.effect_json || '', {}).radio_report_text || rowText)}</textarea>
+                    <p class="description">Diese Rückmeldung wird beim Eintreten dieser Lage gefunkt. Die Lagebeschreibung darüber bleibt getrennt.</p>
                     <div class="lst-patient-editor">
                         <div class="lst-box-header">
                             <h4>Patienten in dieser Variante</h4>
@@ -1267,6 +1383,12 @@ jQuery(function ($) {
         `);
 
         const $card = container.find('.lst-followup-row').last();
+        if (row.flow_stage) $card.attr('data-flow-stage', row.flow_stage);
+        if (row.flow_stage && row.flow_stage !== 'arrival_variant' && row.flow_stage !== 'arrival_default') $card.find('.lst-followup-role').val(row.flow_stage);
+        const effect = parseJsonValue(row.effect_json || '', {});
+        $card.data('flow-parents', Array.isArray(effect.flow_parent_keys) ? effect.flow_parent_keys : parseJsonValue(row.applicable_initial_keys || [], []));
+        $card.data('flow-parent-explicit', true);
+        refreshFlowParents();
         const followupSplit = splitPatientAndManualResources(parseJsonValue(row.required_resources_json || '', []));
         followupSplit.manual.forEach(function (resource) {
             addResourceRow($card.find('.lst-followup-resource-list'), resource);
@@ -1381,6 +1503,213 @@ jQuery(function ($) {
         return rows;
     }
 
+    function refreshFlowParents() {
+        const initial = $('.lst-followup-row').filter(function () { return $(this).find('.lst-followup-role').val() === 'initial' && $(this).attr('data-flow-stage') !== 'arrival_default'; }).map(function () {
+            return { key: $(this).attr('data-flow-key'), title: $(this).find('.lst-followup-label').val() || 'Erstlage' };
+        }).get();
+        const candidates = $('.lst-followup-row').filter(function () { return $(this).find('.lst-followup-role').val() !== 'incident_end'; }).map(function () {
+            const $card = $(this);
+            return { key: $card.attr('data-flow-key'), title: $card.find('.lst-followup-label').val() || 'Unbenannt' };
+        }).get();
+        $('.lst-followup-row').each(function () {
+            const $card = $(this), $select = $card.find('.lst-followup-parents');
+            const selected = $card.data('flow-parents') || $select.val() || [];
+            $select.html(candidates.filter(row => row.key !== $card.attr('data-flow-key') && ($card.find('.lst-followup-role').val() !== 'initial' || isFlowCall($('.lst-followup-row').filter(function () { return $(this).attr('data-flow-key') === row.key; })))).map(row => '<option value="' + esc(row.key) + '">' + esc(row.title) + '</option>').join(''));
+            $select.val(selected);
+            $card.find('.lst-followup-parents').closest('label').toggle(!isFlowCall($card) && $card.attr('data-flow-stage') !== 'arrival_default');
+            $card.removeData('flow-parents');
+        });
+        const sum = $('.lst-followup-row').filter(function () { return $(this).find('.lst-followup-role').val() === 'initial' && $(this).attr('data-flow-stage') !== 'arrival_default'; }).toArray().reduce(function (value, el) {
+            return value + Number($(el).find('.lst-followup-probability').val() || 0);
+        }, 0);
+        const count = initial.length;
+        const message = 'Eintreffvarianten: ' + sum + ' %, Standardlage: ' + Math.max(0, 100 - sum) + ' %';
+        $('#lst-flow-probability-sum, #lst-flow-graph-validation').text(message).toggleClass('lst-flow-invalid', sum > 100);
+    }
+
+    function flowPositions() {
+        try { return JSON.parse(localStorage.getItem(flowLayoutKey()) || '{}'); }
+        catch (e) { return {}; }
+    }
+    function saveFlowPosition(key, point) {
+        const positions = flowPositions(); positions[key] = point;
+        localStorage.setItem(flowLayoutKey(), JSON.stringify(positions));
+    }
+    let flowMountedNode = null;
+    let flowMountPlaceholder = null;
+    function restoreFlowProperties() {
+        if (flowMountedNode && flowMountPlaceholder && flowMountPlaceholder.parentNode) {
+            $(flowMountPlaceholder).before(flowMountedNode);
+            $(flowMountPlaceholder).remove();
+        }
+        flowMountedNode = null;
+        flowMountPlaceholder = null;
+    }
+    function isFlowCall($card) {
+        return $card.find('.lst-followup-role').val() === 'followup_call'
+            || $card.find('.lst-followup-kind').val() === 'caller_answer'
+            || $card.find('.lst-followup-speaker').val() === 'caller';
+    }
+    function flowLayoutKey() {
+        return 'lst_einsatz_flow_positions_v5_' + ($('#lst-einsatz-id').val() || 'new');
+    }
+    function flowWouldCycle(from, to) {
+        const seen = new Set();
+        function visit(key) {
+            if (key === to) return true;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            const $card = $('.lst-followup-row').filter(function () { return $(this).attr('data-flow-key') === key; });
+            return ($card.find('.lst-followup-parents').val() || []).some(visit);
+        }
+        return visit(from);
+    }
+    function renderFlowGraph() {
+        if (flowView !== 'graph' || !$('#lst-flow-canvas').length) return;
+        restoreFlowProperties();
+        refreshFlowParents();
+        const $canvas = $('#lst-flow-canvas'), $nodes = $canvas.find('.lst-flow-nodes').empty(), $svg = $canvas.find('svg').empty();
+        const positions = flowPositions();
+        const cards = $('.lst-followup-row').toArray().map(el => $(el));
+        const arrivalDefault = cards.find($card => $card.attr('data-flow-stage') === 'arrival_default');
+        const initials = cards.filter($card => $card.find('.lst-followup-role').val() === 'initial' && $card.attr('data-flow-stage') !== 'arrival_default');
+        const calls = cards.filter($card => $card.find('.lst-followup-role').val() !== 'initial' && isFlowCall($card))
+            .sort(($a, $b) => Number($a.find('.lst-followup-min').val() || 0) - Number($b.find('.lst-followup-min').val() || 0)
+                || Number($a.find('.lst-followup-step').val() || 0) - Number($b.find('.lst-followup-step').val() || 0));
+        const developments = cards.filter($card => $card.find('.lst-followup-role').val() === 'development' && !isFlowCall($card));
+        const finalSituations = cards.filter($card => $card.find('.lst-followup-role').val() === 'final_situation');
+        const endings = cards.filter($card => $card.find('.lst-followup-role').val() === 'incident_end');
+        const nodeWidth = 260, nodeHeight = 124, columnGap = 320, rowGap = 210;
+        const centerX = 380, top = 30;
+        const points = { call: positions.call || { x: centerX, y: top } };
+        calls.forEach(($card, i) => {
+            const key = $card.attr('data-flow-key');
+            points[key] = positions[key] || { x: centerX, y: top + (i + 1) * rowGap };
+        });
+        const foundationY = top + (calls.length + 1) * rowGap;
+        points.foundation = positions.foundation || { x: centerX, y: foundationY };
+        const arrivalY = foundationY + rowGap;
+        if (arrivalDefault) points[arrivalDefault.attr('data-flow-key')] = positions[arrivalDefault.attr('data-flow-key')] || { x: centerX, y: arrivalY };
+        const initialY = arrivalY + rowGap;
+        initials.forEach(($card, i) => {
+            const key = $card.attr('data-flow-key');
+            const columns = Math.min(3, initials.length);
+            points[key] = positions[key] || { x: 60 + (i % columns) * columnGap, y: initialY + Math.floor(i / columns) * rowGap };
+        });
+        const developmentY = initialY + Math.max(1, Math.ceil(initials.length / 3)) * rowGap;
+        const developmentByKey = new Map(developments.map($card => [$card.attr('data-flow-key'), $card]));
+        const developmentDepth = ($card, seen = new Set()) => {
+            const key = $card.attr('data-flow-key');
+            if (seen.has(key)) return 0;
+            seen.add(key);
+            const parents = $card.find('.lst-followup-parents').val() || [];
+            return parents.reduce((depth, parent) => Math.max(depth, developmentByKey.has(parent) ? 1 + developmentDepth(developmentByKey.get(parent), new Set(seen)) : 0), 0);
+        };
+        const columnsByDepth = {};
+        let maxDevelopmentDepth = 0;
+        developments.forEach($card => {
+            const key = $card.attr('data-flow-key'), depth = developmentDepth($card);
+            const column = columnsByDepth[depth] || 0;
+            columnsByDepth[depth] = column + 1;
+            maxDevelopmentDepth = Math.max(maxDevelopmentDepth, depth);
+            points[key] = positions[key] || { x: 60 + column * columnGap, y: developmentY + depth * rowGap };
+        });
+        const finalSituationY = developmentY + (maxDevelopmentDepth + 1) * rowGap;
+        finalSituations.forEach(($card, i) => {
+            const key = $card.attr('data-flow-key');
+            points[key] = positions[key] || { x: centerX + i * columnGap, y: finalSituationY };
+        });
+        const endY = finalSituationY + rowGap;
+        endings.forEach(($card, i) => {
+            const key = $card.attr('data-flow-key');
+            points[key] = positions[key] || { x: centerX + i * columnGap, y: endY };
+        });
+        const all = [
+            { key: 'call', title: 'Erstanruf', type: 'call', text: 'Anruferprofile und Meldungsbausteine', $card: null },
+            { key: 'foundation', title: 'Grundlage', type: 'foundation', text: $('#lst-lagemeldung').val(), $card: null }
+        ].concat(cards.map($card => ({
+            key: $card.attr('data-flow-key'),
+            title: $card.find('.lst-followup-label').val() || 'Unbenannt',
+            type: $card.attr('data-flow-stage') === 'arrival_default' ? 'arrival-base' : ($card.find('.lst-followup-role').val() === 'initial' ? 'initial' : (isFlowCall($card) ? 'call-update' : $card.find('.lst-followup-role').val())),
+            text: isFlowCall($card) ? $card.find('.lst-followup-radio-report').val() : $card.find('.lst-followup-text').val(), $card
+        })));
+        all.forEach(node => {
+            const point = points[node.key];
+            const probability = node.type === 'initial' ? ' · ' + node.$card.find('.lst-followup-probability').val() + ' %' : '';
+            $('<div role="button" tabindex="0" class="lst-flow-node lst-flow-node--' + node.type + '"><strong>' + esc(node.title) + probability + '</strong><span class="lst-flow-node-text">' + esc(node.text || (node.type === 'call' ? 'Notruf bearbeiten' : 'Keine Beschreibung')) + '</span>'
+                + (['initial', 'arrival-base', 'development', 'final_situation', 'call-update'].includes(node.type) ? '<span class="lst-flow-port lst-flow-port--out" data-flow-port-out="' + esc(node.key) + '" title="Verbindung ziehen" aria-label="Verbindung ziehen"></span>' : '')
+                + (['initial', 'arrival-base', 'development', 'final_situation', 'incident_end'].includes(node.type) ? '<span class="lst-flow-port lst-flow-port--in" data-flow-port-in="' + esc(node.key) + '" title="Verbindung hier ablegen"></span>' : '') + '</div>')
+                .attr('data-flow-node', node.key).css({ left: point.x, top: point.y }).toggleClass('is-selected', node.key === flowSelectedKey).appendTo($nodes);
+        });
+        const edges = [];
+        let previous = 'call';
+        calls.forEach($card => {
+            const key = $card.attr('data-flow-key');
+            edges.push([previous, key, 'call']);
+            previous = key;
+        });
+        edges.push([previous, 'foundation', 'call']);
+        if (arrivalDefault) edges.push(['foundation', arrivalDefault.attr('data-flow-key'), 'situation']);
+        initials.forEach($card => { if (arrivalDefault) edges.push([arrivalDefault.attr('data-flow-key'), $card.attr('data-flow-key'), 'situation']); });
+        const linked = initials.concat(developments, finalSituations, endings);
+        linked.forEach($card => {
+            const selectedParents = $card.find('.lst-followup-parents').val() || [];
+            const parents = selectedParents;
+            parents.forEach(parent => edges.push([parent, $card.attr('data-flow-key'), 'editable']));
+        });
+        const width = Math.max(1040, ...Object.values(points).map(point => point.x + nodeWidth + 50));
+        const height = Math.max(720, ...Object.values(points).map(point => point.y + nodeHeight + 80));
+        $nodes.css({ width, height });
+        $svg.attr({ width, height, viewBox: '0 0 ' + width + ' ' + height });
+        $canvas.find('.lst-flow-viewport').css({ width, height, transform: 'scale(' + flowZoom + ')', transformOrigin: 'top left' });
+        $('#lst-flow-zoom-value').text(Math.round(flowZoom * 100) + ' %');
+        $svg.prepend('<defs><marker id="lst-flow-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#64748b"/></marker><marker id="lst-flow-arrow-call" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#0f766e"/></marker></defs>');
+        edges.forEach(([from, to, kind]) => {
+            if (!points[from] || !points[to]) return;
+            const a = points[from], b = points[to];
+            const x1 = a.x + nodeWidth / 2, y1 = a.y + nodeHeight;
+            const x2 = b.x + nodeWidth / 2, y2 = b.y;
+            const bend = Math.max(45, (y2 - y1) / 2);
+            const curve = 'M ' + x1 + ' ' + y1 + ' C ' + x1 + ' ' + (y1 + bend) + ', ' + x2 + ' ' + (y2 - bend) + ', ' + x2 + ' ' + y2;
+            $(document.createElementNS('http://www.w3.org/2000/svg', 'path')).attr({
+                d: curve,
+                fill: 'none', stroke: kind === 'call' ? '#0f766e' : '#64748b',
+                'stroke-width': 2.5, 'marker-end': kind === 'call' ? 'url(#lst-flow-arrow-call)' : 'url(#lst-flow-arrow)'
+            }).appendTo($svg);
+            if (kind === 'editable') {
+                $(document.createElementNS('http://www.w3.org/2000/svg', 'path')).attr({
+                    d: curve, fill: 'none', stroke: 'transparent', 'stroke-width': 18,
+                    class: 'lst-flow-edge-remove', 'data-flow-from': from, 'data-flow-to': to,
+                    role: 'button', 'aria-label': 'Verbindung entfernen'
+                }).appendTo($svg).append(document.createElementNS('http://www.w3.org/2000/svg', 'title')).find('title').text('Verbindung entfernen');
+            }
+        });
+        const selected = all.find(node => node.key === flowSelectedKey) || all[0];
+        const $properties = $('#lst-flow-properties');
+        $properties.empty().append('<h3>Eigenschaften: ' + esc(selected.title) + '</h3>');
+        if (selected.$card) {
+            const parents = selected.$card.find('.lst-followup-parents').val() || [];
+            if (parents.length) {
+                const $links = $('<div class="lst-flow-parent-links"><strong>Verbindungen von</strong></div>').appendTo($properties);
+                parents.forEach(parent => {
+                    const source = all.find(node => node.key === parent);
+                    $('<div class="lst-flow-parent-link"></div>').append(
+                        $('<span></span>').text(source ? source.title : parent),
+                        $('<button type="button" class="button button-small">Entfernen</button>').attr({ 'data-flow-remove-from': parent, 'data-flow-remove-to': selected.key })
+                    ).appendTo($links);
+                });
+            }
+        }
+        flowMountedNode = selected.type === 'call' ? $('.lst-editor-split--caller')[0]
+            : (selected.type === 'foundation' ? $('.lst-situation-flow')[0] : selected.$card[0]);
+        if (flowMountedNode) {
+            flowMountPlaceholder = document.createComment('Lage-Eigenschaften im Graph');
+            $(flowMountedNode).before(flowMountPlaceholder);
+            $(flowMountedNode).detach().appendTo($properties);
+        }
+
+    }
+
     function collectFollowups() {
         const rows = [];
         $('#lst-followup-cards .lst-followup-row').each(function () {
@@ -1389,18 +1718,21 @@ jQuery(function ($) {
             const patientRequirements = patientRequirementsFromRows(patientRows);
             const patientResources = patientResourcesFromCounts(patientRequirements.ktw, patientRequirements.rtw, patientRequirements.notarzt);
             rows.push({
+                flow_key: $card.attr('data-flow-key'),
+                flow_role: $card.find('.lst-followup-role').val() === 'initial' ? 'initial' : 'development',
+                applicable_initial_keys: $card.find('.lst-followup-role').val() === 'initial' || isFlowCall($card) ? [] : ($card.find('.lst-followup-parents').val() || []).filter(key => $('.lst-followup-row').filter(function () { return $(this).attr('data-flow-key') === key; }).find('.lst-followup-role').val() === 'initial'),
                 step_no: $card.find('.lst-followup-step').val() || '',
                 label: $card.find('.lst-followup-label').val() || '',
-                kind: $card.find('.lst-followup-kind').val() || 'unit_report',
+                kind: $card.find('.lst-followup-role').val() === 'followup_call' ? 'caller_answer' : ($card.find('.lst-followup-kind').val() || 'unit_report'),
                 text: $card.find('.lst-followup-text').val() || '',
                 min_after_sec: $card.find('.lst-followup-min').val() || '',
                 max_after_sec: $card.find('.lst-followup-max').val() || '',
-                probability_percent: $card.find('.lst-followup-probability').val() || 100,
-                speaker_type: $card.find('.lst-followup-speaker').val() || 'fire_unit',
+                probability_percent: $card.find('.lst-followup-probability').val() === '' ? 100 : Number($card.find('.lst-followup-probability').val()),
+                speaker_type: $card.find('.lst-followup-role').val() === 'followup_call' ? 'caller' : ($card.find('.lst-followup-speaker').val() || 'fire_unit'),
                 trigger_mode: $card.find('.lst-followup-trigger').val() || 'on_unit_arrival',
                 condition_json: collectConditionJson($card),
                 required_resources_json: JSON.stringify(mergeResourceRows(patientResources, collectResources($card.find('.lst-followup-resource-list')))),
-                effect_json: buildEffectJson($card.find('.lst-followup-effect-note').val() || '', patientRequirements, patientRows)
+                effect_json: buildEffectJson($card.find('.lst-followup-effect-note').val() || '', patientRequirements, patientRows, $card.attr('data-flow-stage') || $card.find('.lst-followup-role').val(), $card.find('.lst-followup-parents').val() || [], $card.find('.lst-followup-radio-report').val())
             });
         });
         return rows;
@@ -1449,7 +1781,7 @@ jQuery(function ($) {
         });
 
         const fuCards = $('#lst-followup-cards');
-        if (fuCards.length && !fuCards.find('.lst-followup-row').length) {
+        if (fuCards.length && !$('.lst-followup-row').length) {
             fuCards.html(`
                 <div class="lst-followup-empty-row lst-empty-state">
                     <h4>Noch keine Lagevarianten</h4>
@@ -1528,6 +1860,234 @@ jQuery(function ($) {
 
     function bindDynamicUi() {
         $(document).off('.lstEinsatzDyn');
+        flowView = 'form'; flowSelectedKey = 'foundation'; flowZoom = 1;
+        $(document).on('change.lstEinsatzDyn', '#lst-einsatz-leitstelle', function () {
+            $('#lst-stichwort-id').val('');
+            loadStichwoerter(0);
+        });
+        $(document).on('change.lstEinsatzDyn', '#lst-stichwort-id', function () {
+            const row = currentStichwoerter.find(item => String(item.id) === String($(this).val()));
+            if (!row) return;
+            const previous = $('#lst-einsatztyp').val().trim();
+            let title = $('#lst-title').val().trim();
+            if (previous && title.indexOf(previous + ' – ') === 0) title = title.slice(previous.length + 3);
+            if (title.indexOf(row.code + ' – ') !== 0) title = row.code + ' – ' + (title || row.bezeichnung);
+            $('#lst-title').val(title);
+            $('#lst-einsatztyp').val(row.code);
+            $('#lst-einsatzart').val(row.einsatzart);
+            $('#lst-base-resource-list').empty();
+            (row.fahrzeuge || []).forEach(resource => addResourceRow('#lst-base-resource-list', resource));
+            updateBaseResourceSummary(); updateWizardSummary();
+        });
+        $(document).on('click.lstEinsatzDyn', '#lst-einsatz-modal [data-lst-flow-view]', function (event) {
+            event.preventDefault();
+            const $panel = $(this).closest('.lst-tab-panel--situation');
+            flowView = $(this).attr('data-lst-flow-view') === 'graph' ? 'graph' : 'form';
+            $panel.find('.lst-flow-form').toggle(flowView === 'form');
+            const $graph = $panel.find('#lst-flow-graph');
+            if (flowView === 'graph') {
+                $graph.removeAttr('hidden').show();
+            } else {
+                restoreFlowProperties();
+                $graph.attr('hidden', 'hidden').hide();
+            }
+            $panel.find('[data-lst-flow-view]').each(function () {
+                const active = $(this).attr('data-lst-flow-view') === flowView;
+                $(this).toggleClass('button-primary', active).attr('aria-pressed', active ? 'true' : 'false');
+            });
+            if (flowView === 'graph') {
+                try {
+                    renderFlowGraph();
+                } catch (error) {
+                    console.error('Lage-Graph konnte nicht gezeichnet werden', error);
+                    $graph.find('#lst-flow-properties').text('Der Graph konnte nicht gezeichnet werden. Bitte den Einsatzeditor erneut öffnen.');
+                }
+            }
+        });
+        const flowCanvas = document.getElementById('lst-flow-canvas');
+        if (flowCanvas) {
+            flowCanvas.addEventListener('wheel', function (event) {
+                if (flowView !== 'graph') return;
+                event.preventDefault();
+                const bounds = flowCanvas.getBoundingClientRect();
+                const cursorX = event.clientX - bounds.left;
+                const cursorY = event.clientY - bounds.top;
+                const contentX = (flowCanvas.scrollLeft + cursorX) / flowZoom;
+                const contentY = (flowCanvas.scrollTop + cursorY) / flowZoom;
+                const next = Math.max(0.5, Math.min(2, Math.round((flowZoom + (event.deltaY < 0 ? 0.1 : -0.1)) * 100) / 100));
+                if (next === flowZoom) return;
+                flowZoom = next;
+                renderFlowGraph();
+                flowCanvas.scrollLeft = contentX * flowZoom - cursorX;
+                flowCanvas.scrollTop = contentY * flowZoom - cursorY;
+            }, { passive: false });
+        }
+        $(document).on('mousedown.lstEinsatzDyn', '#lst-flow-canvas', function (event) {
+            if (event.button !== 1) return;
+            event.preventDefault();
+            const canvas = this;
+            const startX = event.clientX, startY = event.clientY;
+            const scrollX = canvas.scrollLeft, scrollY = canvas.scrollTop;
+            $(canvas).addClass('is-panning');
+            $(document).off('.lstFlowPan').on('mousemove.lstFlowPan', function (move) {
+                move.preventDefault();
+                canvas.scrollLeft = scrollX - (move.clientX - startX);
+                canvas.scrollTop = scrollY - (move.clientY - startY);
+            }).one('mouseup.lstFlowPan', function () {
+                $(canvas).removeClass('is-panning');
+                $(document).off('.lstFlowPan');
+            });
+        });
+        $(document).on('auxclick.lstEinsatzDyn', '#lst-flow-canvas', function (event) {
+            if (event.button === 1) event.preventDefault();
+        });
+        $(document).on('click.lstEinsatzDyn', '[data-lst-flow-zoom]', function () {
+            const action = $(this).attr('data-lst-flow-zoom');
+            flowZoom = action === 'reset' ? 1 : Math.max(0.5, Math.min(2, Math.round((flowZoom + (action === 'in' ? 0.25 : -0.25)) * 100) / 100));
+            renderFlowGraph();
+        });
+        $(document).on('click.lstEinsatzDyn', '[data-lst-flow-arrange]', function () {
+            localStorage.removeItem(flowLayoutKey());
+            flowZoom = 1;
+            renderFlowGraph();
+            const canvas = document.getElementById('lst-flow-canvas');
+            if (canvas) { canvas.scrollLeft = 0; canvas.scrollTop = 0; }
+        });
+        $(document).on('change.lstEinsatzDyn', '.lst-followup-kind, .lst-followup-speaker, .lst-followup-min, .lst-followup-step', function () {
+            if (flowView === 'graph') renderFlowGraph();
+        });
+        $(document).on('click.lstEinsatzDyn', '[data-lst-add-flow]', function () {
+            const role = $(this).data('lst-add-flow');
+            const parentKey = flowSelectedKey;
+            addFollowupRow({ flow_role: role === 'arrival_variant' ? 'initial' : 'development', flow_stage: ['arrival_variant', 'final_situation', 'incident_end', 'followup_call'].includes(role) ? role : '', kind: role === 'followup_call' ? 'caller_answer' : 'unit_report', speaker_type: role === 'followup_call' ? 'caller' : 'fire_unit', trigger_mode: role === 'arrival_variant' ? 'on_unit_arrival' : 'random', probability_percent: role === 'arrival_variant' ? 0 : 100 });
+            const $newCard = $('#lst-followup-cards .lst-followup-row').last();
+            $newCard.data('flow-parent-explicit', true);
+            flowSelectedKey = $newCard.attr('data-flow-key');
+            renderFlowGraph();
+        });
+        $(document).on('change.lstEinsatzDyn input.lstEinsatzDyn', '.lst-followup-role, .lst-followup-label, .lst-followup-probability, .lst-followup-parents, .lst-followup-text, .lst-followup-radio-report, #lst-lagemeldung', function () {
+            if ($(this).is('.lst-followup-role')) {
+                const role = $(this).val();
+                $(this).closest('.lst-followup-row').attr('data-flow-stage',
+                    role === 'initial' ? 'arrival_variant' : (['followup_call', 'final_situation', 'incident_end'].includes(role) ? role : ''));
+            }
+            if ($(this).is('.lst-followup-role') && $(this).val() === 'followup_call') {
+                $(this).closest('.lst-followup-row').find('.lst-followup-kind').val('caller_answer');
+                $(this).closest('.lst-followup-row').find('.lst-followup-speaker').val('caller');
+                $(this).closest('.lst-followup-row').find('.lst-followup-trigger').val('random');
+            } else if ($(this).is('.lst-followup-role') && $(this).closest('.lst-followup-row').find('.lst-followup-kind').val() === 'caller_answer') {
+                $(this).closest('.lst-followup-row').find('.lst-followup-kind').val('unit_report');
+                $(this).closest('.lst-followup-row').find('.lst-followup-speaker').val('fire_unit');
+            }
+            if ($(this).is('.lst-followup-role') && $(this).val() === 'initial') $(this).closest('.lst-followup-row').find('.lst-followup-trigger').val('on_unit_arrival');
+            if ($(this).is('.lst-followup-role') && $(this).val() === 'development' && $(this).closest('.lst-followup-row').find('.lst-followup-trigger').val() === 'on_unit_arrival') $(this).closest('.lst-followup-row').find('.lst-followup-trigger').val('random');
+            if ($(this).is('.lst-followup-role')) updateFollowupCardMode($(this).closest('.lst-followup-row'));
+            refreshFlowParents();
+            if (flowView !== 'graph') return;
+            if ($(this).is('.lst-followup-role, .lst-followup-parents')) {
+                if ($(this).is('.lst-followup-parents')) $(this).closest('.lst-followup-row').data('flow-parent-explicit', true);
+                renderFlowGraph();
+                return;
+            }
+            const $card = $(this).closest('.lst-followup-row');
+            const key = $card.attr('data-flow-key') || 'foundation';
+            const title = key === 'foundation' ? 'Grundlage' : ($card.find('.lst-followup-label').val() || 'Unbenannt');
+            const probability = $card.find('.lst-followup-role').val() === 'initial' ? ' · ' + $card.find('.lst-followup-probability').val() + ' %' : '';
+            const $node = $('.lst-flow-node').filter(function () { return $(this).attr('data-flow-node') === key; });
+            $node.find('strong').text(title + probability);
+            $node.find('.lst-flow-node-text').text(key === 'foundation' ? ($('#lst-lagemeldung').val() || 'Keine Lagebeschreibung') : (isFlowCall($card) ? ($card.find('.lst-followup-radio-report').val() || 'Kein Anruftext') : ($card.find('.lst-followup-text').val() || 'Keine Lagebeschreibung')));
+            if (key === flowSelectedKey) $('#lst-flow-properties > h3').text('Eigenschaften: ' + title);
+        });
+        $(document).on('click.lstEinsatzDyn keydown.lstEinsatzDyn', '[data-flow-node]', function (event) {
+            if ($(event.target).closest('[data-flow-port-out], [data-flow-port-in]').length) return;
+            if (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ') return;
+            if (event.type === 'keydown') event.preventDefault();
+            flowSelectedKey = $(this).attr('data-flow-node');
+            renderFlowGraph();
+        });
+        function removeFlowConnection(from, to) {
+            const $card = $('.lst-followup-row').filter(function () { return $(this).attr('data-flow-key') === to; });
+            if (!$card.length) return;
+            const $parents = $card.find('.lst-followup-parents');
+            $parents.val(($parents.val() || []).filter(key => key !== from));
+            $card.data('flow-parent-explicit', true);
+            flowSelectedKey = to;
+            renderFlowGraph();
+        }
+        $(document).on('click.lstEinsatzDyn', '.lst-flow-edge-remove', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            removeFlowConnection($(this).attr('data-flow-from'), $(this).attr('data-flow-to'));
+        });
+        $(document).on('click.lstEinsatzDyn', '[data-flow-remove-from]', function () {
+            removeFlowConnection($(this).attr('data-flow-remove-from'), $(this).attr('data-flow-remove-to'));
+        });
+        $(document).on('mousedown.lstEinsatzDyn', '[data-flow-port-out]', function (event) {
+            if (event.button !== 0) return;
+            event.preventDefault();
+            event.stopPropagation();
+            const from = $(this).attr('data-flow-port-out');
+            const canvas = document.getElementById('lst-flow-canvas');
+            const viewport = $(canvas).find('.lst-flow-viewport')[0];
+            const svg = $(canvas).find('.lst-flow-edges');
+            const origin = this.getBoundingClientRect();
+            const sourceX = (origin.left + origin.width / 2 - viewport.getBoundingClientRect().left) / flowZoom;
+            const sourceY = (origin.top + origin.height / 2 - viewport.getBoundingClientRect().top) / flowZoom;
+            const preview = $(document.createElementNS('http://www.w3.org/2000/svg', 'path')).attr({
+                fill: 'none', stroke: '#1d4ed8', 'stroke-width': 3, 'stroke-dasharray': '7 5'
+            }).appendTo(svg);
+            $(canvas).addClass('is-connecting');
+            $(document).off('.lstFlowConnect').on('mousemove.lstFlowConnect', function (move) {
+                const bounds = viewport.getBoundingClientRect();
+                const x = (move.clientX - bounds.left) / flowZoom;
+                const y = (move.clientY - bounds.top) / flowZoom;
+                preview.attr('d', 'M ' + sourceX + ' ' + sourceY + ' C ' + sourceX + ' ' + (sourceY + 80) + ', ' + x + ' ' + (y - 80) + ', ' + x + ' ' + y);
+            }).one('mouseup.lstFlowConnect', function (up) {
+                const target = $(document.elementFromPoint(up.clientX, up.clientY)).closest('[data-flow-port-in], .lst-flow-node--initial, .lst-flow-node--development, .lst-flow-node--final_situation, .lst-flow-node--incident_end');
+                const to = target.attr('data-flow-port-in') || target.attr('data-flow-node');
+                const $card = $('.lst-followup-row').filter(function () { return $(this).attr('data-flow-key') === to; });
+                if ($card.length && to !== from && (['development', 'final_situation', 'incident_end'].includes($card.find('.lst-followup-role').val()) || ($card.find('.lst-followup-role').val() === 'initial' && $card.attr('data-flow-stage') !== 'arrival_default' && isFlowCall($('.lst-followup-row').filter(function () { return $(this).attr('data-flow-key') === from; })))) && !flowWouldCycle(from, to)) {
+                    const current = $card.find('.lst-followup-parents').val() || [];
+                    $card.find('.lst-followup-parents').val(Array.from(new Set(current.concat(from))));
+                    $card.data('flow-parent-explicit', true);
+                    flowSelectedKey = to;
+                }
+                $(canvas).removeClass('is-connecting');
+                $(document).off('.lstFlowConnect');
+                renderFlowGraph();
+            });
+        });
+        $(document).on('mousedown.lstEinsatzDyn', '[data-flow-node]', function (event) {
+            if (event.button !== 0 || $(event.target).closest('[data-flow-port-out], [data-flow-port-in]').length) return;
+            const key = $(this).attr('data-flow-node'), startX = event.clientX, startY = event.clientY;
+            flowSelectedKey = key;
+            $('.lst-flow-node').removeClass('is-selected');
+            $(this).addClass('is-selected');
+            const old = flowPositions()[key] || { x: parseInt($(this).css('left'), 10), y: parseInt($(this).css('top'), 10) };
+            const move = function (e) { saveFlowPosition(key, { x: Math.max(0, old.x + (e.clientX - startX) / flowZoom), y: Math.max(0, old.y + (e.clientY - startY) / flowZoom) }); renderFlowGraph(); };
+            $(document).on('mousemove.lstFlowDrag', move).one('mouseup.lstFlowDrag', function () { $(document).off('.lstFlowDrag'); });
+        });
+        $(document).on('input.lstEinsatzDyn change.lstEinsatzDyn', '[data-lst-flow-property]', function (event) {
+            const key = flowSelectedKey, $card = $('.lst-followup-row').filter(function () { return $(this).attr('data-flow-key') === key; });
+            const field = $(this).data('lst-flow-property');
+            const selector = { title: '.lst-followup-label', text: '.lst-followup-text', probability: '.lst-followup-probability', parents: '.lst-followup-parents' }[field];
+            if (key === 'foundation' && field === 'text') $('#lst-lagemeldung').val($(this).val());
+            else if ($card.length && selector) $card.find(selector).val($(this).val());
+            if (field === 'parents' || (event.type === 'change') && (field === 'title' || field === 'probability')) renderFlowGraph();
+        });
+        $(document).on('click.lstEinsatzDyn', '[data-lst-flow-add-resource]', function () {
+            const type = $('#lst-flow-properties [data-lst-flow-resource-type]').val();
+            if (!type) return;
+            const $card = $('.lst-followup-row').filter(function () { return $(this).attr('data-flow-key') === flowSelectedKey; });
+            const target = flowSelectedKey === 'foundation' ? '#lst-base-resource-list' : $card.find('.lst-followup-resource-list');
+            addResourceRow(target, { type: type, count: 1 });
+            renderFlowGraph();
+        });
+        $(document).on('click.lstEinsatzDyn', '[data-lst-flow-open-form]', function () {
+            $('[data-lst-flow-view="form"]').trigger('click');
+            const $card = $('.lst-followup-row').filter(function () { return $(this).attr('data-flow-key') === flowSelectedKey; });
+            if ($card.length) $card[0].scrollIntoView({ block: 'center' });
+        });
 
         $(document).on('click.lstEinsatzDyn', '.lst-tab-btn', function () {
             setTab($(this).data('tab'));
@@ -1617,9 +2177,19 @@ jQuery(function ($) {
         });
 
         $(document).on('click.lstEinsatzDyn', '.lst-remove-row', function () {
-            $(this).closest('tr, .lst-followup-row').remove();
+            const $row = $(this).closest('tr, .lst-followup-row');
+            const removedSelected = $row[0] === flowMountedNode;
+            if (removedSelected) {
+                $(flowMountPlaceholder).remove();
+                flowMountedNode = null;
+                flowMountPlaceholder = null;
+                flowSelectedKey = 'foundation';
+            }
+            $row.remove();
             restoreEmptyRows();
             updateWizardSummary();
+            refreshFlowParents();
+            if (flowView === 'graph') renderFlowGraph();
         });
 
         $(document).on('click.lstEinsatzDyn', '#lst-generate-caller-preview', function () {
@@ -1658,11 +2228,33 @@ jQuery(function ($) {
     }
 
     function saveCurrent() {
+        restoreFlowProperties();
         if (callerProfilesLoading || !callerProfilesReady) {
             alert(callerProfilesLoadFailed
                 ? 'Anruferprofile konnten nicht geladen werden. Bitte den Einsatzeditor erneut öffnen und dann speichern.'
                 : 'Anruferprofile werden noch geladen. Bitte kurz warten und dann speichern.');
             return;
+        }
+        refreshFlowParents();
+        let invalidFlow = '';
+        $('.lst-followup-row').each(function () {
+            const $card = $(this), role = $card.find('.lst-followup-role').val();
+            if (isFlowCall($card)) {
+                if (!$card.find('.lst-followup-radio-report').val().trim()) invalidFlow = 'Bitte für jeden Folgeanruf einen Anruftext eintragen.';
+                return;
+            }
+            if (!$card.find('.lst-followup-radio-report').val().trim()) invalidFlow = 'Bitte für jede Lage eine Rückmeldung an die Leitstelle eintragen.';
+            if (role === 'initial' && !($card.find('.lst-followup-parents').val() || []).length) return;
+            const key = $card.attr('data-flow-key'), parents = $card.find('.lst-followup-parents').val() || [];
+            if (!parents.length) invalidFlow = 'Bitte für jede Folgelage mindestens einen Vorgänger verbinden.';
+            if (parents.some(parent => flowWouldCycle(parent, key))) invalidFlow = 'Die Lageverbindungen enthalten einen Kreis.';
+        });
+        if (invalidFlow) { alert(invalidFlow); setTab('situation'); return; }
+        const initialRows = $('.lst-followup-row').filter(function () { return $(this).find('.lst-followup-role').val() === 'initial' && $(this).attr('data-flow-stage') !== 'arrival_default'; });
+        const initialSum = initialRows.toArray().reduce((sum, row) => sum + Number($(row).find('.lst-followup-probability').val() || 0), 0);
+        if (initialSum > 100) {
+            alert('Die Wahrscheinlichkeiten der Eintreffvarianten dürfen zusammen höchstens 100 % ergeben. Aktuell: ' + initialSum + ' %.');
+            setTab('situation'); return;
         }
 
         $('#lst-einsatz-save-spinner').css('visibility', 'visible');
@@ -1682,11 +2274,14 @@ jQuery(function ($) {
             description: $('#lst-description').val() || '',
             einsatzart: $('#lst-einsatzart').val() || 'RD',
             einsatztyp: $('#lst-einsatztyp').val() || '',
+            leitstelle_id: $('#lst-einsatz-leitstelle').val() || 0,
+            stichwort_id: $('#lst-stichwort-id').val() || 0,
             enabled: $('#lst-enabled').is(':checked') ? 1 : 0,
             tags_json: $('#lst-tags-json').val() || '',
             scope_type: $('input[name="lst_scope_type"]:checked').val() || 'anywhere',
             landscape_tags_json: collectLandscapeTagsJson(),
-            poi_type: $('#lst-poi-type').val() || '',
+            poi_types_json: JSON.stringify($('#lst-poi-types').val() || []),
+            poi_type: ($('#lst-poi-types').val() || [])[0] || '',
             fixed_latitude: $('#lst-fixed-latitude').val() || '',
             fixed_longitude: $('#lst-fixed-longitude').val() || '',
             fixed_radius_m: $('#lst-fixed-radius').val() || '',
@@ -1735,6 +2330,8 @@ jQuery(function ($) {
             description: '',
             einsatzart: 'RD',
             einsatztyp: '',
+            leitstelle_id: (window.lstEinsatzLeitstellen && window.lstEinsatzLeitstellen[0] ? window.lstEinsatzLeitstellen[0].id : ''),
+            stichwort_id: '',
             enabled: 1,
             scope_type: 'anywhere',
             time_windows: [],

@@ -108,7 +108,7 @@ SELECT * FROM manifest WHERE is_dirty = 1 AND im Scope
 Overpass Full Query (Geometrie)
 Response → Feature-Transformation
 Speicherung:
-data/osm_tiles/z{z}/{layer}/{x}/{y}.geojsonl.gz
+landuse/landuse_tiles_out/osm/z{z}/{layer}/{x}/{y}.geojsonl.gz
 
 Format:
 

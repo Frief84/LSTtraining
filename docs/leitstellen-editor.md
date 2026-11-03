@@ -44,6 +44,15 @@ Koordinaten werden als Dezimalgrad gespeichert. Ein Marker auf der Karte unterst
 
 Öffnet den GeoJSON-Editor. Das Polygon begrenzt die zulässigen Einsatzorte und lokalen Kartendaten. Änderungen können gezeichnet, importiert oder als GeoJSON übernommen werden.
 
+### Einsatzstichwörter bearbeiten
+
+Öffnet die eigene Stichwortliste der Leitstelle. Codes, Beschreibungen, Hinweise,
+Status sowie Fahrzeugklassen und Anzahlen können angepasst werden. Bestehende
+Leitstellen erhalten beim Datenbankupgrade je eine Kopie der historischen
+Brandenburger Startliste; neue Leitstellen beim Anlegen. Änderungen an einer
+Leitstelle betreffen keine andere. Im Einsatzeditor wird zuerst die Leitstelle,
+dann ein aktives Stichwort gewählt. Die Fahrzeugvorauswahl bleibt bearbeitbar.
+
 ### Wachen bearbeiten
 
 Öffnet die Wachenansicht mit der aktuellen Leitstelle als Kontext. Die eigentlichen Wachen bleiben eigenständige Datensätze.

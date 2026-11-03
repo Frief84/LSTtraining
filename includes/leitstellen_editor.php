@@ -258,6 +258,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST'
     $stmt->execute( $create_params );
 	
    $new_id = (int)$pdo->lastInsertId();
+    lsttraining_stichwoerter_seed_leitstelle( $pdo, $new_id );
     lsttraining_leitstellen_save_neighbors(
         $pdo,
         $new_id,
@@ -486,6 +487,7 @@ if ( $pdo ) {
                        data-rescue-signal-lights="<?php echo esc_attr( $l->rescue_signal_lights_json ?? '' ); ?>"
                        data-neighbor-ids="<?php echo esc_attr( wp_json_encode( $neighbor_ids_by_leitstelle[ (int) $l->id ] ?? [] ) ); ?>"
                     ><?php echo lsttraining_user_can( 'leitstellen', (int) $l->id ) ? 'Bearbeiten' : 'Öffnen'; ?></a>
+                    <a class="button" href="<?php echo esc_url(admin_url('admin.php?page=lsttraining_stichwoerter&ls_id=' . (int) $l->id)); ?>">Stichwörter</a>
                     <?php if ( lsttraining_user_can( 'leitstellen', (int) $l->id ) ) : ?>
                     <form method="post" style="display:inline" onsubmit="return confirm('Wirklich löschen?');">
                         <input type="hidden" name="lst_delete_id" value="<?php echo esc_attr( $l->id ); ?>">
@@ -499,6 +501,16 @@ if ( $pdo ) {
         </tbody>
     </table>
 </div>
+
+<script>
+document.addEventListener('click', function (event) {
+    var link = event.target.closest('#lst-open-stichwoerter-editor');
+    if (!link) { return; }
+    var id = parseInt(document.getElementById('lst_update_id').value, 10) || 0;
+    if (!id) { event.preventDefault(); return; }
+    link.href = <?php echo wp_json_encode(admin_url('admin.php?page=lsttraining_stichwoerter&ls_id=')); ?> + id;
+});
+</script>
 
 <!-- Popup overlay -->
 <div id="popup-overlay" class="lst-leitstelle-overlay" style="display:none;"></div>
@@ -628,6 +640,10 @@ lsttraining_einsatzgebiet_editor(
                             OSM Tiles sync
                         </button>
                     </div>
+                </section>
+                <section class="lst-leitstelle-step" data-lst-step="stichwoerter">
+                    <div class="lst-leitstelle-step__meta"><span class="lst-leitstelle-step__number">4</span><div><strong>Einsatzstichwörter</strong><p>Codes und Fahrzeugvorschläge dieser Leitstelle bearbeiten.</p></div></div>
+                    <div class="lst-leitstelle-step__actions"><a class="button" id="lst-open-stichwoerter-editor" href="#">Stichwörter bearbeiten</a></div>
                 </section>
             </div>
             <input type="hidden" id="current_leitstelle_id" name="ls_id" value="<?php echo esc_attr( $leitstelle_id ); ?>">

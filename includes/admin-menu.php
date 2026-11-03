@@ -156,6 +156,9 @@ add_action( 'admin_menu', function () {
 		);
 	}
 	
+    if ( $can['leitstellen'] ) {
+        add_submenu_page($parent_slug, 'Einsatzstichwörter', 'Einsatzstichwörter', 'read', 'lsttraining_stichwoerter', 'lsttraining_render_stichwoerter');
+    }
 // 3.8 Anruferprofile
 if ( $can['leitstellen'] ) {
     add_submenu_page(

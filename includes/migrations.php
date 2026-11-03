@@ -2,8 +2,9 @@
 if (!defined('ABSPATH')) { exit; }
 
 require_once __DIR__ . '/regions.php';
+require_once __DIR__ . '/einsatz-flow.php';
 
-const LSTTRAINING_SCHEMA_VERSION = 2026102901;
+const LSTTRAINING_SCHEMA_VERSION = 2026110302;
 const LSTTRAINING_SCHEMA_OPTION = 'lsttraining_schema_versions';
 
 function lsttraining_schema_fingerprint(): string {
@@ -414,10 +415,136 @@ function lsttraining_migration_2026091102(PDO $pdo): void {
     }
 }
 
+function lsttraining_migration_2026103001(PDO $pdo): void {
+    foreach ([
+        'flow_key' => 'VARCHAR(64) NULL',
+        'flow_role' => 'VARCHAR(20) NULL',
+        'applicable_initial_keys' => 'TEXT NULL',
+    ] as $column => $definition) {
+        lsttraining_migration_add_column($pdo, 'einsatz_followups', $column, $definition);
+    }
+    if (!lsttraining_migration_table_exists($pdo, 'einsatz_followups')) { return; }
+    $pdo->exec("ALTER TABLE einsatz_followups MODIFY COLUMN trigger_mode ENUM('random','on_unit_arrival','on_missing_resources','on_dispatcher_question','on_transport_started','on_hospital_arrival','on_vehicle_available','manual') NOT NULL DEFAULT 'random'");
+    $rows = $pdo->query('SELECT id, einsatz_id, kind, trigger_mode, probability_percent, flow_key, flow_role FROM einsatz_followups ORDER BY einsatz_id, step_no, id')->fetchAll(PDO::FETCH_ASSOC);
+    $groups = [];
+    foreach ($rows as $row) { $groups[(int) $row['einsatz_id']][] = $row; }
+    $update = $pdo->prepare('UPDATE einsatz_followups SET flow_key = ?, flow_role = ?, probability_percent = ?, applicable_initial_keys = COALESCE(applicable_initial_keys, ?) WHERE id = ?');
+    foreach ($groups as $group) {
+        $initial = array_values(array_filter($group, static fn($row) => !$row['flow_role'] && $row['kind'] === 'unit_report' && $row['trigger_mode'] === 'on_unit_arrival'));
+        $percentages = lsttraining_einsatz_flow_percentages(array_column($initial, 'probability_percent'));
+        $initialIndex = 0;
+        foreach ($group as $row) {
+            if ($row['flow_role'] && $row['flow_key']) { continue; }
+            $role = $row['flow_role'] ?: (($row['kind'] === 'unit_report' && $row['trigger_mode'] === 'on_unit_arrival') ? 'initial' : 'development');
+            $probability = $role === 'initial' ? $percentages[$initialIndex++] : (int) $row['probability_percent'];
+            $update->execute([$row['flow_key'] ?: 'flow_' . bin2hex(random_bytes(8)), $role, $probability, '[]', (int) $row['id']]);
+        }
+    }
+}
+
+function lsttraining_migration_2026110201(PDO $pdo): void {
+    if (!lsttraining_migration_table_exists($pdo, 'leitstellen_osm_layers')) {
+        return;
+    }
+
+    $oldPrefix = 'data/osm_tiles/';
+    $newPrefix = 'landuse/landuse_tiles_out/osm/';
+    $oldRoot = LSTTRAINING_PATH . 'data/osm_tiles';
+    $newRoot = LSTTRAINING_PATH . 'landuse/landuse_tiles_out/osm';
+    if (is_dir($oldRoot) && !is_dir($newRoot) && !rename($oldRoot, $newRoot)) {
+        throw new RuntimeException('OSM-Tiles konnten nicht in den gemeinsamen Landuse-Ordner verschoben werden.');
+    }
+    $select = $pdo->prepare('SELECT id, file_relpath FROM leitstellen_osm_layers WHERE LEFT(file_relpath, ?) = ?');
+    $select->execute([strlen($oldPrefix), $oldPrefix]);
+    $update = $pdo->prepare('UPDATE leitstellen_osm_layers SET file_relpath = ? WHERE id = ?');
+    foreach ($select->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $newPath = $newPrefix . substr((string) $row['file_relpath'], strlen($oldPrefix));
+        if (is_file(LSTTRAINING_PATH . str_replace('/', DIRECTORY_SEPARATOR, $newPath))) {
+            $update->execute([$newPath, (int) $row['id']]);
+        }
+    }
+}
+
+function lsttraining_migration_2026110202(PDO $pdo): void {
+    if (!lsttraining_migration_table_exists($pdo, 'einsatz_followups')) { return; }
+    $templates = $pdo->query('SELECT id, lagemeldung FROM einsaetze ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
+    $select = $pdo->prepare('SELECT * FROM einsatz_followups WHERE einsatz_id = ? ORDER BY step_no, id');
+    $update = $pdo->prepare('UPDATE einsatz_followups SET flow_role = ?, trigger_mode = ?, probability_percent = ?, applicable_initial_keys = ?, effect_json = ? WHERE id = ?');
+    $insert = $pdo->prepare("INSERT INTO einsatz_followups (einsatz_id, step_no, label, kind, text, min_after_sec, max_after_sec, probability_percent, speaker_type, trigger_mode, required_resources_json, effect_json, flow_key, flow_role, applicable_initial_keys) VALUES (?, 0, 'Eintreffen und Erkundung', 'unit_report', ?, 0, 0, 0, 'fire_unit', 'on_unit_arrival', '[]', ?, ?, 'initial', '[]')");
+    foreach ($templates as $template) {
+        $select->execute([(int) $template['id']]);
+        $rows = $select->fetchAll(PDO::FETCH_ASSOC);
+        $default = null;
+        foreach ($rows as $row) {
+            $effect = json_decode((string) ($row['effect_json'] ?? ''), true);
+            if ((is_array($effect) && ($effect['flow_stage'] ?? '') === 'arrival_default')
+                || (($row['flow_role'] ?? '') === 'initial' && preg_match('/eintreffen.*erkundung/i', (string) $row['label']))) {
+                $default = $row; break;
+            }
+        }
+        if ($default) {
+            $effect = json_decode((string) ($default['effect_json'] ?? ''), true);
+            if (!is_array($effect)) { $effect = []; }
+            $effect['flow_stage'] = 'arrival_default';
+            $effect['flow_parent_keys'] = [];
+            $effect['radio_report_text'] = (string) ($effect['radio_report_text'] ?? $default['text'] ?? $template['lagemeldung']);
+            $update->execute(['initial', 'on_unit_arrival', 0, '[]', json_encode($effect, JSON_UNESCAPED_UNICODE), (int) $default['id']]);
+            $defaultKey = (string) $default['flow_key'];
+        } else {
+            $defaultKey = 'flow_' . bin2hex(random_bytes(8));
+            $report = (string) ($template['lagemeldung'] ?? '');
+            $effect = ['flow_stage' => 'arrival_default', 'flow_parent_keys' => [], 'radio_report_text' => $report];
+            $insert->execute([(int) $template['id'], $report, json_encode($effect, JSON_UNESCAPED_UNICODE), $defaultKey]);
+        }
+        $variants = []; $existing = 0;
+        foreach ($rows as $row) {
+            if ($default && (int) $row['id'] === (int) $default['id']) { continue; }
+            $effect = json_decode((string) ($row['effect_json'] ?? ''), true);
+            if (!is_array($effect)) { $effect = []; }
+            if (($effect['flow_stage'] ?? '') === 'arrival_variant' || ($row['flow_role'] ?? '') === 'initial') {
+                $existing += max(0, (int) $row['probability_percent']); continue;
+            }
+            $parents = is_array($effect['flow_parent_keys'] ?? null) ? $effect['flow_parent_keys'] : [];
+            if (($row['flow_role'] ?? '') === 'development'
+                && preg_match('/^Lage [A-D](?:$|[\s:-])/iu', (string) $row['label'])
+                && (!$parents || in_array($defaultKey, $parents, true))) {
+                $variants[] = [$row, $effect];
+            }
+        }
+        $each = count($variants) ? (int) floor(max(0, 100 - $existing) / (count($variants) + 1)) : 0;
+        foreach ($variants as [$row, $effect]) {
+            $effect['flow_stage'] = 'arrival_variant';
+            $effect['flow_parent_keys'] = array_values(array_filter(
+                is_array($effect['flow_parent_keys'] ?? null) ? $effect['flow_parent_keys'] : [],
+                static fn($key) => $key !== $defaultKey
+            ));
+            $update->execute(['initial', 'on_unit_arrival', $each, '[]', json_encode($effect, JSON_UNESCAPED_UNICODE), (int) $row['id']]);
+        }
+    }
+}
+
 /**
  * MySQL-DDL führt implizite Commits aus. Deshalb sind alle Schritte idempotent;
  * die Versionsnummer wird erst gespeichert, wenn der komplette Lauf erfolgreich war.
  */
+function lsttraining_stichwoerter_create_table(PDO $pdo): void {
+    $pdo->exec('CREATE TABLE IF NOT EXISTS einsatzstichwoerter (
+        id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+        leitstelle_id INT NOT NULL,
+        code VARCHAR(100) NOT NULL,
+        bezeichnung VARCHAR(255) NOT NULL,
+        einsatzart ENUM(\'RD\',\'FW\') NOT NULL,
+        fahrzeuge_json TEXT NULL,
+        beschreibung TEXT NULL,
+        hinweis TEXT NULL,
+        aktiv TINYINT(1) NOT NULL DEFAULT 1,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY uq_ls_code (leitstelle_id, code),
+        CONSTRAINT fk_stichwort_leitstelle FOREIGN KEY (leitstelle_id) REFERENCES leitstellen(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
+}
+
 function lsttraining_run_migrations(bool $force = false): int {
     $pdo = lsttraining_get_connection();
     if (!$pdo instanceof PDO) {
@@ -458,6 +585,28 @@ function lsttraining_run_migrations(bool $force = false): int {
     if ($force || $current < 2026102901) {
         lsttraining_migration_add_column($pdo, 'einsaetze', 'patient_profile_json', 'LONGTEXT NULL AFTER patient_anforderung');
         lsttraining_migration_add_column($pdo, 'einsaetze', 'base_required_resources_json', 'LONGTEXT NULL AFTER patient_profile_json');
+    }
+    if ($force || $current < 2026103001) {
+        lsttraining_migration_2026103001($pdo);
+    }
+    if ($force || $current < 2026110201) {
+        lsttraining_migration_2026110201($pdo);
+    }
+    if ($force || $current < 2026110202) {
+        lsttraining_migration_2026110202($pdo);
+    }
+    if ($force || $current < 2026110203) {
+        lsttraining_migration_add_column($pdo, 'einsaetze', 'poi_types_json', 'TEXT NULL AFTER poi_type');
+        $pdo->exec("UPDATE einsaetze SET poi_types_json = JSON_ARRAY(poi_type) WHERE poi_type IS NOT NULL AND poi_type <> '' AND (poi_types_json IS NULL OR poi_types_json = '')");
+    }
+    if ($force || $current < 2026110301) {
+        lsttraining_stichwoerter_create_table($pdo);
+        lsttraining_migration_add_column($pdo, 'einsaetze', 'leitstelle_id', 'INT NULL DEFAULT NULL AFTER id');
+        lsttraining_migration_add_column($pdo, 'einsaetze', 'stichwort_id', 'INT NULL DEFAULT NULL AFTER leitstelle_id');
+        lsttraining_stichwoerter_seed_all($pdo);
+    }
+    if ($force || $current < 2026110302) {
+        lsttraining_migration_add_column($pdo, 'einsatzstichwoerter', 'beschreibung', 'TEXT NULL AFTER bezeichnung');
     }
     lsttraining_schema_store_version(LSTTRAINING_SCHEMA_VERSION);
     return LSTTRAINING_SCHEMA_VERSION;

@@ -28,6 +28,25 @@ Listen unterstuetzen `search`, `page` und `per_page` (maximal 200).
 `POST` und `PATCH` erwarten ein JSON-Objekt. Unbekannte Felder werden mit HTTP
 `400` abgelehnt und nicht still ignoriert.
 
+### Einsatzstichwörter je Leitstelle
+
+```text
+GET    /wp-json/lst/v1/verwaltung/leitstellen/{leitstelle_id}/einsatzstichwoerter
+POST   /wp-json/lst/v1/verwaltung/leitstellen/{leitstelle_id}/einsatzstichwoerter
+GET    /wp-json/lst/v1/verwaltung/leitstellen/{leitstelle_id}/einsatzstichwoerter/{id}
+PATCH  /wp-json/lst/v1/verwaltung/leitstellen/{leitstelle_id}/einsatzstichwoerter/{id}
+DELETE /wp-json/lst/v1/verwaltung/leitstellen/{leitstelle_id}/einsatzstichwoerter/{id}?confirm=true
+```
+
+Jeder Aufruf prüft das Leitstellenrecht für die angegebene ID. Ein Eintrag hat
+`code`, `bezeichnung`, `beschreibung`, `einsatzart` (`RD` oder `FW`), `hinweis`,
+`aktiv` und `fahrzeuge` als Liste von `{ "type": "rettungswagen", "count": 1 }`.
+`code`, `bezeichnung` und `einsatzart` sind beim Anlegen Pflicht. Fahrzeugtypen
+entsprechen den Klassen des Einsatzeditors; Duplikatcodes je Leitstelle werden
+abgelehnt. Beim Löschen oder bei einer Änderung von Code/Bereich werden nur die
+Stichwortverknüpfungen bestehender Vorlagen gelöst. Gespeicherte Titel, Codes und
+Fahrzeugbedarfe bleiben erhalten.
+
 ### Einsatzvorlagen
 
 `/wp-json/lst/v1/verwaltung/einsaetze` verwaltet Vorlagen, keine konkreten
@@ -57,7 +76,7 @@ Content-Type: application/json
 }
 ```
 
-Weitere Hauptfelder sind `description`, `landscape_tags_json`, `poi_type`,
+Weitere Hauptfelder sind `leitstelle_id`, `stichwort_id`, `description`, `landscape_tags_json`, `poi_type`,
 `fixed_latitude`, `fixed_longitude`, `fixed_radius_m`, `patientenzahl`,
 `patient_anforderung`, `notarzt_benoetigt`, `feuerwehr_benoetigt`, `poi_tag`,
 `tags_json`, `base_required_resources_json` und `patient_profile_json`.

@@ -3140,12 +3140,16 @@
         var optionsHtml = '<option value="">Zufälliger Einsatz</option>' + (items || []).map(function (item) {
             return '<option value="' + esc(item.id || '') + '">' + esc(forceSpawnOptionLabel(item)) + '</option>';
         }).join('');
+        var keywordsHtml = '<option value="">Stichwort der Vorlage verwenden</option>' + (simRuntime.forceSpawnStichwoerter || []).map(function (row) {
+            return '<option value="' + esc(row.id) + '">' + esc(row.code + ' – ' + row.bezeichnung + ' (' + row.einsatzart + ')') + '</option>';
+        }).join('');
 
         $modal.html(
             '<div class="lsttraining-dispatch-modal__dialog" role="dialog" aria-modal="true" aria-label="Neuen Anruf erzeugen">' +
                 '<header><strong>Neuen Anruf erzeugen</strong><button type="button" data-lst-close-dispatch-modal aria-label="Schließen">×</button></header>' +
                 '<div class="lsttraining-dispatch-modal__body">' +
                     '<label><span>Einsatzvorlage:</span><select name="force_einsatz_id" data-lst-force-spawn-select>' + optionsHtml + '</select></label>' +
+                    '<label><span>Einsatzstichwort:</span><select data-lst-force-spawn-stichwort>' + keywordsHtml + '</select></label>' +
                     '<p class="lsttraining-muted">Zufällig nutzt dieselbe gewichtete Auswahl wie der normale Einsatzgenerator.</p>' +
                     '<footer>' +
                         '<button type="button" class="lsttraining-mini-btn" data-lst-submit-force-spawn>Anruf erzeugen</button>' +
@@ -3206,6 +3210,7 @@
             }
 
             simRuntime.forceSpawnOptions = response.data && response.data.items ? response.data.items : [];
+            simRuntime.forceSpawnStichwoerter = response.data && response.data.stichwoerter ? response.data.stichwoerter : [];
             renderForceSpawnModal($root, simRuntime.forceSpawnOptions);
         }).fail(function (xhr) {
             var message = ajaxErrorMessage(xhr, 'Einsatzvorlagen konnten nicht geladen werden.');
@@ -3219,11 +3224,12 @@
 
     function submitForceSpawn($root) {
         var value = $root.find('[data-lst-force-spawn-select]').val() || '';
+        var stichwort = $root.find('[data-lst-force-spawn-stichwort]').val() || '';
         closeDispatchModal($root);
-        forceSpawn($root, value);
+        forceSpawn($root, value, stichwort);
     }
 
-    function forceSpawn($root, einsatzId) {
+    function forceSpawn($root, einsatzId, stichwortId) {
         var instanzId = $root.attr('data-instance-id');
         var $button = $root.find('[data-lst-force-spawn]');
         var payload = {
@@ -3237,6 +3243,7 @@
         if (parseInt(einsatzId, 10) > 0) {
             payload.einsatz_id = parseInt(einsatzId, 10);
         }
+        if (parseInt(stichwortId, 10) > 0) { payload.stichwort_id = parseInt(stichwortId, 10); }
 
         simRuntime.isForceSpawnLoading = true;
         clearMessage($root);

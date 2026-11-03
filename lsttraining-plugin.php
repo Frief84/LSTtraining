@@ -32,6 +32,7 @@ if (!defined('LSTTRAINING_URL')) {
 }
 
 require_once LSTTRAINING_PATH . 'includes/db.php';
+require_once LSTTRAINING_PATH . 'includes/einsatzstichwoerter.php';
 require_once LSTTRAINING_PATH . 'includes/regions.php';
 require_once LSTTRAINING_PATH . 'includes/migrations.php';
 require_once LSTTRAINING_PATH . 'includes/instance-lifecycle.php';

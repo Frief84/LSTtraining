@@ -29,7 +29,7 @@ function lsttraining_poi_types_from_json(): array {
         'Freibad','Friedhof','Fußball','FZPark','Gasthaus','Grundschule','GKH','Hafen','Hallenbad','HBF','Herz',
         'IKH','Industrie','Juhe','JVA','Kaufhaus','KH','KH1','KH2','KH3','KiKa','KiKli','Kirche','Kultur','Küste',
         'Lst','Lunge','Notfallpraxis','Ortho','Park','Polizei','Psychiatrie','Reha','Reiterhof','RW','SBF','Schleuse',
-        'Schloss','Schule','See','Sporthalle','Strahlen','Tankstelle','Tropen','UBF','Tunnel','UKH','Wald','Zelt','Zoo'
+        'Schloss','Schule','See','SpiPla','Sporthalle','Strahlen','Tankstelle','Tropen','UBF','Tunnel','UKH','Wald','Zelt','Zoo'
     ];
 
     if (!is_readable($json_path)) {

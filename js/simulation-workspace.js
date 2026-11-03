@@ -37,6 +37,7 @@
         modalDrag: null,
         resizeObserver: null,
         vehicleAnimation: {},
+        routeAssignments: {},
         animationFrame: null,
         timers: {
             snapshot: null,
@@ -409,16 +410,15 @@
         return (type || 'FZ').slice(0, 3);
     }
 
-    function currentSimTimestamp() {
+    function currentSimTimestampPrecise() {
         var base = Number(state.simClock.timestamp || 0);
-        if (!base) {
-            return 0;
-        }
-        if (state.simClock.paused) {
-            return base;
-        }
+        if (!base || state.simClock.paused) return base;
         var elapsed = Math.max(0, (Date.now() - Number(state.simClock.receivedAt || Date.now())) / 1000);
-        return Math.floor(base + (elapsed * Number(state.simClock.speed || state.speed || 1)));
+        return base + (elapsed * Number(state.simClock.speed || state.speed || 1));
+    }
+
+    function currentSimTimestamp() {
+        return Math.floor(currentSimTimestampPrecise());
     }
 
     function syncSimClock(data) {
@@ -552,6 +552,7 @@
         updateRuntimeUi();
         updateClock();
         scheduleLoops();
+        if (!state.paused) startVehicleAnimationLoop();
         if (persist) {
             persistRuntime();
         }
@@ -709,8 +710,9 @@
     }
 
     function lonLat(row) {
-        var lon = Number(row && row.longitude);
-        var lat = Number(row && row.latitude);
+        if (!row || row.longitude === null || row.longitude === '' || row.latitude === null || row.latitude === '') return null;
+        var lon = Number(row.longitude);
+        var lat = Number(row.latitude);
         return Number.isFinite(lon) && Number.isFinite(lat) ? [lon, lat] : null;
     }
 
@@ -752,8 +754,23 @@
         });
     }
 
+    var routeMetricsCache = new WeakMap();
+
     function routePointAtProgress(coordinates, progress) {
-        var route = cleanRouteCoordinates(coordinates);
+        var metrics = Array.isArray(coordinates) ? routeMetricsCache.get(coordinates) : null;
+        if (!metrics) {
+            var clean = cleanRouteCoordinates(coordinates);
+            var lengths = [];
+            var distance = 0;
+            for (var k = 1; k < clean.length; k += 1) {
+                var length = distanceMetersBetweenLonLat(clean[k - 1], clean[k]);
+                lengths.push(length);
+                distance += length;
+            }
+            metrics = { route: clean, lengths: lengths, total: distance };
+            if (Array.isArray(coordinates)) routeMetricsCache.set(coordinates, metrics);
+        }
+        var route = metrics.route;
         if (!route.length) {
             return null;
         }
@@ -763,13 +780,8 @@
         if (progress >= 1) {
             return { point: route[route.length - 1], index: Math.max(0, route.length - 2) };
         }
-        var lengths = [];
-        var total = 0;
-        for (var i = 1; i < route.length; i += 1) {
-            var length = distanceMetersBetweenLonLat(route[i - 1], route[i]);
-            lengths.push(length);
-            total += length;
-        }
+        var lengths = metrics.lengths;
+        var total = metrics.total;
         if (total <= 0) {
             return { point: route[route.length - 1], index: Math.max(0, route.length - 2) };
         }
@@ -872,6 +884,7 @@
     }
 
     function prepareVehicleAnimation(previous, snapshot) {
+        var duration = Math.max(1000, 10000 / (Number(state.speed) || 1));
         var previousVehicles = {};
         asArray(previous && previous.vehicles).forEach(function (vehicle) {
             previousVehicles[vehicleKey(vehicle)] = vehicleLonLat(vehicle);
@@ -900,7 +913,7 @@
                     path: path.length >= 2 ? path : null,
                     started: Date.now(),
                     progress: 0,
-                    duration: path.length >= 2 ? 11000 : 0
+                    duration: start && (path.length >= 2 || distanceMetersBetweenLonLat(start, end) > 0.1) ? duration : 0
                 };
                 return;
             }
@@ -919,12 +932,53 @@
                 start: start,
                 end: end,
                 started: Date.now(),
-                duration: 11000
+                duration: duration
             };
         });
     }
 
+    function predictedRoutePosition(assignment) {
+        if (!assignment || assignment.route_status !== 'ready' ||
+            ['to_scene', 'to_hospital', 'returning'].indexOf(String(assignment.mission_phase || '')) === -1 ||
+            (assignment.mission_phase === 'to_scene' && !assignment.movement_started_at && !Number(assignment.current_progress))) {
+            return null;
+        }
+        var elapsedSinceSnapshot = Math.max(0, currentSimTimestampPrecise() - Number(state.snapshot && state.snapshot.sim_timestamp || 0));
+        var segments = asArray(assignment.route_segments);
+        if (segments.length) {
+            var routeDuration = segments.reduce(function (sum, segment) {
+                return sum + Math.max(1, Number(segment.duration_sec) || 1);
+            }, 0);
+            var segmentIndex = Math.max(0, Math.min(segments.length - 1, Number(assignment.current_segment_index) || 0));
+            var elapsed = elapsedSinceSnapshot;
+            for (var i = 0; i < segmentIndex; i += 1) elapsed += Math.max(1, Number(segments[i].duration_sec) || 1);
+            elapsed += clamp(Number(assignment.current_segment_progress) || 0, 0, 1) * Math.max(1, Number(segments[segmentIndex].duration_sec) || 1);
+            var total = 0;
+            for (var j = 0; j < segments.length; j += 1) {
+                var duration = Math.max(1, Number(segments[j].duration_sec) || 1);
+                total += duration;
+                if (elapsed <= total || j === segments.length - 1) {
+                    var point = routePointAtProgress(segments[j].coordinates, clamp((elapsed - (total - duration)) / duration, 0, 1));
+                    return point ? {
+                        position: point.point,
+                        moving: !state.simClock.paused && elapsed < routeDuration,
+                        segmentIndex: j,
+                        segmentProgress: clamp((elapsed - (total - duration)) / duration, 0, 1)
+                    } : null;
+                }
+            }
+        }
+        var route = assignment.route_coordinates;
+        var duration = Number(assignment.route_duration_sec) || 0;
+        if (route.length < 2 || duration <= 0) return null;
+        var progress = clamp((Number(assignment.current_progress) || 0) + elapsedSinceSnapshot / duration, 0, 1);
+        var point = routePointAtProgress(route, progress);
+        return point ? { position: point.point, moving: !state.simClock.paused && progress < 1, progress: progress } : null;
+    }
+
     function animatedVehicleCoordinate(vehicle) {
+        var routePosition = predictedRoutePosition(state.routeAssignments[vehicleKey(vehicle)]);
+        if (routePosition) return routePosition.position;
         var animation = state.vehicleAnimation[vehicleKey(vehicle)];
         return animation && animation.current ? animation.current : vehicleLonLat(vehicle);
     }
@@ -1011,7 +1065,7 @@
 
     function mapVehicles() {
         return asArray(state.snapshot && state.snapshot.vehicles).filter(function (vehicle) {
-            return lonLat(vehicle) && vehicleVisibleOnMap(vehicle);
+            return vehicleVisibleOnMap(vehicle) && animatedVehicleCoordinate(vehicle);
         });
     }
 
@@ -1057,18 +1111,19 @@
             return segment.coordinates.length >= 2;
         });
         var selectedVehicle = findVehicle(state.selectedVehicleId);
-        var selectedAnimation = selectedVehicle ? state.vehicleAnimation[vehicleKey(selectedVehicle)] : null;
+        var predicted = selectedVehicle ? predictedRoutePosition(assignment) : null;
+        var selectedAnimation = predicted ? null : (selectedVehicle ? state.vehicleAnimation[vehicleKey(selectedVehicle)] : null);
         var animatedTail = [];
         if (selectedAnimation && selectedAnimation.path && selectedAnimation.path.length >= 2 && selectedAnimation.progress < 1) {
             animatedTail = routeTailFromProgress(selectedAnimation.path, selectedAnimation.progress, selectedAnimation.current);
         }
         if (segments.length) {
-            var segmentIndex = Math.max(0, Math.min(segments.length - 1, Number(assignment && assignment.current_segment_index) || 0));
-            var segmentProgress = clamp(Number(assignment && assignment.current_segment_progress || 0), 0, 1);
+            var segmentIndex = Math.max(0, Math.min(segments.length - 1, Number(predicted ? predicted.segmentIndex : assignment && assignment.current_segment_index) || 0));
+            var segmentProgress = clamp(Number(predicted ? predicted.segmentProgress : assignment && assignment.current_segment_progress) || 0, 0, 1);
             var last = asObject(assignment && assignment.last_position);
-            var current = Number.isFinite(Number(last.longitude)) && Number.isFinite(Number(last.latitude))
+            var current = predicted ? predicted.position : (Number.isFinite(Number(last.longitude)) && Number.isFinite(Number(last.latitude))
                 ? [Number(last.longitude), Number(last.latitude)]
-                : null;
+                : null);
             var combined = [];
             var append = function (coord) {
                 if (!Array.isArray(coord) || coord.length < 2) {
@@ -1104,15 +1159,15 @@
         if (route.length < 2) {
             return [];
         }
-        var progress = clamp(Number(assignment.current_progress || 0), 0, 1);
+        var progress = clamp(Number(predicted ? predicted.progress : assignment.current_progress || 0), 0, 1);
         if (progress >= 1) {
             return [];
         }
         var remaining = animatedTail.slice();
         var last = asObject(assignment.last_position);
-        var current = Number.isFinite(Number(last.longitude)) && Number.isFinite(Number(last.latitude))
+        var current = predicted ? predicted.position : (Number.isFinite(Number(last.longitude)) && Number.isFinite(Number(last.latitude))
             ? [Number(last.longitude), Number(last.latitude)]
-            : null;
+            : null);
         routeTailFromProgress(route, progress, animatedTail.length ? null : current).forEach(function (coord) {
             var previous = remaining.length ? remaining[remaining.length - 1] : null;
             if (!previous || Math.abs(previous[0] - coord[0]) > 0.000001 || Math.abs(previous[1] - coord[1]) > 0.000001) {
@@ -1217,8 +1272,15 @@
         if (type === 'hospital') return '#06b6d4';
         if (type === 'poi') return '#c084fc';
         if (type === 'station') {
-            if (data && data.is_neighbor) return '#94a3b8';
-            return { rd: '#22c55e', fw: '#ef4444', thw: '#3b82f6', air: '#f5b301' }[String(data && data.kind || '').toLowerCase()] || '#f59e0b';
+            if (data && data.is_neighbor_center) return '#94a3b8';
+            return {
+                FW: 'red',
+                RD: 'blue',
+                FRRD: '#b700ff',
+                FFW: '#ff9999',
+                SEG: '#00800f',
+                AIR: '#f5b301'
+            }[String(data && data.typ || '').trim().toUpperCase()] || '#999';
         }
         return '#94a3b8';
     }
@@ -1525,25 +1587,32 @@
         return markerStyles;
     }
 
+    var stationMarkerStyles = {};
+
     function pointStyle(type, data, selected) {
         if (type === 'vehicle') {
             return vehicleStyle(data, selected);
         }
         var color = featureColor(type, data);
+        if (type === 'station') {
+            var stationStyleKey = color + (data && data.is_neighbor_center ? ':center' : '');
+            if (!stationMarkerStyles[stationStyleKey]) {
+                stationMarkerStyles[stationStyleKey] = new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: data && data.is_neighbor_center ? 6 : 7,
+                        fill: new ol.style.Fill({ color: color }),
+                        stroke: new ol.style.Stroke({ color: '#000', width: 1 })
+                    })
+                });
+            }
+            return stationMarkerStyles[stationStyleKey];
+        }
         var radius = selected ? 12 : 9;
         var shape = new ol.style.Circle({
             radius: radius,
             fill: new ol.style.Fill({ color: color }),
             stroke: new ol.style.Stroke({ color: selected ? '#fef08a' : '#ffffff', width: selected ? 3 : 2 })
         });
-        if (type === 'station') {
-            var smallStation = data && (data.is_neighbor || String(data.typ || '').trim().toUpperCase() === 'FFW');
-            shape = new ol.style.Circle({
-                radius: smallStation ? 6 : 9,
-                fill: new ol.style.Fill({ color: color }),
-                stroke: new ol.style.Stroke({ color: data && data.is_neighbor ? '#cbd5e1' : '#ffffff', width: 2 })
-            });
-        }
         if (type === 'incident') {
             shape = new ol.style.RegularShape({
                 points: 3,
@@ -1821,6 +1890,10 @@
         }
 
         var step = function () {
+            if (state.paused) {
+                state.animationFrame = null;
+                return;
+            }
             var now = Date.now();
             var active = false;
             var hasSignal = false;
@@ -1855,7 +1928,9 @@
                 if (signalActive(vehicle)) {
                     hasSignal = true;
                 }
-                var coord = animatedVehicleCoordinate(vehicle);
+                var routePosition = predictedRoutePosition(state.routeAssignments[vehicleKey(vehicle)]);
+                if (routePosition && routePosition.moving) active = true;
+                var coord = routePosition ? routePosition.position : animatedVehicleCoordinate(vehicle);
                 if (coord) {
                     feature.getGeometry().setCoordinates(ol.proj.fromLonLat(coord));
                 }
@@ -2440,8 +2515,10 @@
 
         asArray(state.snapshot && state.snapshot.events).forEach(function (item) {
             var kind = String(item.kind || '');
-            var sourceType = kind === 'unit_report' ? 'vehicles' : (kind === 'system' ? 'system' : (kind === 'caller_answer' ? 'caller' : 'dispatch'));
             var meta = asObject(item.meta);
+            if (kind === 'system' && meta.source === 'template') return;
+            var sourceType = kind === 'unit_report' || ['fms', 'fms_status', 'vehicle_status', 'fahrzeug_status', 'radio', 'funk'].indexOf(kind) !== -1
+                ? 'vehicles' : (kind === 'system' ? 'system' : (kind === 'caller_answer' ? 'caller' : 'dispatch'));
             addRadioRow($.extend({
                 event_id: item.id || item.event_id,
                 einsatz_id: item.instanz_einsatz_id || item.einsatz_id,
@@ -2456,7 +2533,7 @@
         asArray(state.snapshot && state.snapshot.call_log).forEach(function (item) {
             addRadioRow($.extend({
                 source_type: item.kind === 'unit_report' ? 'vehicles' : (item.kind === 'new_call' || item.kind === 'caller_answer' ? 'caller' : 'dispatch'),
-                source_label: item.kind === 'unit_report' ? 'Fahrzeuge' : (item.kind === 'new_call' ? 'Notruf' : 'Leitstelle')
+                source_label: item.kind === 'unit_report' ? 'Fahrzeuge' : (item.kind === 'new_call' || item.kind === 'caller_answer' ? 'Notruf' : 'Leitstelle')
             }, item));
         });
         asArray(state.snapshot && state.snapshot.fms_log).forEach(function (item) {
@@ -2686,6 +2763,7 @@
             var previousPaused = state.paused;
             prepareVehicleAnimation(state.snapshot || {}, response.data);
             state.snapshot = response.data;
+            state.routeAssignments = assignmentMap(response.data.assignments);
             closeVehicleContextMenu();
             logSnapshotRouteFailures(state.snapshot);
             syncSimClock(response.data);
@@ -2965,7 +3043,10 @@
             var options = '<option value="">Zufälliger Einsatz</option>' + asArray(items).map(function (item) {
                 return '<option value="' + esc(item.id) + '">' + esc('#' + item.id + ' ' + (item.title || item.einsatztyp || 'Einsatz') + (item.einsatzart ? ' (' + item.einsatzart + ')' : '')) + '</option>';
             }).join('');
-            $modal.html(modalHtml('Neuer Einsatz', '<label>Einsatzvorlage<select data-lstw-force-spawn-select>' + options + '</select></label><p class="lstw-message" data-lstw-force-spawn-feedback role="alert" hidden></p><footer><button type="button" data-lstw-submit-force-spawn>Anruf erzeugen</button></footer>')).prop('hidden', false);
+            var keywords = '<option value="">Stichwort der Vorlage verwenden</option>' + asArray(state.forceSpawnStichwoerter).map(function (row) {
+                return '<option value="' + esc(row.id) + '">' + esc(row.code + ' – ' + row.bezeichnung + ' (' + row.einsatzart + ')') + '</option>';
+            }).join('');
+            $modal.html(modalHtml('Neuer Einsatz', '<label>Einsatzvorlage<select data-lstw-force-spawn-select>' + options + '</select></label><label>Einsatzstichwort<select data-lstw-force-spawn-stichwort>' + keywords + '</select></label><p class="lstw-message" data-lstw-force-spawn-feedback role="alert" hidden></p><footer><button type="button" data-lstw-submit-force-spawn>Anruf erzeugen</button></footer>')).prop('hidden', false);
             updateRuntimeUi();
         }
         if (state.forceSpawnOptions) {
@@ -2975,6 +3056,7 @@
         $modal.html(modalHtml('Neuer Einsatz', '<p class="lstw-empty">Einsatzvorlagen werden geladen...</p>')).prop('hidden', false);
         simPost({ action: 'lsttraining_sim_force_spawn_options', instanz_id: state.instanceId }).done(function (response) {
             state.forceSpawnOptions = response && response.success && response.data ? asArray(response.data.items) : [];
+            state.forceSpawnStichwoerter = response && response.success && response.data ? asArray(response.data.stichwoerter) : [];
             render(state.forceSpawnOptions);
         }).fail(function (xhr) {
             $modal.html(modalHtml('Neuer Einsatz', '<p class="lstw-empty">' + esc(ajaxErrorMessage(xhr, 'Einsatzvorlagen konnten nicht geladen werden.')) + '</p>'));
@@ -3003,10 +3085,11 @@
         if (mutationBlocked()) return;
         if (state.forceSpawnSubmitting) return;
         var value = state.$root.find('[data-lstw-force-spawn-select]').val();
+        var stichwort = state.$root.find('[data-lstw-force-spawn-stichwort]').val();
         setForceSpawnSubmitting(true);
         showForceSpawnFeedback('');
         setMapStatus('Neuer Anruf wird erzeugt...', false);
-        simPost({ action: 'lsttraining_sim_force_spawn', instanz_id: state.instanceId, einsatz_id: value || 0 }).done(function (response) {
+        simPost({ action: 'lsttraining_sim_force_spawn', instanz_id: state.instanceId, einsatz_id: value || 0, stichwort_id: stichwort || 0 }).done(function (response) {
             var message = response && response.data && response.data.message ? response.data.message : 'Neuer Anruf konnte nicht erzeugt werden.';
             if (!response || !response.success || !response.data || !response.data.spawned) {
                 setForceSpawnSubmitting(false);

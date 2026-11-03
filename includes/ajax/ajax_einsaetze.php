@@ -262,7 +262,8 @@ function lsttraining_einsatzeditor_fetch_one(PDO $pdo, int $id): array {
 
     $followupStmt = $pdo->prepare('
         SELECT step_no, label, kind, text, min_after_sec, max_after_sec, condition_json,
-               probability_percent, speaker_type, trigger_mode, required_resources_json, effect_json
+               probability_percent, speaker_type, trigger_mode, required_resources_json, effect_json,
+               flow_key, flow_role, applicable_initial_keys
         FROM einsatz_followups
         WHERE einsatz_id = ?
         ORDER BY step_no ASC
@@ -562,6 +563,8 @@ add_action('wp_ajax_lst_save_einsatz', function () {
     $description = isset($_POST['description']) ? sanitize_textarea_field(wp_unslash($_POST['description'])) : '';
     $einsatzart = isset($_POST['einsatzart']) ? sanitize_text_field(wp_unslash($_POST['einsatzart'])) : '';
     $einsatztyp = isset($_POST['einsatztyp']) ? sanitize_text_field(wp_unslash($_POST['einsatztyp'])) : '';
+    $leitstelle_id = isset($_POST['leitstelle_id']) ? absint($_POST['leitstelle_id']) : 0;
+    $stichwort_id = isset($_POST['stichwort_id']) ? absint($_POST['stichwort_id']) : 0;
     $enabled = isset($_POST['enabled']) ? (int) $_POST['enabled'] : 0;
 
     $tags_json = isset($_POST['tags_json']) ? trim((string) wp_unslash($_POST['tags_json'])) : '';
@@ -569,6 +572,8 @@ add_action('wp_ajax_lst_save_einsatz', function () {
     $scope_type = isset($_POST['scope_type']) ? sanitize_text_field(wp_unslash($_POST['scope_type'])) : 'anywhere';
     $landscape_tags_json = isset($_POST['landscape_tags_json']) ? trim((string) wp_unslash($_POST['landscape_tags_json'])) : '';
     $poi_type = isset($_POST['poi_type']) ? sanitize_text_field(wp_unslash($_POST['poi_type'])) : '';
+    $poi_types_present = isset($_POST['poi_types_json']);
+    $poi_types_raw = $poi_types_present ? json_decode(wp_unslash($_POST['poi_types_json']), true) : null;
 
     $fixed_latitude = (isset($_POST['fixed_latitude']) && $_POST['fixed_latitude'] !== '') ? (float) $_POST['fixed_latitude'] : null;
     $fixed_longitude = (isset($_POST['fixed_longitude']) && $_POST['fixed_longitude'] !== '') ? (float) $_POST['fixed_longitude'] : null;
@@ -605,6 +610,21 @@ add_action('wp_ajax_lst_save_einsatz', function () {
     if ($einsatztyp === '') {
         wp_send_json_error(['message' => 'Einsatztyp fehlt.'], 400);
     }
+    if ($leitstelle_id && !lsttraining_user_can('leitstellen', $leitstelle_id)) {
+        wp_send_json_error(['message' => 'Keine Berechtigung für diese Leitstelle.'], 403);
+    }
+    if ($stichwort_id) {
+        $stichwort = lsttraining_stichwoerter_get($pdo, $leitstelle_id, $stichwort_id);
+        if (!$stichwort || !(int) $stichwort['aktiv'] || $stichwort['einsatzart'] !== $einsatzart || $stichwort['code'] !== $einsatztyp) {
+            wp_send_json_error(['message' => 'Stichwort passt nicht zur Leitstelle, Einsatzart oder zum Code.'], 400);
+        }
+        if (!str_starts_with($title, $einsatztyp . ' – ')) {
+            $title = $einsatztyp . ' – ' . $title;
+        }
+    } elseif ($leitstelle_id === 0 && isset($_POST['leitstelle_id']) && $id === 0) {
+        wp_send_json_error(['message' => 'Bitte eine Leitstelle wählen.'], 400);
+    }
+
     if (!in_array($scope_type, ['anywhere', 'landscape', 'poi_type', 'fixed_point'], true)) {
         wp_send_json_error(['message' => 'Ungültiger Ortsmodus.'], 400);
     }
@@ -618,6 +638,23 @@ add_action('wp_ajax_lst_save_einsatz', function () {
     $patient_profile_json = lsttraining_einsatzeditor_normalize_patients_json($patient_profile_json);
     $hasBaseRequiredResourcesColumn = lsttraining_einsatzeditor_column_exists($pdo, 'einsaetze', 'base_required_resources_json');
     $hasPatientProfileColumn = lsttraining_einsatzeditor_ensure_column($pdo, 'einsaetze', 'patient_profile_json', 'LONGTEXT NULL');
+
+    if ($poi_types_present && (!is_array($poi_types_raw) || array_values($poi_types_raw) !== $poi_types_raw || count($poi_types_raw) > 100)) {
+        wp_send_json_error(['message' => 'Ungültige POI-Typen.'], 400);
+    }
+    $poi_types = $poi_types_raw === null ? ($poi_type !== '' ? [$poi_type] : []) : $poi_types_raw;
+    foreach ($poi_types as $type) {
+        if (!is_string($type) || trim($type) === '' || mb_strlen($type) > 50) {
+            wp_send_json_error(['message' => 'Ungültiger POI-Typ.'], 400);
+        }
+    }
+    $poi_types = array_values(array_unique($poi_types));
+    $poi_type = $poi_types[0] ?? '';
+    $poi_types_json = wp_json_encode($poi_types, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $hasPoiTypesColumn = lsttraining_einsatzeditor_column_exists($pdo, 'einsaetze', 'poi_types_json');
+    if (count($poi_types) > 1 && !$hasPoiTypesColumn) {
+        wp_send_json_error(['message' => 'Die Datenbankmigration für mehrere POI-Typen fehlt.'], 500);
+    }
 
     if ($scope_type === 'poi_type' && $poi_type === '') {
         wp_send_json_error(['message' => 'Für poi_type muss ein POI-Typ gesetzt sein.'], 400);
@@ -644,6 +681,11 @@ add_action('wp_ajax_lst_save_einsatz', function () {
     if (!is_array($caller_parts)) { $caller_parts = []; }
     if (!is_array($caller_profiles)) { $caller_profiles = []; }
     if (!is_array($followups)) { $followups = []; }
+    try {
+        $followups = lsttraining_einsatz_flow_validate($followups);
+    } catch (InvalidArgumentException $e) {
+        wp_send_json_error(['message' => $e->getMessage()], 400);
+    }
     if (!$caller_profiles_loaded && $caller_profiles) {
         $caller_profiles_loaded = true;
     }
@@ -727,7 +769,7 @@ add_action('wp_ajax_lst_save_einsatz', function () {
             $stmt = $pdo->prepare('
                 UPDATE einsaetze
                    SET title = ?, description = ?, einsatzart = ?, einsatztyp = ?, enabled = ?,
-                       scope_type = ?, landscape_tags_json = ?, poi_type = ?, fixed_latitude = ?, fixed_longitude = ?, fixed_radius_m = ?,
+                       scope_type = ?, landscape_tags_json = ?, poi_type = ?, ' . ($hasPoiTypesColumn ? 'poi_types_json = ?,' : '') . ' fixed_latitude = ?, fixed_longitude = ?, fixed_radius_m = ?,
                        caller_who = ?, caller_where = ?, caller_what = ?, anrufertext = ?, caller_template_text = ?,
                        lagemeldung = ?, patientenzahl = ?, patient_anforderung = ?, notarzt_benoetigt = ?, feuerwehr_benoetigt = ?,
                        ' . ($hasBaseRequiredResourcesColumn ? 'base_required_resources_json = ?,' : '') . '
@@ -745,6 +787,7 @@ add_action('wp_ajax_lst_save_einsatz', function () {
                 $scope_type,
                 $landscape_tags_json,
                 $poi_type !== '' ? $poi_type : null,
+                ...($hasPoiTypesColumn ? [$poi_types_json] : []),
                 $fixed_latitude,
                 $fixed_longitude,
                 $fixed_radius_m,
@@ -775,7 +818,7 @@ add_action('wp_ajax_lst_save_einsatz', function () {
             $stmt = $pdo->prepare('
                 INSERT INTO einsaetze
                     (title, description, einsatzart, einsatztyp, enabled,
-                     scope_type, landscape_tags_json, poi_type, fixed_latitude, fixed_longitude, fixed_radius_m,
+                     scope_type, landscape_tags_json, poi_type, ' . ($hasPoiTypesColumn ? 'poi_types_json,' : '') . ' fixed_latitude, fixed_longitude, fixed_radius_m,
                      caller_who, caller_where, caller_what, anrufertext, caller_template_text,
                      lagemeldung, patientenzahl, patient_anforderung, notarzt_benoetigt, feuerwehr_benoetigt,
                      ' . ($hasBaseRequiredResourcesColumn ? 'base_required_resources_json,' : '') . '
@@ -783,7 +826,7 @@ add_action('wp_ajax_lst_save_einsatz', function () {
                      poi_tag, tags_json, created_at, updated_at, weight_base)
                 VALUES
                     (?,?,?,?,?,
-                     ?,?,?,?,?,?,
+                     ?,?,?, ' . ($hasPoiTypesColumn ? '?,' : '') . ' ?,?,?,
                      ?,?,?,?,?,
                      ?,?,?,?,?,
                      ' . ($hasBaseRequiredResourcesColumn ? '?,' : '') . '
@@ -799,6 +842,7 @@ add_action('wp_ajax_lst_save_einsatz', function () {
                 $scope_type,
                 $landscape_tags_json,
                 $poi_type !== '' ? $poi_type : null,
+                ...($hasPoiTypesColumn ? [$poi_types_json] : []),
                 $fixed_latitude,
                 $fixed_longitude,
                 $fixed_radius_m,
@@ -827,6 +871,8 @@ add_action('wp_ajax_lst_save_einsatz', function () {
 
             $id = (int) $pdo->lastInsertId();
         }
+
+        $pdo->prepare('UPDATE einsaetze SET leitstelle_id = ?, stichwort_id = ? WHERE id = ?')->execute([$leitstelle_id ?: null, $stichwort_id ?: null, $id]);
 
         $deleteTables = ['einsatz_time_windows', 'einsatz_seasons', 'einsatz_weather_conditions', 'einsatz_caller_parts', 'einsatz_followups'];
         if ($caller_profiles_loaded && lsttraining_einsatzeditor_table_exists($pdo, 'einsatz_anrufer_profiles')) {
@@ -894,8 +940,9 @@ add_action('wp_ajax_lst_save_einsatz', function () {
             $ins = $pdo->prepare('
                 INSERT INTO einsatz_followups
                     (einsatz_id, label, step_no, kind, text, min_after_sec, max_after_sec, condition_json,
-                     probability_percent, speaker_type, trigger_mode, required_resources_json, effect_json)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     probability_percent, speaker_type, trigger_mode, required_resources_json, effect_json,
+                     flow_key, flow_role, applicable_initial_keys)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ');
 
             foreach ($followups as $followupIndex => $row) {
@@ -935,6 +982,9 @@ add_action('wp_ajax_lst_save_einsatz', function () {
                     $triggerMode,
                     lsttraining_einsatzeditor_normalize_resources_json(isset($row['required_resources_json']) ? (string) $row['required_resources_json'] : null),
                     lsttraining_einsatzeditor_normalize_effect_json(isset($row['effect_json']) ? (string) $row['effect_json'] : null),
+                    (string) $row['flow_key'],
+                    (string) $row['flow_role'],
+                    wp_json_encode($row['applicable_initial_keys']),
                 ]);
             }
         }

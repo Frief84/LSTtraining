@@ -803,6 +803,7 @@ function lst_manage_create_resource(WP_REST_Request $request) {
         $stmt->execute(array_values($data));
         $id = (int) $pdo->lastInsertId();
         lst_manage_sync_relations($pdo, $config, $id, $payload);
+        if ($resource === 'leitstellen') { lsttraining_stichwoerter_seed_leitstelle($pdo, $id); }
         $pdo->commit();
 
         if (function_exists('lsttraining_log_activity')) {

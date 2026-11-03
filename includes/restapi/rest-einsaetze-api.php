@@ -28,10 +28,13 @@ function lst_rest_einsaetze_fields(): array {
         'description' => ['type' => 'text', 'nullable' => true, 'max' => 10000],
         'einsatzart' => ['type' => 'enum', 'required' => true, 'allowed' => ['RD', 'FW']],
         'einsatztyp' => ['type' => 'string', 'required' => true, 'max' => 100],
+        'leitstelle_id' => ['type' => 'id', 'nullable' => true],
+        'stichwort_id' => ['type' => 'id', 'nullable' => true],
         'enabled' => ['type' => 'bool', 'default' => true],
         'scope_type' => ['type' => 'enum', 'default' => 'anywhere', 'allowed' => ['anywhere', 'landscape', 'poi_type', 'fixed_point']],
         'landscape_tags_json' => ['type' => 'json_list', 'nullable' => true],
         'poi_type' => ['type' => 'string', 'nullable' => true, 'max' => 50],
+        'poi_types_json' => ['type' => 'json_list', 'nullable' => true],
         'fixed_latitude' => ['type' => 'latitude', 'nullable' => true],
         'fixed_longitude' => ['type' => 'longitude', 'nullable' => true],
         'fixed_radius_m' => ['type' => 'int', 'nullable' => true, 'min' => 0],
@@ -95,6 +98,20 @@ function lst_rest_einsaetze_normalize(WP_REST_Request $request, bool $creating):
             throw new InvalidArgumentException($name . ' darf nicht leer sein.');
         }
     }
+    if (array_key_exists('poi_types_json', $data)) {
+        $poiTypes = json_decode((string) $data['poi_types_json'], true);
+        if (!is_array($poiTypes) || count($poiTypes) > 100 || count($poiTypes) !== count(array_unique($poiTypes))) {
+            throw new InvalidArgumentException('poi_types_json enthaelt ungueltige oder doppelte POI-Typen.');
+        }
+        foreach ($poiTypes as $type) {
+            if (!is_string($type) || trim($type) === '' || mb_strlen($type) > 50) {
+                throw new InvalidArgumentException('poi_types_json enthaelt einen ungueltigen POI-Typ.');
+            }
+        }
+        $data['poi_type'] = $poiTypes[0] ?? null;
+    } elseif (array_key_exists('poi_type', $data)) {
+        $data['poi_types_json'] = wp_json_encode($data['poi_type'] ? [$data['poi_type']] : []);
+    }
     $normalized = [];
     if (array_key_exists('time_windows', $payload)) {
         $normalized['time_windows'] = lsttraining_einsatzeditor_normalize_time_windows($payload['time_windows']);
@@ -136,8 +153,10 @@ function lst_rest_einsaetze_normalize(WP_REST_Request $request, bool $creating):
             'max_after_sec' => ['type' => 'int', 'nullable' => true, 'min' => 0],
             'probability_percent' => ['type' => 'int', 'default' => 100, 'min' => 0, 'max' => 100],
             'speaker_type' => ['type' => 'enum', 'default' => 'system', 'allowed' => ['caller', 'fire_unit', 'ems_unit', 'police', 'dispatch', 'system']],
-            'trigger_mode' => ['type' => 'enum', 'default' => 'random', 'allowed' => ['random', 'on_unit_arrival', 'on_missing_resources', 'on_dispatcher_question', 'manual']],
-        ], ['condition_json', 'required_resources_json', 'effect_json']);
+            'trigger_mode' => ['type' => 'enum', 'default' => 'random', 'allowed' => ['random', 'on_unit_arrival', 'on_missing_resources', 'on_dispatcher_question', 'on_transport_started', 'on_hospital_arrival', 'on_vehicle_available', 'manual']],
+            'flow_key' => ['type' => 'string', 'nullable' => true, 'max' => 64],
+            'flow_role' => ['type' => 'enum', 'nullable' => true, 'allowed' => ['initial', 'development']],
+        ], ['condition_json', 'required_resources_json', 'effect_json', 'applicable_initial_keys']);
         $steps = array_column($normalized['followups'], 'step_no');
         if (count($steps) !== count(array_unique($steps))) { throw new InvalidArgumentException('followups enthaelt doppelte step_no.'); }
         foreach ($normalized['followups'] as $row) {
@@ -145,6 +164,7 @@ function lst_rest_einsaetze_normalize(WP_REST_Request $request, bool $creating):
                 throw new InvalidArgumentException('followups: min_after_sec darf max_after_sec nicht uebersteigen.');
             }
         }
+        $normalized['followups'] = lsttraining_einsatz_flow_validate($normalized['followups']);
     }
     return [$data, $normalized];
 }
@@ -178,8 +198,17 @@ function lst_rest_einsaetze_rows(string $name, $rows, array $fields, array $json
 
 function lst_rest_einsaetze_validate(PDO $pdo, array $data, array $children, ?array $current, bool $creating): void {
     $merged = array_replace($current ?: [], $data);
+    $leitstelle_id = (int) ($merged['leitstelle_id'] ?? 0);
+    $stichwort_id = (int) ($merged['stichwort_id'] ?? 0);
+    if ($leitstelle_id && !lsttraining_user_can('leitstellen', $leitstelle_id)) { throw new InvalidArgumentException('Keine Berechtigung für die Leitstelle.'); }
+    if ($stichwort_id) {
+        $stichwort = lsttraining_stichwoerter_get($pdo, $leitstelle_id, $stichwort_id);
+        if (!$stichwort || !(int) $stichwort['aktiv'] || $stichwort['einsatzart'] !== ($merged['einsatzart'] ?? '') || $stichwort['code'] !== ($merged['einsatztyp'] ?? '')) {
+            throw new InvalidArgumentException('Stichwort passt nicht zur Leitstelle, Einsatzart oder zum Code.');
+        }
+    }
     $scope = $merged['scope_type'] ?? 'anywhere';
-    if ($scope === 'poi_type' && empty($merged['poi_type'])) { throw new InvalidArgumentException('Fuer poi_type ist poi_type erforderlich.'); }
+    if ($scope === 'poi_type' && empty($merged['poi_type']) && empty(json_decode((string) ($merged['poi_types_json'] ?? '[]'), true))) { throw new InvalidArgumentException('Fuer poi_type ist poi_type erforderlich.'); }
     if ($scope === 'fixed_point' && (!isset($merged['fixed_latitude']) || !isset($merged['fixed_longitude']))) { throw new InvalidArgumentException('Fuer fixed_point sind Koordinaten erforderlich.'); }
     if ($scope === 'landscape') {
         $tags = $merged['landscape_tags_json'] ?? null;
@@ -218,7 +247,7 @@ function lst_rest_einsaetze_fetch(PDO $pdo, int $id): ?array {
         'weather_conditions' => ['einsatz_weather_conditions', 'weather_type', 'weather_type ASC'],
         'caller_parts' => ['einsatz_caller_parts', 'part_key, text, sort_order, enabled', 'part_key ASC, sort_order ASC, id ASC'],
         'caller_profiles' => ['einsatz_anrufer_profiles', 'profile_id, weight', 'profile_id ASC'],
-        'followups' => ['einsatz_followups', 'step_no, label, kind, text, min_after_sec, max_after_sec, condition_json, probability_percent, speaker_type, trigger_mode, required_resources_json, effect_json', 'step_no ASC'],
+        'followups' => ['einsatz_followups', 'step_no, label, kind, text, min_after_sec, max_after_sec, condition_json, probability_percent, speaker_type, trigger_mode, required_resources_json, effect_json, flow_key, flow_role, applicable_initial_keys', 'step_no ASC'],
     ];
     foreach ($relations as $name => [$table, $columns, $order]) {
         if ($name === 'caller_profiles' && !lsttraining_einsatzeditor_table_exists($pdo, $table)) { $item[$name] = []; continue; }
@@ -233,7 +262,7 @@ function lst_rest_einsaetze_fetch(PDO $pdo, int $id): ?array {
         }
         if ($name === 'followups') {
             foreach ($rows as &$row) {
-                foreach (['condition_json', 'required_resources_json', 'effect_json'] as $field) { if (isset($row[$field])) { $row[$field] = json_decode($row[$field], true); } }
+                foreach (['condition_json', 'required_resources_json', 'effect_json', 'applicable_initial_keys'] as $field) { if (isset($row[$field])) { $row[$field] = json_decode($row[$field], true); } }
             }
             unset($row);
         }
@@ -273,11 +302,11 @@ function lst_rest_einsaetze_sync(PDO $pdo, int $id, array $children): void {
     }
     if (array_key_exists('followups', $children)) {
         $pdo->prepare('DELETE FROM einsatz_followups WHERE einsatz_id = ?')->execute([$id]);
-        $columns = ['step_no', 'label', 'kind', 'text', 'min_after_sec', 'max_after_sec', 'condition_json', 'probability_percent', 'speaker_type', 'trigger_mode', 'required_resources_json', 'effect_json'];
+        $columns = ['step_no', 'label', 'kind', 'text', 'min_after_sec', 'max_after_sec', 'condition_json', 'probability_percent', 'speaker_type', 'trigger_mode', 'required_resources_json', 'effect_json', 'flow_key', 'flow_role', 'applicable_initial_keys'];
         $insert = $pdo->prepare('INSERT INTO einsatz_followups (einsatz_id, ' . implode(', ', $columns) . ') VALUES (' . implode(', ', array_fill(0, count($columns) + 1, '?')) . ')');
         foreach ($children['followups'] as $row) {
             $values = [];
-            foreach ($columns as $column) { $values[] = $row[$column] ?? null; }
+            foreach ($columns as $column) { $values[] = $column === 'applicable_initial_keys' ? wp_json_encode($row[$column] ?? []) : ($row[$column] ?? null); }
             $insert->execute(array_merge([$id], $values));
         }
     }
@@ -296,7 +325,7 @@ function lst_rest_einsaetze_list(WP_REST_Request $request) {
         $count = $pdo->prepare('SELECT COUNT(*) FROM einsaetze' . $where);
         $count->execute($params);
         $total = (int) $count->fetchColumn();
-        $stmt = $pdo->prepare('SELECT id, title, description, einsatzart, einsatztyp, enabled, scope_type FROM einsaetze' . $where . ' ORDER BY id DESC LIMIT ' . $per_page . ' OFFSET ' . (($page - 1) * $per_page));
+        $stmt = $pdo->prepare('SELECT id, leitstelle_id, stichwort_id, title, description, einsatzart, einsatztyp, enabled, scope_type FROM einsaetze' . $where . ' ORDER BY id DESC LIMIT ' . $per_page . ' OFFSET ' . (($page - 1) * $per_page));
         $stmt->execute($params);
         return lst_manage_success(['resource' => 'einsaetze', 'items' => $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [], 'pagination' => ['page' => $page, 'per_page' => $per_page, 'total' => $total, 'pages' => (int) ceil($total / $per_page)]]);
     } catch (Throwable $e) { error_log('[LSTtraining][REST einsaetze list] ' . $e->getMessage()); return lst_manage_error('db_query_failed', 'Einsatzvorlagen konnten nicht geladen werden.', 500); }
@@ -323,6 +352,18 @@ function lst_rest_einsaetze_write(WP_REST_Request $request) {
         $current = $creating ? null : lst_rest_einsaetze_fetch($pdo, $id);
         if (!$creating && !$current) { return lst_manage_error('not_found', 'Einsatzvorlage nicht gefunden.', 404); }
         lst_rest_einsaetze_validate($pdo, $data, $children, $current, $creating);
+        $selected_stichwort_id = (int) ($data['stichwort_id'] ?? ($current['stichwort_id'] ?? 0));
+        if (!empty($data['title']) && $selected_stichwort_id) {
+            $selected = lsttraining_stichwoerter_get($pdo, (int) ($data['leitstelle_id'] ?? ($current['leitstelle_id'] ?? 0)), $selected_stichwort_id);
+            if ($selected) {
+                $old_prefix = (string) ($current['einsatztyp'] ?? '') . ' – ';
+                if ($old_prefix !== ' – ' && str_starts_with($data['title'], $old_prefix)) {
+                    $data['title'] = substr($data['title'], strlen($old_prefix));
+                }
+                if (!str_starts_with($data['title'], $selected['code'] . ' – ')) { $data['title'] = $selected['code'] . ' – ' . $data['title']; }
+            }
+        }
+
         foreach (['base_required_resources_json', 'patient_profile_json'] as $column) {
             if (array_key_exists($column, $data) && !lsttraining_einsatzeditor_column_exists($pdo, 'einsaetze', $column)) {
                 throw new InvalidArgumentException($column . ' ist in dieser Datenbank nicht verfuegbar.');

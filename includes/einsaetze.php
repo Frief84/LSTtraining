@@ -50,7 +50,15 @@ if (is_readable($poi_json)) {
         }
     }
 }
+$einsatz_leitstellen = [];
+try {
+    $einsatz_pdo = lsttraining_get_connection();
+    foreach (($einsatz_pdo->query('SELECT id,name FROM leitstellen ORDER BY name')->fetchAll(PDO::FETCH_ASSOC) ?: []) as $center) {
+        if (lsttraining_user_can('leitstellen', (int) $center['id'])) { $einsatz_leitstellen[] = $center; }
+    }
+} catch (Throwable $e) { $einsatz_leitstellen = []; }
 ?>
+<script>window.lstEinsatzLeitstellen = <?php echo wp_json_encode($einsatz_leitstellen, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;</script>
 <div class="wrap lst-admin-page lst-einsaetze-page">
     <h1 class="wp-heading-inline">Einsätze</h1>
     <a href="#" class="page-title-action" id="lst-einsatz-new">Neu hinzufügen</a>
@@ -191,8 +199,7 @@ if (is_readable($poi_json)) {
             <button type="button" class="lst-tab-btn" data-tab="location"><span>2</span><strong>Einsatzort</strong><em>Gebiet, POI oder Karte</em></button>
             <button type="button" class="lst-tab-btn" data-tab="time"><span>3</span><strong>Zeit &amp; Bedingungen</strong><em>Zeitfenster, Saison, Wetter</em></button>
             <button type="button" class="lst-tab-btn" data-tab="caller"><span>4</span><strong>Anruf</strong><em>Profile und Meldungsbausteine</em></button>
-            <button type="button" class="lst-tab-btn" data-tab="situation"><span>5</span><strong>Lage &amp; Bedarf</strong><em>Startlage und Fahrzeuge</em></button>
-            <button type="button" class="lst-tab-btn" data-tab="followups"><span>6</span><strong>Lagevarianten</strong><em>Rückmeldungen und Zusatzbedarf</em></button>
+            <button type="button" class="lst-tab-btn" data-tab="situation"><span>5</span><strong>Lage und Bedarf</strong><em>Grundlage und Entwicklungen</em></button>
         </div>
 
         <div class="lst-tab-panel is-active" data-tab-panel="general">
@@ -207,7 +214,16 @@ if (is_readable($poi_json)) {
                 </div>
 
                 <div class="lst-field">
-                    <label for="lst-einsatztyp"><strong>Einsatzstichwort / Typ</strong></label>
+                    <label for="lst-einsatz-leitstelle"><strong>Leitstelle</strong></label>
+                    <select id="lst-einsatz-leitstelle"><option value="">Übergreifend (bestehende Vorlage)</option><# _.each(data.leitstellen || [], function(ls) { #><option value="{{ ls.id }}" <# if (String(data.leitstelle_id || '') === String(ls.id)) { #>selected<# } #>>{{ ls.name }}</option><# }); #></select>
+                </div>
+                <div class="lst-field">
+                    <label for="lst-stichwort-id"><strong>Einsatzstichwort</strong></label>
+                    <select id="lst-stichwort-id"><option value="">Bitte Stichwort wählen</option></select>
+                    <p class="description">Die Auswahl setzt Code und Fahrzeugvorschlag. Der Grundbedarf bleibt danach bearbeitbar.</p>
+                </div>
+                <div class="lst-field">
+                    <label for="lst-einsatztyp"><strong>Stichwortcode</strong></label>
                     <input type="text" id="lst-einsatztyp" class="regular-text" value="{{ data.einsatztyp || '' }}">
                 </div>
 
@@ -320,15 +336,15 @@ if (is_readable($poi_json)) {
 
             <div class="lst-scope-panel" data-scope-panel="poi_type" style="display:none;">
                 <div class="lst-field">
-                    <label for="lst-poi-type"><strong>POI-Typ / Objektart</strong></label>
-                    <select id="lst-poi-type">
-                        <option value="">Bitte wählen</option>
+                    <label for="lst-poi-types"><strong>Mögliche POI-Typen / Objektarten</strong></label>
+                    <select id="lst-poi-types" multiple size="8">
                         <# _.each(data.poi_types || [], function(poi) { #>
-                            <option value="{{ poi.tag }}" <# if ((data.poi_type || '') === poi.tag) { #>selected<# } #>>
+                            <option value="{{ poi.tag }}" <# if ((data.selected_poi_types || []).includes(poi.tag)) { #>selected<# } #>>
                                 {{ poi.tag }}<# if (poi.description) { #> - {{ poi.description }}<# } #>
                             </option>
                         <# }); #>
                     </select>
+                    <p class="description">Mehrere auswählen mit Strg bzw. Cmd. Pro Einsatz wird ein passender POI aus den gewählten Arten verwendet.</p>
                 </div>
             </div>
 
@@ -515,6 +531,27 @@ if (is_readable($poi_json)) {
 </div>
 
         <div class="lst-tab-panel lst-tab-panel--situation" data-tab-panel="situation" style="display:none;">
+            <div class="lst-flow-switch" role="group" aria-label="Ansicht für Lage und Bedarf">
+                <button type="button" class="button button-primary" data-lst-flow-view="form">Formular</button>
+                <button type="button" class="button" data-lst-flow-view="graph">Graph</button>
+            </div>
+            <div class="lst-flow-graph" id="lst-flow-graph" hidden>
+                <div class="lst-flow-graph-toolbar"><strong>Ablaufdiagramm</strong><span id="lst-flow-graph-validation"></span>
+                    <button type="button" class="button" data-lst-add-flow="followup_call">Folgeanruf hinzufügen</button>
+                    <button type="button" class="button" data-lst-add-flow="arrival_variant">Eintreffvariante hinzufügen</button>
+                    <button type="button" class="button" data-lst-add-flow="development">Entwicklung hinzufügen</button>
+                    <button type="button" class="button" data-lst-add-flow="final_situation">Endlage</button>
+                    <button type="button" class="button" data-lst-add-flow="incident_end">Einsatzende</button>
+                    <button type="button" class="button" data-lst-flow-arrange>Automatisch anordnen</button>
+                    <span class="lst-flow-zoom" role="group" aria-label="Graph zoomen"><button type="button" class="button" data-lst-flow-zoom="out" aria-label="Verkleinern">−</button><output id="lst-flow-zoom-value">100 %</output><button type="button" class="button" data-lst-flow-zoom="in" aria-label="Vergrößern">+</button><button type="button" class="button" data-lst-flow-zoom="reset">100 %</button></span>
+                </div>
+                <p class="lst-flow-hint">Erstanruf → Folgeanrufe → Grundlage → Eintreffen und Erkundung → Eintreffvariante oder Standardlage → Endlage → Einsatzende. Knoten anklicken und rechts bearbeiten; vom blauen Punkt eine Verbindung ziehen. Eine gezogene Verbindung durch Klick auf die Linie oder rechts beim Zielknoten entfernen.</p>
+                <div class="lst-flow-workspace">
+                    <div class="lst-flow-canvas" id="lst-flow-canvas"><div class="lst-flow-viewport"><svg class="lst-flow-edges" aria-hidden="true"></svg><div class="lst-flow-nodes"></div></div></div>
+                    <aside class="lst-flow-properties" id="lst-flow-properties" aria-label="Eigenschaften des ausgewählten Knotens">Knoten auswählen, um seine Angaben zu bearbeiten.</aside>
+                </div>
+            </div>
+            <div class="lst-flow-form">
             <div class="lst-step-intro">
                 <h3>Welche Lage und welchen Grundbedarf hat der Einsatz?</h3>
                 <p>Diese Startlage erscheint in der Einsatzkarte. Der Fahrzeugbedarf beschreibt, was fachlich gebraucht wird; alarmiert wird später in der Simulation.</p>
@@ -567,16 +604,13 @@ if (is_readable($poi_json)) {
                     </table>
                 </div>
             </div>
-        </div>
-
-        <div class="lst-tab-panel" data-tab-panel="followups" style="display:none;">
             <div class="lst-step-intro">
-                <h3>Was kann sich nach Einsatzbeginn ändern?</h3>
-                <p>Lagevarianten können nach Eintreffen einer Einheit eine S5-Rückmeldung erzeugen, die sichtbare Lage aktualisieren und zusätzlichen Kräftebedarf auslösen.</p>
+                <h3>Welche Erstlagen und Entwicklungen sind möglich?</h3>
+                <p>Beim ersten Eintreffen wird die Standardlage oder genau eine Eintreffvariante gemeldet. Entwicklungen können danach eintreten.</p>
             </div>
             <div class="lst-box-header">
-                <h3>Lagevarianten / Rückmeldungen</h3>
-                <button type="button" class="button button-secondary" id="lst-add-followup">Lagevariante hinzufügen</button>
+                <h3>Eintreffvarianten und Entwicklungen <span id="lst-flow-probability-sum"></span></h3>
+                <button type="button" class="button button-secondary" id="lst-add-followup">Variante hinzufügen</button>
             </div>
 
             <div id="lst-followup-cards" class="lst-followup-cards">
@@ -588,7 +622,11 @@ if (is_readable($poi_json)) {
                     </div>
                 <# } else { #>
                     <# _.each(data.followups, function(row, index) { #>
-                        <div class="lst-box lst-followup-card lst-followup-row" data-followup-index="{{ index }}">
+                        <div class="lst-box lst-followup-card lst-followup-row" data-followup-index="{{ index }}" data-flow-key="{{ row.flow_key || '' }}" data-flow-stage="{{ row.flow_stage || '' }}">
+                            <div class="lst-flow-role-fields">
+                                <label>Art <select class="lst-followup-role"><option value="initial" <# if (row.flow_role === 'initial' || (!row.flow_role && row.trigger_mode === 'on_unit_arrival' && row.kind === 'unit_report')) { #>selected<# } #>>{{ row.flow_stage === 'arrival_default' ? 'Eintreffen und Erkundung' : 'Eintreffvariante' }}</option><option value="followup_call" <# if (row.flow_stage === "followup_call") { #>selected<# } #>>Folgeanruf</option><option value="development" <# if (!row.flow_stage && (row.flow_role === 'development' || (!row.flow_role && row.trigger_mode !== 'on_unit_arrival'))) { #>selected<# } #>>Entwicklung</option><option value="final_situation" <# if (row.flow_stage === "final_situation") { #>selected<# } #>>Endlage</option><option value="incident_end" <# if (row.flow_stage === "incident_end") { #>selected<# } #>>Einsatzende</option></select></label>
+                                <label>Mögliche Vorgänger <select class="lst-followup-parents" multiple aria-label="Mögliche Vorgänger"></select></label>
+                            </div>
                             <div class="lst-followup-card-head">
                                 <div>
                                     <span class="lst-wizard-kicker">Lagevariante</span>
@@ -624,11 +662,7 @@ if (is_readable($poi_json)) {
                                     </div>
                                     <div class="lst-field">
                                         <label><strong>Wahrscheinlichkeit</strong></label>
-                                        <select class="lst-followup-probability">
-                                            <# _.each([100, 90, 75, 50, 25, 10, 0], function(prob) { #>
-                                                <option value="{{ prob }}" <# if (String(row.probability_percent != null ? row.probability_percent : 100) === String(prob)) { #>selected<# } #>>{{ prob }} %</option>
-                                            <# }); #>
-                                        </select>
+                                        <input type="number" class="small-text lst-followup-probability" min="0" max="100" step="1" value="{{ row.probability_percent != null ? row.probability_percent : 100 }}"> %
                                     </div>
                                     <div class="lst-field">
                                         <label><strong>Frühestens nach Sekunden</strong></label>
@@ -648,7 +682,9 @@ if (is_readable($poi_json)) {
                                     <label><strong>Sichtbarer Lage-/Beschreibungstext</strong></label>
                                     <textarea class="large-text lst-followup-text" rows="5" placeholder="Beschreibe die Lage, die das ersteintreffende Fahrzeug per S5 meldet.">{{ row.text || '' }}</textarea>
                                 </div>
-                                <p class="description">Dieser Text wird als S5-Lagemeldung gesendet und ersetzt beim Eintreten der Variante die sichtbare Lagebeschreibung.</p>
+                                <label><strong>Rückmeldung an die Leitstelle</strong></label>
+                                <textarea class="large-text lst-followup-radio-report" rows="4" placeholder="Was meldet die Einheit der Leitstelle?">{{ row.text || "" }}</textarea>
+                                <p class="description">Diese Rückmeldung wird beim Eintreten dieser Lage gefunkt. Die Lagebeschreibung darüber bleibt getrennt.</p>
                                 <div class="lst-patient-editor">
                                     <div class="lst-box-header">
                                         <h4>Patienten in dieser Variante</h4>
@@ -721,6 +757,7 @@ if (is_readable($poi_json)) {
                         </div>
                     <# }); #>
                 <# } #>
+            </div>
             </div>
         </div>
     </div>

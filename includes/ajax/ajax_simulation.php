@@ -248,6 +248,7 @@ add_action('wp_ajax_lsttraining_sim_force_spawn', function () {
     }
 
     $einsatz_id = isset($_POST['einsatz_id']) ? absint($_POST['einsatz_id']) : 0;
+    $stichwort_id = isset($_POST['stichwort_id']) ? absint($_POST['stichwort_id']) : 0;
 
     $pdo = lsttraining_get_connection();
     if (!$pdo) {
@@ -265,6 +266,7 @@ add_action('wp_ajax_lsttraining_sim_force_spawn', function () {
         if ($einsatz_id > 0) {
             $options['einsatz_id'] = $einsatz_id;
         }
+        if ($stichwort_id > 0) { $options['stichwort_id'] = $stichwort_id; }
 
         $tick_lock = lsttraining_sim_acquire_tick_lock($pdo, $instanz_id);
         $result = lsttraining_sim_spawn_one($pdo, $instanz_id, $options);
@@ -304,13 +306,18 @@ add_action('wp_ajax_lsttraining_sim_force_spawn_options', function () {
             wp_send_json_error(['message' => 'Nur Admins oder Einsatzleiter können Testeinsätze erzeugen.'], 403);
         }
 
-        $stmt = $pdo->query('
+        $instance_stmt = $pdo->prepare('SELECT leitstelle_id FROM spielinstanzen WHERE id = ?');
+        $instance_stmt->execute([$instanz_id]);
+        $leitstelle_id = (int) $instance_stmt->fetchColumn();
+        if (!$leitstelle_id) { throw new RuntimeException('Leitstelle der Simulation fehlt.'); }
+        $stmt = $pdo->prepare('
             SELECT id, title, einsatzart, einsatztyp, scope_type
             FROM einsaetze
-            WHERE enabled = 1
+            WHERE enabled = 1 AND (leitstelle_id IS NULL OR leitstelle_id = ?)
             ORDER BY title ASC, id ASC
             LIMIT 500
         ');
+        $stmt->execute([$leitstelle_id]);
         if (!$stmt) {
             throw new RuntimeException('Einsatzvorlagen konnten nicht geladen werden.');
         }
@@ -325,7 +332,7 @@ add_action('wp_ajax_lsttraining_sim_force_spawn_options', function () {
             ];
         }
 
-        wp_send_json_success(['items' => $items]);
+        wp_send_json_success(['items' => $items, 'stichwoerter' => lsttraining_stichwoerter_list($pdo, $leitstelle_id, true)]);
     } catch (Throwable $e) {
         error_log('[LSTtraining][sim_force_spawn_options] ' . $e->getMessage());
         wp_send_json_error(['message' => 'Einsatzvorlagen konnten nicht geladen werden.'], 500);
@@ -963,13 +970,13 @@ function lsttraining_sim_server_route(float $from_lat, float $from_lon, float $t
 }
 
 function lsttraining_sim_route_duration_for_signal(int $duration_sec, bool $sondersignal_allowed): int {
-    $duration_sec = max(30, $duration_sec);
+    $duration_sec = max(1, $duration_sec);
     if (!$sondersignal_allowed) {
         return $duration_sec;
     }
 
-    // Signalfahrt: 10 Prozent höhere Geschwindigkeit, also entsprechend kürzere Dauer.
-    return max(20, (int) round($duration_sec / 1.10));
+    // Maximal 20 Prozent schneller als die normale Routendauer; aufrunden verhindert Übertempo bei kurzen Segmenten.
+    return max(1, (int) ceil($duration_sec / 1.20));
 }
 
 function lsttraining_sim_route_segment(string $type, array $coordinates, int $duration_sec, int $distance_m = 0): array {
@@ -1436,29 +1443,47 @@ function lsttraining_sim_fire_phase_followups(PDO $pdo, int $einsatz_id, array &
         return false;
     }
 
-    $incident_stmt = $pdo->prepare('SELECT source_id FROM instanz_einsaetze WHERE id = ? LIMIT 1');
+    $incident_stmt = $pdo->prepare('SELECT source_id, meta_json FROM instanz_einsaetze WHERE id = ? LIMIT 1');
     $incident_stmt->execute([$einsatz_id]);
-    $source_id = (int) $incident_stmt->fetchColumn();
+    $incident_row = $incident_stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+    $source_id = (int) ($incident_row['source_id'] ?? 0);
     if ($source_id <= 0) {
         return false;
     }
 
     $stmt = $pdo->prepare('
-        SELECT id, text, effect_json, speaker_type
+        SELECT id, text, effect_json, speaker_type, flow_key, flow_role, applicable_initial_keys, probability_percent, required_resources_json
         FROM einsatz_followups
         WHERE einsatz_id = ? AND kind = ? AND trigger_mode = ?
         ORDER BY step_no ASC, id ASC
     ');
     $stmt->execute([$source_id, 'unit_report', $trigger_mode]);
     $followups = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    $incident_meta = lsttraining_sim_decode_meta($incident_row['meta_json'] ?? '');
+    $selected_initial = (string) ($incident_meta['selected_initial_key'] ?? '');
+    $decisions = is_array($incident_meta['development_decisions'] ?? null) ? $incident_meta['development_decisions'] : [];
     $did_emit = false;
     foreach ($followups as $followup) {
+        $parents = json_decode((string) ($followup['applicable_initial_keys'] ?? '[]'), true);
+        if (($followup['flow_role'] ?? '') === 'development' && is_array($parents) && $parents && !in_array($selected_initial, $parents, true)) {
+            $legacy_effect = lsttraining_sim_decode_meta($followup['effect_json'] ?? '');
+            if (!array_key_exists('flow_parent_keys', $legacy_effect)) { continue; }
+        }
         $effect = lsttraining_sim_decode_meta($followup['effect_json'] ?? '');
+        if (array_key_exists('flow_parent_keys', $effect)) {
+            $reached = false;
+            foreach (is_array($effect['flow_parent_keys']) ? $effect['flow_parent_keys'] : [] as $parent_key) {
+                if ($parent_key === $selected_initial || $parent_key === (string) ($incident_meta['arrival_base_key'] ?? '') || !empty($decisions[$parent_key]['emitted'])) { $reached = true; break; }
+            }
+            if (!$reached) { continue; }
+        }
+        if (mt_rand(1, 100) > (int) ($followup['probability_percent'] ?? 100)) { continue; }
         $configured_command = (string) ($effect['command_code'] ?? '');
         if ($command_code !== '' && $configured_command !== '' && $configured_command !== $command_code) {
             continue;
         }
-        $text = trim((string) ($followup['text'] ?? ''));
+        $situation_text = trim((string) ($followup['text'] ?? ''));
+        $text = trim((string) ($effect['radio_report_text'] ?? $situation_text));
         if ($text === '') {
             continue;
         }
@@ -1481,6 +1506,33 @@ function lsttraining_sim_fire_phase_followups(PDO $pdo, int $einsatz_id, array &
             $event_meta['reply_to_event_id'] = $reply_to_event_id;
         }
         lsttraining_sim_insert_unit_event($pdo, $einsatz_id, 'Leitstelle von ' . $rufname . ': ' . $text . ', Ende.', $event_meta);
+        $flow_key = (string) ($followup['flow_key'] ?? '');
+        if ($flow_key !== '') {
+            $decisions[$flow_key] = ['selected' => true, 'emitted' => true, 'emitted_at' => lsttraining_sim_time_string($now)];
+            $incident_meta['development_decisions'] = $decisions;
+        }
+        if (($followup['flow_role'] ?? '') === 'development') {
+            $additional = lsttraining_sim_normalize_required_resources($followup['required_resources_json'] ?? '');
+            if ($additional) {
+                $incident_meta['required_resources'] = lsttraining_sim_merge_required_resources($incident_meta['required_resources'] ?? [], $additional);
+            }
+            if (!empty($effect['patients']) && is_array($effect['patients'])) {
+                $incident_meta['patients'] = lsttraining_sim_merge_patient_updates($incident_meta['patients'] ?? [], $effect['patients']);
+            }
+            $incident_meta['current_lagemeldung'] = $situation_text;
+            $missing = lsttraining_sim_missing_resources_for_incident($pdo, $einsatz_id, $incident_meta['required_resources'] ?? []);
+            $request = lsttraining_sim_missing_resources_text($missing);
+            if ($request !== '') {
+                $incident_meta['pending_resource_request'] = ['text' => $request, 'missing_resources' => $missing];
+                lsttraining_sim_insert_unit_event($pdo, $einsatz_id, 'Leitstelle von ' . $rufname . ': ' . $request . ', kommen.', [
+                    'event_type' => 'resource_request', 'radio_message_type' => 'resource_request',
+                    'sender_type' => 'vehicle', 'recipient_type' => 'dispatch',
+                    'followup_id' => (int) $followup['id'], 'missing_resources' => $missing,
+                ]);
+            }
+            $pdo->prepare('UPDATE instanz_einsaetze SET lagemeldung = ?, meta_json = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+                ->execute([$situation_text, lsttraining_sim_encode_meta($incident_meta), $einsatz_id]);
+        }
         $did_emit = true;
         if ($command_code !== '') {
             break;
@@ -2112,8 +2164,8 @@ function lsttraining_sim_ensure_police_support(PDO $pdo, int $instanz_id, int $e
         $normal_segments = [lsttraining_sim_route_segment('road', (array) ($route['coordinates'] ?? []), (int) ($route['duration_sec'] ?? 120), (int) ($route['distance_m'] ?? 0))];
     }
     $route_segments = lsttraining_sim_route_segments_for_signal($normal_segments, $signal_allowed);
-    $duration = max(60, lsttraining_sim_route_segments_total_duration($route_segments));
-    $normal_duration = max(60, lsttraining_sim_route_segments_total_duration($normal_segments));
+    $duration = lsttraining_sim_route_segments_total_duration($route_segments);
+    $normal_duration = lsttraining_sim_route_segments_total_duration($normal_segments);
     $rufname = 'Polizei';
     $support_meta = [
         'event_type' => 'support_vehicle_alarm',
@@ -2262,13 +2314,15 @@ function lsttraining_sim_report_text_from_followup(array $followup, array $incid
     $effect = lsttraining_sim_decode_meta((string) ($followup['effect_json'] ?? ''));
     $structured = is_array($effect['situation_report'] ?? null) ? $effect['situation_report'] : [];
     $rufname = trim((string) ($assignment_meta['rufname'] ?? 'Fahrzeug'));
+    $intro = ($followup['flow_role'] ?? '') === 'initial' ? ', eingetroffen.' : ', meldet:';
     $title = trim((string) ($incident['template_title'] ?? ($incident['einsatztyp'] ?? 'Einsatz')));
     $address = lsttraining_sim_display_address_for_incident($incident);
     $lagemeldung = trim((string) ($incident['lagemeldung'] ?? ''));
-    $text = trim((string) ($followup['text'] ?? ''));
+    $text = trim((string) ($effect['radio_report_text'] ?? ''));
+    if ($text === '') { $text = trim((string) ($followup['text'] ?? '')); }
 
     if ($text === '') {
-        $parts = [$rufname . ', eingetroffen.'];
+        $parts = [$rufname . $intro];
         foreach (['environment', 'damage_event', 'people', 'patients', 'hazards', 'summary'] as $key) {
             $part = trim((string) ($structured[$key] ?? ''));
             if ($part !== '') {
@@ -2293,10 +2347,10 @@ function lsttraining_sim_report_text_from_followup(array $followup, array $incid
     ];
     $text = trim(strtr($text, $replacements));
     if ($text !== '' && stripos($text, $rufname) === false) {
-        $text = $rufname . ', eingetroffen.' . "\n" . $text;
+        $text = $rufname . $intro . "\n" . $text;
     }
 
-    return $text !== '' ? $text : $rufname . ', eingetroffen.';
+    return $text !== '' ? $text : $rufname . $intro;
 }
 
 function lsttraining_sim_situation_summary_from_followup(array $followup, array $incident, array $assignment_meta): string {
@@ -2529,6 +2583,51 @@ function lsttraining_sim_existing_situation_followups(PDO $pdo, int $einsatz_id)
     return $existing;
 }
 
+function lsttraining_sim_advance_caller_followups(PDO $pdo, int $instanz_id, int $now): void {
+    $incidents = $pdo->prepare("SELECT id, source_id, meta_json FROM instanz_einsaetze WHERE instanz_id = ? AND source = 'template' AND state = 'active'");
+    $incidents->execute([$instanz_id]);
+    $followups = $pdo->prepare("SELECT flow_key, text, effect_json, min_after_sec, max_after_sec, probability_percent FROM einsatz_followups WHERE einsatz_id = ? AND flow_role = 'development' AND (kind = 'caller_answer' OR speaker_type = 'caller') AND trigger_mode = 'random' ORDER BY step_no, id");
+    $insert = $pdo->prepare('INSERT INTO instanz_einsatz_events (instanz_einsatz_id, kind, text, meta_json) VALUES (?, ?, ?, ?)');
+    $update = $pdo->prepare('UPDATE instanz_einsaetze SET meta_json = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
+    foreach ($incidents->fetchAll(PDO::FETCH_ASSOC) ?: [] as $incident) {
+        $meta = lsttraining_sim_decode_meta($incident['meta_json'] ?? '');
+        if (($meta['call_status'] ?? '') !== 'accepted') { continue; }
+        $accepted_at = lsttraining_sim_parse_wp_time($meta['call_accepted_at'] ?? '');
+        if (!$accepted_at) { continue; }
+        $followups->execute([(int) $incident['source_id']]);
+        $decisions = is_array($meta['development_decisions'] ?? null) ? $meta['development_decisions'] : [];
+        $dirty = false;
+        foreach ($followups->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+            $key = (string) ($row['flow_key'] ?? '');
+            if ($key === '') { continue; }
+            if (!isset($decisions[$key])) {
+                $min = max(0, (int) ($row['min_after_sec'] ?? 0));
+                $max = max($min, (int) ($row['max_after_sec'] ?? $min));
+                $decisions[$key] = [
+                    'selected' => mt_rand(1, 100) <= max(0, min(100, (int) ($row['probability_percent'] ?? 100))),
+                    'due_at' => lsttraining_sim_time_string($accepted_at + mt_rand($min, $max)),
+                    'emitted' => false,
+                ];
+                $dirty = true;
+            }
+            if (empty($decisions[$key]['selected']) || !empty($decisions[$key]['emitted']) || lsttraining_sim_parse_wp_time($decisions[$key]['due_at']) > $now) { continue; }
+            $effect = lsttraining_sim_decode_meta($row['effect_json'] ?? '');
+            $text = trim((string) ($effect['radio_report_text'] ?? $row['text'] ?? ''));
+            if ($text === '') { continue; }
+            $insert->execute([(int) $incident['id'], 'caller_answer', $text, lsttraining_sim_encode_meta([
+                'event_type' => 'flow_caller_update', 'flow_key' => $key, 'radio_base_at' => lsttraining_sim_time_string($now),
+            ])]);
+            $decisions[$key]['emitted'] = true;
+            $decisions[$key]['emitted_at'] = lsttraining_sim_time_string($now);
+            $dirty = true;
+        }
+        if ($dirty) {
+            $meta['development_decisions'] = $decisions;
+            $update->execute([lsttraining_sim_encode_meta($meta), (int) $incident['id']]);
+        }
+    }
+}
+
 function lsttraining_sim_fire_arrival_followups(PDO $pdo, int $instanz_id, array $event, array &$meta, int $now): void {
     if (empty($meta['arrived_at'])) {
         return;
@@ -2591,14 +2690,74 @@ function lsttraining_sim_fire_arrival_followups(PDO $pdo, int $instanz_id, array
 
     $followup_stmt = $pdo->prepare('
         SELECT id, label, step_no, kind, text, min_after_sec, max_after_sec, condition_json,
-               probability_percent, speaker_type, trigger_mode, required_resources_json, effect_json
+               probability_percent, speaker_type, trigger_mode, required_resources_json, effect_json, flow_key, flow_role
         FROM einsatz_followups
-        WHERE einsatz_id = ? AND kind = ? AND trigger_mode = ?
+        WHERE einsatz_id = ? AND flow_role = ?
         ORDER BY step_no ASC, id ASC
         LIMIT 50
     ');
-    $followup_stmt->execute([(int) $incident['source_id'], 'unit_report', 'on_unit_arrival']);
+    $followup_stmt->execute([(int) $incident['source_id'], 'initial']);
     $followups = $followup_stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    $arrival_default = null;
+    foreach ($followups as $candidate) {
+        $effect = lsttraining_sim_decode_meta($candidate['effect_json'] ?? '');
+        if (($effect['flow_stage'] ?? '') === 'arrival_default') { $arrival_default = $candidate; break; }
+    }
+    if ($arrival_default && (string) ($incident_meta['arrival_base_key'] ?? '') !== (string) $arrival_default['flow_key']) {
+        $incident_meta['arrival_base_key'] = (string) $arrival_default['flow_key'];
+        $incident_meta_dirty = true;
+    }
+    if ($followups && empty($incident_meta['selected_initial_key'])) {
+        $call_decisions = is_array($incident_meta['development_decisions'] ?? null) ? $incident_meta['development_decisions'] : [];
+        if ($arrival_default) {
+            $roll = mt_rand(1, 100);
+            $cumulative = 0;
+            $incident_meta['selected_initial_key'] = (string) $arrival_default['flow_key'];
+            foreach ($followups as $candidate) {
+                if ((string) $candidate['flow_key'] === (string) $arrival_default['flow_key']) { continue; }
+                $weight = max(0, (int) ($candidate['probability_percent'] ?? 0));
+                $cumulative += $weight;
+                if ($roll > $cumulative || $roll <= $cumulative - $weight) { continue; }
+                $effect = lsttraining_sim_decode_meta($candidate['effect_json'] ?? '');
+                $parents = is_array($effect['flow_parent_keys'] ?? null) ? $effect['flow_parent_keys'] : [];
+                $available = !$parents;
+                foreach ($parents as $parent_key) {
+                    if (!empty($call_decisions[$parent_key]['emitted'])) { $available = true; break; }
+                }
+                if ($available) { $incident_meta['selected_initial_key'] = (string) $candidate['flow_key']; }
+                break;
+            }
+        } else {
+            $eligible = array_values(array_filter($followups, static function ($candidate) use ($call_decisions): bool {
+                $effect = lsttraining_sim_decode_meta($candidate['effect_json'] ?? '');
+                $parents = is_array($effect['flow_parent_keys'] ?? null) ? $effect['flow_parent_keys'] : [];
+                if (!$parents) { return true; }
+                foreach ($parents as $parent_key) {
+                    if (!empty($call_decisions[$parent_key]['emitted'])) { return true; }
+                }
+                return false;
+            }));
+            $total = array_sum(array_map(static fn($row) => max(0, (int) ($row['probability_percent'] ?? 0)), $eligible));
+            if ($total > 0) {
+                $roll = mt_rand(1, $total);
+                $cumulative = 0;
+                foreach ($eligible as $candidate) {
+                    $cumulative += max(0, (int) ($candidate['probability_percent'] ?? 0));
+                    if ($roll <= $cumulative) {
+                        $incident_meta['selected_initial_key'] = (string) $candidate['flow_key'];
+                        break;
+                    }
+                }
+            }
+        }
+        $incident_meta_dirty = true;
+    }
+    if ($followups) {
+        $followups = array_values(array_filter($followups, static fn($row) => (string) ($row['flow_key'] ?? '') === (string) ($incident_meta['selected_initial_key'] ?? '')));
+    }
+    if ($followups && $arrival_default && (string) ($followups[0]['flow_key'] ?? '') === (string) $arrival_default['flow_key']) {
+        $followups[0]['_default_arrival_report'] = true;
+    }
     if (!$followups) {
         $followups = [[
             'id' => 0,
@@ -2636,15 +2795,15 @@ function lsttraining_sim_fire_arrival_followups(PDO $pdo, int $instanz_id, array
         $key = $is_default_arrival ? 'default_arrival' : (string) $followup_id;
         if (!isset($decisions[$key])) {
             $probability = max(0, min(100, (int) ($followup['probability_percent'] ?? 100)));
-            $min = array_key_exists('min_after_sec', $followup) && $followup['min_after_sec'] !== null ? max(0, (int) $followup['min_after_sec']) : 5;
-            $max = array_key_exists('max_after_sec', $followup) && $followup['max_after_sec'] !== null ? max(0, (int) $followup['max_after_sec']) : 12;
+            $min = 0;
+            $max = 0;
             if ($max < $min) {
                 $max = $min;
             }
             $decisions[$key] = [
                 'followup_id' => $followup_id,
                 'default_arrival_report' => $is_default_arrival,
-                'selected' => $probability >= 100 || ($probability > 0 && mt_rand(1, 100) <= $probability),
+                'selected' => true,
                 'due_at' => lsttraining_sim_time_string($arrival_ts + mt_rand($min, $max)),
                 'min_after_sec' => $min,
                 'max_after_sec' => $max,
@@ -2691,7 +2850,6 @@ function lsttraining_sim_fire_arrival_followups(PDO $pdo, int $instanz_id, array
         $missing_resources = lsttraining_sim_missing_resources_for_incident($pdo, $einsatz_id, $required_resources);
         $missing_text = lsttraining_sim_missing_resources_text($missing_resources);
         $resource_request_text = $missing_text !== '' ? $missing_text : 'Keine weiteren Kräfte erforderlich.';
-        $report_text = lsttraining_sim_append_resource_request_text($report_text, $resource_request_text);
         if ($missing_text !== '') {
             $incident_meta['pending_resource_request'] = [
                 'followup_id' => $followup_id,
@@ -2702,6 +2860,8 @@ function lsttraining_sim_fire_arrival_followups(PDO $pdo, int $instanz_id, array
                 'text' => $resource_request_text,
             ];
             $incident_meta_dirty = true;
+        } else {
+            unset($incident_meta['pending_resource_request']);
         }
         $incident_meta['last_arrival_resource_request_text'] = $resource_request_text;
         $incident_meta['last_arrival_resource_request_required'] = !empty($missing_resources);
@@ -2713,7 +2873,6 @@ function lsttraining_sim_fire_arrival_followups(PDO $pdo, int $instanz_id, array
         if ($should_replace_lagemeldung) {
             $new_lagemeldung = lsttraining_sim_situation_summary_from_followup($followup, $incident, $meta);
             if ($new_lagemeldung !== '' && $new_lagemeldung !== (string) ($incident['lagemeldung'] ?? '')) {
-                $new_lagemeldung = lsttraining_sim_append_resource_request_text($new_lagemeldung, $resource_request_text);
                 $incident['lagemeldung'] = $new_lagemeldung;
                 $incident_meta['current_lagemeldung'] = $new_lagemeldung;
                 $incident_meta['current_lagemeldung_source'] = 'arrival_followup';
@@ -2785,6 +2944,104 @@ function lsttraining_sim_fire_arrival_followups(PDO $pdo, int $instanz_id, array
     if ($incident_meta_dirty || $incident_lagemeldung_dirty) {
         $update_incident = $pdo->prepare('UPDATE instanz_einsaetze SET lagemeldung = ?, meta_json = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
         $update_incident->execute([(string) ($incident['lagemeldung'] ?? ''), lsttraining_sim_encode_meta($incident_meta), $einsatz_id]);
+    }
+}
+
+/** Evaluate developments once per incident, after the first situation report is acknowledged. */
+function lsttraining_sim_fire_flow_development(PDO $pdo, int $instanz_id, array $assignment, array &$assignment_meta, int $now): void {
+    $einsatz_id = (int) ($assignment['instanz_einsatz_id'] ?? 0);
+    $status_id = (int) ($assignment_meta['status_id'] ?? 0);
+    if ($einsatz_id <= 0 || $status_id <= 0 || empty($assignment_meta['arrived_at'])) { return; }
+    $stmt = $pdo->prepare('SELECT id, source_id, source, lagemeldung, meta_json FROM instanz_einsaetze WHERE id = ? AND instanz_id = ? LIMIT 1');
+    $stmt->execute([$einsatz_id, $instanz_id]);
+    $incident = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$incident || $incident['source'] !== 'template') { return; }
+    $incident_meta = lsttraining_sim_decode_meta($incident['meta_json'] ?? '');
+    if ((int) ($incident_meta['arrival_report_status_id'] ?? 0) !== $status_id) { return; }
+    $events = $pdo->prepare('SELECT meta_json FROM instanz_einsatz_events WHERE instanz_einsatz_id = ? AND kind = ? ORDER BY id DESC LIMIT 100');
+    $events->execute([$einsatz_id, 'unit_report']);
+    foreach ($events->fetchAll(PDO::FETCH_COLUMN) ?: [] as $raw) {
+        $event_meta = lsttraining_sim_decode_meta($raw);
+        if (($event_meta['event_type'] ?? '') === 'situation_report' && !empty($event_meta['requires_ack']) && empty($event_meta['acknowledged_at'])) { return; }
+    }
+    $stmt = $pdo->prepare("SELECT * FROM einsatz_followups WHERE einsatz_id = ? AND flow_role = 'development' AND kind = 'unit_report' AND speaker_type <> 'caller' AND trigger_mode IN ('random','on_missing_resources') ORDER BY step_no, id");
+    $stmt->execute([(int) $incident['source_id']]);
+    $decisions = is_array($incident_meta['development_decisions'] ?? null) ? $incident_meta['development_decisions'] : [];
+    $selected_key = (string) ($incident_meta['selected_initial_key'] ?? '');
+    $dirty = false;
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+        $parents = json_decode((string) ($row['applicable_initial_keys'] ?? '[]'), true);
+        if (is_array($parents) && $parents && !in_array($selected_key, $parents, true)) {
+            $legacy_effect = lsttraining_sim_decode_meta($row['effect_json'] ?? '');
+            if (!array_key_exists('flow_parent_keys', $legacy_effect)) { continue; }
+        }
+        $key = (string) $row['flow_key'];
+        $effect = lsttraining_sim_decode_meta($row['effect_json'] ?? '');
+        $parent_time = null;
+        if (array_key_exists('flow_parent_keys', $effect)) {
+            $flow_parents = is_array($effect['flow_parent_keys']) ? $effect['flow_parent_keys'] : [];
+            foreach ($flow_parents as $parent_key) {
+                if ($parent_key === $selected_key || $parent_key === (string) ($incident_meta['arrival_base_key'] ?? '')) {
+                    $time = lsttraining_sim_parse_wp_time($assignment_meta['arrived_at'] ?? '');
+                } elseif (!empty($decisions[$parent_key]['emitted'])) {
+                    $time = lsttraining_sim_parse_wp_time($decisions[$parent_key]['emitted_at'] ?? '') ?: $now;
+                } else {
+                    continue;
+                }
+                $parent_time = $parent_time === null ? $time : min($parent_time, $time);
+            }
+            if ($parent_time === null) { continue; }
+        }
+        if (!isset($decisions[$key])) {
+            $min = max(0, (int) ($row['min_after_sec'] ?? 0));
+            $max = max($min, (int) ($row['max_after_sec'] ?? $min));
+            $arrival = lsttraining_sim_parse_wp_time($assignment_meta['arrived_at']);
+            $decisions[$key] = [
+                'selected' => mt_rand(1, 100) <= (int) $row['probability_percent'],
+                'due_at' => lsttraining_sim_time_string(($parent_time ?: $arrival ?: $now) + mt_rand($min, $max)),
+                'emitted' => false,
+            ];
+            $dirty = true;
+        }
+        if (empty($decisions[$key]['selected']) || !empty($decisions[$key]['emitted']) || lsttraining_sim_parse_wp_time($decisions[$key]['due_at']) > $now) { continue; }
+        if ($row['trigger_mode'] === 'on_missing_resources' && !lsttraining_sim_missing_resources_for_incident($pdo, $einsatz_id, $incident_meta['required_resources'] ?? [])) { continue; }
+        if (!empty($effect['patients']) && is_array($effect['patients'])) {
+            $incident_meta['patients'] = lsttraining_sim_merge_patient_updates($incident_meta['patients'] ?? [], $effect['patients']);
+        }
+        $additional = lsttraining_sim_normalize_required_resources($row['required_resources_json'] ?? '');
+        if ($additional) {
+            $incident_meta['required_resources'] = lsttraining_sim_merge_required_resources($incident_meta['required_resources'] ?? [], $additional);
+        }
+        $missing = lsttraining_sim_missing_resources_for_incident($pdo, $einsatz_id, $incident_meta['required_resources'] ?? []);
+        $request_text = lsttraining_sim_missing_resources_text($missing);
+        if ($request_text !== '') {
+            $incident_meta['pending_resource_request'] = ['text' => $request_text, 'missing_resources' => $missing, 'status_id' => $status_id];
+        } else {
+            unset($incident_meta['pending_resource_request']);
+        }
+        $report = lsttraining_sim_report_text_from_followup($row, $incident, $assignment_meta);
+        $summary = lsttraining_sim_situation_summary_from_followup($row, $incident, $assignment_meta);
+        if ($summary !== '') { $incident['lagemeldung'] = $summary; $incident_meta['current_lagemeldung'] = $summary; }
+        $decisions[$key]['emitted'] = true;
+        $decisions[$key]['emitted_at'] = lsttraining_sim_time_string($now);
+        $incident_meta['development_decisions'] = $decisions;
+        $pdo->prepare('UPDATE instanz_einsaetze SET lagemeldung = ?, meta_json = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')->execute([$incident['lagemeldung'], lsttraining_sim_encode_meta($incident_meta), $einsatz_id]);
+        lsttraining_sim_update_vehicle_state($pdo, $instanz_id, $status_id, ['fms_status' => '5', 'status' => 'besetzt', 'bemerkung' => 'Lageänderung wartet auf Bestätigung.']);
+        lsttraining_sim_insert_unit_event($pdo, $einsatz_id, 'Sprechwunsch', [
+            'event_type' => 'situation_report', 'radio_message_type' => 'speak_request', 'sender_type' => 'vehicle', 'recipient_type' => 'dispatch',
+            'followup_id' => (int) $row['id'], 'followup_label' => (string) $row['label'], 'report_text' => $report,
+            'visible_text_pending' => true, 'status_id' => $status_id, 'fahrzeug_id' => (int) ($assignment_meta['fahrzeug_id'] ?? 0),
+            'rufname' => (string) ($assignment_meta['rufname'] ?? 'Fahrzeug'), 'fms_status' => '5', 'requires_ack' => true,
+            'additional_resources' => $additional, 'missing_resources' => $missing,
+            'resource_request_required' => $request_text !== '', 'resource_request_text' => $request_text,
+            'radio_base_at' => lsttraining_sim_time_string($now),
+        ]);
+        lsttraining_sim_reset_runtime_speed($pdo, $instanz_id);
+        return;
+    }
+    if ($dirty) {
+        $incident_meta['development_decisions'] = $decisions;
+        $pdo->prepare('UPDATE instanz_einsaetze SET meta_json = ? WHERE id = ?')->execute([lsttraining_sim_encode_meta($incident_meta), $einsatz_id]);
     }
 }
 
@@ -3229,6 +3486,7 @@ function lsttraining_sim_advance_vehicle_movements(PDO $pdo, int $instanz_id, in
         if (!empty($meta['arrived_at'])) {
             $meta['mission_phase'] = 'at_scene';
             lsttraining_sim_fire_arrival_followups($pdo, $instanz_id, $event, $meta, $now);
+            lsttraining_sim_fire_flow_development($pdo, $instanz_id, $event, $meta, $now);
             $event_update->execute([lsttraining_sim_encode_meta($meta), (int) $event['id']]);
             continue;
         }
@@ -3310,6 +3568,7 @@ function lsttraining_sim_advance_vehicle_movements(PDO $pdo, int $instanz_id, in
 
         if (!empty($meta['arrived_at'])) {
             lsttraining_sim_fire_arrival_followups($pdo, $instanz_id, $event, $meta, $now);
+            lsttraining_sim_fire_flow_development($pdo, $instanz_id, $event, $meta, $now);
         }
 
         $meta['current_progress'] = round($progress, 4);
@@ -4114,6 +4373,7 @@ function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id,
     $sim_now = (string) ($instance['sim_now'] ?? wp_date('Y-m-d H:i:s', $sim_now_ts));
 
     if ($advance_state && !$simulation_paused) {
+        lsttraining_sim_advance_caller_followups($pdo, $instanz_id, $sim_now_ts);
         lsttraining_sim_advance_vehicle_movements($pdo, $instanz_id, $sim_now_ts);
     }
 
@@ -4934,6 +5194,7 @@ function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id,
                 && (string) ($event_incident['call_status'] ?? '') === 'accepted'
                 && (string) ($event_incident['disposition_status'] ?? '') !== 'prepared';
             $call_log[] = [
+                'event_id' => (int) $event['id'],
                 'ts' => $event['ts'],
                 'kind' => $event['kind'],
                 'text' => $event_text,
@@ -4979,10 +5240,8 @@ function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id,
             continue;
         }
         $meta = is_array($event['meta'] ?? null) ? $event['meta'] : [];
-        $has_fms_meta = isset($meta['fms_status']) || isset($meta['fahrzeug_id']) || isset($meta['vehicle_id']);
         $is_fms_event = in_array($kind, ['fms', 'fms_status', 'vehicle_status', 'fahrzeug_status', 'radio', 'funk'], true);
-
-        if (!$is_fms_event && !$has_fms_meta) {
+        if (!$is_fms_event) {
             continue;
         }
 
@@ -4998,6 +5257,7 @@ function lsttraining_sim_fetch_snapshot(PDO $pdo, int $instanz_id, int $user_id,
         }
 
         $fms_log[] = [
+            'event_id' => (int) $event['id'],
             'ts' => $event['ts'],
             'direction' => (string) ($meta['direction'] ?? 'down'),
             'text' => $text,
@@ -5523,6 +5783,16 @@ add_action('wp_ajax_lsttraining_sim_accept_neighbor_support', function () {
 
             $rufname = (string) ($offer['rufname'] ?? ('Fremdfahrzeug ' . $vehicle_id));
             $support_id = 'neighbor-' . (int) ($offer['nebenleitstelle_id'] ?? 0) . '-' . $vehicle_id . '-' . $request_event_id;
+            $normal_segments = lsttraining_sim_normalize_route_segments($route['route_segments'] ?? []);
+            if (!$normal_segments) {
+                $normal_segments = [lsttraining_sim_route_segment(
+                    lsttraining_sim_transport_is_air_unit(['fahrzeugtyp' => (string) ($offer['fahrzeugtyp'] ?? '')]) ? 'air' : 'road',
+                    (array) ($route['coordinates'] ?? []),
+                    (int) ($route['duration_sec'] ?? 0),
+                    (int) ($route['distance_m'] ?? 0)
+                )];
+            }
+            $signal_segments = lsttraining_sim_route_segments_for_signal($normal_segments, true);
             $alarm_meta = [
                 'event_type' => 'support_vehicle_alarm',
                 'support_type' => 'neighbor',
@@ -5553,11 +5823,12 @@ add_action('wp_ajax_lsttraining_sim_accept_neighbor_support', function () {
                 'sondersignal_allowed' => true,
                 'sondersignal' => 1,
                 'route_status' => 'ready',
-                'route_coordinates' => $route['coordinates'],
-                'route_segments' => is_array($route['route_segments'] ?? null) ? $route['route_segments'] : [],
+                'route_coordinates' => lsttraining_sim_flatten_route_segments($signal_segments),
+                'route_segments' => $signal_segments,
+                'route_segments_normal' => $normal_segments,
                 'route_distance_m' => (int) ($route['distance_m'] ?? 0),
-                'route_duration_sec' => (int) ($route['duration_sec'] ?? 0),
-                'route_duration_normal_sec' => (int) ($route['duration_sec'] ?? 0),
+                'route_duration_sec' => lsttraining_sim_route_segments_total_duration($signal_segments),
+                'route_duration_normal_sec' => lsttraining_sim_route_segments_total_duration($normal_segments),
                 'route_source' => (string) ($route['route_source'] ?? ''),
                 'mission_phase' => 'to_scene',
                 'current_progress' => 0,
@@ -5793,6 +6064,11 @@ function lsttraining_sim_sync_signal_for_assigned_units(PDO $pdo, int $instanz_i
             $normal_duration = max(0, (int) ($meta['route_duration_sec'] ?? 0));
         }
 
+        $game_now_ts = lsttraining_sim_parse_wp_time($game_now);
+        $movement_started_ts = lsttraining_sim_parse_wp_time((string) ($meta['movement_started_at'] ?? ''));
+        $old_motion = $movement_started_ts > 0 && $game_now_ts >= $movement_started_ts
+            ? lsttraining_sim_route_movement_state($meta, $game_now_ts - $movement_started_ts)
+            : null;
         $active_segments = $target_signal_allowed
             ? lsttraining_sim_route_segments_for_signal($normal_segments, true)
             : $normal_segments;
@@ -5808,6 +6084,25 @@ function lsttraining_sim_sync_signal_for_assigned_units(PDO $pdo, int $instanz_i
         }
         if ($normal_duration > 0) {
             $meta['route_duration_normal_sec'] = $normal_duration;
+        }
+        if ($old_motion && $active_segments) {
+            $segment_index = max(0, min(count($active_segments) - 1, (int) ($old_motion['segment_index'] ?? 0)));
+            $elapsed_new = 0.0;
+            for ($i = 0; $i < $segment_index; $i++) {
+                $elapsed_new += max(1, (int) ($active_segments[$i]['duration_sec'] ?? 1));
+            }
+            $elapsed_new += max(1, (int) ($active_segments[$segment_index]['duration_sec'] ?? 1))
+                * max(0.0, min(1.0, (float) ($old_motion['segment_progress'] ?? 0)));
+            $meta['movement_started_at'] = lsttraining_sim_time_string($game_now_ts - (int) round($elapsed_new));
+            $meta['current_progress'] = min(1.0, $elapsed_new / max(1, (int) $meta['route_duration_sec']));
+            $meta['current_segment_index'] = $segment_index;
+            $meta['current_segment_progress'] = (float) ($old_motion['segment_progress'] ?? 0);
+        } elseif ($old_motion && (int) ($meta['route_duration_sec'] ?? 0) > 0) {
+            $progress = max(0.0, min(1.0, (float) ($old_motion['progress'] ?? 0)));
+            $elapsed_new = $progress * (int) $meta['route_duration_sec'];
+            $meta['movement_started_at'] = lsttraining_sim_time_string($game_now_ts - (int) round($elapsed_new));
+            $meta['current_progress'] = $progress;
+            $meta['current_segment_progress'] = $progress;
         }
 
         $meta['sondersignal_allowed'] = $target_signal_allowed;
@@ -7023,6 +7318,19 @@ add_action('wp_ajax_lsttraining_sim_open_unit_report', function () {
                     'user_id' => (int) get_current_user_id(),
                 ]),
             ]);
+            if (!empty($meta['resource_request_required']) && trim((string) ($meta['resource_request_text'] ?? '')) !== '') {
+                lsttraining_sim_insert_unit_event($pdo, $einsatz_id,
+                    'Leitstelle von ' . $rufname . ': ' . (string) $meta['resource_request_text'] . ', kommen.', [
+                        'event_type' => 'resource_request',
+                        'radio_message_type' => 'resource_request',
+                        'sender_type' => 'vehicle',
+                        'recipient_type' => 'dispatch',
+                        'source_event_id' => $event_id,
+                        'status_id' => (int) ($meta['status_id'] ?? 0),
+                        'rufname' => $rufname,
+                        'missing_resources' => $meta['missing_resources'] ?? [],
+                    ]);
+            }
             $pdo->commit();
         }
 

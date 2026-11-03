@@ -1859,7 +1859,7 @@ function lsttraining_osm_write_tile_file(string $layerKey, int $z, int $x, int $
 {
     $baseDir = trailingslashit(dirname(dirname(__DIR__)));
 
-    $relPath = 'data/osm_tiles/z' . $z . '/' . $layerKey . '/' . $x . '/' . $y . '.geojsonl.gz';
+    $relPath = 'landuse/landuse_tiles_out/osm/z' . $z . '/' . $layerKey . '/' . $x . '/' . $y . '.geojsonl.gz';
     $absPath = $baseDir . $relPath;
     $absDir  = dirname($absPath);
 
@@ -1921,6 +1921,7 @@ function lsttraining_osm_update_manifest_after_check(PDO $pdo, array $tileRow, a
                         check_status = 'unchanged',
                         check_message = NULL,
                         etag_or_signature = :sig,
+                        file_relpath = :file_relpath,
                         is_dirty = 0,
                         updated_at = CURRENT_TIMESTAMP
                     WHERE id = :id";
@@ -1928,6 +1929,7 @@ function lsttraining_osm_update_manifest_after_check(PDO $pdo, array $tileRow, a
             $stmt = $pdoConn->prepare($sql);
             $stmt->execute([
                 ':sig' => $result['osm_base'] ?? null,
+                ':file_relpath' => $result['file_relpath'] ?? null,
                 ':id'  => (int)$tileRow['id'],
             ]);
             return;

@@ -42,7 +42,7 @@ function lsttraining_workspace_enqueue_assets(): void {
         'lsttraining-simulation-workspace',
         LSTTRAINING_URL . 'js/simulation-workspace.js',
         ['jquery', 'lst-openlayers'],
-        '1.0.23',
+        '1.0.24',
         true
     );
 

@@ -210,103 +210,7 @@ $region_filter_disabled = (bool) ($filter_leitstelle || $filter_nebenleitstelle)
   <!-- Karte -->
   <div id="wachen-map" style="height: 400px; margin-bottom: 20px;"></div>
 
-  <!-- Tabelle -->
-<?php
-// 0) Exklusivität noch einmal serverseitig absichern (BL > LS > NLS)
-if ($selectedBundesland !== '') {
-    $filter_leitstelle      = 0;
-    $filter_nebenleitstelle = 0;
-} elseif ($filter_leitstelle) {
-    $filter_nebenleitstelle = 0;
-    $selectedBundesland     = '';
-} elseif ($filter_nebenleitstelle) {
-    $filter_leitstelle  = 0;
-    $selectedBundesland = '';
-}
-
-// 1) Flag + Default
-$anyFilterSet = ($selectedLand !== '' || $selectedBundesland !== '' || $filter_leitstelle || $filter_nebenleitstelle);
-$wachen = [];
-
-// 2) Wenn kein Filter: Hinweis ausgeben, aber NICHT returnen
-if (!$anyFilterSet) {
-    echo '<p><em>Bitte zunächst ein Land, eine Leitstelle oder eine Nebenleitstelle wählen.</em></p>';
-} else {
-    // 3) SQL aufbauen wie gehabt
-$sql = '
-  SELECT DISTINCT
-    w.id,
-    w.name,
-    w.typ,
-    w.latitude,
-    w.longitude,
-    COALESCE(v.cnt, 0) AS fahrzeuge_count
-  FROM wachen AS w
-';
-$joins = '
-  LEFT JOIN (
-    SELECT wache_id, COUNT(*) AS cnt
-    FROM fahrzeuge
-    GROUP BY wache_id
-  ) v ON v.wache_id = w.id
-';
-$where = [];
-    $params = [];
-
-    // 3a) Bundesland
-    if ($selectedBundesland !== '') {
-        $where[]  = 'w.land = ?';
-        $params[] = $selectedLand;
-
-        if ($selectedBundesland === '__none__') {
-            $where[] = '(w.bundesland IS NULL OR w.bundesland = \'\')';
-        } else {
-            $where[]  = 'w.bundesland = ?';
-            $params[] = $selectedBundesland;
-        }
-    } elseif ($filter_leitstelle || $filter_nebenleitstelle) {
-        // 3b) LS/NLS über Pivot-Tabellen
-        if ($filter_leitstelle) {
-            $joins   .= ' INNER JOIN wache_leitstellen AS wl ON w.id = wl.wache_id ';
-            $where[]  = 'wl.leitstelle_id = ?';
-            $params[] = (int)$filter_leitstelle;
-        }
-        if ($filter_nebenleitstelle) {
-            $joins   .= ' INNER JOIN wache_nebenleitstellen AS wn ON w.id = wn.wache_id ';
-            $where[]  = 'wn.nebenleitstelle_id = ?';
-            $params[] = (int)$filter_nebenleitstelle;
-        }
-    } elseif ($selectedLand !== '') {
-        // Ein Land ist bereits ein vollständiger Filter. Das Bundesland grenzt
-        // die Ergebnisliste nur optional weiter ein.
-        $where[]  = 'w.land = ?';
-        $params[] = $selectedLand;
-    }
-
-    if ( ! current_user_can( 'manage_options' ) && ! $can_global_wachen ) {
-        $where[] = "(EXISTS (SELECT 1 FROM wache_leitstellen awl WHERE awl.wache_id = w.id AND awl.leitstelle_id IN ($allowed_sql)) OR EXISTS (SELECT 1 FROM wache_nebenleitstellen awn JOIN leitstelle_nebenleitstellen aln ON aln.nebenleitstelle_id = awn.nebenleitstelle_id WHERE awn.wache_id = w.id AND aln.leitstelle_id IN ($allowed_sql)))";
-    }
-
-    // 3c) SQL zusammensetzen
-    $sql .= $joins;
-    if ($where) {
-        $sql .= ' WHERE ' . implode(' AND ', $where);
-    }
-    $sql .= ' ORDER BY w.name';
-
-    // 4) Abfrage
-    try {
-        $stmt   = $pdo->prepare($sql);
-        $stmt->execute($params);
-        $wachen = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {
-        echo '<div class="notice notice-error"><p>' .
-             esc_html__('Fehler beim Laden der Wachen:', 'lsttraining') . ' ' .
-             esc_html($e->getMessage()) . '</p></div>';
-        $wachen = [];
-    }
-}
-?>
+  <!-- Die gefilterte Liste wird einmalig per AJAX geladen. -->
 <div class="filter-box" style="margin:10px 0; display:flex; gap:10px; align-items:center;">
   <label for="wachen-search" style="font-weight:600;">Suche (ID oder Name):</label>
   <input type="text"
@@ -315,7 +219,7 @@ $where = [];
          style="width:300px; max-width:100%;"
          autocomplete="off">
 </div>
-<!-- 5) Tabelle steht IMMER im DOM, Body wird je nach $wachen gefüllt -->
+<!-- Tabelle wird nach dem Laden seitenweise gefüllt. -->
 <table class="widefat fixed" id="wachen-table">
 	 <colgroup>
     <col style="width:60px">      <!-- ID -->
@@ -337,42 +241,10 @@ $where = [];
     </tr>
   </thead>
   <tbody id="wachen-tbody">
-    <?php if (empty($wachen)) : ?>
-      <tr><td colspan="6"><em>Keine Wachen gefunden.</em></td></tr>
-    <?php else : ?>
-      <?php foreach ($wachen as $w) : ?>
-        <tr>
-          <td><?php echo esc_html($w['id']); ?></td>
-          <td><?php echo esc_html($w['name']); ?></td>
-          <td><?php echo esc_html($w['typ']); ?></td>
-          <td><?php echo esc_html($w['latitude'] . ', ' . $w['longitude']); ?></td>
-		<td class="col-fahrzeuge" style="text-align:center;">
-  <?php
-    $cnt = isset($w['fahrzeuge_count']) ? (int)$w['fahrzeuge_count'] : 0;
-
-    // Wenn du die Zahl klickbar zur Fahrzeugliste machen willst:
-    $url = add_query_arg(
-      ['page' => 'lsttraining_fahrzeuge', 'wache_id' => $w['id']],
-      admin_url('admin.php')
-    );
-  ?>
-  <a href="<?php echo esc_url($url); ?>" title="Fahrzeuge dieser Wache anzeigen">
-    <?php echo number_format_i18n($cnt); ?>
-  </a>
-</td>
-          <td>
-            <button class="button edit-wache" data-id="<?php echo esc_attr($w['id']); ?>">
-              Bearbeiten
-            </button>
-            <button type="button" class="button button-link-delete delete-wache" data-id="<?php echo esc_attr($w['id']); ?>">
-              Löschen
-            </button>
-          </td>
-        </tr>
-      <?php endforeach; ?>
-    <?php endif; ?>
+    <tr><td colspan="6"><em>Bitte Filter wählen.</em></td></tr>
   </tbody>
 </table>
+<div class="tablenav"><span id="wachen-page-info" aria-live="polite"></span> <button type="button" class="button" id="wachen-page-prev" disabled>Zurück</button> <button type="button" class="button" id="wachen-page-next" disabled>Weiter</button></div>
 
 <!-- 6) Modal + Template: immer ausgeben, außerhalb von Tabellen -->
 <div id="wache-edit-modal" class="wache-edit-modal hidden">

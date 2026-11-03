@@ -34,6 +34,21 @@ CREATE TABLE IF NOT EXISTS `leitstellen` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+CREATE TABLE IF NOT EXISTS `einsatzstichwoerter` (
+  `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `leitstelle_id` INT NOT NULL,
+  `code` VARCHAR(100) NOT NULL,
+  `bezeichnung` VARCHAR(255) NOT NULL,
+  `einsatzart` ENUM('RD','FW') NOT NULL,
+  `fahrzeuge_json` TEXT NULL,
+  `beschreibung` TEXT NULL,
+  `hinweis` TEXT NULL,
+  `aktiv` TINYINT(1) NOT NULL DEFAULT 1,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY `uq_ls_code` (`leitstelle_id`, `code`),
+  CONSTRAINT `fk_stichwort_leitstelle` FOREIGN KEY (`leitstelle_id`) REFERENCES `leitstellen`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `leitstellen_pois` (
   `id`            INT NOT NULL AUTO_INCREMENT,
   `leitstelle_id` INT NOT NULL,
@@ -373,6 +388,8 @@ CREATE TABLE IF NOT EXISTS `lst_activity_log` (
 
 CREATE TABLE IF NOT EXISTS `einsaetze` (
   `id` INT NOT NULL AUTO_INCREMENT,
+  `leitstelle_id` INT NULL DEFAULT NULL,
+  `stichwort_id` INT NULL DEFAULT NULL,
 
   `title` VARCHAR(255) NULL,
   `description` TEXT NULL,
@@ -388,6 +405,7 @@ CREATE TABLE IF NOT EXISTS `einsaetze` (
   -- Einschränkungen
   `landscape_tags_json` TEXT NULL,
   `poi_type` VARCHAR(50) NULL,
+  `poi_types_json` TEXT NULL,
 
   -- Fixpunkt (nur wenn scope_type='fixed_point')
   `fixed_latitude` DOUBLE NULL,
@@ -522,7 +540,10 @@ CREATE TABLE IF NOT EXISTS `einsatz_followups` (
 
   `probability_percent` TINYINT UNSIGNED NOT NULL DEFAULT 100,
   `speaker_type` ENUM('caller','fire_unit','ems_unit','police','dispatch','system') NOT NULL DEFAULT 'system',
-  `trigger_mode` ENUM('random','on_unit_arrival','on_missing_resources','on_dispatcher_question','manual') NOT NULL DEFAULT 'random',
+  `trigger_mode` ENUM('random','on_unit_arrival','on_missing_resources','on_dispatcher_question','on_transport_started','on_hospital_arrival','on_vehicle_available','manual') NOT NULL DEFAULT 'random',
+  `flow_key` VARCHAR(64) NULL,
+  `flow_role` VARCHAR(20) NULL,
+  `applicable_initial_keys` TEXT NULL,
   `required_resources_json` TEXT NULL,
   `effect_json` TEXT NULL,
 

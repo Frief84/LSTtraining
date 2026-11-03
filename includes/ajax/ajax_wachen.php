@@ -106,18 +106,12 @@ function lsttraining_get_wachen() {
             w.longitude,
             w.land,
             w.bundesland,
-            COALESCE(v.cnt, 0) AS fahrzeuge_count
+            (SELECT COUNT(*) FROM fahrzeuge AS v WHERE v.wache_id = w.id) AS fahrzeuge_count
         FROM wachen AS w
     ";
 
-    // Aggregat über fahrzeuge – immer dabei
-    $joins = "
-        LEFT JOIN (
-            SELECT wache_id, COUNT(*) AS cnt
-            FROM fahrzeuge
-            GROUP BY wache_id
-        ) v ON v.wache_id = w.id
-    ";
+    // Der Index fahrzeuge.wache_id erlaubt eine Zählung nur für gefilterte Wachen.
+    $joins = '';
 
     $where  = [];
     $params = [];

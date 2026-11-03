@@ -319,6 +319,19 @@ add_action('admin_enqueue_scripts', function ($hook) {
     if ($page === 'lsttraining_leitstellen_wachen' || strpos((string)$hook, 'leitstellen_wachen') !== false) {
 
         wp_enqueue_style(
+            'lst-wachen-fontawesome-core',
+            $root_url . 'vendor/fontawesome/css/fontawesome.min.css',
+            [],
+            $asset_version('vendor/fontawesome/css/fontawesome.min.css')
+        );
+        wp_enqueue_style(
+            'lst-wachen-fontawesome-solid',
+            $root_url . 'vendor/fontawesome/css/solid.min.css',
+            ['lst-wachen-fontawesome-core'],
+            $asset_version('vendor/fontawesome/css/solid.min.css')
+        );
+
+        wp_enqueue_style(
             'select2',
             'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css',
             [],
@@ -485,6 +498,11 @@ if (!function_exists('lsttraining_render_nebenstellen')) {
     }
 }
 
+if (!function_exists('lsttraining_render_stichwoerter')) {
+    function lsttraining_render_stichwoerter() {
+        require_once plugin_dir_path(__FILE__) . 'stichwoerter-editor.php';
+    }
+}
 if (!function_exists('lsttraining_render_einsaetze')) {
         function lsttraining_render_einsaetze() {
             require_once plugin_dir_path(__FILE__) . 'einsaetze.php';

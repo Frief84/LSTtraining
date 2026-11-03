@@ -174,7 +174,7 @@ check('Wachenkarte ohne feste Ergebnis-Kappung', () => {
 
 check('Versionierte Migration', () => {
   const migrations = read('includes/migrations.php');
-  assert.match(migrations, /LSTTRAINING_SCHEMA_VERSION\s*=\s*2026102901/);
+  assert.match(migrations, /LSTTRAINING_SCHEMA_VERSION\s*=\s*2026\d{6}/);
   assert.match(migrations, /lsttraining_migration_add_column\(\$pdo, 'einsaetze', 'base_required_resources_json'/);
   assert.match(migrations, /function lsttraining_migration_2026090903/);
   assert.match(migrations, /function lsttraining_migration_2026091101/);

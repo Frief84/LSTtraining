@@ -31,6 +31,12 @@
     let tooltipOverlay = null;
     let markerLayer = null;
     let currentSearchTerm = '';
+    let allWachen = [];
+    let tablePage = 0;
+    let tableSort = 'name';
+    let tableSortDir = 1;
+    const tablePageSize = 100;
+    let wachenRequest = null;
 
     // Fahrzeuge Cache (pro Wache)
     const fahrzeugeCache = Object.create(null); // { [wacheId]: {count, fahrzeuge} }
@@ -243,6 +249,7 @@
 
       const vectorSource = new ol.source.Vector({ features: feats });
 
+      const markerStyles = Object.create(null);
       const styleFn = function (feature) {
         const term = (currentSearchTerm || '').toLowerCase().trim();
         if (term) {
@@ -266,13 +273,16 @@
         else if (isFFW) fillColor = '#ff9999';
         else if (isSEG) fillColor = '#00800f';
 
-        return new ol.style.Style({
-          image: new ol.style.Circle({
-            radius: 7,
-            fill: new ol.style.Fill({ color: fillColor }),
-            stroke: new ol.style.Stroke({ color: '#000', width: 1 })
-          })
-        });
+        if (!markerStyles[fillColor]) {
+          markerStyles[fillColor] = new ol.style.Style({
+            image: new ol.style.Circle({
+              radius: 7,
+              fill: new ol.style.Fill({ color: fillColor }),
+              stroke: new ol.style.Stroke({ color: '#000', width: 1 })
+            })
+          });
+        }
+        return markerStyles[fillColor];
       };
 
       markerLayer = new ol.layer.Vector({ source: vectorSource, style: styleFn });
@@ -288,77 +298,34 @@
 
     function initWachenTableEnhancements() {
       const table = document.getElementById('wachen-table');
-      const tbody = document.getElementById('wachen-tbody') || (table && table.tBodies[0]);
       const search = document.getElementById('wachen-search');
-      if (!tbody) return;
-
-      function cellText(tr, idx) {
-        const td = tr.cells[idx];
-        return td ? (td.textContent || '').trim() : '';
-      }
-
-      function sortRows(colIdx, type, dir) {
-        const rows = Array.prototype.slice.call(tbody.rows);
-        const mul = (dir === 'desc') ? -1 : 1;
-
-        rows.sort(function (a, b) {
-          const av = cellText(a, colIdx);
-          const bv = cellText(b, colIdx);
-          if (type === 'num') {
-            const an = parseFloat(av.replace(',', '.')) || 0;
-            const bn = parseFloat(bv.replace(',', '.')) || 0;
-            return (an < bn ? -1 : an > bn ? 1 : 0) * mul;
-          }
-          return av.toLowerCase().localeCompare(bv.toLowerCase()) * mul;
-        });
-
-        const frag = document.createDocumentFragment();
-        rows.forEach(tr => frag.appendChild(tr));
-        tbody.appendChild(frag);
-      }
-
       if (table && !table.__sortBound) {
-        const ths = table.querySelectorAll('thead th[data-sort]');
-        ths.forEach(th => {
+        table.querySelectorAll('thead th[data-sort]').forEach(th => {
           th.addEventListener('click', function () {
             const key = th.getAttribute('data-sort');
-            const mapIdx = { id: 0, name: 1, typ: 2, fahrzeuge: 4 };
-            const idx = mapIdx[key];
-            if (idx == null) return;
-
-            const current = th.getAttribute('data-dir') || 'asc';
-            const next = (current === 'asc') ? 'desc' : 'asc';
-
-            ths.forEach(other => other.removeAttribute('data-dir'));
-            th.setAttribute('data-dir', next);
-
-            const type = (key === 'id' || key === 'fahrzeuge') ? 'num' : 'text';
-            sortRows(idx, type, next);
+            tableSortDir = tableSort === key ? -tableSortDir : 1;
+            tableSort = key;
+            tablePage = 0;
+            renderTablePage();
           });
         });
         table.__sortBound = true;
       }
-
       if (search && !search.__filterBound) {
-        function applyFilter(q) {
-          const qLower = (q || '').toLowerCase();
-
-          const rows = tbody.rows;
-          for (let i = 0; i < rows.length; i++) {
-            const r = rows[i];
-            const idTxt = cellText(r, 0).toLowerCase();
-            const nameTxt = cellText(r, 1).toLowerCase();
-            const match = (qLower === '') || idTxt.includes(qLower) || nameTxt.includes(qLower);
-            r.style.display = match ? '' : 'none';
-          }
-
-          currentSearchTerm = q || '';
+        search.addEventListener('input', function () {
+          currentSearchTerm = this.value.toLowerCase().trim();
+          tablePage = 0;
+          renderTablePage();
           if (markerLayer) markerLayer.changed();
-        }
-
-        applyFilter(search.value);
-        search.addEventListener('input', function () { applyFilter(this.value); });
+        });
         search.__filterBound = true;
+      }
+      const prev = document.getElementById('wachen-page-prev');
+      const next = document.getElementById('wachen-page-next');
+      if (prev && !prev.__pageBound) {
+        prev.addEventListener('click', () => { tablePage--; renderTablePage(); });
+        next.addEventListener('click', () => { tablePage++; renderTablePage(); });
+        prev.__pageBound = true;
       }
     }
 // Öffnet die Fahrzeuge-Seite gefiltert auf die aktuelle Wache
@@ -387,19 +354,42 @@ $('body').on('click', '#wache-fahrzeuge-toggle', function (e) {
     window.location.href = url.toString();
 });
     function renderTable(wachen) {
+      allWachen = Array.isArray(wachen) ? wachen : [];
+      tablePage = 0;
+      initWachenTableEnhancements();
+      renderTablePage();
+    }
+
+    function renderTablePage() {
       const tbody = document.getElementById('wachen-tbody') || document.querySelector('#wachen-table tbody');
       if (!tbody) return;
 
-      if (!wachen || wachen.length === 0) {
+      const filtered = currentSearchTerm ? allWachen.filter(w =>
+        String(w.id || '').includes(currentSearchTerm) ||
+        String(w.name || '').toLowerCase().includes(currentSearchTerm)
+      ) : allWachen.slice();
+      filtered.sort((a, b) => {
+        const av = tableSort === 'fahrzeuge' ? Number(a.fahrzeuge_count || 0) : a[tableSort];
+        const bv = tableSort === 'fahrzeuge' ? Number(b.fahrzeuge_count || 0) : b[tableSort];
+        if (tableSort === 'id' || tableSort === 'fahrzeuge') return (Number(av) - Number(bv)) * tableSortDir;
+        return String(av || '').localeCompare(String(bv || ''), 'de') * tableSortDir;
+      });
+      const pages = Math.max(1, Math.ceil(filtered.length / tablePageSize));
+      tablePage = Math.max(0, Math.min(tablePage, pages - 1));
+      const pageInfo = document.getElementById('wachen-page-info');
+      const prev = document.getElementById('wachen-page-prev');
+      const next = document.getElementById('wachen-page-next');
+      if (pageInfo) pageInfo.textContent = filtered.length + ' Wachen · Seite ' + (tablePage + 1) + ' von ' + pages;
+      if (prev) prev.disabled = tablePage === 0;
+      if (next) next.disabled = tablePage >= pages - 1;
+      if (filtered.length === 0) {
         tbody.innerHTML = '<tr><td colspan="99"><em>Keine Wachen gefunden.</em></td></tr>';
         return;
       }
 
-      initWachenTableEnhancements();
-
       const baseAdmin = new URL(window.location.origin + '/wp-admin/admin.php');
 
-      tbody.innerHTML = wachen.map(w => {
+      tbody.innerHTML = filtered.slice(tablePage * tablePageSize, (tablePage + 1) * tablePageSize).map(w => {
         const id = w.id ?? '';
         const name = w.name ?? '';
         const typ = w.typ ?? '';
@@ -420,7 +410,7 @@ $('body').on('click', '#wache-fahrzeuge-toggle', function (e) {
             <td class="col-fahrzeuge" style="text-align:center;">
               <a href="${fahrzeugUrl.toString()}" title="Fahrzeuge dieser Wache anzeigen">${fcnt}</a>
             </td>
-            <td><button class="button edit-wache" data-id="${id}">Bearbeiten</button></td>
+            <td><button type="button" class="button edit-wache" data-id="${id}" title="${escapeHtml('Wache bearbeiten: ' + name)}" aria-label="${escapeHtml('Wache bearbeiten: ' + name)}"><i class="fa-solid fa-pen" aria-hidden="true"></i></button> <button type="button" class="button button-link-delete delete-wache" data-id="${id}" title="${escapeHtml('Wache löschen: ' + name)}" aria-label="${escapeHtml('Wache löschen: ' + name)}"><i class="fa-solid fa-trash" aria-hidden="true"></i></button></td>
           </tr>
         `;
       }).join('');
@@ -442,6 +432,10 @@ $('body').on('click', '#wache-fahrzeuge-toggle', function (e) {
     }
 
     function loadWachen(ls, nls, bl) {
+      if (wachenRequest) wachenRequest.abort();
+      const request = new AbortController();
+      wachenRequest = request;
+      let loadFailed = false;
       const hasFilter =
         (parseInt(ls, 10) || 0) ||
         (parseInt(nls, 10) || 0) ||
@@ -473,26 +467,48 @@ $('body').on('click', '#wache-fahrzeuge-toggle', function (e) {
         params.set('land', String($('#land').val() || ''));
       }
 
+      const loading = document.getElementById('wachen-loading');
+      if (loading) {
+        loading.classList.remove('notice-error');
+        loading.classList.add('notice-info');
+        loading.querySelector('span:last-child').textContent = 'Wachen werden geladen …';
+      }
       setWachenLoading(true);
-      return fetch(AJAX_URL + '?' + params.toString(), { credentials: 'same-origin' })
+      return fetch(AJAX_URL + '?' + params.toString(), { credentials: 'same-origin', signal: request.signal })
         .then(res => res.json())
         .then(json => {
           if (!json || json.success !== true) {
             const msg = (json && json.data && (json.data.msg || json.data)) || 'Unbekannter Fehler';
             throw new Error(msg);
           }
+          if (wachenRequest !== request) return json.data;
           const data = json.data || { wachen: [] };
           renderMarkers(data.wachen);
           renderTable(data.wachen);
           return data;
         })
         .catch(err => {
+          if (wachenRequest !== request || err.name === 'AbortError') return;
           console.error('Fehler beim Laden der Wachen:', err);
           renderMarkers([]);
           renderTable([]);
+          loadFailed = true;
+          const loading = document.getElementById('wachen-loading');
+          if (loading) loading.querySelector('span:last-child').textContent = 'Wachen konnten nicht geladen werden. Bitte Filter erneut wählen.';
         })
         .finally(() => {
-          setWachenLoading(false);
+          if (wachenRequest === request) {
+            wachenRequest = null;
+            setWachenLoading(false);
+            if (loadFailed) {
+              const loading = document.getElementById('wachen-loading');
+              if (loading) {
+                loading.classList.remove('notice-info');
+                loading.classList.add('notice-error');
+                loading.hidden = false;
+              }
+            }
+          }
         });
     }
 
@@ -849,10 +865,36 @@ $('body').on('click', '#wache-fahrzeuge-toggle', function (e) {
       openNewWacheModal();
     });
 
-    $(document).on('click', '.delete-wache, .button-delete-wache', function (e) {
+    function confirmWacheDelete(name) {
+      return new Promise(resolve => {
+        const dialog = document.createElement('dialog');
+        dialog.setAttribute('aria-label', 'Wache löschen');
+        dialog.style.cssText = 'padding:24px;max-width:440px;border:1px solid #8c8f94;border-radius:4px;box-shadow:0 12px 32px rgba(0,0,0,.25)';
+        dialog.innerHTML = `<form method="dialog">
+          <p>Möchten Sie die Wache <strong>${escapeHtml(name)}</strong> wirklich löschen?</p>
+          <p style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:0">
+            <button type="submit" class="button" value="no">Nein</button>
+            <button type="submit" class="button button-primary" value="yes">Ja</button>
+          </p>
+        </form>`;
+        dialog.addEventListener('close', () => {
+          resolve(dialog.returnValue === 'yes');
+          dialog.remove();
+        }, { once: true });
+        document.body.appendChild(dialog);
+        dialog.showModal();
+      });
+    }
+
+    $(document).on('click', '.delete-wache, .button-delete-wache', async function (e) {
       e.preventDefault();
       const id = Number($(this).data('id') || $('#wache-edit-form input[name="id"]').val() || 0);
-      if (!id || !window.confirm('Wache wirklich löschen?')) return;
+      if (!id) return;
+      const row = this.closest('tr');
+      const rowName = row && row.cells[1] ? row.cells[1].textContent.trim() : '';
+      const modalName = String($('#w-name').val() || '').trim();
+      const name = rowName || modalName || ('ID ' + id);
+      if (!(await confirmWacheDelete(name))) return;
       $.post((window.lstWachenAjax && window.lstWachenAjax.ajax_url) || AJAX_URL, {
         action: 'lsttraining_delete_wache',
         wache_id: id,
