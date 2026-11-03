@@ -129,6 +129,11 @@ add_action('admin_enqueue_scripts', function ($hook) {
         return;
     }
 
+    if ($page === 'lsttraining_stichwoerter' || strpos((string) $hook, 'lsttraining_stichwoerter') !== false) {
+        wp_enqueue_style('lst-stichwort-fontawesome-core', $root_url . 'vendor/fontawesome/css/fontawesome.min.css', [], $asset_version('vendor/fontawesome/css/fontawesome.min.css'));
+        wp_enqueue_style('lst-stichwort-fontawesome-solid', $root_url . 'vendor/fontawesome/css/solid.min.css', ['lst-stichwort-fontawesome-core'], $asset_version('vendor/fontawesome/css/solid.min.css'));
+    }
+
     // Common (alle LSTtraining-Seiten)
     wp_enqueue_style('dashicons');
 

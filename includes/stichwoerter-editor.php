@@ -18,14 +18,14 @@ $classes = function_exists('lsttraining_sim_resource_class_labels') ? lsttrainin
     </select>
     <button type="button" class="button button-primary" id="lst-stichwort-new">Stichwort hinzufügen</button>
     <p id="lst-stichwort-message" role="status"></p>
-    <table class="widefat striped"><thead><tr><th>Code</th><th>Bezeichnung</th><th>Bereich</th><th>Fahrzeuge</th><th>Status</th><th>Aktionen</th></tr></thead><tbody id="lst-stichwort-rows"><tr><td colspan="6">Wird geladen ...</td></tr></tbody></table>
-    <div id="lst-stichwort-form-wrap" hidden>
-        <h2 id="lst-stichwort-form-title">Stichwort</h2>
+    <table class="widefat striped"><thead><tr><th>Code</th><th>Bezeichnung</th><th>Beschreibung</th><th>Bereich</th><th>Fahrzeuge</th><th>Status</th><th>Aktionen</th></tr></thead><tbody id="lst-stichwort-rows"><tr><td colspan="7">Wird geladen ...</td></tr></tbody></table>
+    <div id="lst-stichwort-form-wrap" class="lst-stichwort-modal" hidden aria-hidden="true"><div class="lst-stichwort-modal__backdrop" data-stichwort-close></div><section class="lst-stichwort-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="lst-stichwort-form-title">
+        <header class="lst-stichwort-modal__header"><h2 id="lst-stichwort-form-title">Stichwort</h2><button type="button" class="button lst-stichwort-modal__close" data-stichwort-close aria-label="Schließen"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></header>
         <form id="lst-stichwort-form">
             <input type="hidden" name="id" value="">
             <p><label>Code<br><input class="regular-text" name="code" required maxlength="100"></label></p>
             <p><label>Bezeichnung<br><input class="regular-text" name="bezeichnung" required maxlength="255"></label></p>
-            <p><label>Beschreibung<br><textarea class="large-text" name="beschreibung" rows="3"></textarea></label></p>
+            <p><label>Beschreibung<br><textarea class="large-text" name="beschreibung" rows="3" required></textarea></label></p>
             <p><label>Bereich<br><select name="einsatzart"><option value="RD">Rettungsdienst</option><option value="FW">Feuerwehr / THL</option></select></label></p>
             <p><label>Hinweis<br><textarea class="large-text" name="hinweis" rows="3"></textarea></label></p>
             <p><label><input type="checkbox" name="aktiv" checked> Aktiv</label></p>
@@ -33,8 +33,11 @@ $classes = function_exists('lsttraining_sim_resource_class_labels') ? lsttrainin
             <p><button type="button" class="button" id="lst-stichwort-add-resource">Fahrzeugklasse hinzufügen</button></p>
             <p><button class="button button-primary" type="submit">Speichern</button> <button class="button" type="button" id="lst-stichwort-cancel">Abbrechen</button></p>
         </form>
-    </div>
+    </section></div>
 </div>
+<style>
+.lst-stichwort-modal[hidden]{display:none}.lst-stichwort-modal{position:fixed;inset:0;z-index:100100;display:grid;place-items:center;padding:24px}.lst-stichwort-modal__backdrop{position:absolute;inset:0;background:rgba(15,23,42,.62)}.lst-stichwort-modal__dialog{position:relative;z-index:1;background:#fff;width:min(760px,96vw);max-height:90vh;overflow:auto;padding:24px 28px;border-radius:8px;box-shadow:0 20px 70px rgba(0,0,0,.3)}.lst-stichwort-modal__header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}.lst-stichwort-modal__header h2{margin:0}.lst-stichwort-modal__close{min-width:36px}.lst-stichwort-row-actions{display:flex;gap:6px}.lst-stichwort-row-actions .button{min-width:34px;text-align:center}.lst-stichwort-resource{display:flex;gap:8px;margin:8px 0;align-items:center}
+</style>
 <script>
 (function () {
   const base = <?php echo wp_json_encode(rest_url('lst/v1/verwaltung/leitstellen/')); ?>;
@@ -56,7 +59,7 @@ $classes = function_exists('lsttraining_sim_resource_class_labels') ? lsttrainin
     if (!ls()) return;
     try {
       items = await request(url());
-      $('#lst-stichwort-rows').innerHTML = items.map(row => '<tr><td>'+e(row.code)+'</td><td>'+e(row.bezeichnung)+'</td><td>'+e(row.einsatzart)+'</td><td>'+e((row.fahrzeuge || []).map(r => r.count+'× '+(classes[r.type] || r.type)).join(', '))+'</td><td>'+(Number(row.aktiv) ? 'Aktiv':'Inaktiv')+'</td><td><button type="button" class="button lst-stichwort-edit" data-id="'+e(row.id)+'">Bearbeiten</button> <button type="button" class="button-link-delete lst-stichwort-delete" data-id="'+e(row.id)+'">Löschen</button></td></tr>').join('') || '<tr><td colspan="6">Keine Stichwörter vorhanden.</td></tr>';
+      $('#lst-stichwort-rows').innerHTML = items.map(row => '<tr><td>'+e(row.code)+'</td><td>'+e(row.bezeichnung)+'</td><td>'+e(row.beschreibung || '')+'</td><td>'+e(row.einsatzart)+'</td><td>'+e((row.fahrzeuge || []).map(r => r.count+'× '+(classes[r.type] || r.type)).join(', '))+'</td><td>'+(Number(row.aktiv) ? 'Aktiv':'Inaktiv')+'</td><td><span class="lst-stichwort-row-actions"><button type="button" class="button lst-stichwort-edit" data-id="'+e(row.id)+'" title="Bearbeiten" aria-label="Bearbeiten"><i class="fa-solid fa-pen" aria-hidden="true"></i></button> <button type="button" class="button button-link-delete lst-stichwort-delete" data-id="'+e(row.id)+'" title="Löschen" aria-label="Löschen"><i class="fa-solid fa-trash" aria-hidden="true"></i></button></span></td></tr>').join('') || '<tr><td colspan="7">Keine Stichwörter vorhanden.</td></tr>';
       message(items.length + ' Stichwörter geladen.');
     } catch (error) { message(error.message); }
   }
@@ -70,24 +73,28 @@ $classes = function_exists('lsttraining_sim_resource_class_labels') ? lsttrainin
     f.elements.aktiv.checked = row.aktiv === undefined || Number(row.aktiv) === 1;
     $('#lst-stichwort-resources').innerHTML = ''; (row.fahrzeuge || []).forEach(resource);
     $('#lst-stichwort-form-title').textContent = row.id ? 'Stichwort bearbeiten' : 'Stichwort hinzufügen';
-    $('#lst-stichwort-form-wrap').hidden = false; $('#lst-stichwort-form-wrap').scrollIntoView({behavior:'smooth'});
+    const modal = $('#lst-stichwort-form-wrap'); modal.hidden = false; modal.setAttribute('aria-hidden','false'); document.body.classList.add('lst-stichwort-modal-open'); f.elements.code.focus();
   }
   $('#lst-stichwort-leitstelle').addEventListener('change', () => {history.replaceState(null,'','?page=lsttraining_stichwoerter&ls_id='+ls()); load();});
   $('#lst-stichwort-new').addEventListener('click', () => edit());
-  $('#lst-stichwort-cancel').addEventListener('click', () => $('#lst-stichwort-form-wrap').hidden = true);
+  function closeModal() { const modal = $('#lst-stichwort-form-wrap'); modal.hidden = true; modal.setAttribute('aria-hidden','true'); document.body.classList.remove('lst-stichwort-modal-open'); }
+  $('#lst-stichwort-cancel').addEventListener('click', closeModal);
+  $('#lst-stichwort-form-wrap').addEventListener('click', event => { if (event.target.matches('[data-stichwort-close]')) closeModal(); });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape' && !$('#lst-stichwort-form-wrap').hidden) closeModal(); });
   $('#lst-stichwort-add-resource').addEventListener('click', () => resource());
   $('#lst-stichwort-resources').addEventListener('click', event => { if (event.target.classList.contains('lst-stichwort-remove')) event.target.closest('.lst-stichwort-resource').remove(); });
   $('#lst-stichwort-rows').addEventListener('click', async event => {
-    const id = Number(event.target.dataset.id || 0); if (!id) return;
-    if (event.target.classList.contains('lst-stichwort-edit')) edit(items.find(row => Number(row.id) === id));
-    if (event.target.classList.contains('lst-stichwort-delete') && confirm('Stichwort wirklich löschen?')) {
+    const button = event.target.closest('button[data-id]'); if (!button) return;
+    const id = Number(button.dataset.id || 0); if (!id) return;
+    if (button.classList.contains('lst-stichwort-edit')) edit(items.find(row => Number(row.id) === id));
+    if (button.classList.contains('lst-stichwort-delete') && confirm('Stichwort wirklich löschen?')) {
       try { await request(url(id)+'?confirm=true','DELETE'); await load(); } catch (error) { message(error.message); }
     }
   });
   $('#lst-stichwort-form').addEventListener('submit', async event => {
     event.preventDefault(); const f = event.target; const id = Number(f.elements.id.value || 0);
     const fahrzeuge = [...document.querySelectorAll('.lst-stichwort-resource')].map(node => ({type:node.querySelector('.lst-stichwort-type').value,count:Number(node.querySelector('.lst-stichwort-count').value)}));
-    try { await request(url(id),id ? 'PATCH':'POST',{code:f.elements.code.value.trim(),bezeichnung:f.elements.bezeichnung.value.trim(),einsatzart:f.elements.einsatzart.value,beschreibung:f.elements.beschreibung.value.trim(),hinweis:f.elements.hinweis.value.trim(),aktiv:f.elements.aktiv.checked,fahrzeuge}); $('#lst-stichwort-form-wrap').hidden = true; await load(); }
+    try { await request(url(id),id ? 'PATCH':'POST',{code:f.elements.code.value.trim(),bezeichnung:f.elements.bezeichnung.value.trim(),einsatzart:f.elements.einsatzart.value,beschreibung:f.elements.beschreibung.value.trim(),hinweis:f.elements.hinweis.value.trim(),aktiv:f.elements.aktiv.checked,fahrzeuge}); closeModal(); await load(); }
     catch (error) { message(error.message); }
   });
   load();

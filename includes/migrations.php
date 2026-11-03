@@ -4,7 +4,7 @@ if (!defined('ABSPATH')) { exit; }
 require_once __DIR__ . '/regions.php';
 require_once __DIR__ . '/einsatz-flow.php';
 
-const LSTTRAINING_SCHEMA_VERSION = 2026110302;
+const LSTTRAINING_SCHEMA_VERSION = 2026110303;
 const LSTTRAINING_SCHEMA_OPTION = 'lsttraining_schema_versions';
 
 function lsttraining_schema_fingerprint(): string {
@@ -607,6 +607,9 @@ function lsttraining_run_migrations(bool $force = false): int {
     }
     if ($force || $current < 2026110302) {
         lsttraining_migration_add_column($pdo, 'einsatzstichwoerter', 'beschreibung', 'TEXT NULL AFTER bezeichnung');
+    }
+    if ($force || $current < 2026110303) {
+        lsttraining_stichwoerter_seed_all($pdo);
     }
     lsttraining_schema_store_version(LSTTRAINING_SCHEMA_VERSION);
     return LSTTRAINING_SCHEMA_VERSION;

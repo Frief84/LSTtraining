@@ -94,25 +94,30 @@ function lsttraining_stichwoerter_defaults(): array {
             [$type, $count] = explode(':', $part);
             $bedarf[] = ['type' => $type, 'count' => (int) $count];
         }
-        $out[] = ['code' => $code, 'bezeichnung' => $title, 'einsatzart' => str_starts_with($code, 'B:') || str_starts_with($code, 'H:') ? 'FW' : 'RD', 'fahrzeuge' => $bedarf, 'hinweis' => $note];
+        $description = $note !== '' ? $note : ('Standardansatz für ' . $title . ' laut PDF.');
+        $out[] = ['code' => $code, 'bezeichnung' => $title, 'beschreibung' => $description, 'einsatzart' => str_starts_with($code, 'B:') || str_starts_with($code, 'H:') ? 'FW' : 'RD', 'fahrzeuge' => $bedarf, 'hinweis' => $note];
     }
     return $out;
 }
 
 function lsttraining_stichwoerter_seed_leitstelle(PDO $pdo, int $leitstelle_id): void {
     if ($leitstelle_id <= 0) { return; }
-    $stmt = $pdo->prepare('INSERT IGNORE INTO einsatzstichwoerter (leitstelle_id,code,bezeichnung,einsatzart,fahrzeuge_json,hinweis) VALUES (?,?,?,?,?,?)');
+    $stmt = $pdo->prepare('INSERT IGNORE INTO einsatzstichwoerter (leitstelle_id,code,bezeichnung,beschreibung,einsatzart,fahrzeuge_json,hinweis) VALUES (?,?,?,?,?,?,?)');
     $count = $pdo->prepare('SELECT COUNT(*) FROM einsatzstichwoerter WHERE leitstelle_id = ?');
     $count->execute([$leitstelle_id]);
     if ((int) $count->fetchColumn() > 0) { return; }
     foreach (lsttraining_stichwoerter_defaults() as $row) {
-        $stmt->execute([$leitstelle_id, $row['code'], $row['bezeichnung'], $row['einsatzart'], wp_json_encode($row['fahrzeuge']), $row['hinweis']]);
+        $stmt->execute([$leitstelle_id, $row['code'], $row['bezeichnung'], $row['beschreibung'], $row['einsatzart'], wp_json_encode($row['fahrzeuge']), $row['hinweis']]);
     }
 }
 
 function lsttraining_stichwoerter_seed_all(PDO $pdo): void {
+    $defaults = lsttraining_stichwoerter_defaults();
     foreach ($pdo->query('SELECT id FROM leitstellen')->fetchAll(PDO::FETCH_COLUMN) ?: [] as $id) {
-        lsttraining_stichwoerter_seed_leitstelle($pdo, (int) $id);
+        $id = (int) $id;
+        lsttraining_stichwoerter_seed_leitstelle($pdo, $id);
+        $update = $pdo->prepare('UPDATE einsatzstichwoerter SET beschreibung = ? WHERE leitstelle_id = ? AND code = ? AND (beschreibung IS NULL OR beschreibung = \'\')');
+        foreach ($defaults as $row) { $update->execute([$row['beschreibung'], $id, $row['code']]); }
     }
 }
 
@@ -176,12 +181,12 @@ function lsttraining_stichwoerter_rest_write(WP_REST_Request $request) {
     try {
         $payload = lsttraining_rest_json_object($request, ['code','bezeichnung','beschreibung','einsatzart','fahrzeuge','hinweis','aktiv'], 65536);
         if ($id && !lsttraining_stichwoerter_get(lsttraining_get_connection(), $ls, $id)) { return lst_manage_error('not_found', 'Stichwort nicht gefunden.', 404); }
-        if (!$id && (!isset($payload['code'], $payload['bezeichnung'], $payload['einsatzart']))) { throw new InvalidArgumentException('Code, Bezeichnung und Bereich sind erforderlich.'); }
+        if (!$id && (!isset($payload['code'], $payload['bezeichnung'], $payload['beschreibung'], $payload['einsatzart']))) { throw new InvalidArgumentException('Code, Bezeichnung, Beschreibung und Bereich sind erforderlich.'); }
         $data = [];
         foreach (['code' => 100, 'bezeichnung' => 255, 'beschreibung' => 4000, 'hinweis' => 4000] as $key => $max) {
             if (array_key_exists($key, $payload)) { $data[$key] = lsttraining_rest_assert_safe_string($key, $payload[$key], $max, in_array($key, ['beschreibung', 'hinweis'], true)); }
         }
-        if (isset($data['code']) && $data['code'] === '' || isset($data['bezeichnung']) && $data['bezeichnung'] === '') { throw new InvalidArgumentException('Code und Bezeichnung dürfen nicht leer sein.'); }
+        if (isset($data['code']) && $data['code'] === '' || isset($data['bezeichnung']) && $data['bezeichnung'] === '' || isset($data['beschreibung']) && $data['beschreibung'] === '') { throw new InvalidArgumentException('Code, Bezeichnung und Beschreibung dürfen nicht leer sein.'); }
         if (isset($payload['einsatzart'])) { if (!in_array($payload['einsatzart'], ['RD','FW'], true)) { throw new InvalidArgumentException('Ungültiger Bereich.'); } $data['einsatzart'] = $payload['einsatzart']; }
         if (isset($payload['fahrzeuge'])) { $data['fahrzeuge_json'] = wp_json_encode(lsttraining_stichwoerter_validate_resources($payload['fahrzeuge'])); }
         if (isset($payload['aktiv'])) { if (!is_bool($payload['aktiv'])) { throw new InvalidArgumentException('aktiv muss boolesch sein.'); } $data['aktiv'] = (int) $payload['aktiv']; }

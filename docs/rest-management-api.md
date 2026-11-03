@@ -41,7 +41,7 @@ DELETE /wp-json/lst/v1/verwaltung/leitstellen/{leitstelle_id}/einsatzstichwoerte
 Jeder Aufruf prüft das Leitstellenrecht für die angegebene ID. Ein Eintrag hat
 `code`, `bezeichnung`, `beschreibung`, `einsatzart` (`RD` oder `FW`), `hinweis`,
 `aktiv` und `fahrzeuge` als Liste von `{ "type": "rettungswagen", "count": 1 }`.
-`code`, `bezeichnung` und `einsatzart` sind beim Anlegen Pflicht. Fahrzeugtypen
+`code`, `bezeichnung`, `beschreibung` und `einsatzart` sind beim Anlegen Pflicht. Fahrzeugtypen
 entsprechen den Klassen des Einsatzeditors; Duplikatcodes je Leitstelle werden
 abgelehnt. Beim Löschen oder bei einer Änderung von Code/Bereich werden nur die
 Stichwortverknüpfungen bestehender Vorlagen gelöst. Gespeicherte Titel, Codes und
