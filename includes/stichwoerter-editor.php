@@ -65,7 +65,7 @@ $classes = function_exists('lsttraining_sim_resource_class_labels') ? lsttrainin
   }
   function resource(row = {}) {
     const options = Object.keys(classes).map(type => '<option value="'+e(type)+'"'+(type === row.type ? ' selected':'')+'>'+e(classes[type])+'</option>').join('');
-    $('#lst-stichwort-resources').insertAdjacentHTML('beforeend','<div class="lst-stichwort-resource"><select class="lst-stichwort-type">'+options+'</select> <input class="small-text lst-stichwort-count" type="number" min="1" max="100" value="'+e(row.count || 1)+'"> <button type="button" class="button-link-delete lst-stichwort-remove">Entfernen</button></div>');
+    $('#lst-stichwort-resources').insertAdjacentHTML('beforeend','<div class="lst-stichwort-resource"><select class="lst-stichwort-type">'+options+'</select> <input class="small-text lst-stichwort-count" type="number" min="1" max="100" value="'+e(row.count || 1)+'"> <button type="button" class="button-link-delete lst-stichwort-remove" title="Fahrzeugklasse entfernen" aria-label="Fahrzeugklasse entfernen"><i class="fa-solid fa-trash" aria-hidden="true"></i></button></div>');
   }
   function edit(row = {}) {
     const f = $('#lst-stichwort-form'); f.reset(); f.elements.id.value = row.id || '';
@@ -82,7 +82,7 @@ $classes = function_exists('lsttraining_sim_resource_class_labels') ? lsttrainin
   $('#lst-stichwort-form-wrap').addEventListener('click', event => { if (event.target.matches('[data-stichwort-close]')) closeModal(); });
   document.addEventListener('keydown', event => { if (event.key === 'Escape' && !$('#lst-stichwort-form-wrap').hidden) closeModal(); });
   $('#lst-stichwort-add-resource').addEventListener('click', () => resource());
-  $('#lst-stichwort-resources').addEventListener('click', event => { if (event.target.classList.contains('lst-stichwort-remove')) event.target.closest('.lst-stichwort-resource').remove(); });
+  $('#lst-stichwort-resources').addEventListener('click', event => { const button = event.target.closest('.lst-stichwort-remove'); if (button) button.closest('.lst-stichwort-resource').remove(); });
   $('#lst-stichwort-rows').addEventListener('click', async event => {
     const button = event.target.closest('button[data-id]'); if (!button) return;
     const id = Number(button.dataset.id || 0); if (!id) return;
