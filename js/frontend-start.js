@@ -2217,7 +2217,7 @@
                     '<p><strong>Einsatzort:</strong> ' + esc(place) + '</p>' +
                     '<label class="lsttraining-check-line"><input type="checkbox" name="signal_allowed" value="1" ' + (dispatchMeta(incident, 'signal_allowed', false) ? 'checked' : '') + '> Signalfahrt</label>' +
                     '<label><span>Einsatzcode:</span><input type="text" name="einsatzcode" value="' + esc(dispatchMeta(incident, 'einsatzcode', incident.einsatztyp || '')) + '"></label>' +
-                    '<label><span>Einsatzstichwörter für die Ausrückorder:</span><div class="lst-dispatch-stichwort-picker" data-stichwort-picker><input type="search" data-stichwort-search placeholder="Stichwort suchen…" autocomplete="off" aria-label="Einsatzstichwort suchen" aria-expanded="false"><div class="lst-dispatch-stichwort-selected" data-stichwort-selected></div><div class="lst-dispatch-stichwort-options" data-stichwort-options role="listbox" hidden></div><select name="ausrueckorder_stichwort_ids" multiple hidden aria-hidden="true" tabindex="-1"></select></div><small id="lst-dispatch-stichwort-help">Stichwörter eintippen, filtern und auswählen. Der Freitext bleibt separat bearbeitbar.</small></label>' +
+                    '<label><span>Einsatzstichwörter für die Ausrückorder:</span><div class="lst-dispatch-stichwort-picker" data-stichwort-picker><input type="search" data-stichwort-search placeholder="Stichwort suchen…" autocomplete="off" aria-label="Einsatzstichwort suchen" aria-expanded="false"><button type="button" class="lst-dispatch-stichwort-toggle" data-stichwort-toggle aria-label="Stichwortliste öffnen" aria-expanded="false">▾</button><div class="lst-dispatch-stichwort-selected" data-stichwort-selected></div><div class="lst-dispatch-stichwort-options" data-stichwort-options role="listbox" hidden></div><select name="ausrueckorder_stichwort_ids" multiple hidden aria-hidden="true" tabindex="-1"></select></div><small id="lst-dispatch-stichwort-help">Stichwörter eintippen, filtern und auswählen. Der Freitext bleibt separat bearbeitbar.</small></label>' +
                     '<label><span>Ausrückorder – Freitext:</span><input type="text" name="ausrueckorder" value="' + esc(dispatchMeta(incident, 'ausrueckorder', '')) + '"></label>' +
                     '<label><span>Einsatzkategorie:</span><input type="text" name="einsatzkategorie" value="' + esc(dispatchMeta(incident, 'einsatzkategorie', incident.einsatzart || '')) + '"></label>' +
                     '<label><span>Zusatz / Freitext:</span><textarea name="zusatz_text" rows="3">' + esc(dispatchZusatzText(incident)) + '</textarea></label>' +
@@ -2325,7 +2325,14 @@
         var $input = $picker.find('[data-stichwort-search]');
         var $options = $picker.find('[data-stichwort-options]');
         $picker.off('.lstStichwortPicker');
-        $input.on('focus.lstStichwortPicker input.lstStichwortPicker', function() { $options.prop('hidden', false); $input.attr('aria-expanded','true'); renderDispatchStichwortPicker($modal); });
+        $input.on('focus.lstStichwortPicker input.lstStichwortPicker', function() { $options.prop('hidden', false); $input.attr('aria-expanded','true'); $picker.find('[data-stichwort-toggle]').attr({'aria-expanded':'true','aria-label':'Stichwortliste schließen'}).text('▴'); renderDispatchStichwortPicker($modal); });
+        $picker.on('click.lstStichwortPicker', '[data-stichwort-toggle]', function() {
+            var opening = $options.prop('hidden');
+            $options.prop('hidden', !opening);
+            $input.attr('aria-expanded', opening ? 'true' : 'false');
+            $(this).attr({'aria-expanded':opening ? 'true' : 'false','aria-label':opening ? 'Stichwortliste schließen' : 'Stichwortliste öffnen'}).text(opening ? '▴' : '▾');
+            if (opening) { $input.trigger('focus'); renderDispatchStichwortPicker($modal); }
+        });
         $picker.on('click.lstStichwortPicker', '[data-stichwort-option]', function() {
             var id = String($(this).attr('data-stichwort-option'));
             var $select = $picker.find('select[name="ausrueckorder_stichwort_ids"]');
@@ -2337,8 +2344,8 @@
             $picker.find('select[name="ausrueckorder_stichwort_ids"] option').filter(function() { return String(this.value) === id; }).prop('selected', false);
             $picker.find('select[name="ausrueckorder_stichwort_ids"]').trigger('change'); renderDispatchStichwortPicker($modal);
         });
-        $input.off('keydown.lstStichwortPicker').on('keydown.lstStichwortPicker', function(event) { if (event.key === 'Escape') { $options.prop('hidden', true); $input.attr('aria-expanded','false'); } });
-        $(document).off('click.lstStichwortPicker').on('click.lstStichwortPicker', function(event) { if (!$(event.target).closest($picker).length) { $options.prop('hidden', true); $input.attr('aria-expanded','false'); } });
+        $input.off('keydown.lstStichwortPicker').on('keydown.lstStichwortPicker', function(event) { if (event.key === 'Escape') { $options.prop('hidden', true); $input.attr('aria-expanded','false'); $picker.find('[data-stichwort-toggle]').attr({'aria-expanded':'false','aria-label':'Stichwortliste öffnen'}).text('▾'); } });
+        $(document).off('click.lstStichwortPicker').on('click.lstStichwortPicker', function(event) { if (!$(event.target).closest($picker).length) { $options.prop('hidden', true); $input.attr('aria-expanded','false'); $picker.find('[data-stichwort-toggle]').attr({'aria-expanded':'false','aria-label':'Stichwortliste öffnen'}).text('▾'); } });
         renderDispatchStichwortPicker($modal);
     }
 

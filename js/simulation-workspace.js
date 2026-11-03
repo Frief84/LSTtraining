@@ -38,6 +38,7 @@
         resizeObserver: null,
         vehicleAnimation: {},
         routeAssignments: {},
+        routePredictionAnchors: {},
         animationFrame: null,
         timers: {
             snapshot: null,
@@ -896,7 +897,8 @@
             var key = vehicleKey(vehicle);
             var end = vehicleLonLat(vehicle);
             var oldAnimation = state.vehicleAnimation[key];
-            var start = oldAnimation && oldAnimation.current ? oldAnimation.current : previousVehicles[key];
+            var predicted = predictedRoutePosition(state.routeAssignments[key]);
+            var start = predicted ? predicted.position : oldAnimation && oldAnimation.current ? oldAnimation.current : previousVehicles[key];
             if (!key || !end) {
                 return;
             }
@@ -937,22 +939,55 @@
         });
     }
 
+    function syncRoutePredictionAnchors(snapshot) {
+        var anchors = {};
+        var timestamp = Number(snapshot && snapshot.sim_timestamp) || currentSimTimestampPrecise();
+        Object.keys(state.routeAssignments).forEach(function (key) {
+            var assignment = state.routeAssignments[key];
+            var segments = asArray(assignment.route_segments);
+            var route = asArray(assignment.route_coordinates);
+            var first = route[0] || [];
+            var last = route[route.length - 1] || [];
+            var identity = [assignment.event_id, assignment.mission_phase, assignment.movement_started_at,
+                assignment.route_duration_sec, route.length, first.join(','), last.join(',')].join('|');
+            var elapsed = 0;
+            if (segments.length) {
+                var index = Math.max(0, Math.min(segments.length - 1, Number(assignment.current_segment_index) || 0));
+                for (var i = 0; i < index; i += 1) {
+                    elapsed += Math.max(1, Number(segments[i].duration_sec) || 1);
+                }
+                elapsed += clamp(Number(assignment.current_segment_progress) || 0, 0, 1) *
+                    Math.max(1, Number(segments[index].duration_sec) || 1);
+            } else {
+                elapsed = clamp(Number(assignment.current_progress) || 0, 0, 1) *
+                    Math.max(0, Number(assignment.route_duration_sec) || 0);
+            }
+            var origin = timestamp - elapsed;
+            var previous = state.routePredictionAnchors[key];
+            anchors[key] = {
+                identity: identity,
+                origin: previous && previous.identity === identity ? Math.min(previous.origin, origin) : origin
+            };
+        });
+        state.routePredictionAnchors = anchors;
+    }
+
     function predictedRoutePosition(assignment) {
         if (!assignment || assignment.route_status !== 'ready' ||
             ['to_scene', 'to_hospital', 'returning'].indexOf(String(assignment.mission_phase || '')) === -1 ||
             (assignment.mission_phase === 'to_scene' && !assignment.movement_started_at && !Number(assignment.current_progress))) {
             return null;
         }
-        var elapsedSinceSnapshot = Math.max(0, currentSimTimestampPrecise() - Number(state.snapshot && state.snapshot.sim_timestamp || 0));
+        var anchor = state.routePredictionAnchors[assignmentKeys(assignment)[0]];
+        var elapsedSinceStart = Math.max(0, currentSimTimestampPrecise() -
+            Number(anchor && anchor.origin || state.snapshot && state.snapshot.sim_timestamp || 0));
         var segments = asArray(assignment.route_segments);
         if (segments.length) {
             var routeDuration = segments.reduce(function (sum, segment) {
                 return sum + Math.max(1, Number(segment.duration_sec) || 1);
             }, 0);
             var segmentIndex = Math.max(0, Math.min(segments.length - 1, Number(assignment.current_segment_index) || 0));
-            var elapsed = elapsedSinceSnapshot;
-            for (var i = 0; i < segmentIndex; i += 1) elapsed += Math.max(1, Number(segments[i].duration_sec) || 1);
-            elapsed += clamp(Number(assignment.current_segment_progress) || 0, 0, 1) * Math.max(1, Number(segments[segmentIndex].duration_sec) || 1);
+            var elapsed = elapsedSinceStart;
             var total = 0;
             for (var j = 0; j < segments.length; j += 1) {
                 var duration = Math.max(1, Number(segments[j].duration_sec) || 1);
@@ -968,10 +1003,10 @@
                 }
             }
         }
-        var route = assignment.route_coordinates;
+        var route = asArray(assignment.route_coordinates);
         var duration = Number(assignment.route_duration_sec) || 0;
         if (route.length < 2 || duration <= 0) return null;
-        var progress = clamp((Number(assignment.current_progress) || 0) + elapsedSinceSnapshot / duration, 0, 1);
+        var progress = clamp(elapsedSinceStart / duration, 0, 1);
         var point = routePointAtProgress(route, progress);
         return point ? { position: point.point, moving: !state.simClock.paused && progress < 1, progress: progress } : null;
     }
@@ -2764,6 +2799,7 @@
             prepareVehicleAnimation(state.snapshot || {}, response.data);
             state.snapshot = response.data;
             state.routeAssignments = assignmentMap(response.data.assignments);
+            syncRoutePredictionAnchors(response.data);
             closeVehicleContextMenu();
             logSnapshotRouteFailures(state.snapshot);
             syncSimClock(response.data);
@@ -3163,7 +3199,7 @@
                 '<label class="lstw-signal-toggle"><span><i class="fa-solid fa-lightbulb lstw-toggle-icon" aria-hidden="true"></i>Sondersignale erlauben</span><input type="checkbox" name="signal_allowed" data-lstw-signal-allowed value="1"' + (signalAllowed ? ' checked' : '') + '></label>' +
                 '<label class="lstw-police-toggle"><span><i class="fa-solid fa-user-shield lstw-toggle-icon" aria-hidden="true"></i>Polizei mitverständigen</span><input type="checkbox" name="polizei_verstaendigen" value="1"' + (meta.polizei_verstaendigen ? ' checked' : '') + '></label>' +
                 '<label><span>Einsatzcode</span><input type="text" name="einsatzcode" value="' + esc(meta.einsatzcode || incident.einsatztyp || '') + '"></label>' +
-                '<label><span>Einsatzstichwörter für die Ausrückorder</span><div class="lst-dispatch-stichwort-picker" data-stichwort-picker><input type="search" data-stichwort-search placeholder="Stichwort suchen…" autocomplete="off" aria-label="Einsatzstichwort suchen" aria-expanded="false"><div class="lst-dispatch-stichwort-selected" data-stichwort-selected></div><div class="lst-dispatch-stichwort-options" data-stichwort-options role="listbox" hidden></div><select name="ausrueckorder_stichwort_ids" multiple hidden aria-hidden="true" tabindex="-1"></select></div><small id="lstw-dispatch-stichwort-help">Stichwörter eintippen, filtern und auswählen. Der Freitext bleibt separat bearbeitbar.</small></label>' +
+                '<label><span>Einsatzstichwörter für die Ausrückorder</span><div class="lst-dispatch-stichwort-picker" data-stichwort-picker><input type="search" data-stichwort-search placeholder="Stichwort suchen…" autocomplete="off" aria-label="Einsatzstichwort suchen" aria-expanded="false"><button type="button" class="lst-dispatch-stichwort-toggle" data-stichwort-toggle aria-label="Stichwortliste öffnen" aria-expanded="false">▾</button><div class="lst-dispatch-stichwort-selected" data-stichwort-selected></div><div class="lst-dispatch-stichwort-options" data-stichwort-options role="listbox" hidden></div><select name="ausrueckorder_stichwort_ids" multiple hidden aria-hidden="true" tabindex="-1"></select></div><small id="lstw-dispatch-stichwort-help">Stichwörter eintippen, filtern und auswählen. Der Freitext bleibt separat bearbeitbar.</small></label>' +
                 '<label><span>Ausrückorder – Freitext</span><input type="text" name="ausrueckorder" value="' + esc(meta.ausrueckorder || '') + '"></label>' +
                 '<label><span>Einsatzkategorie</span><input type="text" name="einsatzkategorie" value="' + esc(meta.einsatzkategorie || incident.einsatzart || '') + '"></label>' +
                 '<label><span>Abholzeit</span><input type="time" name="abholzeit" value="' + esc(meta.abholzeit || '') + '"></label>' +
@@ -3243,7 +3279,14 @@
         var $input = $picker.find('[data-stichwort-search]');
         var $options = $picker.find('[data-stichwort-options]');
         $picker.off('.lstStichwortPicker');
-        $input.on('focus.lstStichwortPicker input.lstStichwortPicker', function() { $options.prop('hidden', false); $input.attr('aria-expanded','true'); renderDispatchStichwortPicker($modal); });
+        $input.on('focus.lstStichwortPicker input.lstStichwortPicker', function() { $options.prop('hidden', false); $input.attr('aria-expanded','true'); $picker.find('[data-stichwort-toggle]').attr({'aria-expanded':'true','aria-label':'Stichwortliste schließen'}).text('▴'); renderDispatchStichwortPicker($modal); });
+        $picker.on('click.lstStichwortPicker', '[data-stichwort-toggle]', function() {
+            var opening = $options.prop('hidden');
+            $options.prop('hidden', !opening);
+            $input.attr('aria-expanded', opening ? 'true' : 'false');
+            $(this).attr({'aria-expanded':opening ? 'true' : 'false','aria-label':opening ? 'Stichwortliste schließen' : 'Stichwortliste öffnen'}).text(opening ? '▴' : '▾');
+            if (opening) { $input.trigger('focus'); renderDispatchStichwortPicker($modal); }
+        });
         $picker.on('click.lstStichwortPicker', '[data-stichwort-option]', function() {
             var id = String($(this).attr('data-stichwort-option'));
             var $select = $picker.find('select[name="ausrueckorder_stichwort_ids"]');
@@ -3255,8 +3298,8 @@
             $picker.find('select[name="ausrueckorder_stichwort_ids"] option').filter(function() { return String(this.value) === id; }).prop('selected', false);
             $picker.find('select[name="ausrueckorder_stichwort_ids"]').trigger('change'); renderDispatchStichwortPicker($modal);
         });
-        $input.off('keydown.lstStichwortPicker').on('keydown.lstStichwortPicker', function(event) { if (event.key === 'Escape') { $options.prop('hidden', true); $input.attr('aria-expanded','false'); } });
-        $(document).off('click.lstStichwortPicker').on('click.lstStichwortPicker', function(event) { if (!$(event.target).closest($picker).length) { $options.prop('hidden', true); $input.attr('aria-expanded','false'); } });
+        $input.off('keydown.lstStichwortPicker').on('keydown.lstStichwortPicker', function(event) { if (event.key === 'Escape') { $options.prop('hidden', true); $input.attr('aria-expanded','false'); $picker.find('[data-stichwort-toggle]').attr({'aria-expanded':'false','aria-label':'Stichwortliste öffnen'}).text('▾'); } });
+        $(document).off('click.lstStichwortPicker').on('click.lstStichwortPicker', function(event) { if (!$(event.target).closest($picker).length) { $options.prop('hidden', true); $input.attr('aria-expanded','false'); $picker.find('[data-stichwort-toggle]').attr({'aria-expanded':'false','aria-label':'Stichwortliste öffnen'}).text('▾'); } });
         renderDispatchStichwortPicker($modal);
     }
 
