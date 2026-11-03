@@ -3178,6 +3178,55 @@
         loadDispatchStichwoerter(incident);
     }
 
+
+    function dispatchVehicleMatchesResource(vehicle, type) {
+        var cls = String(vehicle && vehicle.resource_class || '').toLowerCase();
+        var haystack = String([cls, vehicle && vehicle.resource_class_label, vehicle && vehicle.fahrzeugtyp, vehicle && vehicle.rufname].filter(Boolean).join(' ')).toLowerCase();
+        if (cls === type) return true;
+        var aliases = {
+            rettungswagen: /\b(rtw|rettungswagen)\b/,
+            krankentransport: /\b(ktw|krankentransportwagen?)\b/,
+            notarzt: /\b(notarzt|nef|naw|rth|ith)\b/,
+            loeschfahrzeug: /\b(lf|hlf|tlf|loeschfahrzeug|löschfahrzeug)\b/,
+            ruestung: /\b(rw|ruestwagen|rüstwagen)\b/,
+            fuehrung: /\b(elw|kdo|fuehrung|führung)\b/,
+            gefahrgut: /\b(gefahrgut|abc)\b/,
+            thw_bergung: /\b(gkw|bergung)\b/,
+            thw_fuehrung: /\b(thw|fuehrung|führung)\b/,
+            thw_logistik: /\b(thw|logistik)\b/
+        };
+        return !!(aliases[type] && aliases[type].test(haystack));
+    }
+
+    function applyDispatchStichwortVehicles($form, vehicles) {
+        var $select = $form.find('[name="ausrueckorder_stichwort_ids"]');
+        var previousAuto = $select.data('auto-selected') || [];
+        previousAuto.forEach(function(id) { $form.find('[name="alarm_status_id"][value="' + String(id).replace(/"/g, '') + '"]').prop('checked', false); });
+        var needs = {};
+        $select.find('option:selected').each(function() {
+            var row = $(this).data('stichwort') || {};
+            (row.fahrzeuge || []).forEach(function(resource) { needs[resource.type] = (needs[resource.type] || 0) + Number(resource.count || 0); });
+        });
+        var autoSelected = [];
+        Object.keys(needs).forEach(function(type) {
+            var matched = vehicles.filter(function(vehicle) { return dispatchVehicleMatchesResource(vehicle, type); });
+            var checks = $form.find('[name="alarm_status_id"]');
+            var selectedCount = 0;
+            checks.each(function() {
+                var vehicle = matched.find(function(item) { return String(item.status_id || '') === String($(this).val()); }.bind(this));
+                if (vehicle && this.checked && !this.disabled) selectedCount++;
+            });
+            if (selectedCount >= needs[type]) return;
+            matched.forEach(function(vehicle) {
+                if (selectedCount >= needs[type]) return;
+                var $check = checks.filter(function() { return String(this.value) === String(vehicle.status_id || ''); }).first();
+                if ($check.length && !$check.prop('disabled') && !$check.prop('checked')) {
+                    $check.prop('checked', true); autoSelected.push(String(vehicle.status_id)); selectedCount++;
+                }
+            });
+        });
+        $select.data('auto-selected', autoSelected);
+    }
     function loadDispatchStichwoerter(incident) {
         var $select = state.$root.find('[data-lstw-modal] [name="ausrueckorder_stichwort_ids"]');
         simPost({action:'lsttraining_stichwoerter_for_instance', instanz_id:state.instanceId}).done(function(response) {
@@ -3186,9 +3235,12 @@
             $select.empty();
             asArray(response.data.items).forEach(function(row) {
                 var option = $('<option></option>').val(row.id).text(row.code + ' – ' + row.bezeichnung);
+                option.data('stichwort', row);
                 if (selected.indexOf(String(row.id)) !== -1) option.prop('selected', true);
                 $select.append(option);
             });
+            $select.off('change.lstAusrueckorder').on('change.lstAusrueckorder', function() { applyDispatchStichwortVehicles($select.closest('[data-lstw-modal]'), mergeVehicleLists()); });
+            if (selected.length) applyDispatchStichwortVehicles($select.closest('[data-lstw-modal]'), mergeVehicleLists());
         });
     }
 
