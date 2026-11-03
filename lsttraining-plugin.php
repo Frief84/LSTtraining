@@ -3,7 +3,9 @@
  * Plugin Name: LSTtraining
  * Description: Integration des LSTtraining-Frameworks in WordPress inkl. Map, API und Datenbank.
  * Version: 1.0
- * Author: Frief
+ * Author: Frieder Knabe
+ * License: GPLv2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  */
 
 defined('ABSPATH') or exit;
